@@ -190,8 +190,8 @@ func initAPI() {
 	beego.Router("/api/get-subscriptions", &controllers.ApiController{}, "GET:GetSubscriptions")
 	beego.Router("/api/get-subscription", &controllers.ApiController{}, "GET:GetSubscription")
 	beego.Router("/api/update-subscription", &controllers.ApiController{}, "POST:UpdateSubscription")
-	beego.Router("/api/add-product", &controllers.ApiController{}, "POST:AddSubscription")
-	beego.Router("/api/delete-product", &controllers.ApiController{}, "POST:DeleteSubscription")
+	beego.Router("/api/add-subscription", &controllers.ApiController{}, "POST:AddSubscription")
+	beego.Router("/api/delete-subscription", &controllers.ApiController{}, "POST:DeleteSubscription")
 
 	beego.Router("/api/get-products", &controllers.ApiController{}, "GET:GetProducts")
 	beego.Router("/api/get-product", &controllers.ApiController{}, "GET:GetProduct")

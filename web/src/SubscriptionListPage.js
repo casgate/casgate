@@ -14,40 +14,34 @@
 
 import React from "react";
 import {Link} from "react-router-dom";
-import {Button, Col, List, Row, Table, Tooltip} from "antd";
+import {Button, Table} from "antd";
 import moment from "moment";
 import * as Setting from "./Setting";
 import * as SubscriptionBackend from "./backend/SubscriptionBackend";
 import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
-import {EditOutlined} from "@ant-design/icons";
 import PopconfirmModal from "./PopconfirmModal";
 
 class SubscriptionListPage extends BaseListPage {
-  newProduct() {
+  newSubscription() {
     const randomName = Setting.getRandomName();
     return {
       owner: "admin",
-      name: `product_${randomName}`,
+      name: `subscription_${randomName}`,
       createdTime: moment().format(),
-      displayName: `New Product - ${randomName}`,
-      image: `${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256.png`,
-      tag: "Casdoor Summit 2022",
-      currency: "USD",
-      price: 300,
-      quantity: 99,
-      sold: 10,
-      providers: [],
+      displayName: `New Subscription - ${randomName}`,
+      tag: "Pro plan",
+      expireInDays: 365,
       state: "Published",
     };
   }
 
-  addProduct() {
-    const newProduct = this.newProduct();
-    SubscriptionBackend.addSubscription(newProduct)
+  addSubscription() {
+    const newSubscription = this.newSubscription();
+    SubscriptionBackend.addSubscription(newSubscription)
       .then((res) => {
         if (res.status === "ok") {
-          this.props.history.push({pathname: `/products/${newProduct.name}`, mode: "add"});
+          this.props.history.push({pathname: `/subscription/${newSubscription.name}`, mode: "add"});
           Setting.showMessage("success", i18next.t("general:Successfully added"));
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to add")}: ${res.msg}`);
@@ -58,7 +52,7 @@ class SubscriptionListPage extends BaseListPage {
       });
   }
 
-  deleteProduct(i) {
+  deleteSubscription(i) {
     SubscriptionBackend.deleteSubscription(this.state.data[i])
       .then((res) => {
         if (res.status === "ok") {
@@ -76,7 +70,7 @@ class SubscriptionListPage extends BaseListPage {
       });
   }
 
-  renderTable(products) {
+  renderTable(subscriptions) {
     const columns = [
       {
         title: i18next.t("general:Name"),
@@ -88,7 +82,7 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("name"),
         render: (text, record, index) => {
           return (
-            <Link to={`/products/${text}`}>
+            <Link to={`/subscriptions/${text}`}>
               {text}
             </Link>
           );
@@ -113,17 +107,11 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("displayName"),
       },
       {
-        title: i18next.t("product:Image"),
-        dataIndex: "image",
-        key: "image",
-        width: "170px",
-        render: (text, record, index) => {
-          return (
-            <a target="_blank" rel="noreferrer" href={text}>
-              <img src={text} alt={text} width={150} />
-            </a>
-          );
-        },
+        title: i18next.t("subscription:Expire In Days"),
+        dataIndex: "expireInDays",
+        key: "expireInDays",
+        width: "140px",
+        ...this.getColumnSearchProps("expireInDays"),
       },
       {
         title: i18next.t("user:Tag"),
@@ -134,100 +122,12 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("tag"),
       },
       {
-        title: i18next.t("payment:Currency"),
-        dataIndex: "currency",
-        key: "currency",
-        width: "120px",
-        sorter: true,
-        ...this.getColumnSearchProps("currency"),
-      },
-      {
-        title: i18next.t("product:Price"),
-        dataIndex: "price",
-        key: "price",
-        width: "120px",
-        sorter: true,
-        ...this.getColumnSearchProps("price"),
-      },
-      {
-        title: i18next.t("product:Quantity"),
-        dataIndex: "quantity",
-        key: "quantity",
-        width: "120px",
-        sorter: true,
-        ...this.getColumnSearchProps("quantity"),
-      },
-      {
-        title: i18next.t("product:Sold"),
-        dataIndex: "sold",
-        key: "sold",
-        width: "120px",
-        sorter: true,
-        ...this.getColumnSearchProps("sold"),
-      },
-      {
         title: i18next.t("general:State"),
         dataIndex: "state",
         key: "state",
         width: "120px",
         sorter: true,
         ...this.getColumnSearchProps("state"),
-      },
-      {
-        title: i18next.t("product:Payment providers"),
-        dataIndex: "providers",
-        key: "providers",
-        width: "500px",
-        ...this.getColumnSearchProps("providers"),
-        render: (text, record, index) => {
-          const providers = text;
-          if (providers.length === 0) {
-            return `(${i18next.t("general:empty")})`;
-          }
-
-          const half = Math.floor((providers.length + 1) / 2);
-
-          const getList = (providers) => {
-            return (
-              <List
-                size="small"
-                locale={{emptyText: " "}}
-                dataSource={providers}
-                renderItem={(providerName, i) => {
-                  return (
-                    <List.Item>
-                      <div style={{display: "inline"}}>
-                        <Tooltip placement="topLeft" title="Edit">
-                          <Button style={{marginRight: "5px"}} icon={<EditOutlined />} size="small" onClick={() => Setting.goToLinkSoft(this, `/providers/${providerName}`)} />
-                        </Tooltip>
-                        <Link to={`/providers/${providerName}`}>
-                          {providerName}
-                        </Link>
-                      </div>
-                    </List.Item>
-                  );
-                }}
-              />
-            );
-          };
-
-          return (
-            <div>
-              <Row>
-                <Col span={12}>
-                  {
-                    getList(providers.slice(0, half))
-                  }
-                </Col>
-                <Col span={12}>
-                  {
-                    getList(providers.slice(half))
-                  }
-                </Col>
-              </Row>
-            </div>
-          );
-        },
       },
       {
         title: i18next.t("general:Action"),
@@ -238,11 +138,10 @@ class SubscriptionListPage extends BaseListPage {
         render: (text, record, index) => {
           return (
             <div>
-              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} onClick={() => this.props.history.push(`/products/${record.name}/buy`)}>{i18next.t("product:Buy")}</Button>
-              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/products/${record.name}`)}>{i18next.t("general:Edit")}</Button>
+              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/subscription/${record.name}`)}>{i18next.t("general:Edit")}</Button>
               <PopconfirmModal
                 title={i18next.t("general:Sure to delete") + `: ${record.name} ?`}
-                onConfirm={() => this.deleteProduct(index)}
+                onConfirm={() => this.deleteSubscription(index)}
               >
               </PopconfirmModal>
             </div>
@@ -260,11 +159,11 @@ class SubscriptionListPage extends BaseListPage {
 
     return (
       <div>
-        <Table scroll={{x: "max-content"}} columns={columns} dataSource={products} rowKey="name" size="middle" bordered pagination={paginationProps}
+        <Table scroll={{x: "max-content"}} columns={columns} dataSource={subscriptions} rowKey="name" size="middle" bordered pagination={paginationProps}
           title={() => (
             <div>
-              {i18next.t("general:Products")}&nbsp;&nbsp;&nbsp;&nbsp;
-              <Button type="primary" size="small" onClick={this.addProduct.bind(this)}>{i18next.t("general:Add")}</Button>
+              {i18next.t("general:Subscriptions")}&nbsp;&nbsp;&nbsp;&nbsp;
+              <Button type="primary" size="small" onClick={this.addSubscription.bind(this)}>{i18next.t("general:Add")}</Button>
             </div>
           )}
           loading={this.state.loading}

@@ -1655,6 +1655,33 @@
                 }
             }
         },
+        "/api/get-subscription": {
+            "get": {
+                "tags": [
+                    "Subscription API"
+                ],
+                "description": "get subscriptions",
+                "operationId": "ApiController.GetSubscription",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "description": "The id ( owner/name ) of the subscription",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/object.Subscription"
+                        }
+                    }
+                }
+            }
+        },
+
         "/api/get-product": {
             "get": {
                 "tags": [
@@ -4439,6 +4466,43 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "object.Subscription": {
+            "title": "Subscription",
+            "type": "object",
+            "properties": {
+                "createdTime": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "detail": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
                 }
             }
         },

@@ -89,13 +89,13 @@ func GetSubscription(id string) *Subscription {
 	return getSubscription(owner, name)
 }
 
-func UpdateSubscription(id string, product *Subscription) bool {
+func UpdateSubscription(id string, subscription *Subscription) bool {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if getProduct(owner, name) == nil {
+	if getSubscription(owner, name) == nil {
 		return false
 	}
 
-	affected, err := adapter.Engine.ID(core.PK{owner, name}).AllCols().Update(product)
+	affected, err := adapter.Engine.ID(core.PK{owner, name}).AllCols().Update(subscription)
 	if err != nil {
 		panic(err)
 	}
@@ -103,8 +103,8 @@ func UpdateSubscription(id string, product *Subscription) bool {
 	return affected != 0
 }
 
-func AddSubscription(product *Subscription) bool {
-	affected, err := adapter.Engine.Insert(product)
+func AddSubscription(subscription *Subscription) bool {
+	affected, err := adapter.Engine.Insert(subscription)
 	if err != nil {
 		panic(err)
 	}
@@ -112,8 +112,8 @@ func AddSubscription(product *Subscription) bool {
 	return affected != 0
 }
 
-func DeleteSubscription(product *Subscription) bool {
-	affected, err := adapter.Engine.ID(core.PK{product.Owner, product.Name}).Delete(&Subscription{})
+func DeleteSubscription(subscription *Subscription) bool {
+	affected, err := adapter.Engine.ID(core.PK{subscription.Owner, subscription.Name}).Delete(&Subscription{})
 	if err != nil {
 		panic(err)
 	}
