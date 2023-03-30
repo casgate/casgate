@@ -21,12 +21,13 @@ import i18next from "i18next";
 import * as Util from "./Util";
 import {authConfig} from "./Auth";
 import * as ApplicationBackend from "../backend/ApplicationBackend";
+import * as AgreementModal from "../common/modal/AgreementModal";
 import {SendCodeInput} from "../common/SendCodeInput";
-import SelectRegionBox from "../SelectRegionBox";
-import CustomGithubCorner from "../CustomGithubCorner";
-import SelectLanguageBox from "../SelectLanguageBox";
+import RegionSelect from "../common/select/RegionSelect";
+import CustomGithubCorner from "../common/CustomGithubCorner";
+import LanguageSelect from "../common/select/LanguageSelect";
 import {withRouter} from "react-router-dom";
-import {CountryCodeSelect} from "../common/CountryCodeSelect";
+import {CountryCodeSelect} from "../common/select/CountryCodeSelect";
 
 const formItemLayout = {
   labelCol: {
@@ -47,7 +48,7 @@ const formItemLayout = {
   },
 };
 
-const tailFormItemLayout = {
+export const tailFormItemLayout = {
   wrapperCol: {
     xs: {
       span: 24,
@@ -65,8 +66,7 @@ class SignupPage extends React.Component {
     super(props);
     this.state = {
       classes: props,
-      applicationName: props.match.params?.applicationName ?? authConfig.appName,
-      application: null,
+      applicationName: props.match?.params?.applicationName ?? authConfig.appName,
       email: "",
       phone: "",
       countryCode: "",
@@ -83,20 +83,17 @@ class SignupPage extends React.Component {
   }
 
   componentDidMount() {
-    let applicationName = this.state.applicationName;
     const oAuthParams = Util.getOAuthGetParameters();
     if (oAuthParams !== null) {
-      applicationName = oAuthParams.state;
-      this.setState({applicationName: oAuthParams.state});
       const signinUrl = window.location.href.replace("/signup/oauth/authorize", "/login/oauth/authorize");
       sessionStorage.setItem("signinUrl", signinUrl);
     }
 
-    if (this.getApplicationObj() === null) {
-      if (applicationName !== undefined) {
-        this.getApplication(applicationName);
+    if (this.getApplicationObj() === undefined) {
+      if (this.state.applicationName !== null) {
+        this.getApplication(this.state.applicationName);
       } else {
-        Setting.showMessage("error", `Unknown application name: ${applicationName}`);
+        Setting.showMessage("error", `Unknown application name: ${this.state.applicationName}`);
       }
     }
   }
@@ -109,15 +106,6 @@ class SignupPage extends React.Component {
     ApplicationBackend.getApplication("admin", applicationName)
       .then((application) => {
         this.onUpdateApplication(application);
-        this.setState({
-          application: application,
-        });
-
-        if (application !== null && application !== undefined) {
-          Setting.getTermsOfUseContent(application.termsOfUse, res => {
-            this.setState({termsOfUseContent: res});
-          });
-        }
       });
   }
 
@@ -134,7 +122,7 @@ class SignupPage extends React.Component {
   }
 
   getApplicationObj() {
-    return this.props.application ?? this.state.application;
+    return this.props.application;
   }
 
   onUpdateAccount(account) {
@@ -318,7 +306,7 @@ class SignupPage extends React.Component {
             },
           ]}
         >
-          <SelectRegionBox onChange={(value) => {this.setState({region: value});}} />
+          <RegionSelect onChange={(value) => {this.setState({region: value});}} />
         </Form.Item>
       );
     } else if (signupItem.name === "Email") {
@@ -398,11 +386,11 @@ class SignupPage extends React.Component {
                   },
                   ({getFieldValue}) => ({
                     validator: (_, value) => {
-                      if (!required && value === "") {
+                      if (!required && !value) {
                         return Promise.resolve();
                       }
 
-                      if (value !== "" && !Setting.isValidPhone(value, getFieldValue("countryCode"))) {
+                      if (value && !Setting.isValidPhone(value, getFieldValue("countryCode"))) {
                         this.setState({validPhone: false});
                         return Promise.reject(i18next.t("signup:The input is not valid Phone!"));
                       }
@@ -484,30 +472,8 @@ class SignupPage extends React.Component {
         </Form.Item>
       );
     } else if (signupItem.name === "Agreement") {
-      return (
-        Setting.renderAgreement(Setting.isAgreementRequired(application), () => {
-          this.setState({
-            isTermsOfUseVisible: true,
-          });
-        }, false, tailFormItemLayout, Setting.isDefaultTrue(application))
-      );
+      return AgreementModal.renderAgreementFormItem(application, required, tailFormItemLayout, this);
     }
-  }
-
-  renderModal() {
-    return (
-      Setting.renderModal(this.state.isTermsOfUseVisible, () => {
-        this.form.current.setFieldsValue({agreement: true});
-        this.setState({
-          isTermsOfUseVisible: false,
-        });
-      }, () => {
-        this.form.current.setFieldsValue({agreement: false});
-        this.setState({
-          isTermsOfUseVisible: false,
-        });
-      }, this.state.termsOfUseContent)
-    );
   }
 
   renderForm(application) {
@@ -596,7 +562,7 @@ class SignupPage extends React.Component {
 
   render() {
     const application = this.getApplicationObj();
-    if (application === null) {
+    if (application === undefined || application === null) {
       return null;
     }
 
@@ -622,16 +588,13 @@ class SignupPage extends React.Component {
               {
                 Setting.renderLogo(application)
               }
-              <SelectLanguageBox languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} />
+              <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} />
               {
                 this.renderForm(application)
               }
             </div>
           </div>
         </div>
-        {
-          this.renderModal()
-        }
       </React.Fragment>
     );
   }

@@ -43,27 +43,20 @@ export function renderMessage(msg) {
 export function renderMessageLarge(ths, msg) {
   if (msg !== null) {
     return (
-      <div style={{display: "inline"}}>
-        <Result
-          status="error"
-          title="There was a problem signing you in.."
-          subTitle={msg}
-          extra={[
-            <Button type="primary" key="back" onClick={() => {
-              window.history.go(-2);
-            }}>
+      <Result
+        style={{margin: "0px auto"}}
+        status="error"
+        title="There was a problem signing you in.."
+        subTitle={msg}
+        extra={[
+          <Button type="primary" key="back" onClick={() => {
+            window.history.go(-2);
+          }}>
               Back
-            </Button>,
-            // <Button key="home" onClick={() => Setting.goToLinkSoft(ths, "/")}>
-            //   Home
-            // </Button>,
-            // <Button type="primary" key="signup" onClick={() => Setting.goToLinkSoft(ths, "/signup")}>
-            //   Sign Up
-            // </Button>,
-          ]}
-        >
-        </Result>
-      </div>
+          </Button>,
+        ]}
+      >
+      </Result>
     );
   } else {
     return null;
@@ -71,7 +64,7 @@ export function renderMessageLarge(ths, msg) {
 }
 
 function getRefinedValue(value) {
-  return (value === null) ? "" : value;
+  return value ?? "";
 }
 
 export function getCasParameters(params) {
@@ -100,7 +93,7 @@ export function getOAuthGetParameters(params) {
   const relayState = getRefinedValue(queries.get("RelayState"));
   const noRedirect = getRefinedValue(queries.get("noRedirect"));
 
-  if ((clientId === undefined || clientId === null || clientId === "") && (samlRequest === "" || samlRequest === undefined)) {
+  if (clientId === "" && samlRequest === "") {
     // login
     return null;
   } else {

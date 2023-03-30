@@ -24,12 +24,13 @@ import * as Provider from "./Provider";
 import * as ProviderButton from "./ProviderButton";
 import * as Util from "./Util";
 import * as Setting from "../Setting";
+import * as AgreementModal from "../common/modal/AgreementModal";
 import SelfLoginButton from "./SelfLoginButton";
 import i18next from "i18next";
-import CustomGithubCorner from "../CustomGithubCorner";
+import CustomGithubCorner from "../common/CustomGithubCorner";
 import {SendCodeInput} from "../common/SendCodeInput";
-import SelectLanguageBox from "../SelectLanguageBox";
-import {CaptchaModal} from "../common/CaptchaModal";
+import LanguageSelect from "../common/select/LanguageSelect";
+import {CaptchaModal} from "../common/modal/CaptchaModal";
 import RedirectForm from "../common/RedirectForm";
 
 class LoginPage extends React.Component {
@@ -38,10 +39,9 @@ class LoginPage extends React.Component {
     this.state = {
       classes: props,
       type: props.type,
-      applicationName: props.applicationName !== undefined ? props.applicationName : (props.match === undefined ? null : props.match.params.applicationName),
-      owner: props.owner !== undefined ? props.owner : (props.match === undefined ? null : props.match.params.owner),
-      application: null,
-      mode: props.mode !== undefined ? props.mode : (props.match === undefined ? null : props.match.params.mode), // "signup" or "signin"
+      applicationName: props.applicationName ?? (props.match?.params?.applicationName ?? null),
+      owner: props.owner ?? (props.match?.params?.owner ?? null),
+      mode: props.mode ?? (props.match?.params?.mode ?? null), // "signup" or "signin"
       msg: null,
       username: null,
       validEmailOrPhone: false,
@@ -58,21 +58,19 @@ class LoginPage extends React.Component {
     };
 
     if (this.state.type === "cas" && props.match?.params.casApplicationName !== undefined) {
-      this.state.owner = props.match?.params.owner;
-      this.state.applicationName = props.match?.params.casApplicationName;
+      this.state.owner = props.match?.params?.owner;
+      this.state.applicationName = props.match?.params?.casApplicationName;
     }
 
     this.form = React.createRef();
   }
 
   componentDidMount() {
-    if (this.getApplicationObj() === null) {
-      if (this.state.type === "login" || this.state.type === "cas") {
+    if (this.getApplicationObj() === undefined) {
+      if (this.state.type === "login" || this.state.type === "cas" || this.state.type === "saml") {
         this.getApplication();
       } else if (this.state.type === "code") {
         this.getApplicationLogin();
-      } else if (this.state.type === "saml") {
-        this.getSamlApplication();
       } else {
         Setting.showMessage("error", `Unknown authentication type: ${this.state.type}`);
       }
@@ -80,14 +78,35 @@ class LoginPage extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if (this.state.application && !prevState.application) {
-      const captchaProviderItems = this.getCaptchaProviderItems(this.state.application);
-
-      if (!captchaProviderItems) {
-        return;
+    if (prevProps.application !== this.props.application) {
+      const captchaProviderItems = this.getCaptchaProviderItems(this.props.application);
+      if (captchaProviderItems) {
+        this.setState({enableCaptchaModal: captchaProviderItems.some(providerItem => providerItem.rule === "Always")});
       }
 
-      this.setState({enableCaptchaModal: captchaProviderItems.some(providerItem => providerItem.rule === "Always")});
+      if (this.props.account && this.props.account.owner === this.props.application?.organization) {
+        const params = new URLSearchParams(this.props.location.search);
+        const silentSignin = params.get("silentSignin");
+        if (silentSignin !== null) {
+          this.sendSilentSigninData("signing-in");
+
+          const values = {};
+          values["application"] = this.props.application.name;
+          this.login(values);
+        }
+
+        if (params.get("popup") === "1") {
+          window.addEventListener("beforeunload", () => {
+            this.sendPopupData({type: "windowClosed"}, params.get("redirect_uri"));
+          });
+        }
+
+        if (this.props.application.enableAutoSignin) {
+          const values = {};
+          values["application"] = this.props.application.name;
+          this.login(values);
+        }
+      }
     }
   }
 
@@ -96,47 +115,37 @@ class LoginPage extends React.Component {
     AuthBackend.getApplicationLogin(oAuthParams)
       .then((res) => {
         if (res.status === "ok") {
-          this.onUpdateApplication(res.data);
-          this.setState({
-            application: res.data,
-          });
+          const application = res.data;
+          this.onUpdateApplication(application);
         } else {
-          // Setting.showMessage("error", res.msg);
           this.onUpdateApplication(null);
           this.setState({
-            application: res.data,
             msg: res.msg,
           });
         }
       });
+    return null;
   }
 
   getApplication() {
     if (this.state.applicationName === null) {
-      return;
+      return null;
     }
 
-    if (this.state.owner === null || this.state.owner === undefined || this.state.owner === "") {
+    if (this.state.owner === null || this.state.type === "saml") {
       ApplicationBackend.getApplication("admin", this.state.applicationName)
         .then((application) => {
           this.onUpdateApplication(application);
-          this.setState({
-            application: application,
-          }, () => Setting.getTermsOfUseContent(this.state.application.termsOfUse, res => {
-            this.setState({termsOfUseContent: res});
-          }));
         });
     } else {
       OrganizationBackend.getDefaultApplication("admin", this.state.owner)
         .then((res) => {
           if (res.status === "ok") {
-            this.onUpdateApplication(res.data);
+            const application = res.data;
+            this.onUpdateApplication(application);
             this.setState({
-              application: res.data,
               applicationName: res.data.name,
-            }, () => Setting.getTermsOfUseContent(this.state.application.termsOfUse, res => {
-              this.setState({termsOfUseContent: res});
-            }));
+            });
           } else {
             this.onUpdateApplication(null);
             Setting.showMessage("error", res.msg);
@@ -145,21 +154,8 @@ class LoginPage extends React.Component {
     }
   }
 
-  getSamlApplication() {
-    if (this.state.applicationName === null) {
-      return;
-    }
-    ApplicationBackend.getApplication(this.state.owner, this.state.applicationName)
-      .then((application) => {
-        this.onUpdateApplication(application);
-        this.setState({
-          application: application,
-        });
-      });
-  }
-
   getApplicationObj() {
-    return this.props.application ?? this.state.application;
+    return this.props.application;
   }
 
   onUpdateAccount(account) {
@@ -183,24 +179,18 @@ class LoginPage extends React.Component {
   }
 
   populateOauthValues(values) {
-    const oAuthParams = Util.getOAuthGetParameters();
-    if (oAuthParams !== null && oAuthParams.responseType !== null && oAuthParams.responseType !== "") {
-      values["type"] = oAuthParams.responseType;
-    } else {
-      values["type"] = this.state.type;
-    }
-
-    if (oAuthParams !== null) {
-      values["samlRequest"] = oAuthParams.samlRequest;
-    }
-
-    if (values["samlRequest"] !== null && values["samlRequest"] !== "" && values["samlRequest"] !== undefined) {
-      values["type"] = "saml";
-      values["relayState"] = oAuthParams.relayState;
-    }
-
     if (this.getApplicationObj()?.organization) {
       values["organization"] = this.getApplicationObj().organization;
+    }
+
+    const oAuthParams = Util.getOAuthGetParameters();
+
+    values["type"] = oAuthParams?.responseType ?? this.state.type;
+
+    if (oAuthParams?.samlRequest) {
+      values["samlRequest"] = oAuthParams.samlRequest;
+      values["type"] = "saml";
+      values["relayState"] = oAuthParams.relayState;
     }
   }
 
@@ -305,7 +295,6 @@ class LoginPage extends React.Component {
       // OAuth
       const oAuthParams = Util.getOAuthGetParameters();
       this.populateOauthValues(values);
-
       AuthBackend.login(values, oAuthParams)
         .then((res) => {
           if (res.status === "ok") {
@@ -318,7 +307,6 @@ class LoginPage extends React.Component {
               Setting.goToLink(link);
             } else if (responseType === "code") {
               this.postCodeLoginAction(res);
-              // Setting.showMessage("success", `Authorization code: ${res.data}`);
             } else if (responseType === "token" || responseType === "id_token") {
               const accessToken = res.data;
               Setting.goToLink(`${oAuthParams.redirectUri}#${responseType}=${accessToken}?state=${oAuthParams.state}&token_type=bearer`);
@@ -471,25 +459,17 @@ class LoginPage extends React.Component {
               this.renderPasswordOrCodeInput()
             }
           </Row>
-          <Form.Item>
-            {
-              Setting.isAgreementRequired(application) ?
-                Setting.renderAgreement(true, () => {
-                  this.setState({
-                    isTermsOfUseVisible: true,
-                  });
-                }, true, {}, Setting.isDefaultTrue(application)) : (
-                  <Form.Item name="autoSignin" valuePropName="checked" noStyle>
-                    <Checkbox style={{float: "left"}} disabled={!application.enablePassword}>
-                      {i18next.t("login:Auto sign in")}
-                    </Checkbox>
-                  </Form.Item>
-                )
-            }
+          <div style={{display: "inline-flex", justifyContent: "space-between", width: "320px", marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px"}}>
+            <Form.Item name="autoSignin" valuePropName="checked" noStyle>
+              <Checkbox style={{float: "left"}} disabled={!application.enablePassword}>
+                {i18next.t("login:Auto sign in")}
+              </Checkbox>
+            </Form.Item>
             {
               Setting.renderForgetLink(application, i18next.t("login:Forgot password?"))
             }
-          </Form.Item>
+          </div>
+          {AgreementModal.isAgreementRequired(application) ? AgreementModal.renderAgreementFormItem(application, true, {}, this) : null}
           <Form.Item>
             <Button
               type="primary"
@@ -634,37 +614,12 @@ class LoginPage extends React.Component {
     }
 
     const application = this.getApplicationObj();
-    if (this.props.account.owner !== application.organization) {
+    if (this.props.account.owner !== application?.organization) {
       return null;
-    }
-
-    const params = new URLSearchParams(this.props.location.search);
-    const silentSignin = params.get("silentSignin");
-    if (silentSignin !== null) {
-      this.sendSilentSigninData("signing-in");
-
-      const values = {};
-      values["application"] = application.name;
-      this.onFinish(values);
-    }
-
-    if (params.get("popup") === "1") {
-      window.addEventListener("beforeunload", () => {
-        this.sendPopupData({type: "windowClosed"}, params.get("redirect_uri"));
-      });
-    }
-
-    if (application.enableAutoSignin) {
-      const values = {};
-      values["application"] = application.name;
-      this.onFinish(values);
     }
 
     return (
       <div>
-        {/* {*/}
-        {/*  JSON.stringify(silentSignin)*/}
-        {/* }*/}
         <div style={{fontSize: 16, textAlign: "left"}}>
           {i18next.t("login:Continue with")}&nbsp;:
         </div>
@@ -672,7 +627,7 @@ class LoginPage extends React.Component {
         <SelfLoginButton account={this.props.account} onClick={() => {
           const values = {};
           values["application"] = application.name;
-          this.onFinish(values);
+          this.login(values);
         }} />
         <br />
         <br />
@@ -814,6 +769,9 @@ class LoginPage extends React.Component {
 
   render() {
     const application = this.getApplicationObj();
+    if (application === undefined) {
+      return null;
+    }
     if (application === null) {
       return Util.renderMessageLarge(this, this.state.msg);
     }
@@ -856,28 +814,12 @@ class LoginPage extends React.Component {
                   {
                     Setting.renderLogo(application)
                   }
-                  {/* {*/}
-                  {/*  this.state.clientId !== null ? "Redirect" : null*/}
-                  {/* }*/}
-                  <SelectLanguageBox languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} />
+                  <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} />
                   {
                     this.renderSignedInBox()
                   }
                   {
                     this.renderForm(application)
-                  }
-                  {
-                    Setting.renderModal(this.state.isTermsOfUseVisible, () => {
-                      this.form.current.setFieldsValue({agreement: true});
-                      this.setState({
-                        isTermsOfUseVisible: false,
-                      });
-                    }, () => {
-                      this.form.current.setFieldsValue({agreement: false});
-                      this.setState({
-                        isTermsOfUseVisible: false,
-                      });
-                    }, this.state.termsOfUseContent)
                   }
                 </div>
               </div>

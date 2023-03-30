@@ -54,7 +54,7 @@ import PaymentEditPage from "./PaymentEditPage";
 import PaymentResultPage from "./PaymentResultPage";
 import AccountPage from "./account/AccountPage";
 import HomePage from "./basic/HomePage";
-import CustomGithubCorner from "./CustomGithubCorner";
+import CustomGithubCorner from "./common/CustomGithubCorner";
 import * as Conf from "./Conf";
 
 import * as Auth from "./auth/Auth";
@@ -62,7 +62,7 @@ import EntryPage from "./EntryPage";
 import ResultPage from "./auth/ResultPage";
 import * as AuthBackend from "./auth/AuthBackend";
 import AuthCallback from "./auth/AuthCallback";
-import SelectLanguageBox from "./SelectLanguageBox";
+import LanguageSelect from "./common/select/LanguageSelect";
 import i18next from "i18next";
 import OdicDiscoveryPage from "./auth/OidcDiscoveryPage";
 import SamlCallback from "./auth/SamlCallback";
@@ -72,7 +72,7 @@ import SystemInfo from "./SystemInfo";
 import AdapterListPage from "./AdapterListPage";
 import AdapterEditPage from "./AdapterEditPage";
 import {withTranslation} from "react-i18next";
-import SelectThemeBox from "./SelectThemeBox";
+import ThemeSelect from "./common/select/ThemeSelect";
 import SessionListPage from "./SessionListPage";
 
 const {Header, Footer, Content} = Layout;
@@ -354,7 +354,7 @@ class App extends Component {
       return (
         <React.Fragment>
           {this.renderRightDropdown()}
-          <SelectThemeBox
+          <ThemeSelect
             themeAlgorithm={this.state.themeAlgorithm}
             onChange={(nextThemeAlgorithm) => {
               this.setState({
@@ -362,7 +362,7 @@ class App extends Component {
                 logo: this.getLogo(nextThemeAlgorithm),
               });
             }} />
-          <SelectLanguageBox languages={this.state.account.organization.languages} />
+          <LanguageSelect languages={this.state.account.organization.languages} />
         </React.Fragment>
       );
     }

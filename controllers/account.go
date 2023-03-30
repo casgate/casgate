@@ -50,6 +50,7 @@ type RequestForm struct {
 	Region       string `json:"region"`
 
 	Application string `json:"application"`
+	ClientId    string `json:"clientId"`
 	Provider    string `json:"provider"`
 	Code        string `json:"code"`
 	State       string `json:"state"`
@@ -366,6 +367,43 @@ func (c *ApiController) GetUserinfo() {
 	userInfo := object.GetUserInfo(user, scope, aud, host)
 
 	c.Data["json"] = userInfo
+	c.ServeJSON()
+}
+
+// GetUserinfo2
+// LaravelResponse
+// @Title UserInfo2
+// @Tag Account API
+// @Description return Laravel compatible user information according to OAuth 2.0
+// @Success 200 {object} LaravelResponse The Response object
+// @router /user [get]
+func (c *ApiController) GetUserinfo2() {
+	user, ok := c.RequireSignedInUser()
+	if !ok {
+		return
+	}
+
+	// this API is used by "Api URL" of Flarum's FoF Passport plugin
+	// https://github.com/FriendsOfFlarum/passport
+	type LaravelResponse struct {
+		Id              string `json:"id"`
+		Name            string `json:"name"`
+		Email           string `json:"email"`
+		EmailVerifiedAt string `json:"email_verified_at"`
+		CreatedAt       string `json:"created_at"`
+		UpdatedAt       string `json:"updated_at"`
+	}
+
+	response := LaravelResponse{
+		Id:              user.Id,
+		Name:            user.Name,
+		Email:           user.Email,
+		EmailVerifiedAt: user.CreatedTime,
+		CreatedAt:       user.CreatedTime,
+		UpdatedAt:       user.UpdatedTime,
+	}
+
+	c.Data["json"] = response
 	c.ServeJSON()
 }
 
