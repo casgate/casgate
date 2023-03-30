@@ -192,6 +192,12 @@ class LoginPage extends React.Component {
       values["type"] = "saml";
       values["relayState"] = oAuthParams.relayState;
     }
+
+    if (this.getApplicationObj()?.organization) {
+
+      console.log("block values[\"organization\"]");
+      // values["organization"] = this.getApplicationObj().organization;
+    }
   }
 
   sendPopupData(message, redirectUri) {
@@ -246,6 +252,8 @@ class LoginPage extends React.Component {
   }
 
   onFinish(values) {
+
+    console.log(values);
     if (this.state.loginMethod === "webAuthn") {
       let username = this.state.username;
       if (username === null || username === "") {
@@ -376,8 +384,13 @@ class LoginPage extends React.Component {
         <Form
           name="normal_login"
           initialValues={{
+
             organization: application.organization,
             application: application.name,
+
+            // organization: "Parner_soft_line",
+            // application: "AF",
+
             autoSignin: true,
             username: Conf.ShowGithubCorner ? "admin" : "",
             password: Conf.ShowGithubCorner ? "123" : "",
