@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -31,7 +32,7 @@ type Subscription struct {
 	Detail      string `xorm:"varchar(255)" json:"detail"`
 	Description string `xorm:"varchar(100)" json:"description"`
 	Tag         string `xorm:"varchar(100)" json:"tag"`
-	Key         string `xorm:"varchar(100)" json:"key"`
+	Key         string `xorm:"mediumtext" json:"key"`
 
 	Users []string `xorm:"mediumtext" json:"users"`
 	State string   `xorm:"varchar(100)" json:"state"`
@@ -95,6 +96,26 @@ func UpdateSubscription(id string, subscription *Subscription) bool {
 	owner, name := util.GetOwnerAndNameFromId(id)
 	if getSubscription(owner, name) == nil {
 		return false
+	}
+
+	if subscription.State == "Published" &&
+		len(subscription.Users) > 0 {
+
+		var firstUserName = strings.Split(subscription.Users[0], "/")[1]
+		var u = getUser(subscription.Owner, firstUserName)
+
+		ExtendUserWithRolesAndPermissions(u)
+
+		var app = GetApplicationByUser(u)
+		var scope = ""
+		var host = "localhost:8000"
+		accessToken, _, _, err := generateJwtToken(app, u, "", scope, host)
+
+		if err != nil {
+			panic(err)
+		}
+
+		subscription.Key = accessToken
 	}
 
 	affected, err := adapter.Engine.ID(core.PK{owner, name}).AllCols().Update(subscription)

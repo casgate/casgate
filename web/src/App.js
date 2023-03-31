@@ -159,6 +159,8 @@ class App extends Component {
       this.setState({selectedMenuKey: "/result"});
     } else if (uri.includes("/sysinfo")) {
       this.setState({selectedMenuKey: "/sysinfo"});
+    } else if (uri.includes("/subscriptions")) {
+      this.setState({selectedMenuKey: "/subscriptions"});
     } else {
       this.setState({selectedMenuKey: -1});
     }
@@ -422,6 +424,11 @@ class App extends Component {
       res.push(Setting.getItem(<Link to="/records">{i18next.t("general:Records")}</Link>,
         "/records"
       ));
+
+      res.push(Setting.getItem(<Link to="/subscriptions">{i18next.t("general:Subscriptions")}</Link>,
+        "/subscriptions"
+      ));
+
     }
 
     if (Setting.isAdminUser(this.state.account)) {
@@ -446,10 +453,6 @@ class App extends Component {
       ));
 
       if (Conf.EnableExtraPages) {
-
-        res.push(Setting.getItem(<Link to="/subscriptions">{i18next.t("general:Subscriptions")}</Link>,
-          "/subscriptions"
-        ));
 
         res.push(Setting.getItem(<Link to="/products">{i18next.t("general:Products")}</Link>,
           "/products"
@@ -537,7 +540,6 @@ class App extends Component {
         <Route exact path="/subscriptions" render={(props) => this.renderLoginIfNotLoggedIn(<SubscriptionListPage account={this.state.account} {...props} />)} />
         <Route exact path="/subscription/:subscriptionName" render={(props) => this.renderLoginIfNotLoggedIn(<SubscriptionEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/products" render={(props) => this.renderLoginIfNotLoggedIn(<ProductListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/products/:productName" render={(props) => this.renderLoginIfNotLoggedIn(<ProductEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/products/:productName" render={(props) => this.renderLoginIfNotLoggedIn(<ProductEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/products/:productName/buy" render={(props) => this.renderLoginIfNotLoggedIn(<ProductBuyPage account={this.state.account} {...props} />)} />
         <Route exact path="/payments" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentListPage account={this.state.account} {...props} />)} />
