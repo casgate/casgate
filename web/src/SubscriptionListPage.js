@@ -26,11 +26,12 @@ class SubscriptionListPage extends BaseListPage {
   newSubscription() {
     const randomName = Setting.getRandomName();
     return {
-      owner: "admin",
+      owner: this.props.account.owner,
       name: `subscription_${randomName}`,
       createdTime: moment().format(),
       displayName: `New Subscription - ${randomName}`,
       tag: "Pro plan",
+      users: [],
       expireInDays: 365,
       state: "Published",
     };

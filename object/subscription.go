@@ -31,8 +31,10 @@ type Subscription struct {
 	Detail      string `xorm:"varchar(255)" json:"detail"`
 	Description string `xorm:"varchar(100)" json:"description"`
 	Tag         string `xorm:"varchar(100)" json:"tag"`
+	Key         string `xorm:"varchar(100)" json:"key"`
 
-	State string `xorm:"varchar(100)" json:"state"`
+	Users []string `xorm:"mediumtext" json:"users"`
+	State string   `xorm:"varchar(100)" json:"state"`
 }
 
 func GetSubscriptionCount(owner, field, value string) int {

@@ -14,7 +14,9 @@
 
 import React from "react";
 import {Button, Card, Col, Input, InputNumber, Row, Select} from "antd";
+import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as SubscriptionBackend from "./backend/SubscriptionBackend";
+import * as UserBackend from "./backend/UserBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 import * as ProviderBackend from "./backend/ProviderBackend";
@@ -24,11 +26,16 @@ const {Option} = Select;
 class SubscriptionEditPage extends React.Component {
   constructor(props) {
     super(props);
+    console.log(props);
+    console.log(props.account.organization.name);
     this.state = {
       classes: props,
-      organizationName: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
+      // organizationName: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
+      organizationName: props.account.organization.name,
       subscriptionName: props.match.params.subscriptionName,
       subscription: null,
+      organizations: [],
+      users: [],
       providers: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
     };
@@ -37,13 +44,36 @@ class SubscriptionEditPage extends React.Component {
   UNSAFE_componentWillMount() {
     this.getSubscription();
     this.getPaymentProviders();
+    this.getUsers();
+    this.getOrganizations();
   }
 
   getSubscription() {
-    SubscriptionBackend.getSubscription("admin", this.state.subscriptionName)
+    SubscriptionBackend.getSubscription(this.state.organizationName, this.state.subscriptionName)
       .then((subscription) => {
         this.setState({
           subscription: subscription,
+        });
+
+        this.getUsers(subscription.owner);
+      });
+  }
+
+  getUsers(organizationName) {
+    console.log(organizationName);
+    UserBackend.getUsers(organizationName)
+      .then((res) => {
+        this.setState({
+          users: res,
+        });
+      });
+  }
+
+  getOrganizations() {
+    OrganizationBackend.getOrganizations("admin")
+      .then((res) => {
+        this.setState({
+          organizations: (res.msg === undefined) ? res : [],
         });
       });
   }
@@ -84,6 +114,16 @@ class SubscriptionEditPage extends React.Component {
           {this.state.mode === "add" ? <Button style={{marginLeft: "20px"}} onClick={() => this.deleteSubscription()}>{i18next.t("general:Cancel")}</Button> : null}
         </div>
       } style={(Setting.isMobile()) ? {margin: "5px"} : {}} type="inner">
+        <Row style={{marginTop: "10px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("general:Organization"), i18next.t("general:Organization - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} style={{width: "100%"}} value={this.state.subscription.owner} onChange={(value => {this.updateSubscriptionField("owner", value);})}
+              options={this.state.organizations.map((organization) => Setting.getOption(organization.name, organization.name))
+              } />
+          </Col>
+        </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("general:Name"), i18next.t("general:Name - Tooltip"))} :
@@ -106,11 +146,33 @@ class SubscriptionEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("subscription:expire In Days"), i18next.t("subscription:Expire In Days - Tooltip"))} :
+            {Setting.getLabel(i18next.t("subscription:Expire In Days"), i18next.t("subscription:Expire In Days - Tooltip"))} :
           </Col>
           <Col span={22} >
             <InputNumber value={this.state.subscription.expireInDays} onChange={value => {
               this.updateSubscriptionField("expireInDays", value);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("subscription:Sub users"), i18next.t("subscription:Sub users - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select mode="tags" style={{width: "100%"}} value={this.state.subscription.users}
+              onChange={(value => {this.updateSubscriptionField("users", value);})}
+              options={this.state.users.map((user) => Setting.getOption(`${user.owner}/${user.name}`, `${user.owner}/${user.name}`))}
+            />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("subscription:Key"), i18next.t("subscription:Key - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+
+            <Input value={this.state.subscription.key} onChange={e => {
+              this.updateSubscriptionField("key", e.target.value);
             }} />
           </Col>
         </Row>
