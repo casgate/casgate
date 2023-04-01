@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import moment from "moment";
 import React from "react";
 import {Button, Card, Col, Input, InputNumber, Row, Select} from "antd";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
@@ -21,17 +22,16 @@ import * as Setting from "./Setting";
 import i18next from "i18next";
 import * as ProviderBackend from "./backend/ProviderBackend";
 
-const {Option} = Select;
-
 class SubscriptionEditPage extends React.Component {
   constructor(props) {
     super(props);
     console.log(props);
-    console.log(props.account.organization.name);
+    console.log("orgName:");
+    console.log(props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName);
     this.state = {
       classes: props,
-      // organizationName: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
-      organizationName: props.account.organization.name,
+      organizationName: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
+      // organizationName: props.account.organization.name,
       subscriptionName: props.match.params.subscriptionName,
       subscription: null,
       organizations: [],
@@ -208,19 +208,57 @@ class SubscriptionEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("general:Submitter"), i18next.t("general:Submitter - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Input disabled={true} value={this.state.subscription.submitter} onChange={e => {
+              this.updateSubscriptionField("submitter", e.target.value);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("general:Approver"), i18next.t("general:Approver - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Input disabled={true} value={this.state.subscription.approver} onChange={e => {
+              this.updateSubscriptionField("approver", e.target.value);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("general:Approve time"), i18next.t("general:Approve time - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Input disabled={true} value={Setting.getFormattedDate(this.state.subscription.approveTime)} onChange={e => {
+              this.updatePermissionField("approveTime", e.target.value);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("general:State"), i18next.t("general:State - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Select virtual={false} style={{width: "100%"}} value={this.state.subscription.state} onChange={(value => {
-              this.updateSubscriptionField("state", value);
-            })}>
-              {
-                [
-                  {id: "Published", name: "Published"},
-                  {id: "Draft", name: "Draft"},
-                ].map((item, index) => <Option key={index} value={item.id}>{item.name}</Option>)
+            <Select virtual={false} disabled={!Setting.isLocalAdminUser(this.props.account)} style={{width: "100%"}} value={this.state.subscription.state} onChange={(value => {
+              if (this.state.subscription.state !== value) {
+                if (value === "Approved") {
+                  this.updateSubscriptionField("approver", this.props.account.name);
+                  this.updateSubscriptionField("approveTime", moment().format());
+                } else {
+                  this.updateSubscriptionField("approver", "");
+                  this.updateSubscriptionField("approveTime", "");
+                }
               }
-            </Select>
+
+              this.updateSubscriptionField("state", value);
+            })}
+            options={[
+              {value: "Approved", name: i18next.t("subscription:Approved")},
+              {value: "Pending", name: i18next.t("subscription:Pending")},
+            ].map((item) => Setting.getOption(item.name, item.value))}
+            />
           </Col>
         </Row>
       </Card>

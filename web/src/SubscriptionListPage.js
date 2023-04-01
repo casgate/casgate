@@ -25,15 +25,19 @@ import PopconfirmModal from "./PopconfirmModal";
 class SubscriptionListPage extends BaseListPage {
   newSubscription() {
     const randomName = Setting.getRandomName();
+    const owner = (this.state.organizationName !== undefined) ? this.state.organizationName : this.props.account.owner;
     return {
-      owner: this.props.account.owner,
+      owner: owner,
       name: `subscription_${randomName}`,
       createdTime: moment().format(),
       displayName: `New Subscription - ${randomName}`,
       tag: "Pro plan",
       users: [],
       expireInDays: 365,
-      state: "Published",
+      submitter: this.props.account.name,
+      approver: "",
+      approveTime: "",
+      state: "Pending",
     };
   }
 
@@ -42,7 +46,7 @@ class SubscriptionListPage extends BaseListPage {
     SubscriptionBackend.addSubscription(newSubscription)
       .then((res) => {
         if (res.status === "ok") {
-          this.props.history.push({pathname: `/subscription/${newSubscription.name}`, mode: "add"});
+          this.props.history.push({pathname: `/subscription/${newSubscription.owner}/${newSubscription.name}`, mode: "add"});
           Setting.showMessage("success", i18next.t("general:Successfully added"));
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to add")}: ${res.msg}`);
@@ -139,7 +143,7 @@ class SubscriptionListPage extends BaseListPage {
         render: (text, record, index) => {
           return (
             <div>
-              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/subscription/${record.name}`)}>{i18next.t("general:Edit")}</Button>
+              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/subscription/${record.owner}/${record.name}`)}>{i18next.t("general:Edit")}</Button>
               <PopconfirmModal
                 title={i18next.t("general:Sure to delete") + `: ${record.name} ?`}
                 onConfirm={() => this.deleteSubscription(index)}

@@ -35,7 +35,13 @@ type Subscription struct {
 	Key         string `xorm:"mediumtext" json:"key"`
 
 	Users []string `xorm:"mediumtext" json:"users"`
-	State string   `xorm:"varchar(100)" json:"state"`
+
+	IsEnabled   bool   `json:"isEnabled"`
+	Submitter   string `xorm:"varchar(100)" json:"submitter"`
+	Approver    string `xorm:"varchar(100)" json:"approver"`
+	ApproveTime string `xorm:"varchar(100)" json:"approveTime"`
+
+	State string `xorm:"varchar(100)" json:"state"`
 }
 
 func GetSubscriptionCount(owner, field, value string) int {
@@ -98,7 +104,7 @@ func UpdateSubscription(id string, subscription *Subscription) bool {
 		return false
 	}
 
-	if subscription.State == "Published" &&
+	if subscription.State == "Approved" &&
 		len(subscription.Users) > 0 {
 
 		var firstUserName = strings.Split(subscription.Users[0], "/")[1]
