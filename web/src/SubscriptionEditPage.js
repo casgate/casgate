@@ -14,7 +14,7 @@
 
 import moment from "moment";
 import React from "react";
-import {Button, Card, Col, Input, InputNumber, Row, Select, Switch} from "antd";
+import {Button, Card, Col, DatePicker, Input, InputNumber, Row, Select, Switch} from "antd";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as SubscriptionBackend from "./backend/SubscriptionBackend";
 import * as UserBackend from "./backend/UserBackend";
@@ -93,6 +93,10 @@ class SubscriptionEditPage extends React.Component {
     });
   }
 
+  parseDate(date) {
+    return moment(date);
+  }
+
   renderSubscription() {
     return (
       <Card size="small" title={
@@ -143,6 +147,26 @@ class SubscriptionEditPage extends React.Component {
           <Col span={22} >
             <InputNumber value={this.state.subscription.expireInDays} onChange={value => {
               this.updateSubscriptionField("expireInDays", value);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("subscription:Start Date"), i18next.t("subscription:Start Date - Tooltip"))}
+          </Col>
+          <Col span={22} >
+            <DatePicker value={this.parseDate(this.state.subscription.startDate)} onChange={value => {
+              this.updateSubscriptionField("startDate", value);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("subscription:End Date"), i18next.t("subscription:End Date - Tooltip"))}
+          </Col>
+          <Col span={22} >
+            <DatePicker value={this.parseDate(this.state.subscription.endDate)} onChange={value => {
+              this.updateSubscriptionField("endDate", value);
             }} />
           </Col>
         </Row>

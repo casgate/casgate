@@ -17,6 +17,7 @@ package object
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -33,6 +34,9 @@ type Subscription struct {
 	Description string `xorm:"varchar(100)" json:"description"`
 	Tag         string `xorm:"varchar(100)" json:"tag"`
 	Key         string `xorm:"mediumtext" json:"key"`
+
+	StartDate time.Time `json:"startDate"`
+	EndDate   time.Time `json:"endDate"`
 
 	Users []string `xorm:"mediumtext" json:"users"`
 

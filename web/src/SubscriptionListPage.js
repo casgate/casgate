@@ -31,7 +31,7 @@ class SubscriptionListPage extends BaseListPage {
       name: `subscription_${randomName}`,
       createdTime: moment().format(),
       displayName: `New Subscription - ${randomName}`,
-      tag: "Pro plan",
+      tag: "",
       users: [],
       expireInDays: 365,
       submitter: this.props.account.name,
