@@ -186,10 +186,7 @@ class SubscriptionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("subscription:Key"), i18next.t("subscription:Key - Tooltip"))} :
           </Col>
           <Col span={22} >
-
-            <Input value={this.state.subscription.key} onChange={e => {
-              this.updateSubscriptionField("key", e.target.value);
-            }} />
+            <div>{Setting.getClickable(this.state.subscription.key)}</div>
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
