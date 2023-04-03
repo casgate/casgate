@@ -14,13 +14,12 @@
 
 import moment from "moment";
 import React from "react";
-import {Button, Card, Col, Input, InputNumber, Row, Select} from "antd";
+import {Button, Card, Col, Input, InputNumber, Row, Select, Switch} from "antd";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as SubscriptionBackend from "./backend/SubscriptionBackend";
 import * as UserBackend from "./backend/UserBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
-import * as ProviderBackend from "./backend/ProviderBackend";
 
 class SubscriptionEditPage extends React.Component {
   constructor(props) {
@@ -43,8 +42,7 @@ class SubscriptionEditPage extends React.Component {
 
   UNSAFE_componentWillMount() {
     this.getSubscription();
-    this.getPaymentProviders();
-    this.getUsers();
+    // this.getUsers();
     this.getOrganizations();
   }
 
@@ -74,15 +72,6 @@ class SubscriptionEditPage extends React.Component {
       .then((res) => {
         this.setState({
           organizations: (res.msg === undefined) ? res : [],
-        });
-      });
-  }
-
-  getPaymentProviders() {
-    ProviderBackend.getProviders("admin")
-      .then((res) => {
-        this.setState({
-          providers: res.filter(provider => provider.category === "Payment"),
         });
       });
   }
@@ -119,9 +108,12 @@ class SubscriptionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("general:Organization"), i18next.t("general:Organization - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Select virtual={false} style={{width: "100%"}} value={this.state.subscription.owner} onChange={(value => {this.updateSubscriptionField("owner", value);})}
-              options={this.state.organizations.map((organization) => Setting.getOption(organization.name, organization.name))
-              } />
+            <Select virtual={false} style={{width: "100%"}} value={this.state.subscription.owner} onChange={(owner => {
+              this.updateSubscriptionField("owner", owner);
+              this.getUsers(owner);
+            })}
+            options={this.state.organizations.map((organization) => Setting.getOption(organization.name, organization.name))
+            } />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
@@ -146,7 +138,7 @@ class SubscriptionEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("subscription:Expire In Days"), i18next.t("subscription:Expire In Days - Tooltip"))} :
+            {Setting.getLabel(i18next.t("subscription:Expire In Days"), i18next.t("subscription:Expire In Days - Tooltip"))}
           </Col>
           <Col span={22} >
             <InputNumber value={this.state.subscription.expireInDays} onChange={value => {
@@ -203,6 +195,16 @@ class SubscriptionEditPage extends React.Component {
           <Col span={22} >
             <Input value={this.state.subscription.description} onChange={e => {
               this.updateSubscriptionField("description", e.target.value);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("general:Is enabled"), i18next.t("general:Is enabled - Tooltip"))} :
+          </Col>
+          <Col span={1} >
+            <Switch checked={this.state.subscription.isEnabled} onChange={checked => {
+              this.updateSubscriptionField("isEnabled", checked);
             }} />
           </Col>
         </Row>
@@ -267,7 +269,7 @@ class SubscriptionEditPage extends React.Component {
 
   submitSubscriptionEdit(willExist) {
     const subscription = Setting.deepCopy(this.state.subscription);
-    SubscriptionBackend.updateSubscription(this.state.subscription.owner, this.state.subscriptionName, subscription)
+    SubscriptionBackend.updateSubscription(this.state.organizationName, this.state.subscriptionName, subscription)
       .then((res) => {
         if (res.status === "ok") {
           Setting.showMessage("success", i18next.t("general:Successfully saved"));
