@@ -16,12 +16,12 @@ package authz
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/object"
 	"strings"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casdoor/casdoor/conf"
-	"github.com/casdoor/casdoor/object"
 	xormadapter "github.com/casdoor/xorm-adapter/v3"
 	stringadapter "github.com/qiangmzsx/string-adapter/v2"
 )
@@ -92,6 +92,7 @@ p, *, *, POST, /api/webhook, *, *
 p, *, *, GET, /api/get-webhook-event, *, *
 p, *, *, *, /api/login/oauth, *, *
 p, *, *, GET, /api/get-application, *, *
+p, *, *, POST, /api/add-application, *, *
 p, *, *, GET, /api/get-organization-applications, *, *
 p, *, *, GET, /api/get-user, *, *
 p, *, *, GET, /api/get-user-application, *, *
@@ -119,6 +120,7 @@ p, *, *, *, /cas, *, *
 p, *, *, *, /api/webauthn, *, *
 p, *, *, GET, /api/get-release, *, *
 p, *, *, GET, /api/get-default-application, *, *
+p, *, *, GET, /api/get-subscriptions, *, *
 `
 
 		sa := stringadapter.NewAdapter(ruleText)
