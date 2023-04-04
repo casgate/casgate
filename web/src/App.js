@@ -54,6 +54,7 @@ import PaymentEditPage from "./PaymentEditPage";
 import PaymentResultPage from "./PaymentResultPage";
 import AccountPage from "./account/AccountPage";
 import HomePage from "./basic/HomePage";
+import PricingPage from "./pricing/PricingPage";
 import CustomGithubCorner from "./common/CustomGithubCorner";
 import * as Conf from "./Conf";
 
@@ -431,6 +432,10 @@ class App extends Component {
         "/subscriptions"
       ));
 
+      res.push(Setting.getItem(<Link to="/pricing">{i18next.t("general:Pricing")}</Link>,
+        "/pricing"
+      ));
+
     }
 
     if (Setting.isAdminUser(this.state.account)) {
@@ -541,6 +546,7 @@ class App extends Component {
         <Route exact path="/certs/:certName" render={(props) => this.renderLoginIfNotLoggedIn(<CertEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/subscriptions" render={(props) => this.renderLoginIfNotLoggedIn(<SubscriptionListPage account={this.state.account} {...props} />)} />
         <Route exact path="/subscription/:organizationName/:subscriptionName" render={(props) => this.renderLoginIfNotLoggedIn(<SubscriptionEditPage account={this.state.account} {...props} />)} />
+        <Route exact path="/pricing" render={(props) => this.renderLoginIfNotLoggedIn(<PricingPage account={this.state.account} {...props} />)} />
         <Route exact path="/products" render={(props) => this.renderLoginIfNotLoggedIn(<ProductListPage account={this.state.account} {...props} />)} />
         <Route exact path="/products/:productName" render={(props) => this.renderLoginIfNotLoggedIn(<ProductEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/products/:productName/buy" render={(props) => this.renderLoginIfNotLoggedIn(<ProductBuyPage account={this.state.account} {...props} />)} />
