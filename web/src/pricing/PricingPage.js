@@ -14,7 +14,6 @@
 
 import React from "react";
 import {Card, Col, Row} from "antd";
-import * as ApplicationBackend from "../backend/ApplicationBackend";
 import * as Setting from "../Setting";
 import SingleCard from "./SingleCard";
 import i18next from "i18next";
@@ -29,46 +28,27 @@ class PricingPage extends React.Component {
   }
 
   UNSAFE_componentWillMount() {
-    this.getApplicationsByOrganization(this.props.account.owner);
-  }
-
-  getApplicationsByOrganization(organizationName) {
-    ApplicationBackend.getApplicationsByOrganization("admin", organizationName)
-      .then((res) => {
-        this.setState({
-          applications: (res.msg === undefined) ? res : [],
-        });
-      });
+    this.setState({
+      applications: [],
+    });
   }
 
   getItems() {
     let items = [];
-    if (Setting.isAdminUser(this.props.account)) {
-      items = [
-        {link: "/organizations", name: i18next.t("general:Pro"), organizer: i18next.t("general:For small teams, with limited technical support (via Tickets)"), options: ["DDoS Protection", "MAX RPS 1000"]},
-        {link: "/users", name: i18next.t("general:Business"), organizer: i18next.t("general:For fast growing start-ups, with full technical support (8x5)"), options: ["DDoS Protection", "MAX RPS 10000", "Uptime SLA 100%"]},
-        {link: "/providers", name: i18next.t("general:Enterprise"), organizer: i18next.t("general:For large & medium-sized enterprise, with full technical support (8x5)"), options: ["DDoS Protection", "MAX RPS 10000", "Uptime SLA 100%", "Network Prioritization"]},
-      ];
 
-      for (let i = 0; i < items.length; i++) {
-        let filename = items[i].link;
-        if (filename === "/account") {
-          filename = "/users";
-        }
-        items[i].logo = `${Setting.StaticBaseUrl}/img${filename}.png`;
-        items[i].createdTime = "";
+    items = [
+      {link: "/organizations", name: i18next.t("general:Pro"), organizer: i18next.t("general:For small teams, with limited technical support (via Tickets)"), options: ["DDoS Protection", "MAX RPS 1000"]},
+      {link: "/users", name: i18next.t("general:Business"), organizer: i18next.t("general:For fast growing start-ups, with full technical support (8x5)"), options: ["DDoS Protection", "MAX RPS 10000", "Uptime SLA 100%"]},
+      {link: "/providers", name: i18next.t("general:Enterprise"), organizer: i18next.t("general:For large & medium-sized enterprise, with full technical support (8x5)"), options: ["DDoS Protection", "MAX RPS 10000", "Uptime SLA 100%", "Network Prioritization"]},
+    ];
+
+    for (let i = 0; i < items.length; i++) {
+      let filename = items[i].link;
+      if (filename === "/account") {
+        filename = "/users";
       }
-    } else {
-      this.state.applications.forEach(application => {
-        let pricingpageUrl = application.pricingpageUrl;
-        if (pricingpageUrl === "<custom-url>") {
-          pricingpageUrl = this.props.account.pricingpage;
-        }
-
-        items.push({
-          link: pricingpageUrl, name: application.displayName, organizer: application.description, logo: application.logo, createdTime: "",
-        });
-      });
+      items[i].logo = `${Setting.StaticBaseUrl}/img${filename}.png`;
+      items[i].createdTime = "";
     }
 
     return items;
