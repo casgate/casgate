@@ -157,15 +157,15 @@ class UserEditPage extends React.Component {
     //   </div>
     // )
 
-    if (accountItem.viewRule === "Self") {
-      if (!this.isSelfOrAdmin()) {
-        return null;
-      }
-    } else if (accountItem.viewRule === "Admin") {
-      if (!isAdmin) {
-        return null;
-      }
-    }
+    // if (accountItem.viewRule === "Self") {
+    //   if (!this.isSelfOrAdmin()) {
+    //     return null;
+    //   }
+    // } else if (accountItem.viewRule === "Admin") {
+    //   if (!isAdmin) {
+    //     return null;
+    //   }
+    // }
 
     let disabled = false;
     if (accountItem.modifyRule === "Self") {
