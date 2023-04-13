@@ -194,6 +194,18 @@ func initAPI() {
 	beego.Router("/api/add-subscription", &controllers.ApiController{}, "POST:AddSubscription")
 	beego.Router("/api/delete-subscription", &controllers.ApiController{}, "POST:DeleteSubscription")
 
+	beego.Router("/api/get-plans", &controllers.ApiController{}, "GET:GetPlans")
+	beego.Router("/api/get-plan", &controllers.ApiController{}, "GET:GetPlan")
+	beego.Router("/api/update-plan", &controllers.ApiController{}, "POST:UpdatePlan")
+	beego.Router("/api/add-plan", &controllers.ApiController{}, "POST:AddPlan")
+	beego.Router("/api/delete-plan", &controllers.ApiController{}, "POST:DeletePlan")
+
+	beego.Router("/api/get-pricings", &controllers.ApiController{}, "GET:GetPricings")
+	beego.Router("/api/get-pricing", &controllers.ApiController{}, "GET:GetPricing")
+	beego.Router("/api/update-pricing", &controllers.ApiController{}, "POST:UpdatePricing")
+	beego.Router("/api/add-pricing", &controllers.ApiController{}, "POST:AddPricing")
+	beego.Router("/api/delete-pricing", &controllers.ApiController{}, "POST:DeletePricing")
+
 	beego.Router("/api/get-products", &controllers.ApiController{}, "GET:GetProducts")
 	beego.Router("/api/get-product", &controllers.ApiController{}, "GET:GetProduct")
 	beego.Router("/api/update-product", &controllers.ApiController{}, "POST:UpdateProduct")

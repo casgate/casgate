@@ -25,7 +25,6 @@ type Migrator_1_subscription struct{}
 
 func (*Migrator_1_subscription) IsMigrationNeeded() bool {
 	exist, _ := adapter.Engine.IsTableExist("subscription")
-	//err := adapter.Engine.Table("subscription").Find(&[]*Subscription{})
 
 	return !exist
 }
@@ -48,6 +47,19 @@ func (*Migrator_1_subscription) DoMigration() *migrate.Migration {
 			}
 
 			err = tx.Table("subscription").CreateTable(&Subscription{})
+
+			if err != nil {
+				return err
+			}
+
+			err = tx.Table("plan").CreateTable(&Plan{})
+
+			if err != nil {
+				return err
+			}
+
+			err = tx.Table("pricing").CreateTable(&Pricing{})
+
 			if err != nil {
 				return err
 			}
