@@ -16,10 +16,12 @@ import moment from "moment";
 import React from "react";
 import {Button, Card, Col, DatePicker, Input, InputNumber, Row, Select, Switch} from "antd";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
+import * as RoleBackend from "./backend/RoleBackend";
 import * as SubscriptionBackend from "./backend/SubscriptionBackend";
 import * as UserBackend from "./backend/UserBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
+import dayjs from "dayjs";
 
 class SubscriptionEditPage extends React.Component {
   constructor(props) {
@@ -35,6 +37,7 @@ class SubscriptionEditPage extends React.Component {
       subscription: null,
       organizations: [],
       users: [],
+      roles: [],
       providers: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
     };
@@ -54,6 +57,16 @@ class SubscriptionEditPage extends React.Component {
         });
 
         this.getUsers(subscription.owner);
+        this.getRoles(subscription.owner);
+      });
+  }
+
+  getRoles(organizationName) {
+    RoleBackend.getRoles(organizationName)
+      .then((res) => {
+        this.setState({
+          roles: res,
+        });
       });
   }
 
@@ -93,10 +106,6 @@ class SubscriptionEditPage extends React.Component {
     });
   }
 
-  parseDate(date) {
-    return moment(date);
-  }
-
   renderSubscription() {
     return (
       <Card size="small" title={
@@ -115,6 +124,7 @@ class SubscriptionEditPage extends React.Component {
             <Select virtual={false} style={{width: "100%"}} value={this.state.subscription.owner} onChange={(owner => {
               this.updateSubscriptionField("owner", owner);
               this.getUsers(owner);
+              this.getRoles(owner);
             })}
             options={this.state.organizations.map((organization) => Setting.getOption(organization.name, organization.name))
             } />
@@ -155,7 +165,7 @@ class SubscriptionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("subscription:Start Date"), i18next.t("subscription:Start Date - Tooltip"))}
           </Col>
           <Col span={22} >
-            <DatePicker value={this.parseDate(this.state.subscription.startDate)} onChange={value => {
+            <DatePicker value={dayjs(this.state.subscription.startDate)} onChange={value => {
               this.updateSubscriptionField("startDate", value);
             }} />
           </Col>
@@ -165,7 +175,7 @@ class SubscriptionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("subscription:End Date"), i18next.t("subscription:End Date - Tooltip"))}
           </Col>
           <Col span={22} >
-            <DatePicker value={this.parseDate(this.state.subscription.endDate)} onChange={value => {
+            <DatePicker value={dayjs(this.state.subscription.endDate)} onChange={value => {
               this.updateSubscriptionField("endDate", value);
             }} />
           </Col>
@@ -175,28 +185,21 @@ class SubscriptionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("subscription:Sub users"), i18next.t("subscription:Sub users - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Select mode="tags" style={{width: "100%"}} value={this.state.subscription.users}
-              onChange={(value => {this.updateSubscriptionField("users", value);})}
+            <Select style={{width: "100%"}} value={this.state.subscription.user}
+              onChange={(value => {this.updateSubscriptionField("user", value);})}
               options={this.state.users.map((user) => Setting.getOption(`${user.owner}/${user.name}`, `${user.owner}/${user.name}`))}
             />
           </Col>
         </Row>
+
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("subscription:Key"), i18next.t("subscription:Key - Tooltip"))} :
+            {Setting.getLabel(i18next.t("subscription:Sub roles"), i18next.t("subscription:Sub roles - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <div>{Setting.getClickable(this.state.subscription.key)}</div>
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Tag"), i18next.t("subscription:Tag - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Input value={this.state.subscription.tag} onChange={e => {
-              this.updateSubscriptionField("tag", e.target.value);
-            }} />
+            <Select virtual={false} style={{width: "100%"}} value={this.state.subscription.role} onChange={(value => {this.updateSubscriptionField("role", value);})}
+              options={this.state.roles.map((role) => Setting.getOption(`${role.owner}/${role.name}`, `${role.owner}/${role.name}`))
+              } />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
@@ -217,6 +220,14 @@ class SubscriptionEditPage extends React.Component {
             <Input value={this.state.subscription.description} onChange={e => {
               this.updateSubscriptionField("description", e.target.value);
             }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("subscription:Key"), i18next.t("subscription:Key - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <div>{Setting.getClickable(this.state.subscription.key)}</div>
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >

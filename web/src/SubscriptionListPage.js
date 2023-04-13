@@ -26,14 +26,18 @@ class SubscriptionListPage extends BaseListPage {
   newSubscription() {
     const randomName = Setting.getRandomName();
     const owner = (this.state.organizationName !== undefined) ? this.state.organizationName : this.props.account.owner;
+    const defaultDuration = 365;
+
     return {
       owner: owner,
       name: `subscription_${randomName}`,
       createdTime: moment().format(),
+      startDate: moment().format(),
+      endDate: moment().add(defaultDuration, "d").format(),
       displayName: `New Subscription - ${randomName}`,
       tag: "",
       users: [],
-      expireInDays: 365,
+      expireInDays: defaultDuration,
       submitter: this.props.account.name,
       approver: "",
       approveTime: "",
@@ -119,12 +123,18 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("expireInDays"),
       },
       {
-        title: i18next.t("user:Tag"),
-        dataIndex: "tag",
-        key: "tag",
-        width: "160px",
-        sorter: true,
-        ...this.getColumnSearchProps("tag"),
+        title: i18next.t("subscription:Sub role"),
+        dataIndex: "role",
+        key: "role",
+        width: "140px",
+        ...this.getColumnSearchProps("role"),
+      },
+      {
+        title: i18next.t("subscription:Sub user"),
+        dataIndex: "user",
+        key: "user",
+        width: "140px",
+        ...this.getColumnSearchProps("user"),
       },
       {
         title: i18next.t("general:State"),

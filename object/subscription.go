@@ -32,13 +32,13 @@ type Subscription struct {
 
 	Detail      string `xorm:"varchar(255)" json:"detail"`
 	Description string `xorm:"varchar(100)" json:"description"`
-	Tag         string `xorm:"varchar(100)" json:"tag"`
+	Role        string `xorm:"varchar(100)" json:"role"`
 	Key         string `xorm:"mediumtext" json:"key"`
 
 	StartDate time.Time `json:"startDate"`
 	EndDate   time.Time `json:"endDate"`
 
-	Users []string `xorm:"mediumtext" json:"users"`
+	User string `xorm:"mediumtext" json:"user"`
 
 	IsEnabled   bool   `json:"isEnabled"`
 	Submitter   string `xorm:"varchar(100)" json:"submitter"`
@@ -109,9 +109,9 @@ func UpdateSubscription(id string, subscription *Subscription) bool {
 	}
 
 	if subscription.State == "Approved" &&
-		len(subscription.Users) > 0 {
+		len(subscription.User) > 0 {
 
-		var firstUserName = strings.Split(subscription.Users[0], "/")[1]
+		var firstUserName = strings.Split(subscription.User, "/")[1]
 		var u = getUser(subscription.Owner, firstUserName)
 
 		ExtendUserWithRolesAndPermissions(u)
