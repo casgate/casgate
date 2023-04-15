@@ -14,6 +14,7 @@
 
 import React from "react";
 import {Card, Col, Row} from "antd";
+import * as PlanBackend from "../backend/PlanBackend";
 import * as Setting from "../Setting";
 import SingleCard from "./SingleCard";
 import i18next from "i18next";
@@ -24,6 +25,8 @@ class PricingPage extends React.Component {
     this.state = {
       classes: props,
       applications: null,
+      pricing: props.pricingProp,
+      plans: [],
     };
   }
 
@@ -31,6 +34,25 @@ class PricingPage extends React.Component {
     this.setState({
       applications: [],
     });
+
+    console.log(this.state.pricing);
+
+    if (this.state.pricing.plans) {
+      const plans = this.state.pricing.plans.map((plan) =>
+        PlanBackend.getPlanById(plan, true));
+
+      Promise.all(plans)
+        .then(results => {
+          this.setState({
+            plans: results,
+          });
+        })
+        .catch(error => {
+          console.error("An error occurred:", error);
+        });
+
+    }
+
   }
 
   getItems() {
@@ -55,7 +77,7 @@ class PricingPage extends React.Component {
   }
 
   renderCards() {
-    if (this.state.applications === null) {
+    if (this.state.plans === null) {
       return null;
     }
 
@@ -65,9 +87,9 @@ class PricingPage extends React.Component {
       return (
         <Card bodyStyle={{padding: 0}}>
           {
-            items.map(item => {
+            this.state.plans.map(item => {
               return (
-                <SingleCard key={item.link} logo={item.logo} link={item.link} title={item.name} desc={item.organizer} isSingle={items.length === 1} />
+                <SingleCard key={item.link} logo={item.logo} link={item.link} title={item.displayName} desc={item.organizer} isSingle={items.length === 1} />
               );
             })
           }
@@ -78,9 +100,9 @@ class PricingPage extends React.Component {
         <div style={{marginRight: "15px", marginLeft: "15px"}}>
           <Row style={{marginLeft: "-20px", marginRight: "-20px", marginTop: "20px"}} gutter={24}>
             {
-              items.map(item => {
+              this.state.plans.map(item => {
                 return (
-                  <SingleCard logo={item.logo} link={item.link} title={item.name} desc={item.organizer} time={item.createdTime} isSingle={items.length === 1} key={item.name} options={item.options} />
+                  <SingleCard key={item.name} plan={item} isSingle={items.length === 1} />
                 );
               })
             }

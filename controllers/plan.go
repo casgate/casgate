@@ -52,14 +52,27 @@ func (c *ApiController) GetPlans() {
 // @Tag Plan API
 // @Description get plan
 // @Param   id     query    string  true        "The id ( owner/name ) of the plan"
-// @Success 200 {object} object.plan The Response object
+// @Param   includeOption     query    bool  false        "Should include plan's option"
+// @Success 200 {object} object.PlanWithOptions The Response object
 // @router /get-plan [get]
 func (c *ApiController) GetPlan() {
 	id := c.Input().Get("id")
+	includeOption := c.Input().Get("includeOption") == "true"
 
 	plan := object.GetPlan(id)
 
-	c.Data["json"] = plan
+	if includeOption {
+		options := object.GetPermissionsByRole(plan.Role)
+		planWithOptions := object.PlanWithOptions{Plan: *plan}
+
+		for _, option := range options {
+			planWithOptions.Options = append(planWithOptions.Options, option.DisplayName)
+		}
+
+		c.Data["json"] = planWithOptions
+	} else {
+		c.Data["json"] = plan
+	}
 	c.ServeJSON()
 }
 

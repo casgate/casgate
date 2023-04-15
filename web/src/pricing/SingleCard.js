@@ -54,27 +54,36 @@ class SingleCard extends React.Component {
     );
   }
 
-  renderCard(logo, link, title, desc, time, isSingle, options) {
-    const silentSigninLink = this.wrappedAsSilentSigninLink(link);
+  renderCard(plan, isSingle) {
 
     return (
-      <Col style={{paddingLeft: "20px", paddingRight: "20px", paddingBottom: "20px", marginBottom: "20px"}} span={6}>
+      <Col style={{width: "600px", paddingLeft: "20px", paddingRight: "20px", paddingBottom: "20px", marginBottom: "20px"}} span={6}>
         <Card
           hoverable
-          cover={
-            <img alt="logo" src={logo} style={{width: "100%", height: "200px", padding: "20px", objectFit: "scale-down"}} />
-          }
-          onClick={() => Setting.goToLinkSoft(this, silentSigninLink)}
           style={isSingle ? {width: "320px", height: "100%"} : {width: "100%", height: "100%"}}
         >
-          <Meta title={title} description={desc} />
+
+          <div style={{textAlign: "right"}}>
+            <h2
+              style={{}}>{plan.displayName}</h2>
+
+          </div>
+
+          <div className="px-10 mt-5">
+            <span style={{fontWeight: 700, fontSize: "48px"}}>$ {plan.pricePerMonth}</span>
+            <span style={{fontSize: "18px", fontWeight: 600, color: "gray"}}> per month</span>
+          </div>
+
           <br />
+
+          <Meta description={plan.description} />
+
           <br />
-          <Meta title={""} description={Setting.getFormattedDateShort(time)} />
+          {/* <Meta title={""} description={Setting.getFormattedDateShort("")} /> */}
           <ul style={{listStyleType: "none", paddingLeft: "0px"}}>
 
             {/* iterate  options and render div*/}
-            {options.map((option) => {
+            {plan.options.map((option) => {
             // eslint-disable-next-line react/jsx-key
               return <li>
                 <svg style={{height: "1rem", width: "1rem", fill: "green", marginRight: "10px"}} xmlns="http://www.w3.org/2000/svg"
@@ -85,7 +94,6 @@ class SingleCard extends React.Component {
               </li>;
             })}
           </ul>
-
         </Card>
       </Col>
     );
@@ -93,9 +101,9 @@ class SingleCard extends React.Component {
 
   render() {
     if (Setting.isMobile()) {
-      return this.renderCardMobile(this.props.logo, this.props.link, this.props.title, this.props.desc, this.props.time, this.props.isSingle);
+      return this.renderCardMobile(this.props.plan, this.props.isSingle);
     } else {
-      return this.renderCard(this.props.logo, this.props.link, this.props.title, this.props.desc, this.props.time, this.props.isSingle, this.props.options);
+      return this.renderCard(this.props.plan, this.props.isSingle);
     }
   }
 }

@@ -20,6 +20,11 @@ import (
 	"github.com/xorm-io/core"
 )
 
+type PlanWithOptions struct {
+	Plan
+	Options []string `json:"options"`
+}
+
 type Plan struct {
 	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
 	Name        string `xorm:"varchar(100) notnull pk" json:"name"`

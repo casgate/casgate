@@ -17,6 +17,7 @@ import {Button, Card, Col, Input, Row, Select, Switch} from "antd";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as PricingBackend from "./backend/PricingBackend";
 import * as PlanBackend from "./backend/PlanBackend";
+import PricingPage from "./pricing/PricingPage";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 
@@ -161,6 +162,14 @@ class PricingEditPage extends React.Component {
             }} />
           </Col>
         </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("general:Preview"), i18next.t("general:Preview - Tooltip"))} :
+          </Col>
+          {
+            this.renderPreview()
+          }
+        </Row>
       </Card>
     );
   }
@@ -216,6 +225,14 @@ class PricingEditPage extends React.Component {
           {this.state.mode === "add" ? <Button style={{marginLeft: "20px"}} size="large" onClick={() => this.deletePricing()}>{i18next.t("general:Cancel")}</Button> : null}
         </div>
       </div>
+    );
+  }
+
+  renderPreview() {
+    return (
+      <React.Fragment>
+        <PricingPage pricingProp={this.state.pricing}></PricingPage>
+      </React.Fragment>
     );
   }
 }

@@ -24,6 +24,16 @@ export function getPlans(owner, page = "", pageSize = "", field = "", value = ""
   }).then(res => res.json());
 }
 
+export function getPlanById(id, includeOption = false) {
+  return fetch(`${Setting.ServerUrl}/api/get-plan?id=${id}&includeOption=${includeOption}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Accept-Language": Setting.getAcceptLanguage(),
+    },
+  }).then(res => res.json());
+}
+
 export function getPlan(owner, name) {
   return fetch(`${Setting.ServerUrl}/api/get-plan?id=${owner}/${encodeURIComponent(name)}`, {
     method: "GET",

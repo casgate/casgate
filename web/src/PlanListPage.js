@@ -112,14 +112,14 @@ class PlanListPage extends BaseListPage {
         title: i18next.t("plan:Price per month"),
         dataIndex: "pricePerMonth",
         key: "pricePerMonth",
-        width: "50px",
+        width: "130px",
         ...this.getColumnSearchProps("pricePerMonth"),
       },
       {
         title: i18next.t("plan:Price per year"),
         dataIndex: "pricePerYear",
         key: "pricePerYear",
-        width: "50px",
+        width: "130px",
         ...this.getColumnSearchProps("pricePerYear"),
       },
       {
@@ -145,7 +145,7 @@ class PlanListPage extends BaseListPage {
         title: i18next.t("general:Action"),
         dataIndex: "",
         key: "op",
-        width: "230px",
+        width: "200px",
         fixed: (Setting.isMobile()) ? "false" : "right",
         render: (text, record, index) => {
           return (
