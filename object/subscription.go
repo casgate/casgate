@@ -32,7 +32,7 @@ type Subscription struct {
 
 	Detail      string `xorm:"varchar(255)" json:"detail"`
 	Description string `xorm:"varchar(100)" json:"description"`
-	Role        string `xorm:"varchar(100)" json:"role"`
+	Plan        string `xorm:"varchar(100)" json:"plan"`
 	Key         string `xorm:"mediumtext" json:"key"`
 
 	StartDate time.Time `json:"startDate"`
@@ -109,17 +109,41 @@ func UpdateSubscription(id string, subscription *Subscription) bool {
 	}
 
 	if subscription.State == "Approved" &&
-		len(subscription.User) > 0 {
+		len(subscription.User) > 0 &&
+		len(subscription.Plan) > 0 {
 
-		var firstUserName = strings.Split(subscription.User, "/")[1]
-		var u = getUser(subscription.Owner, firstUserName)
+		firstUserName := strings.Split(subscription.User, "/")[1]
+		user := getUser(subscription.Owner, firstUserName)
 
-		ExtendUserWithRolesAndPermissions(u)
+		ExtendUserWithRolesAndPermissions(user)
 
-		var app = GetApplicationByUser(u)
+		selectedPlan := GetPlan(subscription.Plan)
+
+		if selectedPlan == nil || selectedPlan.Role == "" {
+			panic("Plan not found")
+		}
+
+		var needAddUserToRole = false
+
+		for _, role := range user.Roles {
+			if strings.ToLower(role.Name) == strings.ToLower(selectedPlan.Role) {
+				needAddUserToRole = true
+				break
+			}
+		}
+
+		if needAddUserToRole {
+			role := GetRole(selectedPlan.Role)
+			role.Users = append(role.Users, user.Name)
+			UpdateRole(role.GetId(), role)
+
+			user.Roles = append(user.Roles, role)
+		}
+
+		var app = GetApplicationByUser(user)
 		var scope = ""
 		var host = "localhost:8000"
-		accessToken, _, _, err := generateJwtToken(app, u, "", scope, host)
+		accessToken, _, _, err := generateJwtToken(app, user, "", scope, host)
 
 		if err != nil {
 			panic(err)

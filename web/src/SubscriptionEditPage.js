@@ -16,7 +16,7 @@ import moment from "moment";
 import React from "react";
 import {Button, Card, Col, DatePicker, Input, InputNumber, Row, Select, Switch} from "antd";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
-import * as RoleBackend from "./backend/RoleBackend";
+import * as PlanBackend from "./backend/PlanBackend";
 import * as SubscriptionBackend from "./backend/SubscriptionBackend";
 import * as UserBackend from "./backend/UserBackend";
 import * as Setting from "./Setting";
@@ -37,7 +37,7 @@ class SubscriptionEditPage extends React.Component {
       subscription: null,
       organizations: [],
       users: [],
-      roles: [],
+      planes: [],
       providers: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
     };
@@ -57,15 +57,15 @@ class SubscriptionEditPage extends React.Component {
         });
 
         this.getUsers(subscription.owner);
-        this.getRoles(subscription.owner);
+        this.getPlanes(subscription.owner);
       });
   }
 
-  getRoles(organizationName) {
-    RoleBackend.getRoles(organizationName)
+  getPlanes(organizationName) {
+    PlanBackend.getPlans(organizationName)
       .then((res) => {
         this.setState({
-          roles: res,
+          planes: res,
         });
       });
   }
@@ -124,7 +124,7 @@ class SubscriptionEditPage extends React.Component {
             <Select virtual={false} style={{width: "100%"}} value={this.state.subscription.owner} onChange={(owner => {
               this.updateSubscriptionField("owner", owner);
               this.getUsers(owner);
-              this.getRoles(owner);
+              this.getPlanes(owner);
             })}
             options={this.state.organizations.map((organization) => Setting.getOption(organization.name, organization.name))
             } />
@@ -194,11 +194,11 @@ class SubscriptionEditPage extends React.Component {
 
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("subscription:Sub roles"), i18next.t("subscription:Sub roles - Tooltip"))} :
+            {Setting.getLabel(i18next.t("subscription:Sub plan"), i18next.t("subscription:Sub plan - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Select virtual={false} style={{width: "100%"}} value={this.state.subscription.role} onChange={(value => {this.updateSubscriptionField("role", value);})}
-              options={this.state.roles.map((role) => Setting.getOption(`${role.owner}/${role.name}`, `${role.owner}/${role.name}`))
+            <Select virtual={false} style={{width: "100%"}} value={this.state.subscription.plan} onChange={(value => {this.updateSubscriptionField("plan", value);})}
+              options={this.state.planes.map((plan) => Setting.getOption(`${plan.owner}/${plan.name}`, `${plan.owner}/${plan.name}`))
               } />
           </Col>
         </Row>
