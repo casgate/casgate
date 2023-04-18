@@ -115,6 +115,7 @@ func initAPI() {
 	beego.Router("/api/check-user-password", &controllers.ApiController{}, "POST:CheckUserPassword")
 	beego.Router("/api/get-email-and-phone", &controllers.ApiController{}, "GET:GetEmailAndPhone")
 	beego.Router("/api/send-verification-code", &controllers.ApiController{}, "POST:SendVerificationCode")
+	beego.Router("/api/verify-code", &controllers.ApiController{}, "POST:VerifyCode")
 	beego.Router("/api/verify-captcha", &controllers.ApiController{}, "POST:VerifyCaptcha")
 	beego.Router("/api/reset-email-or-phone", &controllers.ApiController{}, "POST:ResetEmailOrPhone")
 	beego.Router("/api/get-captcha", &controllers.ApiController{}, "GET:GetCaptcha")
@@ -187,6 +188,18 @@ func initAPI() {
 	beego.Router("/api/update-cert", &controllers.ApiController{}, "POST:UpdateCert")
 	beego.Router("/api/add-cert", &controllers.ApiController{}, "POST:AddCert")
 	beego.Router("/api/delete-cert", &controllers.ApiController{}, "POST:DeleteCert")
+
+	beego.Router("/api/get-chats", &controllers.ApiController{}, "GET:GetChats")
+	beego.Router("/api/get-chat", &controllers.ApiController{}, "GET:GetChat")
+	beego.Router("/api/update-chat", &controllers.ApiController{}, "POST:UpdateChat")
+	beego.Router("/api/add-chat", &controllers.ApiController{}, "POST:AddChat")
+	beego.Router("/api/delete-chat", &controllers.ApiController{}, "POST:DeleteChat")
+
+	beego.Router("/api/get-messages", &controllers.ApiController{}, "GET:GetMessages")
+	beego.Router("/api/get-message", &controllers.ApiController{}, "GET:GetMessage")
+	beego.Router("/api/update-message", &controllers.ApiController{}, "POST:UpdateMessage")
+	beego.Router("/api/add-message", &controllers.ApiController{}, "POST:AddMessage")
+	beego.Router("/api/delete-message", &controllers.ApiController{}, "POST:DeleteMessage")
 
 	beego.Router("/api/get-subscriptions", &controllers.ApiController{}, "GET:GetSubscriptions")
 	beego.Router("/api/get-subscription", &controllers.ApiController{}, "GET:GetSubscription")

@@ -15,10 +15,12 @@
 package object
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
+	"github.com/casdoor/casdoor/proxy"
 	"github.com/casdoor/casdoor/util"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/xorm-io/core"
@@ -48,6 +50,7 @@ type User struct {
 	EmailVerified     bool     `json:"emailVerified"`
 	Phone             string   `xorm:"varchar(20) index" json:"phone"`
 	CountryCode       string   `xorm:"varchar(6)" json:"countryCode"`
+	Region            string   `xorm:"varchar(100)" json:"region"`
 	Location          string   `xorm:"varchar(100)" json:"location"`
 	Address           []string `json:"address"`
 	Affiliation       string   `xorm:"varchar(100)" json:"affiliation"`
@@ -57,7 +60,6 @@ type User struct {
 	Homepage          string   `xorm:"varchar(100)" json:"homepage"`
 	Bio               string   `xorm:"varchar(100)" json:"bio"`
 	Tag               string   `xorm:"varchar(100)" json:"tag"`
-	Region            string   `xorm:"varchar(100)" json:"region"`
 	Language          string   `xorm:"varchar(100)" json:"language"`
 	Gender            string   `xorm:"varchar(100)" json:"gender"`
 	Birthday          string   `xorm:"varchar(100)" json:"birthday"`
@@ -449,7 +451,7 @@ func UpdateUser(id string, user *User, columns []string, isGlobalAdmin bool) boo
 	if len(columns) == 0 {
 		columns = []string{
 			"owner", "display_name", "avatar",
-			"location", "address", "country_code", "region", "language", "affiliation", "title", "homepage", "bio", "score", "tag", "signup_application",
+			"location", "address", "country_code", "region", "language", "affiliation", "title", "homepage", "bio", "tag", "language", "gender", "birthday", "education", "score", "karma", "ranking", "signup_application",
 			"is_admin", "is_global_admin", "is_forbidden", "is_deleted", "hash", "is_default_avatar", "properties", "webauthnCredentials", "managedAccounts",
 			"signin_wrong_times", "last_signin_wrong_time",
 		}
@@ -513,7 +515,10 @@ func AddUser(user *User) bool {
 	user.UpdateUserHash()
 	user.PreHash = user.Hash
 
-	user.PermanentAvatar = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
+	updated := user.refreshAvatar()
+	if updated && user.PermanentAvatar != "*" {
+		user.PermanentAvatar = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
+	}
 
 	user.Ranking = GetUserCount(user.Owner, "", "") + 1
 
@@ -692,4 +697,41 @@ func userChangeTrigger(oldName string, newName string) error {
 	}
 
 	return session.Commit()
+}
+
+func (user *User) refreshAvatar() bool {
+	var err error
+	var fileBuffer *bytes.Buffer
+	var ext string
+
+	// Gravatar + Identicon
+	if strings.Contains(user.Avatar, "Gravatar") && user.Email != "" {
+		client := proxy.ProxyHttpClient
+		has, err := hasGravatar(client, user.Email)
+		if err != nil {
+			panic(err)
+		}
+
+		if has {
+			fileBuffer, ext, err = getGravatarFileBuffer(client, user.Email)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	if fileBuffer == nil && strings.Contains(user.Avatar, "Identicon") {
+		fileBuffer, ext, err = getIdenticonFileBuffer(user.Name)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if fileBuffer != nil {
+		avatarUrl := getPermanentAvatarUrlFromBuffer(user.Owner, user.Name, fileBuffer, ext, true)
+		user.Avatar = avatarUrl
+		return true
+	}
+
+	return false
 }

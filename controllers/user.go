@@ -95,13 +95,13 @@ func (c *ApiController) GetUser() {
 
 	owner := c.Input().Get("owner")
 	if owner == "" {
-		owner, _ = util.GetOwnerAndNameFromId(id)
+		owner = util.GetOwnerFromId(id)
 	}
 
 	organization := object.GetOrganization(fmt.Sprintf("%s/%s", "admin", owner))
 	if !organization.IsProfilePublic {
 		requestUserId := c.GetSessionUsername()
-		hasPermission, err := object.CheckUserPermission(requestUserId, id, owner, false, c.GetAcceptLanguage())
+		hasPermission, err := object.CheckUserPermission(requestUserId, id, false, c.GetAcceptLanguage())
 		if !hasPermission {
 			c.ResponseError(err.Error())
 			return
@@ -138,10 +138,6 @@ func (c *ApiController) UpdateUser() {
 	id := c.Input().Get("id")
 	columnsStr := c.Input().Get("columns")
 
-	if id == "" {
-		id = c.GetSessionUsername()
-	}
-
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
@@ -149,8 +145,25 @@ func (c *ApiController) UpdateUser() {
 		return
 	}
 
-	if msg := object.CheckUpdateUser(object.GetUser(id), &user, c.GetAcceptLanguage()); msg != "" {
+	if id == "" {
+		id = c.GetSessionUsername()
+		if id == "" {
+			c.ResponseError(c.T("general:Missing parameter"))
+			return
+		}
+	}
+	oldUser := object.GetUser(id)
+	if oldUser == nil {
+		c.ResponseError(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), id))
+		return
+	}
+
+	if msg := object.CheckUpdateUser(oldUser, &user, c.GetAcceptLanguage()); msg != "" {
 		c.ResponseError(msg)
+		return
+	}
+	if pass, err := checkPermissionForUpdateUser(oldUser, &user, c); !pass {
+		c.ResponseError(err)
 		return
 	}
 
@@ -160,11 +173,6 @@ func (c *ApiController) UpdateUser() {
 	}
 
 	isGlobalAdmin := c.IsGlobalAdmin()
-
-	if pass, err := checkPermissionForUpdateUser(id, user, c); !pass {
-		c.ResponseError(err)
-		return
-	}
 
 	affected := object.UpdateUser(id, &user, columns, isGlobalAdmin)
 	if affected {
@@ -276,14 +284,34 @@ func (c *ApiController) SetPassword() {
 	userName := c.Ctx.Request.Form.Get("userName")
 	oldPassword := c.Ctx.Request.Form.Get("oldPassword")
 	newPassword := c.Ctx.Request.Form.Get("newPassword")
+	code := c.Ctx.Request.Form.Get("code")
 
-	requestUserId := c.GetSessionUsername()
+	if strings.Contains(newPassword, " ") {
+		c.ResponseError(c.T("user:New password cannot contain blank space."))
+		return
+	}
+	if len(newPassword) <= 5 {
+		c.ResponseError(c.T("user:New password must have at least 6 characters"))
+		return
+	}
+
 	userId := util.GetId(userOwner, userName)
 
-	hasPermission, err := object.CheckUserPermission(requestUserId, userId, userOwner, true, c.GetAcceptLanguage())
-	if !hasPermission {
-		c.ResponseError(err.Error())
+	requestUserId := c.GetSessionUsername()
+	if requestUserId == "" && code == "" {
 		return
+	} else if code == "" {
+		hasPermission, err := object.CheckUserPermission(requestUserId, userId, true, c.GetAcceptLanguage())
+		if !hasPermission {
+			c.ResponseError(err.Error())
+			return
+		}
+	} else {
+		if code != c.GetSession("verifiedCode") {
+			c.ResponseError("")
+			return
+		}
+		c.SetSession("verifiedCode", "")
 	}
 
 	targetUser := object.GetUser(userId)
@@ -294,16 +322,6 @@ func (c *ApiController) SetPassword() {
 			c.ResponseError(msg)
 			return
 		}
-	}
-
-	if strings.Contains(newPassword, " ") {
-		c.ResponseError(c.T("user:New password cannot contain blank space."))
-		return
-	}
-
-	if len(newPassword) <= 5 {
-		c.ResponseError(c.T("user:New password must have at least 6 characters"))
-		return
 	}
 
 	targetUser.Password = newPassword

@@ -42,7 +42,7 @@ export const Countries = [{label: "English", key: "en", country: "US", alt: "Eng
   {label: "日本語", key: "ja", country: "JP", alt: "日本語"},
   {label: "한국어", key: "ko", country: "KR", alt: "한국어"},
   {label: "Русский", key: "ru", country: "RU", alt: "Русский"},
-  {label: "TiếngViệt", key: "vi", country: "VI", alt: "TiếngViệt"},
+  {label: "TiếngViệt", key: "vi", country: "VN", alt: "TiếngViệt"},
 ];
 
 export function getThemeData(organization, application) {
@@ -1070,18 +1070,28 @@ export function getTagColor(s) {
   return "processing";
 }
 
-export function getTags(tags) {
+export function getTags(tags, urlPrefix = null) {
   const res = [];
   if (!tags) {
     return res;
   }
 
   tags.forEach((tag, i) => {
-    res.push(
-      <Tag color={getTagColor(tag)}>
-        {tag}
-      </Tag>
-    );
+    if (urlPrefix === null) {
+      res.push(
+        <Tag color={getTagColor(tag)}>
+          {tag}
+        </Tag>
+      );
+    } else {
+      res.push(
+        <Link to={`/${urlPrefix}/${tag}`}>
+          <Tag color={getTagColor(tag)}>
+            {tag}
+          </Tag>
+        </Link>
+      );
+    }
   });
   return res;
 }
