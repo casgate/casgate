@@ -20,8 +20,12 @@ import {StyleProvider, legacyLogicalPropertiesTransformer} from "@ant-design/css
 import {BarsOutlined, CommentOutlined, DownOutlined, InfoCircleFilled, LogoutOutlined, SettingOutlined} from "@ant-design/icons";
 import {Alert, Avatar, Button, Card, ConfigProvider, Drawer, Dropdown, FloatButton, Layout, Menu, Result} from "antd";
 import {Link, Redirect, Route, Switch, withRouter} from "react-router-dom";
-import OrganizationListPage from "./OrganizationListPage";
-import OrganizationEditPage from "./OrganizationEditPage";
+
+import OrganizationListPage from "./pt_lm/OrganizationListPage";
+import OrganizationEditPage from "./pt_lm/OrganizationEditPage";
+
+// import OrganizationListPage from "./OrganizationListPage";
+// import OrganizationEditPage from "./OrganizationEditPage";
 import UserListPage from "./UserListPage";
 import UserEditPage from "./UserEditPage";
 import RoleListPage from "./RoleListPage";
@@ -65,7 +69,6 @@ import AccountPage from "./account/AccountPage";
 import HomePage from "./basic/HomePage";
 import CustomGithubCorner from "./common/CustomGithubCorner";
 import * as Conf from "./Conf";
-
 import * as Auth from "./auth/Auth";
 import EntryPage from "./EntryPage";
 import ResultPage from "./auth/ResultPage";
@@ -98,6 +101,7 @@ class App extends Component {
       themeAlgorithm: ["default"],
       themeData: Conf.ThemeDefault,
       logo: this.getLogo(Setting.getAlgorithmNames(Conf.ThemeDefault)),
+      mode: "pt_lm",
     };
 
     Setting.initServerUrl();
@@ -548,8 +552,15 @@ class App extends Component {
         <Route exact path="/" render={(props) => this.renderLoginIfNotLoggedIn(<HomePage account={this.state.account} {...props} />)} />
         <Route exact path="/account" render={(props) => this.renderLoginIfNotLoggedIn(<AccountPage account={this.state.account} {...props} />)} />
         <Route exact path="/organizations" render={(props) => this.renderLoginIfNotLoggedIn(<OrganizationListPage account={this.state.account} {...props} />)} />
+
         <Route exact path="/organizations/:organizationName" render={(props) => this.renderLoginIfNotLoggedIn(<OrganizationEditPage account={this.state.account} onChangeTheme={this.setTheme} {...props} />)} />
-        <Route exact path="/organizations/:organizationName/users" render={(props) => this.renderLoginIfNotLoggedIn(<UserListPage account={this.state.account} {...props} />)} />
+
+        <Route exact path="/organizations/:organizationName/users" render={(props) => {
+          if (this.state.mode) {
+            return this.renderLoginIfNotLoggedIn(<UserListPage account={this.state.account} {...props} />);
+          }
+        }} />
+
         <Route exact path="/users" render={(props) => this.renderLoginIfNotLoggedIn(<UserListPage account={this.state.account} {...props} />)} />
         <Route exact path="/users/:organizationName/:userName" render={(props) => <UserEditPage account={this.state.account} {...props} />} />
         <Route exact path="/roles" render={(props) => this.renderLoginIfNotLoggedIn(<RoleListPage account={this.state.account} {...props} />)} />

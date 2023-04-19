@@ -257,4 +257,7 @@ func initAPI() {
 
 	beego.Router("/api/get-system-info", &controllers.ApiController{}, "GET:GetSystemInfo")
 	beego.Router("/api/get-version-info", &controllers.ApiController{}, "GET:GetVersionInfo")
+
+	beego.Router("/api/apply-blueprint", &controllers.ApiController{}, "POST:ApplyBlueprint")
+
 }
