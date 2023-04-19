@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from "react";
-import {Button, Card, Col, Input, Radio, Row, Select, Switch} from "antd";
+import {Button, Card, Col, Input, InputNumber, Radio, Row, Select, Switch} from "antd";
 import * as OrganizationBackend from "../backend/OrganizationBackend";
 import * as ApplicationBackend from "../backend/ApplicationBackend";
 import * as LdapBackend from "../backend/LdapBackend";
@@ -21,7 +21,6 @@ import * as Setting from "../Setting";
 import * as Conf from "../Conf";
 import i18next from "i18next";
 import {LinkOutlined} from "@ant-design/icons";
-import LdapTable from "../table/LdapTable";
 import AccountTable from "../table/AccountTable";
 import ThemeEditor from "../common/theme/ThemeEditor";
 
@@ -136,6 +135,16 @@ class OrganizationEditPage extends React.Component {
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("organization:Max client"), i18next.t("organization:Max client - Tooltip"))} :
+          </Col>
+          <Col span={4} >
+            <InputNumber value={this.state.organization.initScore} onChange={value => {
+              this.updateOrganizationField("initScore", value);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("general:Password type"), i18next.t("general:Password type - Tooltip"))} :
           </Col>
@@ -232,21 +241,6 @@ class OrganizationEditPage extends React.Component {
                   }} />
                 </Row> : null
             }
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}}>
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:LDAPs"), i18next.t("general:LDAPs - Tooltip"))} :
-          </Col>
-          <Col span={22}>
-            <LdapTable
-              title={i18next.t("general:LDAPs")}
-              table={this.state.ldaps}
-              organizationName={this.state.organizationName}
-              onUpdateTable={(value) => {
-                this.setState({ldaps: value});
-              }}
-            />
           </Col>
         </Row>
       </Card>
