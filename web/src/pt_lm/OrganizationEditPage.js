@@ -13,17 +13,17 @@
 // limitations under the License.
 
 import React from "react";
-import {Button, Card, Col, Input, InputNumber, Radio, Row, Select, Switch} from "antd";
-import * as OrganizationBackend from "./backend/OrganizationBackend";
-import * as ApplicationBackend from "./backend/ApplicationBackend";
-import * as LdapBackend from "./backend/LdapBackend";
-import * as Setting from "./Setting";
-import * as Conf from "./Conf";
+import {Button, Card, Col, Input, Radio, Row, Select, Switch} from "antd";
+import * as OrganizationBackend from "../backend/OrganizationBackend";
+import * as ApplicationBackend from "../backend/ApplicationBackend";
+import * as LdapBackend from "../backend/LdapBackend";
+import * as Setting from "../Setting";
+import * as Conf from "../Conf";
 import i18next from "i18next";
 import {LinkOutlined} from "@ant-design/icons";
-import LdapTable from "./table/LdapTable";
-import AccountTable from "./table/AccountTable";
-import ThemeEditor from "./common/theme/ThemeEditor";
+import LdapTable from "../table/LdapTable";
+import AccountTable from "../table/AccountTable";
+import ThemeEditor from "../common/theme/ThemeEditor";
 
 const {Option} = Select;
 
@@ -127,33 +127,6 @@ class OrganizationEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Favicon"), i18next.t("general:Favicon - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Row style={{marginTop: "20px"}} >
-              <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 1}>
-                {Setting.getLabel(i18next.t("general:URL"), i18next.t("general:URL - Tooltip"))} :
-              </Col>
-              <Col span={23} >
-                <Input prefix={<LinkOutlined />} value={this.state.organization.favicon} onChange={e => {
-                  this.updateOrganizationField("favicon", e.target.value);
-                }} />
-              </Col>
-            </Row>
-            <Row style={{marginTop: "20px"}} >
-              <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 1}>
-                {i18next.t("general:Preview")}:
-              </Col>
-              <Col span={23} >
-                <a target="_blank" rel="noreferrer" href={this.state.organization.favicon}>
-                  <img src={this.state.organization.favicon} alt={this.state.organization.favicon} height={90} style={{marginBottom: "20px"}} />
-                </a>
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("organization:Website URL"), i18next.t("organization:Website URL - Tooltip"))} :
           </Col>
           <Col span={22} >
@@ -184,60 +157,6 @@ class OrganizationEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Supported country codes"), i18next.t("general:Supported country codes - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Select virtual={false} mode={"multiple"} style={{width: "100%"}} value={this.state.organization.countryCodes ?? []}
-              onChange={value => {
-                this.updateOrganizationField("countryCodes", value);
-              }}
-              filterOption={(input, option) => (option?.text ?? "").toLowerCase().includes(input.toLowerCase())}
-            >
-              {
-                Setting.getCountryCodeData().map((country) => Setting.getCountryCodeOption(country))
-              }
-            </Select>
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Default avatar"), i18next.t("general:Default avatar - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Row style={{marginTop: "20px"}} >
-              <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 1}>
-                {Setting.getLabel(i18next.t("general:URL"), i18next.t("general:URL - Tooltip"))} :
-              </Col>
-              <Col span={23} >
-                <Input prefix={<LinkOutlined />} value={this.state.organization.defaultAvatar} onChange={e => {
-                  this.updateOrganizationField("defaultAvatar", e.target.value);
-                }} />
-              </Col>
-            </Row>
-            <Row style={{marginTop: "20px"}} >
-              <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 1}>
-                {i18next.t("general:Preview")}:
-              </Col>
-              <Col span={23} >
-                <a target="_blank" rel="noreferrer" href={this.state.organization.defaultAvatar}>
-                  <img src={this.state.organization.defaultAvatar} alt={this.state.organization.defaultAvatar} height={90} style={{marginBottom: "20px"}} />
-                </a>
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Default application"), i18next.t("general:Default application - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Select virtual={false} style={{width: "100%"}} value={this.state.organization.defaultApplication} onChange={(value => {this.updateOrganizationField("defaultApplication", value);})}
-              options={this.state.applications?.map((item) => Setting.getOption(item.name, item.name))
-              } />
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("organization:Tags"), i18next.t("organization:Tags - Tooltip"))} :
           </Col>
           <Col span={22} >
@@ -255,32 +174,6 @@ class OrganizationEditPage extends React.Component {
           <Col span={22} >
             <Input value={this.state.organization.masterPassword} onChange={e => {
               this.updateOrganizationField("masterPassword", e.target.value);
-            }} />
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Languages"), i18next.t("general:Languages - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Select virtual={false} mode="tags" style={{width: "100%"}}
-              options={Setting.Countries.map((item) => {
-                return Setting.getOption(item.label, item.key);
-              })}
-              value={this.state.organization.languages ?? []}
-              onChange={(value => {
-                this.updateOrganizationField("languages", value);
-              })} >
-            </Select>
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
-            {Setting.getLabel(i18next.t("organization:Init score"), i18next.t("organization:Init score - Tooltip"))} :
-          </Col>
-          <Col span={4} >
-            <InputNumber value={this.state.organization.initScore} onChange={value => {
-              this.updateOrganizationField("initScore", value);
             }} />
           </Col>
         </Row>

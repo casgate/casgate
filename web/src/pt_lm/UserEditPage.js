@@ -14,22 +14,22 @@
 
 import React from "react";
 import {Button, Card, Col, Input, InputNumber, Result, Row, Select, Spin, Switch} from "antd";
-import * as UserBackend from "./backend/UserBackend";
-import * as OrganizationBackend from "./backend/OrganizationBackend";
-import * as Setting from "./Setting";
+import * as UserBackend from "../backend/UserBackend";
+import * as OrganizationBackend from "../backend/OrganizationBackend";
+import * as Setting from "../Setting";
 import i18next from "i18next";
-import CropperDivModal from "./common/modal/CropperDivModal.js";
-import * as ApplicationBackend from "./backend/ApplicationBackend";
-import PasswordModal from "./common/modal/PasswordModal";
-import ResetModal from "./common/modal/ResetModal";
-import AffiliationSelect from "./common/select/AffiliationSelect";
-import OAuthWidget from "./common/OAuthWidget";
-import SamlWidget from "./common/SamlWidget";
-import RegionSelect from "./common/select/RegionSelect";
-import WebAuthnCredentialTable from "./table/WebauthnCredentialTable";
-import ManagedAccountTable from "./table/ManagedAccountTable";
-import PropertyTable from "./table/propertyTable";
-import {CountryCodeSelect} from "./common/select/CountryCodeSelect";
+import CropperDivModal from "../common/modal/CropperDivModal.js";
+import * as ApplicationBackend from "../backend/ApplicationBackend";
+import PasswordModal from "../common/modal/PasswordModal";
+import ResetModal from "../common/modal/ResetModal";
+import AffiliationSelect from "../common/select/AffiliationSelect";
+import OAuthWidget from "../common/OAuthWidget";
+import SamlWidget from "../common/SamlWidget";
+import RegionSelect from "../common/select/RegionSelect";
+import WebAuthnCredentialTable from "../table/WebauthnCredentialTable";
+import ManagedAccountTable from "../table/ManagedAccountTable";
+import PropertyTable from "../table/propertyTable";
+import {CountryCodeSelect} from "../common/select/CountryCodeSelect";
 
 const {Option} = Select;
 

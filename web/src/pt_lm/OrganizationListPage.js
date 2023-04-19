@@ -16,11 +16,11 @@ import React from "react";
 import {Link} from "react-router-dom";
 import {Button, Switch, Table} from "antd";
 import moment from "moment";
-import * as Setting from "./Setting";
-import * as OrganizationBackend from "./backend/OrganizationBackend";
+import * as Setting from "../Setting";
+import * as OrganizationBackend from "../backend/OrganizationBackend";
 import i18next from "i18next";
-import BaseListPage from "./BaseListPage";
-import PopconfirmModal from "./PopconfirmModal";
+import BaseListPage from "../BaseListPage";
+import PopconfirmModal from "../PopconfirmModal";
 
 class OrganizationListPage extends BaseListPage {
   newOrganization() {

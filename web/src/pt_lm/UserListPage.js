@@ -17,12 +17,12 @@ import {Link} from "react-router-dom";
 import {Button, Switch, Table, Upload} from "antd";
 import {UploadOutlined} from "@ant-design/icons";
 import moment from "moment";
-import * as OrganizationBackend from "./backend/OrganizationBackend";
-import * as Setting from "./Setting";
-import * as UserBackend from "./backend/UserBackend";
+import * as OrganizationBackend from "../backend/OrganizationBackend";
+import * as Setting from "../Setting";
+import * as UserBackend from "../backend/UserBackend";
 import i18next from "i18next";
-import BaseListPage from "./BaseListPage";
-import PopconfirmModal from "./PopconfirmModal";
+import BaseListPage from "../BaseListPage";
+import PopconfirmModal from "../PopconfirmModal";
 
 class UserListPage extends BaseListPage {
   constructor(props) {
