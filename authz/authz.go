@@ -123,6 +123,7 @@ p, *, *, GET, /api/get-release, *, *
 p, *, *, GET, /api/get-default-application, *, *
 p, *, *, GET, /api/get-subscriptions, *, *
 p, *, *, *, /api/apply-blueprint, *, *
+p, *, *, *, /api/update-subscription-postback, *, *
 `
 
 		sa := stringadapter.NewAdapter(ruleText)
