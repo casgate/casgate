@@ -16,11 +16,13 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/casdoor/casdoor/extension"
 	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/pt_af_sdk"
 	"net/url"
 	"strings"
 )
+
+const af_host = "https://m1-26.af.rd.ptsecurity.ru/api/ptaf/v4/"
 
 // UpdateSubscriptionPostBack ...
 // @Title Blueprint
@@ -56,22 +58,17 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 
 	if subscription.State == "Approved" {
 
-		// precondition
+		af := af_client.NewPtAF(af_host)
 
-		allRoles := af_client.GetRoles()
-
+		allRoles := af.GetRoles()
 		if allRoles == nil {
 			panic("no roles found")
 		}
 
 		customer := object.GetUser(subscription.User)
-
-		// find admin in customer org
-		// use admin cred for af_client.AdministratorRequest
-
 		allCustomerCompanyUsers := object.GetUsers(customer.Owner)
-		var customerCompanyAdmin *object.User
 
+		var customerCompanyAdmin *object.User
 		for _, user := range allCustomerCompanyUsers {
 			if user.IsAdmin {
 				customerCompanyAdmin = user
@@ -83,6 +80,14 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 			// log
 			return
 		}
+
+		loginRequest := af_client.LoginRequest{
+			Username:    "admin",
+			Password:    "P@ssw0rd",
+			Fingerprint: "qwe",
+		}
+
+		af.Login(loginRequest)
 
 		request := af_client.TenantRequest{
 			Name:        "tenant_" + customer.Name,
@@ -99,7 +104,7 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 			},
 		}
 
-		tenant, err := af_client.CreateTenant(request)
+		tenant, err := af.CreateTenant(request)
 
 		if err != nil {
 			//log
@@ -125,7 +130,7 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 				Fingerprint: "qwe",
 			}
 
-			token, _ := af_client.Login(loginRequest)
+			token, _ := af.Login(loginRequest)
 
 			// create proper roles
 
@@ -151,18 +156,18 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 			}
 
 			//	serviceRoleId, _ := af_client.CreateRole(token.AccessToken, serviceRole)
-			userRoleId, _ := af_client.CreateRole(token.AccessToken, *userRole)
+			userRoleId, _ := af.CreateRole(token.AccessToken, *userRole)
 
 			createUserRequest := af_client.CreateUserRequest{
-				Username:               customer.Name,
+				Username:               customer.Email,
 				Password:               "P@ssw0rd",
-				Email:                  "ilya.sulimanov@gmail.com",
+				Email:                  customer.Email,
 				Role:                   userRoleId,
 				PasswordChangeRequired: true,
 				IsActive:               true,
 			}
 
-			af_client.CreateUser(token.AccessToken, createUserRequest)
+			af.CreateUser(createUserRequest)
 
 			// put to customer Properties info about logon and pwd
 			// enable subscription
