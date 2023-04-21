@@ -1,0 +1,203 @@
+{
+  "roles": [
+    {
+      "name": "Service",
+      "permissions": [
+        {
+          "namespace": "audit",
+          "entity": "events",
+          "actions": [
+            "list",
+            "view"
+          ]
+        },
+        {
+          "namespace": "auth",
+          "entity": "current_tenant",
+          "actions": [
+            "view"
+          ]
+        },
+        {
+          "namespace": "auth",
+          "entity": "tenants",
+          "actions": [
+            "view",
+            "list"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "actions",
+          "actions": [
+            "view",
+            "list",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "applications",
+          "actions": [
+            "view",
+            "list",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "global_lists",
+          "actions": [
+            "view",
+            "list",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "policies",
+          "actions": [
+            "view",
+            "list",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "policy_templates",
+          "actions": [
+            "view",
+            "list",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "namespace": "monitoring",
+          "entity": "configuration",
+          "actions": [
+            "view"
+          ]
+        },
+        {
+          "namespace": "threats",
+          "entity": "threats",
+          "actions": [
+            "list"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "permissions": [
+        {
+          "namespace": "configuration",
+          "entity": "actions",
+          "actions": [
+            "view",
+            "list",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "applications",
+          "actions": [
+            "view",
+            "list"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "global_lists",
+          "actions": [
+            "view",
+            "list",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "policies",
+          "actions": [
+            "view",
+            "list",
+            "update"
+          ]
+        },
+        {
+          "namespace": "monitoring",
+          "entity": "configuration",
+          "actions": [
+            "view"
+          ]
+        },
+        {
+          "namespace": "threats",
+          "entity": "threats",
+          "actions": [
+            "list"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User RO",
+      "permissions": [
+        {
+          "namespace": "configuration",
+          "entity": "actions",
+          "actions": [
+            "view",
+            "list"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "applications",
+          "actions": [
+            "view",
+            "list"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "global_lists",
+          "actions": [
+            "view",
+            "list"
+          ]
+        },
+        {
+          "namespace": "configuration",
+          "entity": "policies",
+          "actions": [
+            "view",
+            "list"
+          ]
+        },
+        {
+          "namespace": "threats",
+          "entity": "threats",
+          "actions": [
+            "list"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,7 @@ package af_client
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"github.com/casdoor/casdoor/util"
 	"io/ioutil"
 	"net/http"
@@ -36,9 +37,10 @@ type TrafficProcessingRequest struct {
 }
 
 type AdministratorRequest struct {
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Email                  string `json:"email"`
+	Username               string `json:"username"`
+	Password               string `json:"password"`
+	PasswordChangeRequired bool   `json:"password_change_required"`
 }
 
 type Tenant struct {
@@ -76,6 +78,33 @@ type CreateUserRequest struct {
 	Role                   string `json:"role"`
 	PasswordChangeRequired bool   `json:"password_change_required"`
 	IsActive               bool   `json:"is_active"`
+}
+
+type Role struct {
+	Name        string       `json:"name"`
+	Permissions []Permission `json:"permissions"`
+}
+
+type Permission struct {
+	Namespace string   `json:"namespace"`
+	Entity    string   `json:"entity"`
+	Actions   []string `json:"actions"`
+}
+
+type RolesSettings struct {
+	Roles []Role `json:"roles"`
+}
+
+type CreateRoleResponse struct {
+	Id          string `json:"id"`
+	IsDefault   bool   `json:"is_default"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Permissions []struct {
+		Namespace string   `json:"namespace"`
+		Entity    string   `json:"entity"`
+		Actions   []string `json:"actions"`
+	} `json:"permissions"`
 }
 
 func Login(request LoginRequest) (*LoginResponse, error) {
@@ -162,6 +191,78 @@ func CreateTenant(request TenantRequest) (*Tenant, error) {
 	return result, nil
 }
 
-func CreateUser() {
+func CreateUser(token string, request CreateUserRequest) {
 
+	//dev only. should be remove in production
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+	body := strings.NewReader(util.StructToJson(request))
+	req, _ := http.NewRequest("POST", host+"auth/users", body)
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+
+	response, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	responseContent := string(response)
+
+	print(responseContent)
+}
+
+func GetRoles() []Role {
+
+	path := "roles.json"
+
+	if !util.FileExist(path) {
+		return nil
+	}
+
+	file := util.ReadStringFromPath(path)
+
+	var settings RolesSettings
+	err := json.Unmarshal([]byte(file), &settings)
+	if err != nil {
+		panic(err)
+	}
+
+	return settings.Roles
+}
+
+func CreateRole(token string, request Role) (string, error) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+	body := strings.NewReader(util.StructToJson(request))
+	req, _ := http.NewRequest("POST", host+"auth/roles", body)
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+
+	response, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	responseContent := string(response)
+
+	result := &CreateRoleResponse{}
+
+	err = util.JsonToStruct(responseContent, result)
+	if err != nil {
+		return "", err
+	}
+
+	return result.Id, nil
 }
