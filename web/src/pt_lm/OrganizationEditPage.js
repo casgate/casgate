@@ -23,6 +23,7 @@ import i18next from "i18next";
 import {LinkOutlined} from "@ant-design/icons";
 import AccountTable from "../table/AccountTable";
 import ThemeEditor from "../common/theme/ThemeEditor";
+import PropertyTable from "../table/propertyTable";
 
 const {Option} = Select;
 
@@ -142,6 +143,14 @@ class OrganizationEditPage extends React.Component {
             <InputNumber value={this.state.organization.initScore} onChange={value => {
               this.updateOrganizationField("initScore", value);
             }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("general:Properties"), i18next.t("general:Properties - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <PropertyTable properties={this.state.organization.properties} onUpdateTable={(value) => {this.updateOrganizationField("properties", value);}} />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >

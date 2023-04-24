@@ -42,6 +42,10 @@ class OrganizationListPage extends BaseListPage {
       masterPassword: "",
       enableSoftDeletion: false,
       isProfilePublic: true,
+      properties: {
+        "ИНН": "",
+        "КПП": "",
+      },
       accountItems: [
         {name: "Organization", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "ID", visible: true, viewRule: "Public", modifyRule: "Immutable"},
@@ -107,6 +111,7 @@ class OrganizationListPage extends BaseListPage {
   }
 
   renderTable(organizations) {
+
     const columns = [
       {
         title: i18next.t("general:Name"),
