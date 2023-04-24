@@ -44,7 +44,7 @@ func (af PtAF) Login(request LoginRequest) (*LoginResponse, error) {
 	}
 	client := &http.Client{Transport: tr}
 	body := strings.NewReader(util.StructToJson(request))
-	req, _ := http.NewRequest("POST", host+"auth/refresh_tokens", body)
+	req, _ := http.NewRequest("POST", af.url+"auth/refresh_tokens", body)
 
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
@@ -78,7 +78,7 @@ func (af PtAF) Login(request LoginRequest) (*LoginResponse, error) {
 func (af PtAF) CreateTenant(request TenantRequest) (*Tenant, error) {
 
 	body := strings.NewReader(util.StructToJson(request))
-	req, _ := http.NewRequest("POST", host+"auth/tenants", body)
+	req, _ := http.NewRequest("POST", af.url+"auth/tenants", body)
 
 	resp, err := af.doRequest(*req)
 
@@ -108,7 +108,7 @@ func (af PtAF) CreateTenant(request TenantRequest) (*Tenant, error) {
 func (af PtAF) CreateUser(request CreateUserRequest) {
 
 	body := strings.NewReader(util.StructToJson(request))
-	req, _ := http.NewRequest("POST", host+"auth/users", body)
+	req, _ := http.NewRequest("POST", af.url+"auth/users", body)
 
 	resp, err := af.doRequest(*req)
 
@@ -125,7 +125,7 @@ func (af PtAF) CreateUser(request CreateUserRequest) {
 func (af PtAF) CreateRole(token string, request Role) (string, error) {
 
 	body := strings.NewReader(util.StructToJson(request))
-	req, _ := http.NewRequest("POST", host+"auth/roles", body)
+	req, _ := http.NewRequest("POST", af.url+"auth/roles", body)
 
 	resp, err := af.doRequest(*req)
 

@@ -37,10 +37,17 @@ func (c *ApiController) ApplyBlueprint() {
 		return
 	}
 
-	if record.Action == "add-organization" {
+	if record.Action == "update-organization" {
 
 		lastOrganization := object.GetPaginationOrganizations(record.User, 0, 1, "", "", "createdTime", "")
 		organizationName := lastOrganization[0].Name
+
+		isActive := lastOrganization[0].InitScore > 0
+		alreadyHasRole := len(object.GetRoles(organizationName)) > 0
+
+		if !isActive || alreadyHasRole {
+			return
+		}
 
 		masterRoles := object.GetRoles("built-in")
 		masterModel := object.GetModel("built-in/rbac_built-in") // "rbac_built-in")
