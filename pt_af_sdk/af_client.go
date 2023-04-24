@@ -11,7 +11,7 @@ import (
 
 type PtAF struct {
 	url   string
-	token string
+	Token string
 
 	httpClient *http.Client
 }
@@ -29,7 +29,7 @@ func NewPtAF(url string) *PtAF {
 }
 
 func (af PtAF) doRequest(request http.Request) (http.Response, error) {
-	request.Header.Set("Authorization", "Bearer "+af.token)
+	request.Header.Set("Authorization", "Bearer "+af.Token)
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("Content-Type", "application/json")
 
@@ -71,7 +71,7 @@ func (af PtAF) Login(request LoginRequest) (*LoginResponse, error) {
 		return nil, err
 	}
 
-	af.token = result.AccessToken
+	af.Token = result.AccessToken
 	return result, nil
 }
 

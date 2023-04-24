@@ -87,7 +87,8 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 			Fingerprint: "qwe",
 		}
 
-		af.Login(loginRequest)
+		var logr, _ = af.Login(loginRequest)
+		af.Token = logr.AccessToken
 
 		request := af_client.TenantRequest{
 			Name:        "tenant_" + customer.Name,
@@ -104,6 +105,8 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 			},
 		}
 
+		//admin should be - admin of pt client protal
+
 		tenant, err := af.CreateTenant(request)
 
 		if err != nil {
@@ -117,9 +120,8 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 				customer.Properties = make(map[string]string)
 			}
 
-			customer.Properties["tenantId"] = tenant.ID
-			customer.Properties["tenantAdmin"] = customerCompanyAdmin.Email
-			customer.Properties["pwd"] = "P@ssw0rd"
+			customer.Properties["ServiceAccountLogin"] = customerCompanyAdmin.Name
+			customer.Properties["ServiceAccountPwd"] = "P@ssw0rd"
 
 			affected := object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
 			print(affected)
@@ -131,6 +133,7 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 			}
 
 			token, _ := af.Login(loginRequest)
+			af.Token = token.AccessToken
 
 			// create proper roles
 
@@ -169,7 +172,17 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 
 			af.CreateUser(createUserRequest)
 
+			// create one more user with service role
+
+			customer.Properties["ClientAccountLogin"] = "client@smartline.com"
+			customer.Properties["ClientAccountPwd"] = "P@ssw0rd"
+
+			customer.Properties["PT AF ID"] = tenant.ID
+
+			object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
+
 			// put to customer Properties info about logon and pwd
+			// put to organization prop info about admin
 			// enable subscription
 		}
 	}

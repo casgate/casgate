@@ -123,6 +123,11 @@ p, *, *, *, /api/webauthn, *, *
 p, *, *, GET, /api/get-release, *, *
 p, *, *, GET, /api/get-default-application, *, *
 p, *, *, GET, /api/get-subscriptions, *, *
+p, *, *, GET, /api/get-plans, *, *
+p, *, *, GET, /api/get-plan, *, *
+p, *, *, POST, /api/add-plan, *, *
+p, *, *, PUT, /api/update-plan, *, *
+p, *, *, GET, /api/get-pricings, *, *
 p, *, *, *, /api/apply-blueprint, *, *
 p, *, *, *, /api/update-subscription-postback, *, *
 `
@@ -151,6 +156,7 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 		}
 	}
 
+	//return true
 	userId := fmt.Sprintf("%s/%s", subOwner, subName)
 	user := object.GetUser(userId)
 	if user != nil && user.IsAdmin && (subOwner == objOwner || (objOwner == "admin" && subOwner == objName)) {
