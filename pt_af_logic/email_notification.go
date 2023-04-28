@@ -41,9 +41,20 @@ func getBuiltInEmailProvider() *object.Provider {
 	return nil
 }
 
+func getAdmins(organization string) []string {
+	users := object.GetUsers(organization)
+	var emails []string
+	for _, user := range users {
+		if user.IsAdmin {
+			emails = append(emails, user.Email)
+		}
+	}
+	return emails
+}
+
 func getBuiltInAdmins() []string {
 	users := object.GetUsers("built-in")
-	emails := []string{}
+	var emails []string
 	for _, user := range users {
 		if user.IsGlobalAdmin {
 			emails = append(emails, user.Email)
