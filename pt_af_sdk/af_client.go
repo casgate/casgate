@@ -19,7 +19,7 @@ type PtAF struct {
 func NewPtAF(url string) *PtAF {
 	result := &PtAF{url: url}
 
-	//dev only. should be remove in production
+	//dev only. should be removed in production
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
