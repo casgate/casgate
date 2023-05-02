@@ -16,10 +16,13 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/pt_af_sdk"
 	"net/url"
 	"strings"
+
+	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/pt_af_logic"
+	af_client "github.com/casdoor/casdoor/pt_af_sdk"
+	"github.com/casdoor/casdoor/util"
 )
 
 const afHost = "https://m1-26.af.rd.ptsecurity.ru/api/ptaf/v4/"
@@ -53,25 +56,31 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 	subscription := object.GetSubscription(id)
 
 	if subscription == nil {
+		util.LogInfo(c.Ctx, "No subscription found")
 		return
 	}
 
 	switch subscription.State {
 	case "Pending":
-		{
-			// send to built-in admins (isGlobalAdmin)
-		}
+		c.email(subscription)
 	case "Approved":
 		{
-			// send to organization admins (isAdmin)
-			createTenant(subscription)
+			c.email(subscription)
+			c.createTenant(subscription)
 		}
 	}
 
 	c.ServeJSON()
 }
 
-func createTenant(subscription *object.Subscription) {
+func (c *ApiController) email(subscription *object.Subscription) {
+	err := pt_af_logic.Email(subscription)
+	if err != nil {
+		util.LogError(c.Ctx, err.Error())
+	}
+}
+
+func (c *ApiController) createTenant(subscription *object.Subscription) {
 	af := af_client.NewPtAF(afHost)
 
 	allRoles := af.GetRoles()
@@ -124,7 +133,7 @@ func createTenant(subscription *object.Subscription) {
 	tenant, err := af.CreateTenant(request)
 
 	if err != nil {
-		//log
+		util.LogError(c.Ctx, err.Error())
 		return
 	}
 
