@@ -25,6 +25,8 @@ type ContactData struct {
 	Name  string `json:"name"`
 }
 
+const builtInOrgCode = "built-in"
+
 func Email(subscription *object.Subscription) error {
 	provider := getBuiltInEmailProvider()
 	if provider == nil {
@@ -92,7 +94,7 @@ func Email(subscription *object.Subscription) error {
 }
 
 func getBuiltInEmailProvider() *object.Provider {
-	providers := object.GetProviders("built-in")
+	providers := object.GetProviders(builtInOrgCode)
 	for _, provider := range providers {
 		if provider.Category == "Email" {
 			return provider
@@ -123,7 +125,7 @@ func getPartnerManager(organization string) *object.User {
 }
 
 func getBuiltInAdmins() []string {
-	users := object.GetUsers("built-in")
+	users := object.GetUsers(builtInOrgCode)
 	var emails []string
 	for _, user := range users {
 		if user.IsGlobalAdmin {
