@@ -60,6 +60,7 @@ func Email(subscription *object.Subscription) error {
 			Name:  partnerManager.DisplayName,
 		},
 		Product: "PT Application Firewall",
+		Action:  subscription.State,
 	}
 
 	var recipients []string
@@ -84,7 +85,7 @@ func Email(subscription *object.Subscription) error {
 	}
 
 	for _, email := range recipients {
-		err = object.SendEmail(provider, subject, content, email, provider.Receiver)
+		err = object.SendEmail(provider, subject, content, email, provider.DisplayName)
 		if err != nil {
 			return err
 		}
