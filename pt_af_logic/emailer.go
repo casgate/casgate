@@ -85,14 +85,25 @@ func Email(subscription *object.Subscription) error {
 		return err
 	}
 
+	errors := make(chan error, 256)
+	defer close(errors)
 	for _, email := range recipients {
-		err = object.SendEmail(provider, subject, content, email, provider.DisplayName)
-		if err != nil {
-			return err
+		go func(dst string) {
+			errors <- object.SendEmail(provider, subject, content, dst, provider.DisplayName)
+		}(email)
+	}
+
+	for range recipients {
+		if e := <-errors; e != nil {
+			if err != nil {
+				err = fmt.Errorf("%w; %w", err, e)
+			} else {
+				err = e
+			}
 		}
 	}
 
-	return nil
+	return err
 }
 
 func getBuiltInEmailProvider() *object.Provider {
