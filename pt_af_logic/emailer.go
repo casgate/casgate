@@ -60,7 +60,6 @@ func Email(subscription *object.Subscription) error {
 			Name:  partnerManager.DisplayName,
 		},
 		Product: "PT Application Firewall",
-		Action:  subscription.State,
 	}
 
 	var recipients []string
@@ -70,11 +69,13 @@ func Email(subscription *object.Subscription) error {
 		{
 			recipients = getBuiltInAdmins()
 			subject = "Subscription created"
+			msg.Action = "Create"
 		}
 	case "Approved":
 		{
 			recipients = getAdmins(subscription.Owner)
 			subject = "Subscription approved"
+			msg.Action = "Approve"
 		}
 	}
 
