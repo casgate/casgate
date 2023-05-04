@@ -16,13 +16,16 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/pt_af_sdk"
 	"net/url"
 	"strings"
+
+	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/pt_af_logic"
+	af_client "github.com/casdoor/casdoor/pt_af_sdk"
+	"github.com/casdoor/casdoor/util"
 )
 
-const af_host = "https://m1-26.af.rd.ptsecurity.ru/api/ptaf/v4/"
+const afHost = "https://m1-26.af.rd.ptsecurity.ru/api/ptaf/v4/"
 
 // UpdateSubscriptionPostBack ...
 // @Title Blueprint
@@ -53,139 +56,157 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 	subscription := object.GetSubscription(id)
 
 	if subscription == nil {
+		util.LogWarning(c.Ctx, "No subscription found")
+		c.ServeJSON() // to avoid crash
 		return
 	}
 
-	if subscription.State == "Approved" {
-
-		af := af_client.NewPtAF(af_host)
-
-		allRoles := af.GetRoles()
-		if allRoles == nil {
-			panic("no roles found")
-		}
-
-		customer := object.GetUser(subscription.User)
-		allCustomerCompanyUsers := object.GetUsers(customer.Owner)
-
-		var customerCompanyAdmin *object.User
-		for _, user := range allCustomerCompanyUsers {
-			if user.IsAdmin {
-				customerCompanyAdmin = user
-				break
-			}
-		}
-
-		if customerCompanyAdmin == nil {
-			// log
-			return
-		}
-
-		loginRequest := af_client.LoginRequest{
-			Username:    "admin",
-			Password:    "P@ssw0rd",
-			Fingerprint: "qwe",
-		}
-
-		var logr, _ = af.Login(loginRequest)
-		af.Token = logr.AccessToken
-
-		request := af_client.TenantRequest{
-			Name:        "tenant_" + customer.Name,
-			Description: "Tenant's description",
-			IsActive:    true,
-			TrafficProcessing: af_client.TrafficProcessingRequest{
-				TrafficProcessingType: "agent",
-			},
-			Administrator: af_client.AdministratorRequest{
-				Email:                  customerCompanyAdmin.Email,
-				Username:               customerCompanyAdmin.Name,
-				Password:               "P@ssw0rd",
-				PasswordChangeRequired: false,
-			},
-		}
-
-		//admin should be - admin of pt client protal
-
-		tenant, err := af.CreateTenant(request)
-
-		if err != nil {
-			//log
-			return
-		}
-
-		if tenant != nil {
-
-			if customer.Properties == nil {
-				customer.Properties = make(map[string]string)
-			}
-
-			customer.Properties["ServiceAccountLogin"] = customerCompanyAdmin.Name
-			customer.Properties["ServiceAccountPwd"] = "P@ssw0rd"
-
-			affected := object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
-			print(affected)
-
-			loginRequest := af_client.LoginRequest{
-				Username:    customerCompanyAdmin.Name,
-				Password:    "P@ssw0rd",
-				Fingerprint: "qwe",
-			}
-
-			token, _ := af.Login(loginRequest)
-			af.Token = token.AccessToken
-
-			// create proper roles
-
-			var serviceRole *af_client.Role
-			var userRole *af_client.Role
-
-			for _, role := range allRoles {
-				if strings.ToLower(role.Name) == "service" {
-					serviceRole = &role
-				}
-
-				if strings.ToLower(role.Name) == "user" {
-					userRole = &role
-				}
-			}
-
-			if serviceRole == nil {
-				panic("no service role found")
-			}
-
-			if userRole == nil {
-				panic("no service role found")
-			}
-
-			//	serviceRoleId, _ := af_client.CreateRole(token.AccessToken, serviceRole)
-			userRoleId, _ := af.CreateRole(token.AccessToken, *userRole)
-
-			createUserRequest := af_client.CreateUserRequest{
-				Username:               customer.Email,
-				Password:               "P@ssw0rd",
-				Email:                  customer.Email,
-				Role:                   userRoleId,
-				PasswordChangeRequired: true,
-				IsActive:               true,
-			}
-
-			af.CreateUser(createUserRequest)
-
-			// create one more user with service role
-
-			customer.Properties["ClientAccountLogin"] = "client@smartline.com"
-			customer.Properties["ClientAccountPwd"] = "P@ssw0rd"
-
-			customer.Properties["PT AF ID"] = tenant.ID
-
-			object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
-
-			// put to customer Properties info about logon and pwd
-			// put to organization prop info about admin
-			// enable subscription
+	switch subscription.State {
+	case "Pending":
+		c.email(subscription)
+	case "Approved":
+		{
+			c.email(subscription)
+			c.createTenant(subscription)
 		}
 	}
 
 	c.ServeJSON()
+}
+
+func (c *ApiController) email(subscription *object.Subscription) {
+	err := pt_af_logic.Email(subscription)
+	if err != nil {
+		util.LogError(c.Ctx, err.Error())
+	}
+}
+
+func (c *ApiController) createTenant(subscription *object.Subscription) {
+	af := af_client.NewPtAF(afHost)
+
+	allRoles := af.GetRoles()
+	if allRoles == nil {
+		panic("no roles found")
+	}
+
+	customer := object.GetUser(subscription.User)
+	allCustomerCompanyUsers := object.GetUsers(customer.Owner)
+
+	var customerCompanyAdmin *object.User
+	for _, user := range allCustomerCompanyUsers {
+		if user.IsAdmin {
+			customerCompanyAdmin = user
+			break
+		}
+	}
+
+	if customerCompanyAdmin == nil {
+		// log
+		return
+	}
+
+	loginRequest := af_client.LoginRequest{
+		Username:    "admin",
+		Password:    "P@ssw0rd",
+		Fingerprint: "qwe",
+	}
+
+	var logr, _ = af.Login(loginRequest)
+	af.Token = logr.AccessToken
+
+	request := af_client.TenantRequest{
+		Name:        "tenant_" + customer.Name,
+		Description: "Tenant's description",
+		IsActive:    true,
+		TrafficProcessing: af_client.TrafficProcessingRequest{
+			TrafficProcessingType: "agent",
+		},
+		Administrator: af_client.AdministratorRequest{
+			Email:                  customerCompanyAdmin.Email,
+			Username:               customerCompanyAdmin.Name,
+			Password:               "P@ssw0rd",
+			PasswordChangeRequired: false,
+		},
+	}
+
+	//admin should be - admin of pt client protal
+
+	tenant, err := af.CreateTenant(request)
+
+	if err != nil {
+		util.LogError(c.Ctx, err.Error())
+		return
+	}
+
+	if tenant != nil {
+
+		if customer.Properties == nil {
+			customer.Properties = make(map[string]string)
+		}
+
+		customer.Properties[af_client.PtPropPref+"ServiceAccountLogin"] = customerCompanyAdmin.Name
+		customer.Properties[af_client.PtPropPref+"ServiceAccountPwd"] = "P@ssw0rd"
+
+		affected := object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
+		print(affected)
+
+		loginRequest := af_client.LoginRequest{
+			Username:    customerCompanyAdmin.Name,
+			Password:    "P@ssw0rd",
+			Fingerprint: "qwe",
+		}
+
+		token, _ := af.Login(loginRequest)
+		af.Token = token.AccessToken
+
+		// create proper roles
+
+		var serviceRole *af_client.Role
+		var userRole *af_client.Role
+
+		for _, role := range allRoles {
+			if strings.EqualFold(role.Name, "service") {
+				serviceRole = &role
+			}
+
+			if strings.EqualFold(role.Name, "user") {
+				userRole = &role
+			}
+		}
+
+		if serviceRole == nil {
+			panic("no service role found")
+		}
+
+		if userRole == nil {
+			panic("no user role found")
+		}
+
+		//	serviceRoleId, _ := af_client.CreateRole(token.AccessToken, serviceRole)
+		userRoleId, _ := af.CreateRole(token.AccessToken, *userRole)
+
+		createUserRequest := af_client.CreateUserRequest{
+			Username:               customer.Email,
+			Password:               "P@ssw0rd",
+			Email:                  customer.Email,
+			Role:                   userRoleId,
+			PasswordChangeRequired: true,
+			IsActive:               true,
+		}
+
+		af.CreateUser(createUserRequest)
+
+		// create one more user with service role
+
+		customer.Properties[af_client.PtPropPref+"ClientAccountLogin"] = "client@smartline.com"
+		customer.Properties[af_client.PtPropPref+"ClientAccountPwd"] = "P@ssw0rd"
+
+		customer.Properties[af_client.PtPropPref+"Tenant ID"] = tenant.ID
+
+		object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
+
+		// put to customer Properties info about logon and pwd
+		// put to organization prop info about admin
+		// enable subscription
+	}
 }
