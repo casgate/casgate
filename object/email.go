@@ -40,7 +40,7 @@ func SendEmail(provider *Provider, title string, content string, dest string, se
 	dialer := getDialer(provider)
 
 	message := gomail.NewMessage()
-	message.SetAddressHeader("From", provider.Receiver, sender)
+	message.SetAddressHeader("From", provider.ClientId, sender)
 	message.SetHeader("To", dest)
 	message.SetHeader("Subject", title)
 	message.SetBody("text/html", content)

@@ -4,17 +4,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"github.com/casdoor/casdoor/object"
+	af_client "github.com/casdoor/casdoor/pt_af_sdk"
+	"strings"
 )
 
 type Message struct {
 	Action                string            `json:"action"`
-	ShortName             string            `json:"shortName"`
+	ClientShortName       string            `json:"clientShortName"`
 	ClientProperties      map[string]string `json:"clientProperties"`
+	ClientContact         ContactData       `json:"clientContact"`
 	Product               string            `json:"product"`
 	Plan                  string            `json:"plan"`
-	ClientContact         ContactData       `json:"clientContact"`
 	PartnerShortName      string            `json:"partnerShortName"`
 	PartnerManagerContact ContactData       `json:"partnerManagerContact"`
 }
@@ -44,16 +45,23 @@ func Email(subscription *object.Subscription) error {
 	}
 	client := object.GetUser(subscription.User)
 
+	var clientProps = make(map[string]string)
+	for prop := range client.Properties {
+		if !strings.HasPrefix(prop, af_client.PtPropPref) {
+			clientProps[prop] = client.Properties[prop]
+		}
+	}
+
 	msg := Message{
 		PartnerShortName: organization.Name,
 		Plan:             subscription.Plan,
-		ShortName:        client.Name,
+		ClientShortName:  client.Name,
 		ClientContact: ContactData{
 			Email: client.Email,
 			Phone: client.Phone,
 			Name:  client.DisplayName,
 		},
-		ClientProperties: client.Properties,
+		ClientProperties: clientProps,
 		PartnerManagerContact: ContactData{
 			Email: partnerManager.Email,
 			Phone: partnerManager.Phone,

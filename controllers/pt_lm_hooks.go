@@ -144,8 +144,8 @@ func (c *ApiController) createTenant(subscription *object.Subscription) {
 			customer.Properties = make(map[string]string)
 		}
 
-		customer.Properties["ServiceAccountLogin"] = customerCompanyAdmin.Name
-		customer.Properties["ServiceAccountPwd"] = "P@ssw0rd"
+		customer.Properties[af_client.PtPropPref+"ServiceAccountLogin"] = customerCompanyAdmin.Name
+		customer.Properties[af_client.PtPropPref+"ServiceAccountPwd"] = "P@ssw0rd"
 
 		affected := object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
 		print(affected)
@@ -198,10 +198,10 @@ func (c *ApiController) createTenant(subscription *object.Subscription) {
 
 		// create one more user with service role
 
-		customer.Properties["ClientAccountLogin"] = "client@smartline.com"
-		customer.Properties["ClientAccountPwd"] = "P@ssw0rd"
+		customer.Properties[af_client.PtPropPref+"ClientAccountLogin"] = "client@smartline.com"
+		customer.Properties[af_client.PtPropPref+"ClientAccountPwd"] = "P@ssw0rd"
 
-		customer.Properties["PT AF ID"] = tenant.ID
+		customer.Properties[af_client.PtPropPref+"Tenant ID"] = tenant.ID
 
 		object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
 

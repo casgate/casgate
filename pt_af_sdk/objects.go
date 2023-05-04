@@ -1,5 +1,7 @@
 package af_client
 
+const PtPropPref = "[PT AF]"
+
 type LoginRequest struct {
 	Username    string `json:"username"`
 	Password    string `json:"password"`
