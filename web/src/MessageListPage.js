@@ -20,7 +20,7 @@ import * as Setting from "./Setting";
 import * as MessageBackend from "./backend/MessageBackend";
 import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
-import PopconfirmModal from "./PopconfirmModal";
+import PopconfirmModal from "./common/modal/PopconfirmModal";
 
 class MessageListPage extends BaseListPage {
   newMessage() {
@@ -31,6 +31,7 @@ class MessageListPage extends BaseListPage {
       createdTime: moment().format(),
       organization: this.props.account.owner,
       chat: "",
+      replyTo: "",
       author: `${this.props.account.owner}/${this.props.account.name}`,
       text: "",
     };
@@ -208,7 +209,7 @@ class MessageListPage extends BaseListPage {
       value = params.type;
     }
     this.setState({loading: true});
-    MessageBackend.getMessages("admin", params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    MessageBackend.getMessages("admin", Setting.isAdminUser(this.props.account) ? "" : this.props.account.owner, params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({

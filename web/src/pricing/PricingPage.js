@@ -1,4 +1,4 @@
-// Copyright 2021 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casdoor Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,9 @@
 
 import React from "react";
 import {Card, Col, Row} from "antd";
+import * as PricingBackend from "../backend/PricingBackend";
 import * as PlanBackend from "../backend/PlanBackend";
+import CustomGithubCorner from "../common/CustomGithubCorner";
 import * as Setting from "../Setting";
 import SingleCard from "./SingleCard";
 import i18next from "i18next";
@@ -25,71 +27,86 @@ class PricingPage extends React.Component {
     this.state = {
       classes: props,
       applications: null,
-      pricing: props.pricingProp,
-      plans: [],
+      pricingName: (props.pricingName ?? props.match?.params?.pricingName) ?? null,
+      pricing: props.pricing,
+      plans: null,
+      loading: false,
     };
   }
 
-  UNSAFE_componentWillMount() {
+  componentDidMount() {
     this.setState({
       applications: [],
     });
 
-    console.log(this.state.pricing);
-
-    if (this.state.pricing.plans) {
-      const plans = this.state.pricing.plans.map((plan) =>
-        PlanBackend.getPlanById(plan, true));
-
-      Promise.all(plans)
-        .then(results => {
-          this.setState({
-            plans: results,
-          });
-        })
-        .catch(error => {
-          console.error("An error occurred:", error);
-        });
-
+    if (this.state.pricing) {
+      this.loadPlans();
+    } else {
+      this.loadPricing(this.state.pricingName);
     }
-
+    this.setState({
+      loading: true,
+    });
   }
 
-  getItems() {
-    let items = [];
+  componentDidUpdate() {
+    if (this.state.pricing &&
+      this.state.pricing.plans?.length !== this.state.plans?.length && !this.state.loading) {
+      this.setState({loading: true});
+      this.loadPlans();
+    }
+  }
 
-    items = [
-      {link: "/organizations", name: i18next.t("general:Pro"), organizer: i18next.t("general:For small teams, with limited technical support (via Tickets)"), options: ["DDoS Protection", "MAX RPS 1000"]},
-      {link: "/users", name: i18next.t("general:Business"), organizer: i18next.t("general:For fast growing start-ups, with full technical support (8x5)"), options: ["DDoS Protection", "MAX RPS 10000", "Uptime SLA 100%"]},
-      {link: "/providers", name: i18next.t("general:Enterprise"), organizer: i18next.t("general:For large & medium-sized enterprise, with full technical support (8x5)"), options: ["DDoS Protection", "MAX RPS 10000", "Uptime SLA 100%", "Network Prioritization"]},
-    ];
+  loadPlans() {
+    const plans = this.state.pricing.plans.map((plan) =>
+      PlanBackend.getPlanById(plan, true));
 
-    for (let i = 0; i < items.length; i++) {
-      let filename = items[i].link;
-      if (filename === "/account") {
-        filename = "/users";
-      }
-      items[i].logo = `${Setting.StaticBaseUrl}/img${filename}.png`;
-      items[i].createdTime = "";
+    Promise.all(plans)
+      .then(results => {
+        this.setState({
+          plans: results,
+          loading: false,
+        });
+      })
+      .catch(error => {
+        Setting.showMessage("error", `Failed to get plans: ${error}`);
+      });
+  }
+
+  loadPricing(pricingName) {
+    if (pricingName === undefined) {
+      return;
     }
 
-    return items;
+    PricingBackend.getPricing("built-in", pricingName)
+      .then((result) => {
+        this.setState({
+          loading: false,
+          pricing: result,
+        });
+        this.onUpdatePricing(result);
+      });
+  }
+
+  onUpdatePricing(pricing) {
+    this.props.onUpdatePricing(pricing);
   }
 
   renderCards() {
-    if (this.state.plans === null) {
-      return null;
-    }
 
-    const items = this.getItems();
+    const getUrlByPlan = (plan) => {
+      const pricing = this.state.pricing;
+      const signUpUrl = `/signup/${pricing.application}?plan=${plan}&pricing=${pricing.name}`;
+      return `${window.location.origin}${signUpUrl}`;
+    };
 
     if (Setting.isMobile()) {
       return (
-        <Card bodyStyle={{padding: 0}}>
+        <Card style={{border: "none"}} bodyStyle={{padding: 0}}>
           {
             this.state.plans.map(item => {
               return (
-                <SingleCard key={item.link} logo={item.logo} link={item.link} title={item.displayName} desc={item.organizer} isSingle={items.length === 1} />
+                <SingleCard link={getUrlByPlan(item.name)} key={item.name} plan={item} isSingle={this.state.plans.length === 1} />
               );
             })
           }
@@ -98,11 +115,11 @@ class PricingPage extends React.Component {
     } else {
       return (
         <div style={{marginRight: "15px", marginLeft: "15px"}}>
-          <Row style={{marginLeft: "-20px", marginRight: "-20px", marginTop: "20px"}} gutter={24}>
+          <Row style={{justifyContent: "center"}} gutter={24}>
             {
               this.state.plans.map(item => {
                 return (
-                  <SingleCard key={item.name} plan={item} isSingle={items.length === 1} />
+                  <SingleCard style={{marginRight: "5px", marginLeft: "5px"}} link={getUrlByPlan(item.name)} key={item.name} plan={item} isSingle={this.state.plans.length === 1} />
                 );
               })
             }
@@ -113,16 +130,36 @@ class PricingPage extends React.Component {
   }
 
   render() {
+    if (this.state.loading || this.state.plans === null || this.state.plans === undefined) {
+      return null;
+    }
+
+    const pricing = this.state.pricing;
+
     return (
-      <div>
-        <Row style={{width: "100%"}}>
-          <Col span={24} style={{display: "flex", justifyContent: "center"}} >
-            {
-              this.renderCards()
-            }
-          </Col>
-        </Row>
-      </div>
+      <React.Fragment>
+        <CustomGithubCorner />
+        <div className="login-content">
+          <div className="login-panel">
+            <div className="login-form">
+              <h1 style={{fontSize: "48px", marginTop: "0px", marginBottom: "15px"}}>{pricing.displayName}</h1>
+              <span style={{fontSize: "20px"}}>{pricing.description}</span>
+              <Row style={{width: "100%", marginTop: "40px"}}>
+                <Col span={24} style={{display: "flex", justifyContent: "center"}} >
+                  {
+                    this.renderCards()
+                  }
+                </Col>
+              </Row>
+              <Row style={{justifyContent: "center"}}>
+                {pricing && pricing.trialDuration > 0
+                  ? <i>{i18next.t("pricing:Free")} {pricing.trialDuration}-{i18next.t("pricing:days trial available!")}</i>
+                  : null}
+              </Row>
+            </div>
+          </div>
+        </div>
+      </React.Fragment>
     );
   }
 }

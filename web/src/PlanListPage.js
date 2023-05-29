@@ -1,4 +1,4 @@
-// Copyright 2022 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casdoor Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import * as Setting from "./Setting";
 import * as PlanBackend from "./backend/PlanBackend";
 import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
-import PopconfirmModal from "./PopconfirmModal";
+import PopconfirmModal from "./common/modal/PopconfirmModal";
 
 class PlanListPage extends BaseListPage {
   newPlan() {
@@ -85,6 +85,21 @@ class PlanListPage extends BaseListPage {
         render: (text, record, index) => {
           return (
             <Link to={`/plans/${text}`}>
+              {text}
+            </Link>
+          );
+        },
+      },
+      {
+        title: i18next.t("general:Organization"),
+        dataIndex: "owner",
+        key: "owner",
+        width: "120px",
+        sorter: true,
+        ...this.getColumnSearchProps("owner"),
+        render: (text, record, index) => {
+          return (
+            <Link to={`/organizations/${text}`}>
               {text}
             </Link>
           );

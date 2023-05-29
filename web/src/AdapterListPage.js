@@ -20,16 +20,16 @@ import * as Setting from "./Setting";
 import * as AdapterBackend from "./backend/AdapterBackend";
 import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
-import PopconfirmModal from "./PopconfirmModal";
+import PopconfirmModal from "./common/modal/PopconfirmModal";
 
 class AdapterListPage extends BaseListPage {
   newAdapter() {
     const randomName = Setting.getRandomName();
     return {
-      owner: "built-in",
+      owner: "admin",
       name: `adapter_${randomName}`,
       createdTime: moment().format(),
-      organization: "built-in",
+      organization: this.props.account.owner,
       type: "Database",
       host: "localhost",
       port: 3306,
@@ -247,7 +247,7 @@ class AdapterListPage extends BaseListPage {
       value = params.type;
     }
     this.setState({loading: true});
-    AdapterBackend.getAdapters("", params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    AdapterBackend.getAdapters("admin", Setting.isAdminUser(this.props.account) ? "" : this.props.account.owner, params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({

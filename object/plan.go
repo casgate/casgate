@@ -16,14 +16,10 @@ package object
 
 import (
 	"fmt"
+
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
 )
-
-type PlanWithOptions struct {
-	Plan
-	Options []string `json:"options"`
-}
 
 type Plan struct {
 	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
@@ -35,9 +31,10 @@ type Plan struct {
 	PricePerMonth float64 `json:"pricePerMonth"`
 	PricePerYear  float64 `json:"pricePerYear"`
 	Currency      string  `xorm:"varchar(100)" json:"currency"`
+	IsEnabled     bool    `json:"isEnabled"`
 
-	Role     string `xorm:"varchar(100)" json:"role"`
-	HasTrial bool   `json:"hasTrial"`
+	Role    string   `xorm:"varchar(100)" json:"role"`
+	Options []string `xorm:"-" json:"options"`
 }
 
 func GetPlanCount(owner, field, value string) int {
@@ -123,4 +120,26 @@ func DeletePlan(plan *Plan) bool {
 
 func (plan *Plan) GetId() string {
 	return fmt.Sprintf("%s/%s", plan.Owner, plan.Name)
+}
+
+func Subscribe(owner string, user string, plan string, pricing string) *Subscription {
+	selectedPricing := GetPricing(fmt.Sprintf("%s/%s", owner, pricing))
+
+	valid := selectedPricing != nil && selectedPricing.IsEnabled
+
+	if !valid {
+		return nil
+	}
+
+	planBelongToPricing := selectedPricing.HasPlan(owner, plan)
+
+	if planBelongToPricing {
+		newSubscription := NewSubscription(owner, user, plan, selectedPricing.TrialDuration)
+		affected := AddSubscription(newSubscription)
+
+		if affected {
+			return newSubscription
+		}
+	}
+	return nil
 }

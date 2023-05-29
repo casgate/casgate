@@ -1,4 +1,4 @@
-// Copyright 2022 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casdoor Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
@@ -53,7 +54,7 @@ func (c *ApiController) GetPlans() {
 // @Description get plan
 // @Param   id     query    string  true        "The id ( owner/name ) of the plan"
 // @Param   includeOption     query    bool  false        "Should include plan's option"
-// @Success 200 {object} object.PlanWithOptions The Response object
+// @Success 200 {object} object.Plan The Response object
 // @router /get-plan [get]
 func (c *ApiController) GetPlan() {
 	id := c.Input().Get("id")
@@ -63,13 +64,12 @@ func (c *ApiController) GetPlan() {
 
 	if includeOption {
 		options := object.GetPermissionsByRole(plan.Role)
-		planWithOptions := object.PlanWithOptions{Plan: *plan}
 
 		for _, option := range options {
-			planWithOptions.Options = append(planWithOptions.Options, option.DisplayName)
+			plan.Options = append(plan.Options, option.DisplayName)
 		}
 
-		c.Data["json"] = planWithOptions
+		c.Data["json"] = plan
 	} else {
 		c.Data["json"] = plan
 	}

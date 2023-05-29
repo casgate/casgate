@@ -1,4 +1,4 @@
-// Copyright 2022 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casdoor Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {CopyOutlined} from "@ant-design/icons";
+import copy from "copy-to-clipboard";
 import React from "react";
-import {Button, Card, Col, Input, Row, Select, Switch} from "antd";
+import {Button, Card, Col, Input, InputNumber, Row, Select, Switch} from "antd";
+import * as ApplicationBackend from "./backend/ApplicationBackend";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as PricingBackend from "./backend/PricingBackend";
 import * as PlanBackend from "./backend/PlanBackend";
@@ -27,9 +30,10 @@ class PricingEditPage extends React.Component {
     this.state = {
       classes: props,
       organizationName: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
-      // organizationName: props.account.organization.name,
       pricingName: props.match.params.pricingName,
       organizations: [],
+      application: null,
+      applications: [],
       pricing: null,
       plans: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
@@ -38,8 +42,9 @@ class PricingEditPage extends React.Component {
 
   UNSAFE_componentWillMount() {
     this.getPricing();
-    // this.getUsers();
     this.getOrganizations();
+    this.getApplicationsByOrganization(this.state.organizationName);
+    this.getUserApplication();
   }
 
   getPricing() {
@@ -82,9 +87,28 @@ class PricingEditPage extends React.Component {
 
     const pricing = this.state.pricing;
     pricing[key] = value;
+
     this.setState({
       pricing: pricing,
     });
+  }
+
+  getApplicationsByOrganization(organizationName) {
+    ApplicationBackend.getApplicationsByOrganization("admin", organizationName)
+      .then((res) => {
+        this.setState({
+          applications: (res.msg === undefined) ? res : [],
+        });
+      });
+  }
+
+  getUserApplication() {
+    ApplicationBackend.getUserApplication(this.state.organizationName, this.state.userName)
+      .then((application) => {
+        this.setState({
+          application: application,
+        });
+      });
   }
 
   renderPricing() {
@@ -104,6 +128,7 @@ class PricingEditPage extends React.Component {
           <Col span={22} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.pricing.owner} onChange={(owner => {
               this.updatePricingField("owner", owner);
+              this.getApplicationsByOrganization(owner);
               this.getPlans(owner);
             })}
             options={this.state.organizations.map((organization) => Setting.getOption(organization.name, organization.name))
@@ -142,16 +167,48 @@ class PricingEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("pricing:Sub plans"), i18next.t("pricing:Sub plans - Tooltip"))} :
+            {Setting.getLabel(i18next.t("general:Application"), i18next.t("general:Application - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} style={{width: "100%"}} value={this.state.pricing.application}
+              onChange={(value => {this.updatePricingField("application", value);})}
+              options={this.state.applications.map((application) => Setting.getOption(application.name, application.name))
+              } />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("pricing:Sub plans"), i18next.t("Pricing:Sub plans - Tooltip"))} :
           </Col>
           <Col span={22} >
             <Select mode="tags" style={{width: "100%"}} value={this.state.pricing.plans}
-              onChange={(value => {this.updatePricingField("plans", value);})}
+              onChange={(value => {
+                this.updatePricingField("plans", value);
+              })}
               options={this.state.plans.map((plan) => Setting.getOption(`${plan.owner}/${plan.name}`, `${plan.owner}/${plan.name}`))}
             />
           </Col>
         </Row>
-
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("pricing:Has trial"), i18next.t("pricing:Has trial - Tooltip"))} :
+          </Col>
+          <Col span={1} >
+            <Switch disabled={true} checked={this.state.pricing.hasTrial} onChange={checked => {
+              this.updatePricingField("hasTrial", checked);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("pricing:Trial duration"), i18next.t("pricing:Trial duration - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <InputNumber min={1} value={this.state.pricing.trialDuration} onChange={value => {
+              this.updatePricingField("trialDuration", value);
+            }} />
+          </Col>
+        </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
             {Setting.getLabel(i18next.t("general:Is enabled"), i18next.t("general:Is enabled - Tooltip"))} :
@@ -187,7 +244,7 @@ class PricingEditPage extends React.Component {
           if (willExist) {
             this.props.history.push("/pricings");
           } else {
-            this.props.history.push(`/pricings/${this.state.pricing.name}`);
+            this.props.history.push(`/pricing/${this.state.pricing.owner}/${this.state.pricing.name}`);
           }
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to save")}: ${res.msg}`);
@@ -229,9 +286,21 @@ class PricingEditPage extends React.Component {
   }
 
   renderPreview() {
+    const pricingUrl = `/select-plan/${this.state.pricing.name}`;
     return (
       <React.Fragment>
-        <PricingPage pricingProp={this.state.pricing}></PricingPage>
+        <Col>
+          <Button style={{marginBottom: "10px", marginTop: Setting.isMobile() ? "15px" : "0"}} type="primary" shape="round" icon={<CopyOutlined />} onClick={() => {
+            copy(`${window.location.origin}${pricingUrl}`);
+            Setting.showMessage("success", i18next.t("pricing:pricing page URL copied to clipboard successfully, please paste it into the incognito window or another browser"));
+          }}
+          >
+            {i18next.t("pricing:Copy pricing page URL")}
+          </Button>
+        </Col>
+        <Col>
+          <PricingPage pricing={this.state.pricing}></PricingPage>
+        </Col>
       </React.Fragment>
     );
   }

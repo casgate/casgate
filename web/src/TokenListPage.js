@@ -20,7 +20,7 @@ import * as Setting from "./Setting";
 import * as TokenBackend from "./backend/TokenBackend";
 import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
-import PopconfirmModal from "./PopconfirmModal";
+import PopconfirmModal from "./common/modal/PopconfirmModal";
 
 class TokenListPage extends BaseListPage {
   newToken() {
@@ -30,7 +30,7 @@ class TokenListPage extends BaseListPage {
       name: `token_${randomName}`,
       createdTime: moment().format(),
       application: "app-built-in",
-      organization: "built-in",
+      organization: this.props.account.owner,
       user: "admin",
       accessToken: "",
       expiresIn: 7200,
@@ -240,7 +240,7 @@ class TokenListPage extends BaseListPage {
     const field = params.searchedColumn, value = params.searchText;
     const sortField = params.sortField, sortOrder = params.sortOrder;
     this.setState({loading: true});
-    TokenBackend.getTokens("admin", params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    TokenBackend.getTokens("admin", Setting.isAdminUser(this.props.account) ? "" : this.props.account.owner, params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({

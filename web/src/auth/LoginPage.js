@@ -33,6 +33,7 @@ import LanguageSelect from "../common/select/LanguageSelect";
 import {CaptchaModal} from "../common/modal/CaptchaModal";
 import {CaptchaRule} from "../common/modal/CaptchaModal";
 import RedirectForm from "../common/RedirectForm";
+import {MfaAuthVerifyForm, NextMfa, RequiredMfa} from "./MfaAuthVerifyForm";
 
 class LoginPage extends React.Component {
   constructor(props) {
@@ -229,22 +230,26 @@ class LoginPage extends React.Component {
     }
   }
 
-  postCodeLoginAction(res) {
+  postCodeLoginAction(resp) {
     const application = this.getApplicationObj();
     const ths = this;
     const oAuthParams = Util.getOAuthGetParameters();
-    const code = res.data;
+    const code = resp.data;
     const concatChar = oAuthParams?.redirectUri?.includes("?") ? "&" : "?";
     const noRedirect = oAuthParams.noRedirect;
-    if (Setting.hasPromptPage(application)) {
-      AuthBackend.getAccount("")
-        .then((res) => {
-          let account = null;
-          if (res.status === "ok") {
-            account = res.data;
-            account.organization = res.data2;
 
+    if (Setting.hasPromptPage(application) || resp.msg === RequiredMfa) {
+      AuthBackend.getAccount()
+        .then((res) => {
+          if (res.status === "ok") {
+            const account = res.data;
+            account.organization = res.data2;
             this.onUpdateAccount(account);
+
+            if (resp.msg === RequiredMfa) {
+              Setting.goToLink(`/prompt/${application.name}?redirectUri=${oAuthParams.redirectUri}&code=${code}&state=${oAuthParams.state}&promptType=mfa`);
+              return;
+            }
 
             if (Setting.isPromptAnswered(account, application)) {
               Setting.goToLink(`${oAuthParams.redirectUri}${concatChar}code=${code}&state=${oAuthParams.state}`);
@@ -331,19 +336,30 @@ class LoginPage extends React.Component {
       this.populateOauthValues(values);
       AuthBackend.login(values, oAuthParams)
         .then((res) => {
-          if (res.status === "ok") {
+          const callback = (res) => {
             const responseType = values["type"];
 
             if (responseType === "login") {
-              Setting.showMessage("success", i18next.t("application:Logged in successfully"));
-
-              const link = Setting.getFromLink();
-              Setting.goToLink(link);
+              if (res.msg === RequiredMfa) {
+                AuthBackend.getAccount().then((res) => {
+                  if (res.status === "ok") {
+                    const account = res.data;
+                    account.organization = res.data2;
+                    this.onUpdateAccount(account);
+                  }
+                });
+                Setting.goToLink(`/prompt/${this.getApplicationObj().name}?promptType=mfa`);
+              } else {
+                Setting.showMessage("success", i18next.t("application:Logged in successfully"));
+                const link = Setting.getFromLink();
+                Setting.goToLink(link);
+              }
             } else if (responseType === "code") {
               this.postCodeLoginAction(res);
             } else if (responseType === "token" || responseType === "id_token") {
+              const amendatoryResponseType = responseType === "token" ? "access_token" : responseType;
               const accessToken = res.data;
-              Setting.goToLink(`${oAuthParams.redirectUri}#${responseType}=${accessToken}?state=${oAuthParams.state}&token_type=bearer`);
+              Setting.goToLink(`${oAuthParams.redirectUri}#${amendatoryResponseType}=${accessToken}&state=${oAuthParams.state}&token_type=bearer`);
             } else if (responseType === "saml") {
               if (res.data2.method === "POST") {
                 this.setState({
@@ -357,6 +373,26 @@ class LoginPage extends React.Component {
                 Setting.goToLink(`${redirectUri}?SAMLResponse=${encodeURIComponent(SAMLResponse)}&RelayState=${oAuthParams.relayState}`);
               }
             }
+          };
+
+          if (res.status === "ok") {
+            callback(res);
+          } else if (res.status === NextMfa) {
+            this.setState({
+              getVerifyTotp: () => {
+                return (
+                  <MfaAuthVerifyForm
+                    mfaProps={res.data}
+                    formValues={values}
+                    oAuthParams={oAuthParams}
+                    application={this.getApplicationObj()}
+                    onFail={() => {
+                      Setting.showMessage("error", i18next.t("mfa:Verification failed"));
+                    }}
+                    onSuccess={(res) => callback(res)}
+                  />);
+              },
+            });
           } else {
             Setting.showMessage("error", `${i18next.t("application:Failed to sign in")}: ${res.msg}`);
           }
@@ -551,7 +587,7 @@ class LoginPage extends React.Component {
           </div>
           <br />
           {
-            application.providers.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
+            application.providers?.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
               return ProviderButton.renderProviderLogo(providerItem.provider, application, 40, 10, "big", this.props.location);
             })
           }
@@ -810,7 +846,7 @@ class LoginPage extends React.Component {
       );
     }
 
-    const visibleOAuthProviderItems = application.providers.filter(providerItem => this.isProviderVisible(providerItem));
+    const visibleOAuthProviderItems = (application.providers === null) ? [] : application.providers.filter(providerItem => this.isProviderVisible(providerItem));
     if (this.props.preview !== "auto" && !application.enablePassword && visibleOAuthProviderItems.length === 1) {
       Setting.goToLink(Provider.getAuthUrl(application, visibleOAuthProviderItems[0].provider, "signup"));
       return (
@@ -825,6 +861,7 @@ class LoginPage extends React.Component {
         <CustomGithubCorner />
         <div className="login-content" style={{margin: this.props.preview ?? this.parseOffset(application.formOffset)}}>
           {Setting.inIframe() || Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCss}} />}
+          {Setting.inIframe() || !Setting.isMobile() ? null : <div dangerouslySetInnerHTML={{__html: application.formCssMobile}} />}
           <div className="login-panel">
             <div className="side-image" style={{display: application.formOffset !== 4 ? "none" : null}}>
               <div dangerouslySetInnerHTML={{__html: application.formSideHtml}} />
@@ -839,12 +876,9 @@ class LoginPage extends React.Component {
                     Setting.renderLogo(application)
                   }
                   <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} />
-                  {
-                    this.renderSignedInBox()
-                  }
-                  {
-                    this.renderForm(application)
-                  }
+                  {this.state.getVerifyTotp !== undefined ? null : this.renderSignedInBox()}
+                  {this.state.getVerifyTotp !== undefined ? null : this.renderForm(application)}
+                  {this.state.getVerifyTotp !== undefined ? this.state.getVerifyTotp() : null}
                 </div>
               </div>
             </div>

@@ -16,24 +16,23 @@ package object
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
 )
 
+const defaultStatus = "Pending"
+
 type Subscription struct {
 	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
 	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
 	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
 	DisplayName string `xorm:"varchar(100)" json:"displayName"`
-	Duration    int    `json:"expireInDays"`
+	Duration    int    `json:"duration"`
 
-	Detail      string `xorm:"varchar(255)" json:"detail"`
 	Description string `xorm:"varchar(100)" json:"description"`
 	Plan        string `xorm:"varchar(100)" json:"plan"`
-	Key         string `xorm:"mediumtext" json:"key"`
 
 	StartDate time.Time `json:"startDate"`
 	EndDate   time.Time `json:"endDate"`
@@ -46,6 +45,22 @@ type Subscription struct {
 	ApproveTime string `xorm:"varchar(100)" json:"approveTime"`
 
 	State string `xorm:"varchar(100)" json:"state"`
+}
+
+func NewSubscription(owner string, user string, plan string, duration int) *Subscription {
+	id := util.GenerateId()[:6]
+	return &Subscription{
+		Name:        "Subscription_" + id,
+		DisplayName: "New Subscription - " + id,
+		Owner:       owner,
+		User:        owner + "/" + user,
+		Plan:        owner + "/" + plan,
+		CreatedTime: util.GetCurrentTime(),
+		State:       defaultStatus,
+		Duration:    duration,
+		StartDate:   time.Now(),
+		EndDate:     time.Now().AddDate(0, 0, duration),
+	}
 }
 
 func GetSubscriptionCount(owner, field, value string) int {
@@ -106,50 +121,6 @@ func UpdateSubscription(id string, subscription *Subscription) bool {
 	owner, name := util.GetOwnerAndNameFromId(id)
 	if getSubscription(owner, name) == nil {
 		return false
-	}
-
-	if subscription.State == "Approved" &&
-		len(subscription.User) > 0 &&
-		len(subscription.Plan) > 0 {
-
-		firstUserName := strings.Split(subscription.User, "/")[1]
-		user := getUser(subscription.Owner, firstUserName)
-
-		ExtendUserWithRolesAndPermissions(user)
-
-		selectedPlan := GetPlan(subscription.Plan)
-
-		if selectedPlan == nil || selectedPlan.Role == "" {
-			panic("Plan not found")
-		}
-
-		var needAddUserToRole = false
-
-		for _, role := range user.Roles {
-			if strings.ToLower(role.Name) == strings.ToLower(selectedPlan.Role) {
-				needAddUserToRole = true
-				break
-			}
-		}
-
-		if needAddUserToRole {
-			role := GetRole(selectedPlan.Role)
-			role.Users = append(role.Users, user.Name)
-			UpdateRole(role.GetId(), role)
-
-			user.Roles = append(user.Roles, role)
-		}
-
-		var app = GetApplicationByUser(user)
-		var scope = ""
-		var host = "localhost:8000"
-		accessToken, _, _, err := generateJwtToken(app, user, "", scope, host)
-
-		if err != nil {
-			panic(err)
-		}
-
-		subscription.Key = accessToken
 	}
 
 	affected, err := adapter.Engine.ID(core.PK{owner, name}).AllCols().Update(subscription)

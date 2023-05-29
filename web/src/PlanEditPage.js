@@ -1,4 +1,4 @@
-// Copyright 2022 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casdoor Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ class PlanEditPage extends React.Component {
     this.state = {
       classes: props,
       organizationName: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
-      // organizationName: props.account.organization.name,
       planName: props.match.params.planName,
       plan: null,
       organizations: [],
@@ -42,7 +41,6 @@ class PlanEditPage extends React.Component {
 
   UNSAFE_componentWillMount() {
     this.getPlan();
-    // this.getUsers();
     this.getOrganizations();
   }
 
@@ -68,7 +66,6 @@ class PlanEditPage extends React.Component {
   }
 
   getUsers(organizationName) {
-    console.log(organizationName);
     UserBackend.getUsers(organizationName)
       .then((res) => {
         this.setState({
@@ -149,7 +146,7 @@ class PlanEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("plan:Sub roles"), i18next.t("plan:Sub roles - Tooltip"))} :
+            {Setting.getLabel(i18next.t("role:Sub roles"), i18next.t("plan:Sub roles - Tooltip"))} :
           </Col>
           <Col span={22} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.plan.role} onChange={(value => {this.updatePlanField("role", value);})}
@@ -169,7 +166,7 @@ class PlanEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("plan:pricePerMonth"), i18next.t("plan:pricePerMonth - Tooltip"))} :
+            {Setting.getLabel(i18next.t("plan:PricePerMonth"), i18next.t("plan:PricePerMonth - Tooltip"))} :
           </Col>
           <Col span={22} >
             <InputNumber value={this.state.plan.pricePerMonth} onChange={value => {
@@ -179,7 +176,7 @@ class PlanEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("plan:pricePerYear"), i18next.t("plan:pricePerYear - Tooltip"))} :
+            {Setting.getLabel(i18next.t("plan:PricePerYear"), i18next.t("plan:PricePerYear - Tooltip"))} :
           </Col>
           <Col span={22} >
             <InputNumber value={this.state.plan.pricePerYear} onChange={value => {
@@ -189,7 +186,7 @@ class PlanEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("plan:Currency"), i18next.t("plan:Currency - Tooltip"))} :
+            {Setting.getLabel(i18next.t("payment:Currency"), i18next.t("payment:Currency - Tooltip"))} :
           </Col>
           <Col span={22} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.plan.currency} onChange={(value => {
@@ -231,7 +228,7 @@ class PlanEditPage extends React.Component {
           if (willExist) {
             this.props.history.push("/plans");
           } else {
-            this.props.history.push(`/plans/${this.state.plan.name}`);
+            this.props.history.push(`/plan/${this.state.plan.owner}/${this.state.plan.name}`);
           }
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to save")}: ${res.msg}`);

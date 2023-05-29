@@ -110,6 +110,16 @@ class ChatMenu extends React.Component {
     return items.map((item, index) => `${index}`);
   }
 
+  setSelectedKeyToNewChat(chats) {
+    const items = this.chatsToItems(chats);
+    const openKeys = items.map((item) => item.key);
+
+    this.setState({
+      openKeys: openKeys,
+      selectedKeys: ["0-0"],
+    });
+  }
+
   onOpenChange = (keys) => {
     const items = this.chatsToItems(this.props.chats);
     const rootSubmenuKeys = this.getRootSubmenuKeys(items);
@@ -126,7 +136,7 @@ class ChatMenu extends React.Component {
     const items = this.chatsToItems(this.props.chats);
 
     return (
-      <>
+      <div>
         <Button
           icon={<PlusOutlined />}
           style={{
@@ -152,6 +162,7 @@ class ChatMenu extends React.Component {
           New Chat
         </Button>
         <Menu
+          style={{maxHeight: "calc(100vh - 140px - 40px - 8px)", overflowY: "auto"}}
           mode="inline"
           openKeys={this.state.openKeys}
           selectedKeys={this.state.selectedKeys}
@@ -159,7 +170,7 @@ class ChatMenu extends React.Component {
           onSelect={this.onSelect}
           items={items}
         />
-      </>
+      </div>
     );
   }
 }

@@ -1,4 +1,4 @@
-// Copyright 2021 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casdoor Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import i18next from "i18next";
 import React from "react";
-import {Card, Col} from "antd";
+import {Button, Card, Col} from "antd";
 import * as Setting from "../Setting";
 import {withRouter} from "react-router-dom";
 
@@ -27,63 +28,32 @@ class SingleCard extends React.Component {
     };
   }
 
-  wrappedAsSilentSigninLink(link) {
-    if (link.startsWith("http")) {
-      link += link.includes("?") ? "&silentSignin=1" : "?silentSignin=1";
-    }
-    return link;
-  }
-
-  renderCardMobile(logo, link, title, desc, time, isSingle) {
-    const gridStyle = {
-      width: "100vw",
-      textAlign: "center",
-      cursor: "pointer",
-    };
-    const silentSigninLink = this.wrappedAsSilentSigninLink(link);
+  renderCard(plan, isSingle, link) {
 
     return (
-      <Card.Grid style={gridStyle} onClick={() => Setting.goToLinkSoft(this, silentSigninLink)}>
-        <img src={logo} alt="logo" width={"100%"} style={{marginBottom: "20px"}} />
-        <Meta
-          title={title}
-          description={desc}
-          style={{justifyContent: "center"}}
-        />
-      </Card.Grid>
-    );
-  }
-
-  renderCard(plan, isSingle) {
-
-    return (
-      <Col style={{width: "600px", paddingLeft: "20px", paddingRight: "20px", paddingBottom: "20px", marginBottom: "20px"}} span={6}>
+      <Col style={{minWidth: "320px", paddingLeft: "20px", paddingRight: "20px", paddingBottom: "20px", marginBottom: "20px", paddingTop: "0px"}} span={6}>
         <Card
           hoverable
-          style={isSingle ? {width: "320px", height: "100%"} : {width: "100%", height: "100%"}}
+          onClick={() => Setting.isMobile() ? window.location.href = link : null}
+          style={isSingle ? {width: "320px", height: "100%"} : {width: "100%", height: "100%", paddingTop: "0px"}}
         >
-
           <div style={{textAlign: "right"}}>
             <h2
-              style={{}}>{plan.displayName}</h2>
-
+              style={{marginTop: "0px"}}>{plan.displayName}</h2>
           </div>
 
-          <div className="px-10 mt-5">
+          <div style={{textAlign: "left"}} className="px-10 mt-5">
             <span style={{fontWeight: 700, fontSize: "48px"}}>$ {plan.pricePerMonth}</span>
-            <span style={{fontSize: "18px", fontWeight: 600, color: "gray"}}> per month</span>
+            <span style={{fontSize: "18px", fontWeight: 600, color: "gray"}}>  {i18next.t("plan:PerMonth")}</span>
           </div>
 
           <br />
-
-          <Meta description={plan.description} />
-
+          <div style={{textAlign: "left", fontSize: "18px"}}>
+            <Meta description={plan.description} />
+          </div>
           <br />
-          {/* <Meta title={""} description={Setting.getFormattedDateShort("")} /> */}
-          <ul style={{listStyleType: "none", paddingLeft: "0px"}}>
-
-            {/* iterate  options and render div*/}
-            {plan.options.map((option) => {
+          <ul style={{listStyleType: "none", paddingLeft: "0px", textAlign: "left"}}>
+            {(plan.options ?? []).map((option) => {
             // eslint-disable-next-line react/jsx-key
               return <li>
                 <svg style={{height: "1rem", width: "1rem", fill: "green", marginRight: "10px"}} xmlns="http://www.w3.org/2000/svg"
@@ -94,17 +64,21 @@ class SingleCard extends React.Component {
               </li>;
             })}
           </ul>
+          <div style={{minHeight: "60px"}}>
+
+          </div>
+          <Button style={{width: "100%", position: "absolute", height: "50px", borderRadius: "0px", bottom: "0", left: "0"}} type="primary" key="subscribe" onClick={() => window.location.href = link}>
+            {
+              i18next.t("pricing:Getting started")
+            }
+          </Button>
         </Card>
       </Col>
     );
   }
 
   render() {
-    if (Setting.isMobile()) {
-      return this.renderCardMobile(this.props.plan, this.props.isSingle);
-    } else {
-      return this.renderCard(this.props.plan, this.props.isSingle);
-    }
+    return this.renderCard(this.props.plan, this.props.isSingle, this.props.link);
   }
 }
 

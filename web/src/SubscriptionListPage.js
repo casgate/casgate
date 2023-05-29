@@ -1,4 +1,4 @@
-// Copyright 2022 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casdoor Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import * as Setting from "./Setting";
 import * as SubscriptionBackend from "./backend/SubscriptionBackend";
 import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
-import PopconfirmModal from "./PopconfirmModal";
+import PopconfirmModal from "./common/modal/PopconfirmModal";
 
 class SubscriptionListPage extends BaseListPage {
   newSubscription() {
@@ -98,6 +98,21 @@ class SubscriptionListPage extends BaseListPage {
         },
       },
       {
+        title: i18next.t("general:Organization"),
+        dataIndex: "owner",
+        key: "owner",
+        width: "120px",
+        sorter: true,
+        ...this.getColumnSearchProps("owner"),
+        render: (text, record, index) => {
+          return (
+            <Link to={`/organizations/${text}`}>
+              {text}
+            </Link>
+          );
+        },
+      },
+      {
         title: i18next.t("general:Created time"),
         dataIndex: "createdTime",
         key: "createdTime",
@@ -116,18 +131,18 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("displayName"),
       },
       {
-        title: i18next.t("subscription:Expire In Days"),
-        dataIndex: "expireInDays",
-        key: "expireInDays",
+        title: i18next.t("subscription:Duration"),
+        dataIndex: "duration",
+        key: "duration",
         width: "140px",
-        ...this.getColumnSearchProps("expireInDays"),
+        ...this.getColumnSearchProps("duration"),
       },
       {
-        title: i18next.t("subscription:Sub role"),
-        dataIndex: "role",
-        key: "role",
+        title: i18next.t("subscription:Sub plane"),
+        dataIndex: "plan",
+        key: "plan",
         width: "140px",
-        ...this.getColumnSearchProps("role"),
+        ...this.getColumnSearchProps("plan"),
       },
       {
         title: i18next.t("subscription:Sub user"),

@@ -24,6 +24,12 @@ import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
 
 class ChatPage extends BaseListPage {
+  constructor(props) {
+    super(props);
+
+    this.menu = React.createRef();
+  }
+
   newChat(chat) {
     const randomName = Setting.getRandomName();
     return {
@@ -45,11 +51,12 @@ class ChatPage extends BaseListPage {
   newMessage(text) {
     const randomName = Setting.getRandomName();
     return {
-      owner: "admin", // this.props.account.messagename,
+      owner: this.props.account.owner, // this.props.account.messagename,
       name: `message_${randomName}`,
       createdTime: moment().format(),
       organization: this.props.account.owner,
       chat: this.state.chatName,
+      replyTo: "",
       author: `${this.props.account.owner}/${this.props.account.name}`,
       text: text,
     };
@@ -77,6 +84,35 @@ class ChatPage extends BaseListPage {
           messages: messages,
         });
 
+        if (messages.length > 0) {
+          const lastMessage = messages[messages.length - 1];
+          if (lastMessage.author === "AI" && lastMessage.replyTo !== "" && lastMessage.text === "") {
+            let text = "";
+            MessageBackend.getMessageAnswer(lastMessage.owner, lastMessage.name, (data) => {
+              if (data === "") {
+                data = "\n";
+              }
+
+              const lastMessage2 = Setting.deepCopy(lastMessage);
+              text += data;
+              lastMessage2.text = text;
+              messages[messages.length - 1] = lastMessage2;
+              this.setState({
+                messages: messages,
+              });
+            }, (error) => {
+              Setting.showMessage("error", `${i18next.t("general:Failed to get answer")}: ${error}`);
+
+              const lastMessage2 = Setting.deepCopy(lastMessage);
+              lastMessage2.text = `#ERROR#: ${error}`;
+              messages[messages.length - 1] = lastMessage2;
+              this.setState({
+                messages: messages,
+              });
+            });
+          }
+        }
+
         Setting.scrollToDiv(`chatbox-list-item-${messages.length}`);
       });
   }
@@ -94,7 +130,7 @@ class ChatPage extends BaseListPage {
           this.getMessages(newChat.name);
 
           const {pagination} = this.state;
-          this.fetch({pagination});
+          this.fetch({pagination}, false);
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to add")}: ${res.msg}`);
         }
@@ -114,7 +150,7 @@ class ChatPage extends BaseListPage {
           if (j < 0) {
             this.setState({
               chatName: undefined,
-              messages: undefined,
+              messages: [],
               data: data,
             });
           } else {
@@ -135,6 +171,10 @@ class ChatPage extends BaseListPage {
       });
   }
 
+  getCurrentChat() {
+    return this.state.data.filter(chat => chat.name === this.state.chatName)[0];
+  }
+
   renderTable(chats) {
     const onSelectChat = (i) => {
       const chat = chats[i];
@@ -146,7 +186,7 @@ class ChatPage extends BaseListPage {
     };
 
     const onAddChat = () => {
-      const chat = this.state.data.filter(chat => chat.name === this.state.chatName)[0];
+      const chat = this.getCurrentChat();
       this.addChat(chat);
     };
 
@@ -165,12 +205,12 @@ class ChatPage extends BaseListPage {
 
     return (
       <div style={{display: "flex", height: "calc(100vh - 140px)"}}>
-        <div style={{width: "250px", height: "100%", backgroundColor: "white", borderRight: "1px solid rgb(245,245,245)"}}>
-          <ChatMenu chats={chats} onSelectChat={onSelectChat} onAddChat={onAddChat} onDeleteChat={onDeleteChat} />
+        <div style={{width: "250px", height: "100%", backgroundColor: "white", borderRight: "1px solid rgb(245,245,245)", borderBottom: "1px solid rgb(245,245,245)"}}>
+          <ChatMenu ref={this.menu} chats={chats} onSelectChat={onSelectChat} onAddChat={onAddChat} onDeleteChat={onDeleteChat} />
         </div>
         <div style={{flex: 1, height: "100%", backgroundColor: "white", position: "relative"}}>
           {
-            this.state.messages === null ? null : (
+            (this.state.messages === undefined || this.state.messages === null) ? null : (
               <div style={{
                 position: "absolute",
                 top: -50,
@@ -184,6 +224,7 @@ class ChatPage extends BaseListPage {
                 backgroundBlendMode: "luminosity",
                 filter: "grayscale(80%) brightness(140%) contrast(90%)",
                 opacity: 0.5,
+                pointerEvents: "none",
               }}>
               </div>
             )
@@ -194,7 +235,7 @@ class ChatPage extends BaseListPage {
     );
   }
 
-  fetch = (params = {}) => {
+  fetch = (params = {}, setLoading = true) => {
     let field = params.searchedColumn, value = params.searchText;
     const sortField = params.sortField, sortOrder = params.sortOrder;
     if (params.category !== undefined && params.category !== null) {
@@ -204,13 +245,16 @@ class ChatPage extends BaseListPage {
       field = "type";
       value = params.type;
     }
-    this.setState({loading: true});
-    ChatBackend.getChats("admin", params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    if (setLoading) {
+      this.setState({loading: true});
+    }
+    ChatBackend.getChats("admin", params.pagination.current, -1, field, value, sortField, sortOrder)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({
             loading: false,
             data: res.data,
+            messages: [],
             pagination: {
               ...params.pagination,
               total: res.data2,
@@ -226,6 +270,10 @@ class ChatPage extends BaseListPage {
             this.setState({
               chatName: chat.name,
             });
+          }
+
+          if (!setLoading) {
+            this.menu.current.setSelectedKeyToNewChat(chats);
           }
         } else {
           if (Setting.isResponseDenied(res)) {

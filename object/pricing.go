@@ -16,21 +16,28 @@ package object
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
 )
 
 type Pricing struct {
-	Owner       string   `xorm:"varchar(100) notnull pk" json:"owner"`
-	Name        string   `xorm:"varchar(100) notnull pk" json:"name"`
-	CreatedTime string   `xorm:"varchar(100)" json:"createdTime"`
-	DisplayName string   `xorm:"varchar(100)" json:"displayName"`
-	Description string   `xorm:"varchar(100)" json:"description"`
-	Plans       []string `xorm:"mediumtext" json:"plans"`
-	IsEnabled   bool     `json:"isEnabled"`
-	Submitter   string   `xorm:"varchar(100)" json:"submitter"`
-	Approver    string   `xorm:"varchar(100)" json:"approver"`
-	ApproveTime string   `xorm:"varchar(100)" json:"approveTime"`
+	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
+	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
+	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
+	DisplayName string `xorm:"varchar(100)" json:"displayName"`
+	Description string `xorm:"varchar(100)" json:"description"`
+
+	Plans         []string `xorm:"mediumtext" json:"plans"`
+	IsEnabled     bool     `json:"isEnabled"`
+	HasTrial      bool     `json:"hasTrial"`
+	TrialDuration int      `json:"trialDuration"`
+	Application   string   `xorm:"varchar(100)" json:"application"`
+
+	Submitter   string `xorm:"varchar(100)" json:"submitter"`
+	Approver    string `xorm:"varchar(100)" json:"approver"`
+	ApproveTime string `xorm:"varchar(100)" json:"approveTime"`
 
 	State string `xorm:"varchar(100)" json:"state"`
 }
@@ -118,4 +125,23 @@ func DeletePricing(pricing *Pricing) bool {
 
 func (pricing *Pricing) GetId() string {
 	return fmt.Sprintf("%s/%s", pricing.Owner, pricing.Name)
+}
+
+func (pricing *Pricing) HasPlan(owner string, plan string) bool {
+	selectedPlan := GetPlan(fmt.Sprintf("%s/%s", owner, plan))
+
+	if selectedPlan == nil {
+		return false
+	}
+
+	result := false
+
+	for _, pricingPlan := range pricing.Plans {
+		if strings.Contains(pricingPlan, selectedPlan.Name) {
+			result = true
+			break
+		}
+	}
+
+	return result
 }

@@ -20,7 +20,7 @@ import * as Setting from "./Setting";
 import * as SyncerBackend from "./backend/SyncerBackend";
 import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
-import PopconfirmModal from "./PopconfirmModal";
+import PopconfirmModal from "./common/modal/PopconfirmModal";
 
 class SyncerListPage extends BaseListPage {
   newSyncer() {
@@ -29,7 +29,7 @@ class SyncerListPage extends BaseListPage {
       owner: "admin",
       name: `syncer_${randomName}`,
       createdTime: moment().format(),
-      organization: "built-in",
+      organization: this.props.account.owner,
       type: "Database",
       host: "localhost",
       port: 3306,
@@ -275,7 +275,7 @@ class SyncerListPage extends BaseListPage {
       value = params.type;
     }
     this.setState({loading: true});
-    SyncerBackend.getSyncers("admin", params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    SyncerBackend.getSyncers("admin", Setting.isAdminUser(this.props.account) ? "" : this.props.account.owner, params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({

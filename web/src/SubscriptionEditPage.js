@@ -1,4 +1,4 @@
-// Copyright 2022 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casdoor Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,9 @@ import dayjs from "dayjs";
 class SubscriptionEditPage extends React.Component {
   constructor(props) {
     super(props);
-    console.log(props);
-    console.log("orgName:");
-    console.log(props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName);
     this.state = {
       classes: props,
       organizationName: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
-      // organizationName: props.account.organization.name,
       subscriptionName: props.match.params.subscriptionName,
       subscription: null,
       organizations: [],
@@ -45,7 +41,6 @@ class SubscriptionEditPage extends React.Component {
 
   UNSAFE_componentWillMount() {
     this.getSubscription();
-    // this.getUsers();
     this.getOrganizations();
   }
 
@@ -71,7 +66,6 @@ class SubscriptionEditPage extends React.Component {
   }
 
   getUsers(organizationName) {
-    console.log(organizationName);
     UserBackend.getUsers(organizationName)
       .then((res) => {
         this.setState({
@@ -152,11 +146,11 @@ class SubscriptionEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("subscription:Expire In Days"), i18next.t("subscription:Expire In Days - Tooltip"))}
+            {Setting.getLabel(i18next.t("subscription:Duration"), i18next.t("subscription:Duration - Tooltip"))}
           </Col>
           <Col span={22} >
-            <InputNumber value={this.state.subscription.expireInDays} onChange={value => {
-              this.updateSubscriptionField("expireInDays", value);
+            <InputNumber value={this.state.subscription.duration} onChange={value => {
+              this.updateSubscriptionField("duration", value);
             }} />
           </Col>
         </Row>
@@ -204,30 +198,12 @@ class SubscriptionEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("subscription:Detail"), i18next.t("subscription:Detail - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Input value={this.state.subscription.detail} onChange={e => {
-              this.updateSubscriptionField("detail", e.target.value);
-            }} />
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("general:Description"), i18next.t("general:Description - Tooltip"))} :
           </Col>
           <Col span={22} >
             <Input value={this.state.subscription.description} onChange={e => {
               this.updateSubscriptionField("description", e.target.value);
             }} />
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("subscription:Key"), i18next.t("subscription:Key - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <div>{Setting.getClickable(this.state.subscription.key)}</div>
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
@@ -312,7 +288,7 @@ class SubscriptionEditPage extends React.Component {
           if (willExist) {
             this.props.history.push("/subscriptions");
           } else {
-            this.props.history.push(`/subscriptions/${this.state.subscription.name}`);
+            this.props.history.push(`/subscription/${this.state.subscription.owner}/${this.state.subscription.name}`);
           }
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to save")}: ${res.msg}`);

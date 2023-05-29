@@ -19,7 +19,7 @@ import {Link} from "react-router-dom";
 import {Table, Tag} from "antd";
 import React from "react";
 import * as SessionBackend from "./backend/SessionBackend";
-import PopconfirmModal from "./PopconfirmModal";
+import PopconfirmModal from "./common/modal/PopconfirmModal";
 
 class SessionListPage extends BaseListPage {
 
@@ -134,7 +134,7 @@ class SessionListPage extends BaseListPage {
       value = params.contentType;
     }
     this.setState({loading: true});
-    SessionBackend.getSessions("", params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    SessionBackend.getSessions(Setting.isAdminUser(this.props.account) ? "" : this.props.account.owner, params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({
