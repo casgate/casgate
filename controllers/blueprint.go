@@ -58,7 +58,7 @@ func (c *ApiController) ApplyBlueprint() {
 		//key, cert, err := util.GenerateRSACertificate(
 		//	currentOrganization.Name,
 		//	currentOrganization.Name,
-		//	time.Now().Add(10*24*365*time.Hour),
+		//	time.Now().Add(20*24*365*time.Hour),
 		//)
 
 		masterRoles := object.GetRoles("built-in")
@@ -162,7 +162,7 @@ func (c *ApiController) ApplyBlueprint() {
 		roles := object.GetRoles(org.Name)
 		model := object.GetModel(org.Name + "/rbac_built-in")
 		permissions := object.GetPermissions(org.Name)
-		applications := object.GetApplications(org.Name)
+		applications := object.GetOrganizationApplications("admin", org.Name)
 		plans := object.GetPlans(org.Name)
 		pricings := object.GetPricings(org.Name)
 		//subscriptions := object.GetSubscriptions(org.Name)
