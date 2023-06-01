@@ -55,12 +55,6 @@ func (c *ApiController) ApplyBlueprint() {
 			return
 		}
 
-		//key, cert, err := util.GenerateRSACertificate(
-		//	currentOrganization.Name,
-		//	currentOrganization.Name,
-		//	time.Now().Add(20*24*365*time.Hour),
-		//)
-
 		masterRoles := object.GetRoles("built-in")
 		masterModel := object.GetModel("built-in/rbac_built-in") // "rbac_built-in")
 		masterPermissions := object.GetPermissions("built-in")
@@ -79,10 +73,36 @@ func (c *ApiController) ApplyBlueprint() {
 			object.AddModel(newModel)
 		}
 
+		// create and bind new certificate
+		keyPem, certPem, err := util.GenerateRSACertificate(
+			currentOrganization.Name,
+			currentOrganization.Name,
+			time.Now().Add(20*24*365*time.Hour),
+		)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+		cert := &object.Cert{
+			Owner:           currentOrganization.Name,
+			Name:            currentOrganization.Name,
+			CreatedTime:     date,
+			DisplayName:     currentOrganization.Name,
+			Scope:           "JWT",
+			Type:            "x509",
+			CryptoAlgorithm: "RS256",
+			BitSize:         4096,
+			ExpireInYears:   20,
+			Certificate:     string(certPem),
+			PrivateKey:      string(keyPem),
+		}
+		object.AddCert(cert)
+
 		//copy application
 		for _, app := range applications {
 			if app.Name != "app-built-in" {
 				newApp := app
+				newApp.Cert = cert.Name
 				newApp.Name = app.Name + "_" + currentOrganization.Name
 				newApp.Organization = currentOrganization.Name
 				newApp.CreatedTime = date
@@ -145,9 +165,6 @@ func (c *ApiController) ApplyBlueprint() {
 		//	object.AddSubscription(newSub)
 		//}
 
-		// create and apply certificate
-		//object.AddCert()
-
 		currentOrganization.BlueprintsApplied = true
 		object.UpdateOrganization(orgName, currentOrganization)
 
@@ -165,8 +182,8 @@ func (c *ApiController) ApplyBlueprint() {
 		applications := object.GetOrganizationApplications("admin", org.Name)
 		plans := object.GetPlans(org.Name)
 		pricings := object.GetPricings(org.Name)
+		cert := object.GetCert(org.Name + "/" + org.Name)
 		//subscriptions := object.GetSubscriptions(org.Name)
-		//cert := object.GetCert(currentOrganization.Name)
 
 		//for _, sub := range subscriptions {
 		//	object.DeleteSubscription(sub)
@@ -200,7 +217,7 @@ func (c *ApiController) ApplyBlueprint() {
 			object.DeleteUser(user)
 		}
 
-		//object.DeleteCert(cert)
+		object.DeleteCert(cert)
 	}
 
 	c.ServeJSON()
