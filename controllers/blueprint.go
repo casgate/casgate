@@ -38,8 +38,6 @@ func (c *ApiController) ApplyBlueprint() {
 		return
 	}
 
-	//fmt.Printf("%+v", record)
-
 	if record.Action == "update-organization" {
 		var org object.Organization
 		if err := json.Unmarshal([]byte(record.Object), &org); err != nil {
