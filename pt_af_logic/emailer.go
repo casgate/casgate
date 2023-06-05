@@ -79,12 +79,60 @@ func Email(subscription *object.Subscription) error {
 			subject = "Subscription created"
 			msg.Action = "Create"
 		}
-	case "Approved":
+	case "Pre-authorized":
 		{
 			recipients = getAdmins(subscription.Owner)
-			subject = "Subscription approved"
+			partnerAdmin := getPartnerManager(subscription.Owner)
+			if partnerAdmin != nil {
+				recipients = append(recipients, partnerAdmin.Email)
+			}
+			subject = "Subscription pre-authorized"
+			msg.Action = "Pre-authorized"
+		}
+	case "Unauthorized":
+		{
+			recipients = getAdmins(subscription.Owner)
+			partnerAdmin := getPartnerManager(subscription.Owner)
+			if partnerAdmin != nil {
+				recipients = append(recipients, partnerAdmin.Email)
+			}
+			subject = "Subscription unauthorized"
 			msg.Action = "Approve"
 		}
+	case "Authorized":
+		{
+			recipients = getAdmins(subscription.Owner)
+			partnerUser := getPartnerUser(subscription.Owner)
+			if partnerUser != nil {
+				recipients = append(recipients, partnerUser.Email)
+			}
+			subject = "Subscription authorized"
+			msg.Action = "Authorized"
+		}
+	case "Started":
+		{
+			recipients = getAdmins(subscription.Owner)
+			partnerAdmin := getPartnerManager(subscription.Owner)
+			if partnerAdmin != nil {
+				recipients = append(recipients, partnerAdmin.Email)
+			}
+			subject = "Subscription started"
+			msg.Action = "Started"
+		}
+	case "Cancelled":
+		{
+			recipients = getAdmins(subscription.Owner)
+			subject = "Subscription cancelled"
+			msg.Action = "Cancelled"
+		}
+	case "Finished":
+		{
+			recipients = getAdmins(subscription.Owner)
+			subject = "Subscription finished"
+			msg.Action = "Finished"
+		}
+	default:
+		return fmt.Errorf("could not handle subscription status: %s", subscription.State)
 	}
 
 	data, err := json.Marshal(msg)
@@ -139,6 +187,16 @@ func getPartnerManager(organization string) *object.User {
 	users := object.GetUsers(organization)
 	for _, user := range users {
 		if user.IsAdmin {
+			return user
+		}
+	}
+	return nil
+}
+
+func getPartnerUser(organization string) *object.User {
+	users := object.GetUsers(organization)
+	for _, user := range users {
+		if !user.IsAdmin {
 			return user
 		}
 	}

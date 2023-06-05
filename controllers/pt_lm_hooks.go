@@ -54,7 +54,6 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 	id := u.Query().Get("id")
 
 	subscription := object.GetSubscription(id)
-
 	if subscription == nil {
 		util.LogWarning(c.Ctx, "No subscription found")
 		c.ServeJSON() // to avoid crash
