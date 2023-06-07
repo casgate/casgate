@@ -65,9 +65,10 @@ type Organization struct {
 	InitScore          int        `json:"initScore"`
 	EnableSoftDeletion bool       `json:"enableSoftDeletion"`
 	IsProfilePublic    bool       `json:"isProfilePublic"`
+	BlueprintsApplied  bool       `json:"blueprintsApplied"`
 
-	MfaItems     []*MfaItem     `xorm:"varchar(300)" json:"mfaItems"`
-	AccountItems []*AccountItem `xorm:"varchar(3000)" json:"accountItems"`
+	MfaItems     []*MfaItem        `xorm:"varchar(300)" json:"mfaItems"`
+	AccountItems []*AccountItem    `xorm:"varchar(3000)" json:"accountItems"`
 	Properties   map[string]string `json:"properties"`
 }
 
