@@ -185,6 +185,7 @@ func Email(subscription *object.Subscription) error {
 	return err
 }
 
+// NotifySubscriptionMembers composes subscription state change message and sends emails to its members
 func NotifySubscriptionMembers(actor *object.User, old, current *object.Subscription) error {
 	provider := getBuiltInEmailProvider()
 	if provider == nil {
@@ -209,6 +210,7 @@ func NotifySubscriptionMembers(actor *object.User, old, current *object.Subscrip
 		}
 	}
 
+	// compose payload
 	msg := SubscriptionStateChangeMessage{
 		Actor: ContactData{
 			Email: actor.Email,
@@ -239,6 +241,8 @@ func NotifySubscriptionMembers(actor *object.User, old, current *object.Subscrip
 		go func(dst string) {
 			var templateName string
 
+			// im really concerned about this way and sure it have not to be like that
+			// probably should be a separate functional handler to handle each recipient
 			if dst == client.Email || dst == partnerManager.Email {
 				templateName = partnerSubscriptionTmpl
 			} else {
