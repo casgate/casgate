@@ -22,7 +22,46 @@ import (
 	"github.com/xorm-io/core"
 )
 
-const defaultStatus = "Pending"
+const (
+	subscriptionNew           = "New"
+	subscriptionPending       = "Pending"
+	subscriptionPreAuthorized = "PreAuthorized"
+	subscriptionUnauthorized  = "Unauthorized"
+	subscriptionAuthorized    = "Authorized"
+	subscriptionStarted       = "Started"
+	subscriptionPreFinished   = "PreFinished"
+	subscriptionFinished      = "Finished"
+	subscriptionCancelled     = "Cancelled"
+)
+
+const defaultStatus = subscriptionNew
+
+var subscriptionStates = map[string][]string{
+	subscriptionNew:           {subscriptionPending},
+	subscriptionPending:       {subscriptionPreAuthorized, subscriptionUnauthorized},
+	subscriptionPreAuthorized: {subscriptionAuthorized, subscriptionCancelled},
+	subscriptionAuthorized:    {subscriptionStarted, subscriptionCancelled},
+	subscriptionUnauthorized:  {subscriptionPending, subscriptionCancelled},
+	subscriptionStarted:       {subscriptionPreFinished},
+	subscriptionPreFinished:   {subscriptionFinished},
+	subscriptionFinished:      {},
+	subscriptionCancelled:     {subscriptionPending},
+}
+
+func SubscriptionStateCanBeChanged(oldState, newState string) (bool, []string) {
+	statuses, ok := subscriptionStates[oldState]
+	if !ok {
+		return false, nil
+	}
+
+	for _, state := range statuses {
+		if newState == state {
+			return true, nil
+		}
+	}
+
+	return false, statuses
+}
 
 type Subscription struct {
 	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
@@ -31,13 +70,9 @@ type Subscription struct {
 	DisplayName string `xorm:"varchar(100)" json:"displayName"`
 	Duration    int    `json:"duration"`
 	Discount    int    `json:"discount"`
-	
-
 
 	Description string `xorm:"varchar(100)" json:"description"`
 	Plan        string `xorm:"varchar(100)" json:"plan"`
-
-	
 
 	StartDate time.Time `json:"startDate"`
 	EndDate   time.Time `json:"endDate"`
