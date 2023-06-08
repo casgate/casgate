@@ -54,18 +54,13 @@ func SubscriptionStateCanBeChanged(oldState, newState string) (bool, []string) {
 		return false, nil
 	}
 
-	var match bool
 	for _, state := range statuses {
 		if newState == state {
-			match = true
+			return true, nil
 		}
 	}
 
-	if !match {
-		return false, statuses
-	}
-
-	return true, nil
+	return false, statuses
 }
 
 type Subscription struct {
