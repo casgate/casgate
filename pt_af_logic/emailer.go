@@ -232,7 +232,6 @@ func NotifySubscriptionMembers(actor *object.User, old, current *object.Subscrip
 	}
 
 	recipients := getSubscriptionStateRecipients(current)
-	fmt.Println("RECIPIENTS")
 
 	errors := make(chan error, len(recipients))
 	defer close(errors)
