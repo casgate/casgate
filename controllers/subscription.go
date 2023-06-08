@@ -16,10 +16,12 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/pt_af_logic"
 	"github.com/casdoor/casdoor/util"
+	"strings"
 )
 
 // GetSubscriptions
@@ -89,14 +91,14 @@ func (c *ApiController) UpdateSubscription() {
 	old := object.GetSubscription(subscription.Owner + "/" + subscription.Name)
 	stateChanged := old.State != subscription.State
 	if stateChanged {
-		//valid, statuses := object.SubscriptionStateCanBeChanged(old.State, subscription.State)
-		//if !valid {
-		//	c.ResponseError(fmt.Sprintf(
-		//		"Invalid subscription state. Can be changed to: '%s'",
-		//		strings.Join(statuses, ", "),
-		//	))
-		//	return
-		//}
+		valid, statuses := object.SubscriptionStateCanBeChanged(old.State, subscription.State)
+		if !valid {
+			c.ResponseError(fmt.Sprintf(
+				"Invalid subscription state. Can be changed to: '%s'",
+				strings.Join(statuses, ", "),
+			))
+			return
+		}
 	}
 
 	c.Data["json"] = wrapActionResponse(object.UpdateSubscription(id, &subscription))
