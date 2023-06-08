@@ -281,7 +281,9 @@ class SubscriptionEditPage extends React.Component {
               {value: "Authorized", name: i18next.t("subscription:Authorized")},
               {value: "Unauthorized", name: i18next.t("subscription:Unauthorized")},
               {value: "Started", name: i18next.t("subscription:Started")},
-              {value: "Cancel", name: i18next.t("subscription:Cancel")},
+              {value: "PreFinished", name: i18next.t("subscription:PreFinished")},
+              {value: "Finished", name: i18next.t("subscription:Finished")},
+              {value: "Cancelled", name: i18next.t("subscription:Cancelled")},
             ].map((item) => Setting.getOption(item.name, item.value))}
             />
           </Col>
