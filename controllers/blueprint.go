@@ -16,10 +16,12 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
+	"net/url"
 	"strings"
 	"time"
+
+	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/util"
 )
 
 // ApplyBlueprint ...
@@ -44,9 +46,11 @@ func (c *ApiController) ApplyBlueprint() {
 			c.ResponseError(err.Error())
 			return
 		}
-		orgName := "admin/" + org.Name
+		
+		url, _ := url.Parse(record.RequestUri)
+		id := url.Query().Get("id")
 
-		currentOrganization := object.GetOrganization(orgName)
+		currentOrganization := object.GetOrganization(id)
 		// prevent double blueprint creation
 		if currentOrganization.BlueprintsApplied {
 			c.ResponseOk("Blueprints already applied")
@@ -66,15 +70,15 @@ func (c *ApiController) ApplyBlueprint() {
 		//copy model
 		if masterModel != nil {
 			newModel := masterModel
-			newModel.Owner = currentOrganization.Name
+			newModel.Owner = org.Name
 			newModel.CreatedTime = date
 			object.AddModel(newModel)
 		}
 
 		// create and bind new certificate
 		keyPem, certPem, err := util.GenerateRSACertificate(
-			currentOrganization.Name,
-			currentOrganization.Name,
+			org.Name,
+			org.Name,
 			time.Now().Add(20*24*365*time.Hour),
 		)
 		if err != nil {
@@ -82,10 +86,10 @@ func (c *ApiController) ApplyBlueprint() {
 			return
 		}
 		cert := &object.Cert{
-			Owner:           currentOrganization.Name,
-			Name:            currentOrganization.Name,
+			Owner:           org.Name,
+			Name:            org.Name,
 			CreatedTime:     date,
-			DisplayName:     currentOrganization.Name,
+			DisplayName:     org.Name,
 			Scope:           "JWT",
 			Type:            "x509",
 			CryptoAlgorithm: "RS256",
@@ -101,8 +105,8 @@ func (c *ApiController) ApplyBlueprint() {
 			if app.Name != "app-built-in" {
 				newApp := app
 				newApp.Cert = cert.Name
-				newApp.Name = app.Name + "_" + currentOrganization.Name
-				newApp.Organization = currentOrganization.Name
+				newApp.Name = app.Name + "_" + org.Name
+				newApp.Organization = org.Name
 				newApp.CreatedTime = date
 				newApp.ClientId = util.GenerateClientId()
 				newApp.ClientSecret = util.GenerateClientSecret()
@@ -113,7 +117,7 @@ func (c *ApiController) ApplyBlueprint() {
 		//copy roles
 		for _, role := range masterRoles {
 			newRole := role
-			newRole.Owner = currentOrganization.Name
+			newRole.Owner = org.Name
 			newRole.CreatedTime = date
 			object.AddRole(newRole)
 		}
@@ -128,18 +132,18 @@ func (c *ApiController) ApplyBlueprint() {
 			newPermission.Roles = []string{}
 
 			for _, role := range oldRoles {
-				newPermission.Roles = append(newPermission.Roles, currentOrganization.Name+"/"+strings.Split(role, "/")[1])
+				newPermission.Roles = append(newPermission.Roles, org.Name+"/"+strings.Split(role, "/")[1])
 			}
 
 			//newPermission.Resources = []string{application.Name}
-			newPermission.Owner = currentOrganization.Name
+			newPermission.Owner = org.Name
 			newPermission.CreatedTime = date
 			object.AddPermission(newPermission)
 		}
 
 		// copy plans
 		for _, plan := range plans {
-			plan.Owner = currentOrganization.Name
+			plan.Owner = org.Name
 			plan.CreatedTime = date
 			object.AddPlan(plan)
 		}
@@ -147,24 +151,17 @@ func (c *ApiController) ApplyBlueprint() {
 		// copy pricing
 		for _, pricing := range pricings {
 			newPricing := pricing
-			newPricing.Owner = currentOrganization.Name
+			newPricing.Owner = org.Name
 			newPricing.CreatedTime = date
 			for i := range pricing.Plans {
-				pricing.Plans[i] = strings.Replace(pricing.Plans[i], "built-in", currentOrganization.Name, -1)
+				pricing.Plans[i] = strings.Replace(pricing.Plans[i], "built-in", org.Name, -1)
 			}
 			object.AddPricing(newPricing)
 		}
 
-		// copy subscriptions
-		//for _, sub := range subscriptions {
-		//	newSub := sub
-		//	newSub.Owner = currentOrganization.Name
-		//	newSub.State = "Pending"
-		//	object.AddSubscription(newSub)
-		//}
-
 		currentOrganization.BlueprintsApplied = true
-		object.UpdateOrganization(orgName, currentOrganization)
+		currentOrganization.Name = org.Name
+		object.UpdateOrganization(util.GetId(org.Owner, org.Name), currentOrganization)
 
 	} else if record.Action == "delete-organization" {
 		var org object.Organization
@@ -181,11 +178,6 @@ func (c *ApiController) ApplyBlueprint() {
 		plans := object.GetPlans(org.Name)
 		pricings := object.GetPricings(org.Name)
 		cert := object.GetCert(org.Name + "/" + org.Name)
-		//subscriptions := object.GetSubscriptions(org.Name)
-
-		//for _, sub := range subscriptions {
-		//	object.DeleteSubscription(sub)
-		//}
 
 		for _, pricing := range pricings {
 			object.DeletePricing(pricing)
