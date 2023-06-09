@@ -189,7 +189,7 @@ class PricingListPage extends BaseListPage {
       value = params.type;
     }
     this.setState({loading: true});
-    PricingBackend.getPricings("", params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    PricingBackend.getPricings(Setting.isAdminUser(this.props.account) ? "" : this.props.account.owner, params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({

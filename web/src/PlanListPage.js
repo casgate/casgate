@@ -208,7 +208,7 @@ class PlanListPage extends BaseListPage {
       value = params.type;
     }
     this.setState({loading: true});
-    PlanBackend.getPlans("", params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    PlanBackend.getPlans(Setting.isAdminUser(this.props.account) ? "" : this.props.account.owner, params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({
