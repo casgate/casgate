@@ -102,7 +102,7 @@ func (c *ApiController) ApplyBlueprint() {
 
 		//copy application
 		for _, app := range applications {
-			if app.Name != "app-built-in" {
+			if app.Name != "" {
 				newApp := app
 				newApp.Cert = cert.Name
 				newApp.Name = app.Name + "_" + org.Name
