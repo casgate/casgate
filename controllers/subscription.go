@@ -148,6 +148,12 @@ func (c *ApiController) DeleteSubscription() {
 		return
 	}
 
+	existing := object.GetSubscription(subscription.GetId())
+	if existing.State != "New" {
+		c.ResponseError("Cannot delete subscription with current status")
+		return
+	}
+
 	c.Data["json"] = wrapActionResponse(object.DeleteSubscription(&subscription))
 	c.ServeJSON()
 }
