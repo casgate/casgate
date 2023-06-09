@@ -31,6 +31,7 @@ class PricingPage extends React.Component {
       pricing: props.pricing,
       plans: null,
       loading: false,
+      org: (props.owner ?? props.match?.params?.owner),
     };
   }
 
@@ -74,11 +75,12 @@ class PricingPage extends React.Component {
   }
 
   loadPricing(pricingName) {
+    console.log(this.state);
     if (pricingName === undefined) {
       return;
     }
 
-    PricingBackend.getPricing("built-in", pricingName)
+    PricingBackend.getPricing(this.state.org, pricingName)
       .then((result) => {
         this.setState({
           loading: false,

@@ -286,7 +286,7 @@ class PricingEditPage extends React.Component {
   }
 
   renderPreview() {
-    const pricingUrl = `/select-plan/${this.state.pricing.name}`;
+    const pricingUrl = `/select-plan/${this.state.organizationName}/${this.state.pricing.name}`;
     return (
       <React.Fragment>
         <Col>
