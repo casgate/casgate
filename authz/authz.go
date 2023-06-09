@@ -126,6 +126,8 @@ p, *, *, GET, /api/get-default-application, *, *
 p, *, *, GET, /api/get-prometheus-info, *, *
 p, *, *, *, /api/metrics, *, *
 p, *, *, GET, /api/get-subscriptions, *, *
+p, *, *, GET, /api/get-pricings, *, *
+p, *, *, GET, /api/get-plans, *, *
 p, *, *, GET, /api/get-pricing, *, *
 p, *, *, GET, /api/get-plan, *, *
 p, *, *, *, /api/update-subscription-postback, *, *
