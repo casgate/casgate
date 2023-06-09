@@ -105,9 +105,10 @@ func (c *ApiController) ApplyBlueprint() {
 			if app.Name != "" {
 				newApp := app
 				newApp.Cert = cert.Name
-				newApp.Name = app.Name + "_" + org.Name
+				newApp.Name = org.Name
 				newApp.Organization = org.Name
 				newApp.CreatedTime = date
+				newApp.Providers = app.Providers
 				newApp.ClientId = util.GenerateClientId()
 				newApp.ClientSecret = util.GenerateClientSecret()
 				object.AddApplication(newApp)
@@ -153,6 +154,7 @@ func (c *ApiController) ApplyBlueprint() {
 			newPricing := pricing
 			newPricing.Owner = org.Name
 			newPricing.CreatedTime = date
+			newPricing.Application = org.Name
 			for i := range pricing.Plans {
 				pricing.Plans[i] = strings.Replace(pricing.Plans[i], "built-in", org.Name, -1)
 			}
