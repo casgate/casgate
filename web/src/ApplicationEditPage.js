@@ -86,7 +86,7 @@ const sideTemplate = `<style>
     <span>SSO</span> 
   </span>
   <div class="img">
-    <img src="https://cdn.casbin.org/img/casbin.svg" alt="Casdoor"/>
+    <img src="https://static.vecteezy.com/system/resources/thumbnails/000/439/863/small/Basic_Ui__28186_29.jpg" alt="Casdoor"/>
   </div>
 </div>
 `;

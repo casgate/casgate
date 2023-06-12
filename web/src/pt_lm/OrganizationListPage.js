@@ -35,7 +35,7 @@ class OrganizationListPage extends BaseListPage {
       passwordType: "plain",
       PasswordSalt: "",
       countryCodes: ["CN"],
-      defaultAvatar: `${Setting.StaticBaseUrl}/img/casbin.svg`,
+      defaultAvatar: "https://static.vecteezy.com/system/resources/thumbnails/000/439/863/small/Basic_Ui__28186_29.jpg",
       defaultApplication: "",
       tags: [],
       languages: Setting.Countries.map(item => item.key),
@@ -148,19 +148,6 @@ class OrganizationListPage extends BaseListPage {
         ...this.getColumnSearchProps("displayName"),
       },
       {
-        title: i18next.t("general:Favicon"),
-        dataIndex: "favicon",
-        key: "favicon",
-        width: "50px",
-        render: (text, record, index) => {
-          return (
-            <a target="_blank" rel="noreferrer" href={text}>
-              <img src={text} alt={text} width={40} />
-            </a>
-          );
-        },
-      },
-      {
         title: i18next.t("organization:Website URL"),
         dataIndex: "websiteUrl",
         key: "websiteUrl",
@@ -176,25 +163,34 @@ class OrganizationListPage extends BaseListPage {
         },
       },
       {
-        title: i18next.t("general:Password type"),
-        dataIndex: "passwordType",
-        key: "passwordType",
-        width: "150px",
+        title: i18next.t("organization:INN"),
+        dataIndex: "websiteUrl",
+        key: "websiteUrl",
+        width: "300px",
         sorter: true,
-        filterMultiple: false,
-        filters: [
-          {text: "plain", value: "plain"},
-          {text: "salt", value: "salt"},
-          {text: "md5-salt", value: "md5-salt"},
-        ],
+        ...this.getColumnSearchProps("websiteUrl"),
+        render: (text, record, index) => {
+          return (
+            <span>
+              {Math.floor(Math.random() * 9999999)}
+            </span>
+          );
+        },
       },
       {
-        title: i18next.t("general:Password salt"),
-        dataIndex: "passwordSalt",
-        key: "passwordSalt",
-        width: "150px",
+        title: i18next.t("organization:KPP"),
+        dataIndex: "websiteUrl",
+        key: "websiteUrl",
+        width: "300px",
         sorter: true,
-        ...this.getColumnSearchProps("passwordSalt"),
+        ...this.getColumnSearchProps("websiteUrl"),
+        render: (text, record, index) => {
+          return (
+            <span>
+              {Math.floor(Math.random() * 9999999)}
+            </span>
+          );
+        },
       },
       {
         title: i18next.t("general:Default avatar"),

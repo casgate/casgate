@@ -419,19 +419,19 @@ class App extends Component {
         "/users"
       ));
 
-      res.push(Setting.getItem(<Link to="/roles">{i18next.t("general:Roles")}</Link>,
-        "/roles"
-      ));
+      // res.push(Setting.getItem(<Link to="/roles">{i18next.t("general:Roles")}</Link>,
+      //   "/roles"
+      // ));
 
-      res.push(Setting.getItem(<Link to="/permissions">{i18next.t("general:Permissions")}</Link>,
-        "/permissions"
-      ));
+      // res.push(Setting.getItem(<Link to="/permissions">{i18next.t("general:Permissions")}</Link>,
+      //   "/permissions"
+      // ));
     }
 
     if (Setting.isLocalAdminUser(this.state.account)) {
-      res.push(Setting.getItem(<Link to="/models">{i18next.t("general:Models")}</Link>,
-        "/models"
-      ));
+      // res.push(Setting.getItem(<Link to="/models">{i18next.t("general:Models")}</Link>,
+      //   "/models"
+      // ));
 
       res.push(Setting.getItem(<Link to="/adapters">{i18next.t("general:Adapters")}</Link>,
         "/adapters"
@@ -447,21 +447,21 @@ class App extends Component {
         "/providers"
       ));
 
-      res.push(Setting.getItem(<Link to="/chats">{i18next.t("general:Chats")}</Link>,
-        "/chats"
-      ));
+      // res.push(Setting.getItem(<Link to="/chats">{i18next.t("general:Chats")}</Link>,
+      //   "/chats"
+      // ));
 
-      res.push(Setting.getItem(<Link to="/messages">{i18next.t("general:Messages")}</Link>,
-        "/messages"
-      ));
+      // res.push(Setting.getItem(<Link to="/messages">{i18next.t("general:Messages")}</Link>,
+      //   "/messages"
+      // ));
 
       res.push(Setting.getItem(<Link to="/resources">{i18next.t("general:Resources")}</Link>,
         "/resources"
       ));
 
-      res.push(Setting.getItem(<Link to="/records">{i18next.t("general:Records")}</Link>,
-        "/records"
-      ));
+      // res.push(Setting.getItem(<Link to="/records">{i18next.t("general:Records")}</Link>,
+      //   "/records"
+      // ));
 
       res.push(Setting.getItem(<Link to="/plans">{i18next.t("general:Plans")}</Link>,
         "/plans"
@@ -478,46 +478,46 @@ class App extends Component {
     }
 
     if (Setting.isLocalAdminUser(this.state.account)) {
-      res.push(Setting.getItem(<Link to="/tokens">{i18next.t("general:Tokens")}</Link>,
-        "/tokens"
-      ));
+      // res.push(Setting.getItem(<Link to="/tokens">{i18next.t("general:Tokens")}</Link>,
+      //   "/tokens"
+      // ));
 
-      res.push(Setting.getItem(<Link to="/sessions">{i18next.t("general:Sessions")}</Link>,
-        "/sessions"
-      ));
+      // res.push(Setting.getItem(<Link to="/sessions">{i18next.t("general:Sessions")}</Link>,
+      //   "/sessions"
+      // ));
 
       res.push(Setting.getItem(<Link to="/webhooks">{i18next.t("general:Webhooks")}</Link>,
         "/webhooks"
       ));
 
-      res.push(Setting.getItem(<Link to="/syncers">{i18next.t("general:Syncers")}</Link>,
-        "/syncers"
-      ));
+      // res.push(Setting.getItem(<Link to="/syncers">{i18next.t("general:Syncers")}</Link>,
+      //   "/syncers"
+      // ));
 
-      res.push(Setting.getItem(<Link to="/certs">{i18next.t("general:Certs")}</Link>,
-        "/certs"
-      ));
+      // res.push(Setting.getItem(<Link to="/certs">{i18next.t("general:Certs")}</Link>,
+      //   "/certs"
+      // ));
 
       if (Conf.EnableExtraPages) {
 
-        res.push(Setting.getItem(<Link to="/products">{i18next.t("general:Products")}</Link>,
-          "/products"
-        ));
+        // res.push(Setting.getItem(<Link to="/products">{i18next.t("general:Products")}</Link>,
+        //   "/products"
+        // ));
 
-        res.push(Setting.getItem(<Link to="/payments">{i18next.t("general:Payments")}</Link>,
-          "/payments"
-        ));
+        // res.push(Setting.getItem(<Link to="/payments">{i18next.t("general:Payments")}</Link>,
+        //   "/payments"
+        // ));
       }
 
     }
     if (Setting.isAdminUser(this.state.account)) {
-      res.push(Setting.getItem(<Link to="/sysinfo">{i18next.t("general:System Info")}</Link>,
-        "/sysinfo"
-      ));
-      res.push(Setting.getItem(<a target="_blank" rel="noreferrer"
-        href={Setting.isLocalhost() ? `${Setting.ServerUrl}/swagger` : "/swagger"}>{i18next.t("general:Swagger")}</a>,
-      "/swagger"
-      ));
+      // res.push(Setting.getItem(<Link to="/sysinfo">{i18next.t("general:System Info")}</Link>,
+      //   "/sysinfo"
+      // ));
+      // res.push(Setting.getItem(<a target="_blank" rel="noreferrer"
+      //   href={Setting.isLocalhost() ? `${Setting.ServerUrl}/swagger` : "/swagger"}>{i18next.t("general:Swagger")}</a>,
+      // "/swagger"
+      // ));
     }
 
     return res;

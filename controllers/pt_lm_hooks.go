@@ -60,12 +60,12 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 		return
 	}
 
-	switch subscription.State {
-	case "Pending":
+	switch strings.ToLower(subscription.State) {
+	case "pending":
 		c.email(subscription)
-	case "Approved":
+	case "started":
 		{
-			c.email(subscription)
+			//c.email(subscription)
 			c.createTenant(subscription)
 		}
 	}
@@ -197,7 +197,7 @@ func (c *ApiController) createTenant(subscription *object.Subscription) {
 
 		// create one more user with service role
 
-		customer.Properties[af_client.PtPropPref+"ClientAccountLogin"] = "client@smartline.com"
+		customer.Properties[af_client.PtPropPref+"ClientAccountLogin"] = "f6_client@mail.ru"
 		customer.Properties[af_client.PtPropPref+"ClientAccountPwd"] = "P@ssw0rd"
 
 		customer.Properties[af_client.PtPropPref+"Tenant ID"] = tenant.ID

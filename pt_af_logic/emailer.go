@@ -229,8 +229,8 @@ func NotifySubscriptionMembers(actor *object.User, old, current *object.Subscrip
 		},
 		Organization: organization,
 		Subscription: current,
-		NewStatus:    old.State,
-		OldStatus:    current.State,
+		NewStatus:    current.State,
+		OldStatus:    old.State,
 	}
 
 	recipients := getSubscriptionStateRecipients(current)
