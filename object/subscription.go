@@ -36,6 +36,7 @@ const (
 
 const defaultStatus = subscriptionNew
 
+// global state change rules
 var subscriptionStates = map[string][]string{
 	subscriptionNew:           {subscriptionPending},
 	subscriptionPending:       {subscriptionPreAuthorized, subscriptionUnauthorized},
@@ -48,6 +49,7 @@ var subscriptionStates = map[string][]string{
 	subscriptionCancelled:     {subscriptionPending},
 }
 
+// organization admin state change availability
 var orgAdminStates = map[string][]string{
 	subscriptionNew:         {subscriptionPending},
 	subscriptionAuthorized:  {subscriptionStarted, subscriptionCancelled},
@@ -55,6 +57,7 @@ var orgAdminStates = map[string][]string{
 	subscriptionCancelled:   {subscriptionPending},
 }
 
+// organization member state change availability
 var orgUserStates = map[string][]string{
 	subscriptionNew:           {subscriptionPending},
 	subscriptionUnauthorized:  {subscriptionPending, subscriptionCancelled},
@@ -62,6 +65,8 @@ var orgUserStates = map[string][]string{
 	subscriptionStarted:       {subscriptionPreFinished},
 }
 
+// SubscriptionStateCanBeChanged checks if subscription state can be moved to next value
+// returns allowed states to move if it is available and current action is wrong
 func SubscriptionStateCanBeChanged(oldState, newState string) (bool, []string) {
 	statuses, ok := subscriptionStates[oldState]
 	if !ok {
@@ -77,6 +82,8 @@ func SubscriptionStateCanBeChanged(oldState, newState string) (bool, []string) {
 	return false, statuses
 }
 
+// SubscriptionStateAllowedToChange checks if user has permission to assign a new subscription state
+// returns allowed states to move if it is available
 func SubscriptionStateAllowedToChange(isGlobalAdmin, isAdmin bool, oldState, newState string) (bool, []string) {
 	if isGlobalAdmin {
 		return true, nil
