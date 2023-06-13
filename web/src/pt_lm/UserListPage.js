@@ -47,7 +47,7 @@ class UserListPage extends BaseListPage {
       password: "123",
       passwordSalt: "",
       displayName: `New User - ${randomName}`,
-      avatar: `${Setting.StaticBaseUrl}/img/casbin.svg`,
+      avatar: "https://static.vecteezy.com/system/resources/thumbnails/000/439/863/small/Basic_Ui__28186_29.jpg",
       email: `${randomName}@example.com`,
       phone: Setting.getRandomNumber(),
       countryCode: this.state.organization.countryCodes?.length > 0 ? this.state.organization.countryCodes[0] : "",

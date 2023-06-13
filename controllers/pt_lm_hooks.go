@@ -53,19 +53,19 @@ func (c *ApiController) UpdateSubscriptionPostBack() {
 	}
 	id := u.Query().Get("id")
 
-	subscription := object.GetSubscription(id)
+	subscription, _ := object.GetSubscription(id)
 	if subscription == nil {
 		util.LogWarning(c.Ctx, "No subscription found")
 		c.ServeJSON() // to avoid crash
 		return
 	}
 
-	switch subscription.State {
-	case "Pending":
+	switch strings.ToLower(subscription.State) {
+	case "pending":
 		c.email(subscription)
-	case "Approved":
+	case "started":
 		{
-			c.email(subscription)
+			//c.email(subscription)
 			c.createTenant(subscription)
 		}
 	}
@@ -88,8 +88,8 @@ func (c *ApiController) createTenant(subscription *object.Subscription) {
 		panic("no roles found")
 	}
 
-	customer := object.GetUser(subscription.User)
-	allCustomerCompanyUsers := object.GetUsers(customer.Owner)
+	customer, _ := object.GetUser(subscription.User)
+	allCustomerCompanyUsers, _ := object.GetUsers(customer.Owner)
 
 	var customerCompanyAdmin *object.User
 	for _, user := range allCustomerCompanyUsers {
@@ -146,7 +146,7 @@ func (c *ApiController) createTenant(subscription *object.Subscription) {
 		customer.Properties[af_client.PtPropPref+"ServiceAccountLogin"] = customerCompanyAdmin.Name
 		customer.Properties[af_client.PtPropPref+"ServiceAccountPwd"] = "P@ssw0rd"
 
-		affected := object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
+		affected, _ := object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
 		print(affected)
 
 		loginRequest := af_client.LoginRequest{
@@ -197,7 +197,7 @@ func (c *ApiController) createTenant(subscription *object.Subscription) {
 
 		// create one more user with service role
 
-		customer.Properties[af_client.PtPropPref+"ClientAccountLogin"] = "client@smartline.com"
+		customer.Properties[af_client.PtPropPref+"ClientAccountLogin"] = "f6_client@mail.ru"
 		customer.Properties[af_client.PtPropPref+"ClientAccountPwd"] = "P@ssw0rd"
 
 		customer.Properties[af_client.PtPropPref+"Tenant ID"] = tenant.ID

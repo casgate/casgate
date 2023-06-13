@@ -51,6 +51,11 @@ class OrganizationEditPage extends React.Component {
   getOrganization() {
     OrganizationBackend.getOrganization("admin", this.state.organizationName)
       .then((organization) => {
+        if (organization === null) {
+          this.props.history.push("/404");
+          return;
+        }
+
         this.setState({
           organization: organization,
         });
@@ -206,7 +211,7 @@ class OrganizationEditPage extends React.Component {
             {Setting.getLabel(i18next.t("general:Languages"), i18next.t("general:Languages - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Select virtual={false} mode="tags" style={{width: "100%"}}
+            <Select virtual={false} mode="multiple" style={{width: "100%"}}
               options={Setting.Countries.map((item) => {
                 return Setting.getOption(item.label, item.key);
               })}

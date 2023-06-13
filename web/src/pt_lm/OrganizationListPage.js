@@ -35,7 +35,7 @@ class OrganizationListPage extends BaseListPage {
       passwordType: "plain",
       PasswordSalt: "",
       countryCodes: ["CN"],
-      defaultAvatar: `${Setting.StaticBaseUrl}/img/casbin.svg`,
+      defaultAvatar: "https://static.vecteezy.com/system/resources/thumbnails/000/439/863/small/Basic_Ui__28186_29.jpg",
       defaultApplication: "",
       tags: [],
       languages: Setting.Countries.map(item => item.key),
@@ -53,23 +53,23 @@ class OrganizationListPage extends BaseListPage {
         {name: "Display name", visible: true, viewRule: "Public", modifyRule: "Self"},
         {name: "Avatar", visible: true, viewRule: "Public", modifyRule: "Self"},
         {name: "User type", visible: true, viewRule: "Public", modifyRule: "Admin"},
-        {name: "Password", visible: true, viewRule: "Self", modifyRule: "Self"},
+        {name: "Password", visible: false, viewRule: "Self", modifyRule: "Self"},
         {name: "Email", visible: true, viewRule: "Public", modifyRule: "Self"},
         {name: "Phone", visible: true, viewRule: "Public", modifyRule: "Self"},
-        {name: "Country/Region", visible: true, viewRule: "Public", modifyRule: "Self"},
-        {name: "Location", visible: true, viewRule: "Public", modifyRule: "Self"},
-        {name: "Affiliation", visible: true, viewRule: "Public", modifyRule: "Self"},
-        {name: "Title", visible: true, viewRule: "Public", modifyRule: "Self"},
-        {name: "Homepage", visible: true, viewRule: "Public", modifyRule: "Self"},
-        {name: "Bio", visible: true, viewRule: "Public", modifyRule: "Self"},
+        {name: "Country/Region", visible: false, viewRule: "Public", modifyRule: "Self"},
+        {name: "Location", visible: false, viewRule: "Public", modifyRule: "Self"},
+        {name: "Affiliation", visible: false, viewRule: "Public", modifyRule: "Self"},
+        {name: "Title", visible: false, viewRule: "Public", modifyRule: "Self"},
+        {name: "Homepage", visible: false, viewRule: "Public", modifyRule: "Self"},
+        {name: "Bio", visible: false, viewRule: "Public", modifyRule: "Self"},
         {name: "Tag", visible: true, viewRule: "Public", modifyRule: "Admin"},
-        {name: "Signup application", visible: true, viewRule: "Public", modifyRule: "Admin"},
-        {name: "Roles", visible: true, viewRule: "Public", modifyRule: "Immutable"},
-        {name: "Permissions", visible: true, viewRule: "Public", modifyRule: "Immutable"},
-        {name: "3rd-party logins", visible: true, viewRule: "Self", modifyRule: "Self"},
-        {name: "Properties", visible: false, viewRule: "Admin", modifyRule: "Admin"},
+        {name: "Signup application", visible: false, viewRule: "Public", modifyRule: "Admin"},
+        {name: "Roles", visible: false, viewRule: "Public", modifyRule: "Immutable"},
+        {name: "Permissions", visible: false, viewRule: "Public", modifyRule: "Immutable"},
+        {name: "3rd-party logins", visible: false, viewRule: "Self", modifyRule: "Self"},
+        {name: "Properties", visible: true, viewRule: "Admin", modifyRule: "Admin"},
         {name: "Is admin", visible: true, viewRule: "Admin", modifyRule: "Admin"},
-        {name: "Is global admin", visible: true, viewRule: "Admin", modifyRule: "Admin"},
+        {name: "Is global admin", visible: false, viewRule: "Admin", modifyRule: "Admin"},
         {name: "Is forbidden", visible: true, viewRule: "Admin", modifyRule: "Admin"},
         {name: "Is deleted", visible: true, viewRule: "Admin", modifyRule: "Admin"},
       ],
@@ -148,19 +148,6 @@ class OrganizationListPage extends BaseListPage {
         ...this.getColumnSearchProps("displayName"),
       },
       {
-        title: i18next.t("general:Favicon"),
-        dataIndex: "favicon",
-        key: "favicon",
-        width: "50px",
-        render: (text, record, index) => {
-          return (
-            <a target="_blank" rel="noreferrer" href={text}>
-              <img src={text} alt={text} width={40} />
-            </a>
-          );
-        },
-      },
-      {
         title: i18next.t("organization:Website URL"),
         dataIndex: "websiteUrl",
         key: "websiteUrl",
@@ -176,25 +163,34 @@ class OrganizationListPage extends BaseListPage {
         },
       },
       {
-        title: i18next.t("general:Password type"),
-        dataIndex: "passwordType",
-        key: "passwordType",
-        width: "150px",
+        title: i18next.t("organization:INN"),
+        dataIndex: "websiteUrl",
+        key: "websiteUrl",
+        width: "300px",
         sorter: true,
-        filterMultiple: false,
-        filters: [
-          {text: "plain", value: "plain"},
-          {text: "salt", value: "salt"},
-          {text: "md5-salt", value: "md5-salt"},
-        ],
+        ...this.getColumnSearchProps("websiteUrl"),
+        render: (text, record, index) => {
+          return (
+            <span>
+              {Math.floor(Math.random() * 9999999)}
+            </span>
+          );
+        },
       },
       {
-        title: i18next.t("general:Password salt"),
-        dataIndex: "passwordSalt",
-        key: "passwordSalt",
-        width: "150px",
+        title: i18next.t("organization:KPP"),
+        dataIndex: "websiteUrl",
+        key: "websiteUrl",
+        width: "300px",
         sorter: true,
-        ...this.getColumnSearchProps("passwordSalt"),
+        ...this.getColumnSearchProps("websiteUrl"),
+        render: (text, record, index) => {
+          return (
+            <span>
+              {Math.floor(Math.random() * 9999999)}
+            </span>
+          );
+        },
       },
       {
         title: i18next.t("general:Default avatar"),
