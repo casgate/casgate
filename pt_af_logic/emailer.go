@@ -61,12 +61,12 @@ func Email(subscription *object.Subscription) error {
 	}
 
 	orgId := fmt.Sprintf("admin/%s", subscription.Owner)
-	organization := object.GetOrganization(orgId)
+	organization, _ := object.GetOrganization(orgId)
 	partnerManager := getPartnerManager(subscription.Owner)
 	if partnerManager == nil {
 		return errors.New("no partner manager detected")
 	}
-	client := object.GetUser(subscription.User)
+	client, _ := object.GetUser(subscription.User)
 
 	var clientProps = make(map[string]string)
 	for prop := range client.Properties {
@@ -196,12 +196,12 @@ func NotifySubscriptionMembers(actor *object.User, old, current *object.Subscrip
 	}
 
 	orgId := fmt.Sprintf("admin/%s", current.Owner)
-	organization := object.GetOrganization(orgId)
+	organization, _ := object.GetOrganization(orgId)
 	partnerManager := getPartnerManager(current.Owner)
 	if partnerManager == nil {
 		return errors.New("no partner manager detected")
 	}
-	client := object.GetUser(current.User)
+	client, _ := object.GetUser(current.User)
 
 	var clientProps = make(map[string]string)
 	for prop := range client.Properties {
@@ -343,7 +343,7 @@ func getSubscriptionStateRecipients(sub *object.Subscription) []string {
 }
 
 func getBuiltInEmailProvider() *object.Provider {
-	providers := object.GetProviders(builtInOrgCode)
+	providers, _ := object.GetProviders(builtInOrgCode)
 	for _, provider := range providers {
 		if provider.Category == "Email" {
 			return provider
@@ -353,7 +353,7 @@ func getBuiltInEmailProvider() *object.Provider {
 }
 
 func getAdmins(organization string) []string {
-	users := object.GetUsers(organization)
+	users, _ := object.GetUsers(organization)
 	var emails []string
 	for _, user := range users {
 		if user.IsAdmin {
@@ -364,7 +364,7 @@ func getAdmins(organization string) []string {
 }
 
 func getPartnerManager(organization string) *object.User {
-	users := object.GetUsers(organization)
+	users, _ := object.GetUsers(organization)
 	for _, user := range users {
 		if user.IsAdmin {
 			return user
@@ -374,7 +374,7 @@ func getPartnerManager(organization string) *object.User {
 }
 
 func getPartnerUser(organization string) *object.User {
-	users := object.GetUsers(organization)
+	users, _ := object.GetUsers(organization)
 	for _, user := range users {
 		if !user.IsAdmin {
 			return user
@@ -384,7 +384,7 @@ func getPartnerUser(organization string) *object.User {
 }
 
 func getBuiltInAdmins() []string {
-	users := object.GetUsers(builtInOrgCode)
+	users, _ := object.GetUsers(builtInOrgCode)
 	var emails []string
 	for _, user := range users {
 		if user.IsGlobalAdmin {

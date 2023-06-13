@@ -130,6 +130,7 @@ p, *, *, GET, /api/get-pricings, *, *
 p, *, *, GET, /api/get-plans, *, *
 p, *, *, GET, /api/get-pricing, *, *
 p, *, *, GET, /api/get-plan, *, *
+p, *, *, GET, /api/get-organization-names, *, *
 p, *, *, *, /api/update-subscription-postback, *, *
 p, *, *, *, /api/apply-blueprint, *, *
 `
@@ -158,7 +159,11 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 		}
 	}
 
-	user := object.GetUser(util.GetId(subOwner, subName))
+	user, err := object.GetUser(util.GetId(subOwner, subName))
+	if err != nil {
+		panic(err)
+	}
+
 	if user != nil && user.IsAdmin && (subOwner == objOwner || (objOwner == "admin")) {
 		return true
 	}

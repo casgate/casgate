@@ -50,19 +50,19 @@ func (c *ApiController) ApplyBlueprint() {
 		url, _ := url.Parse(record.RequestUri)
 		id := url.Query().Get("id")
 
-		currentOrganization := object.GetOrganization(id)
+		currentOrganization, _ := object.GetOrganization(id)
 		// prevent double blueprint creation
 		if currentOrganization.BlueprintsApplied {
 			c.ResponseOk("Blueprints already applied")
 			return
 		}
 
-		masterRoles := object.GetRoles("built-in")
-		masterModel := object.GetModel("built-in/rbac_built-in") // "rbac_built-in")
-		masterPermissions := object.GetPermissions("built-in")
-		applications := object.GetOrganizationApplications("admin", "built-in")
-		plans := object.GetPlans("built-in")
-		pricings := object.GetPricings("built-in")
+		masterRoles, _ := object.GetRoles("built-in")
+		masterModel, _ := object.GetModel("built-in/rbac_built-in") // "rbac_built-in")
+		masterPermissions, _ := object.GetPermissions("built-in")
+		applications, _ := object.GetOrganizationApplications("admin", "built-in")
+		plans, _ := object.GetPlans("built-in")
+		pricings, _ := object.GetPricings("built-in")
 		//subscriptions := object.GetSubscriptions("built-in")
 
 		date := time.Now().Format(time.RFC3339)
@@ -172,14 +172,14 @@ func (c *ApiController) ApplyBlueprint() {
 			return
 		}
 
-		users := object.GetUsers(org.Name)
-		roles := object.GetRoles(org.Name)
-		model := object.GetModel(org.Name + "/rbac_built-in")
-		permissions := object.GetPermissions(org.Name)
-		applications := object.GetOrganizationApplications("admin", org.Name)
-		plans := object.GetPlans(org.Name)
-		pricings := object.GetPricings(org.Name)
-		cert := object.GetCert(org.Name + "/" + org.Name)
+		users, _ := object.GetUsers(org.Name)
+		roles, _ := object.GetRoles(org.Name)
+		model, _ := object.GetModel(org.Name + "/rbac_built-in")
+		permissions, _ := object.GetPermissions(org.Name)
+		applications, _ := object.GetOrganizationApplications("admin", org.Name)
+		plans, _ := object.GetPlans(org.Name)
+		pricings, _ := object.GetPricings(org.Name)
+		cert, _ := object.GetCert(org.Name + "/" + org.Name)
 
 		for _, pricing := range pricings {
 			object.DeletePricing(pricing)
