@@ -248,7 +248,12 @@ func (c *ApiController) DeleteSubscription() {
 		return
 	}
 
-	existing := object.GetSubscription(subscription.GetId())
+	existing, err := object.GetSubscription(subscription.GetId())
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
 	if existing.State != "New" {
 		c.ResponseError("Cannot delete subscription with current status")
 		return
