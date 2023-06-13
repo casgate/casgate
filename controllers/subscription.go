@@ -120,6 +120,67 @@ func (c *ApiController) UpdateSubscription() {
 		}
 	}
 
+	isNameChanged := old.Name != subscription.Name
+	isStartDateChanged := old.StartDate != subscription.StartDate
+	isEndDateChanged := old.EndDate != subscription.EndDate
+	isSubUserChanged := old.User != subscription.User
+	isPlanChanged := old.Plan != subscription.Plan
+	isDiscountChanged := old.Discount != subscription.Discount
+
+	if subscription.State != "New" {
+		if isNameChanged && !isGlobalAdmin {
+			c.ResponseError("Name change is restricted to New subscriptions only")
+			return
+		}
+
+		if isSubUserChanged {
+			c.ResponseError("User change is restricted to New subscriptions only")
+			return
+		}
+
+		if isPlanChanged {
+			if subscription.State != "Pending" && subscription.State != "Unauthorized" {
+				c.ResponseError("Plan change is restricted to New subscriptions only")
+				return
+			}
+		}
+
+		if isDiscountChanged {
+			if subscription.State != "Pending" && subscription.State != "Unauthorized" {
+				c.ResponseError("Discount change is restricted to New subscriptions only")
+				return
+			}
+		}
+
+		if isStartDateChanged {
+			if !isGlobalAdmin {
+				if !isOrgAdmin {
+					c.ResponseError("Restricted to organization admin")
+					return
+				}
+
+				if subscription.State != "Authorized" {
+					c.ResponseError("Restricted to Authorized subscription state only")
+					return
+				}
+			}
+		}
+
+		if isEndDateChanged {
+			if !isGlobalAdmin {
+				if !isOrgAdmin {
+					c.ResponseError("Restricted to organization admin")
+					return
+				}
+
+				if subscription.State != "PreFinished" {
+					c.ResponseError("Restricted to PreFinished subscription state only")
+					return
+				}
+			}
+		}
+	}
+
 	c.Data["json"] = wrapActionResponse(object.UpdateSubscription(id, &subscription))
 	c.ServeJSON()
 
