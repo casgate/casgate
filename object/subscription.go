@@ -48,6 +48,20 @@ var subscriptionStates = map[string][]string{
 	subscriptionCancelled:     {subscriptionPending},
 }
 
+var orgAdminStates = map[string][]string{
+	subscriptionNew:         {subscriptionPending},
+	subscriptionAuthorized:  {subscriptionStarted, subscriptionCancelled},
+	subscriptionPreFinished: {subscriptionFinished},
+	subscriptionCancelled:   {subscriptionPending},
+}
+
+var orgUserStates = map[string][]string{
+	subscriptionNew:           {subscriptionPending},
+	subscriptionUnauthorized:  {subscriptionPending, subscriptionCancelled},
+	subscriptionPreAuthorized: {subscriptionAuthorized, subscriptionCancelled},
+	subscriptionStarted:       {subscriptionPreFinished},
+}
+
 func SubscriptionStateCanBeChanged(oldState, newState string) (bool, []string) {
 	statuses, ok := subscriptionStates[oldState]
 	if !ok {
@@ -61,6 +75,41 @@ func SubscriptionStateCanBeChanged(oldState, newState string) (bool, []string) {
 	}
 
 	return false, statuses
+}
+
+func SubscriptionStateAllowedToChange(isGlobalAdmin, isAdmin bool, oldState, newState string) (bool, []string) {
+	if isGlobalAdmin {
+		return true, nil
+	}
+
+	var statuses []string
+	var ok bool
+
+	if isAdmin {
+		statuses, ok = orgAdminStates[oldState]
+		if !ok {
+			return false, nil
+		}
+
+		for _, state := range statuses {
+			if newState == state {
+				return true, nil
+			}
+		}
+	} else {
+		statuses, ok = orgUserStates[oldState]
+		if !ok {
+			return false, nil
+		}
+
+		for _, state := range statuses {
+			if newState == state {
+				return true, nil
+			}
+		}
+	}
+
+	return ok, statuses
 }
 
 type Subscription struct {

@@ -86,17 +86,36 @@ func (c *ApiController) UpdateSubscription() {
 
 	// get current user
 	currentUser := c.getCurrentUser()
+	isGlobalAdmin := currentUser.IsGlobalAdmin
+	isOrgAdmin := currentUser.IsAdmin
 
 	// check subscription status
 	old := object.GetSubscription(subscription.Owner + "/" + subscription.Name)
 	stateChanged := old.State != subscription.State
 	if stateChanged {
 		valid, statuses := object.SubscriptionStateCanBeChanged(old.State, subscription.State)
-		if !valid {
+		// global admin can move states in an unrestricted way
+		if !valid && !isGlobalAdmin {
 			c.ResponseError(fmt.Sprintf(
 				"Invalid subscription state. Can be changed to: '%s'",
 				strings.Join(statuses, ", "),
 			))
+			return
+		}
+
+		// check for user permissions before allow state to change
+		allowed, statuses2 := object.SubscriptionStateAllowedToChange(isGlobalAdmin, isOrgAdmin, old.State, subscription.State)
+		if !allowed {
+			var errText string
+			if len(statuses2) == 0 {
+				errText = "State change for current user is restricted"
+			} else {
+				errText = fmt.Sprintf(
+					"Invalid subscription state. Can be changed to: '%s'",
+					strings.Join(statuses, ", "),
+				)
+			}
+			c.ResponseError(errText)
 			return
 		}
 	}
