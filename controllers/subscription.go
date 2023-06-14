@@ -129,7 +129,7 @@ func (c *ApiController) UpdateSubscription() {
 				errText = "State change for current user is restricted"
 			} else {
 				errText = fmt.Sprintf(
-					"Invalid subscription state. Can be changed to: '%s'", statuses,
+					"Invalid subscription state. Can be changed to: '%s'", statuses2,
 				)
 			}
 			c.ResponseError(errText)
