@@ -76,7 +76,6 @@ class PricingPage extends React.Component {
   }
 
   loadPricing(pricingName) {
-    console.log(this.state);
     if (pricingName === undefined) {
       return;
     }

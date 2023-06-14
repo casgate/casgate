@@ -219,8 +219,6 @@ class LoginPage extends React.Component {
     }
 
     if (this.getApplicationObj()?.organization) {
-
-      console.log("block values[\"organization\"]");
       // values["organization"] = this.getApplicationObj().organization;
     }
   }
@@ -281,8 +279,6 @@ class LoginPage extends React.Component {
   }
 
   onFinish(values) {
-
-    console.log(values);
     if (this.state.loginMethod === "webAuthn") {
       let username = this.state.username;
       if (username === null || username === "") {
