@@ -21,7 +21,6 @@ import (
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/pt_af_logic"
 	"github.com/casdoor/casdoor/util"
-	"strings"
 )
 
 // GetSubscriptions
@@ -117,8 +116,7 @@ func (c *ApiController) UpdateSubscription() {
 		// global admin can move states in an unrestricted way
 		if !valid && !isGlobalAdmin {
 			c.ResponseError(fmt.Sprintf(
-				"Invalid subscription state. Can be changed to: '%s'",
-				strings.Join(statuses, ", "),
+				"Invalid subscription state. Can be changed to: '%s'", statuses,
 			))
 			return
 		}
@@ -131,8 +129,7 @@ func (c *ApiController) UpdateSubscription() {
 				errText = "State change for current user is restricted"
 			} else {
 				errText = fmt.Sprintf(
-					"Invalid subscription state. Can be changed to: '%s'",
-					strings.Join(statuses, ", "),
+					"Invalid subscription state. Can be changed to: '%s'", statuses,
 				)
 			}
 			c.ResponseError(errText)
@@ -147,7 +144,9 @@ func (c *ApiController) UpdateSubscription() {
 	isPlanChanged := old.Plan != subscription.Plan
 	isDiscountChanged := old.Discount != subscription.Discount
 
-	if subscription.State != "New" {
+	currentState := object.SubscriptionState(subscription.State)
+
+	if currentState != object.SubscriptionNew {
 		if isNameChanged && !isGlobalAdmin {
 			c.ResponseError("Name change is restricted to New subscriptions only")
 			return
@@ -159,14 +158,14 @@ func (c *ApiController) UpdateSubscription() {
 		}
 
 		if isPlanChanged {
-			if subscription.State != "Pending" && subscription.State != "Unauthorized" {
+			if currentState != object.SubscriptionPending && currentState != object.SubscriptionUnauthorized {
 				c.ResponseError("Plan change is restricted to New subscriptions only")
 				return
 			}
 		}
 
 		if isDiscountChanged {
-			if subscription.State != "Pending" && subscription.State != "Unauthorized" {
+			if currentState != object.SubscriptionPending && currentState != object.SubscriptionUnauthorized {
 				c.ResponseError("Discount change is restricted to New subscriptions only")
 				return
 			}
@@ -179,7 +178,7 @@ func (c *ApiController) UpdateSubscription() {
 					return
 				}
 
-				if subscription.State != "Authorized" {
+				if currentState != object.SubscriptionAuthorized {
 					c.ResponseError("Restricted to Authorized subscription state only")
 					return
 				}
@@ -193,7 +192,7 @@ func (c *ApiController) UpdateSubscription() {
 					return
 				}
 
-				if subscription.State != "PreFinished" {
+				if currentState != object.SubscriptionPreFinished {
 					c.ResponseError("Restricted to PreFinished subscription state only")
 					return
 				}

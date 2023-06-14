@@ -16,65 +16,85 @@ package object
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
 )
 
+type SubscriptionState string
+
+func (s SubscriptionState) String() string {
+	return string(s)
+}
+
+type SubscriptionStates []SubscriptionState
+
+func (s SubscriptionStates) String() string {
+	var strs []string
+	for _, state := range s {
+		strs = append(strs, state.String())
+	}
+	return strings.Join(strs, ", ")
+}
+
 const (
-	subscriptionNew           = "New"
-	subscriptionPending       = "Pending"
-	subscriptionPreAuthorized = "PreAuthorized"
-	subscriptionUnauthorized  = "Unauthorized"
-	subscriptionAuthorized    = "Authorized"
-	subscriptionStarted       = "Started"
-	subscriptionPreFinished   = "PreFinished"
-	subscriptionFinished      = "Finished"
-	subscriptionCancelled     = "Cancelled"
+	SubscriptionNew           SubscriptionState = "New"
+	SubscriptionPending       SubscriptionState = "Pending"
+	SubscriptionPreAuthorized SubscriptionState = "PreAuthorized"
+	SubscriptionUnauthorized  SubscriptionState = "Unauthorized"
+	SubscriptionAuthorized    SubscriptionState = "Authorized"
+	SubscriptionStarted       SubscriptionState = "Started"
+	SubscriptionPreFinished   SubscriptionState = "PreFinished"
+	SubscriptionFinished      SubscriptionState = "Finished"
+	SubscriptionCancelled     SubscriptionState = "Cancelled"
 )
 
-const defaultStatus = subscriptionNew
+const defaultStatus = SubscriptionNew
 
 // global state change rules
-var subscriptionStates = map[string][]string{
-	subscriptionNew:           {subscriptionPending},
-	subscriptionPending:       {subscriptionPreAuthorized, subscriptionUnauthorized},
-	subscriptionPreAuthorized: {subscriptionAuthorized, subscriptionCancelled},
-	subscriptionAuthorized:    {subscriptionStarted, subscriptionCancelled},
-	subscriptionUnauthorized:  {subscriptionPending, subscriptionCancelled},
-	subscriptionStarted:       {subscriptionPreFinished},
-	subscriptionPreFinished:   {subscriptionFinished},
-	subscriptionFinished:      {},
-	subscriptionCancelled:     {subscriptionPending},
+var subscriptionStates = map[SubscriptionState][]SubscriptionState{
+	SubscriptionNew:           {SubscriptionPending},
+	SubscriptionPending:       {SubscriptionPreAuthorized, SubscriptionUnauthorized},
+	SubscriptionPreAuthorized: {SubscriptionAuthorized, SubscriptionCancelled},
+	SubscriptionAuthorized:    {SubscriptionStarted, SubscriptionCancelled},
+	SubscriptionUnauthorized:  {SubscriptionPending, SubscriptionCancelled},
+	SubscriptionStarted:       {SubscriptionPreFinished},
+	SubscriptionPreFinished:   {SubscriptionFinished},
+	SubscriptionFinished:      {},
+	SubscriptionCancelled:     {},
 }
 
 // organization admin state change availability
-var orgAdminStates = map[string][]string{
-	subscriptionNew:         {subscriptionPending},
-	subscriptionAuthorized:  {subscriptionStarted, subscriptionCancelled},
-	subscriptionPreFinished: {subscriptionFinished},
-	subscriptionCancelled:   {subscriptionPending},
+var orgAdminStates = map[SubscriptionState]SubscriptionStates{
+	SubscriptionNew:         {SubscriptionPending},
+	SubscriptionAuthorized:  {SubscriptionStarted, SubscriptionCancelled},
+	SubscriptionPreFinished: {SubscriptionFinished},
+	SubscriptionCancelled:   {SubscriptionPending},
 }
 
 // organization member state change availability
-var orgUserStates = map[string][]string{
-	subscriptionNew:           {subscriptionPending},
-	subscriptionUnauthorized:  {subscriptionPending, subscriptionCancelled},
-	subscriptionPreAuthorized: {subscriptionAuthorized, subscriptionCancelled},
-	subscriptionStarted:       {subscriptionPreFinished},
+var orgUserStates = map[SubscriptionState]SubscriptionStates{
+	SubscriptionNew:           {SubscriptionPending},
+	SubscriptionUnauthorized:  {SubscriptionPending, SubscriptionCancelled},
+	SubscriptionPreAuthorized: {SubscriptionAuthorized, SubscriptionCancelled},
+	SubscriptionStarted:       {SubscriptionPreFinished},
 }
 
 // SubscriptionStateCanBeChanged checks if subscription state can be moved to next value
 // returns allowed states to move if it is available and current action is wrong
-func SubscriptionStateCanBeChanged(oldState, newState string) (bool, []string) {
-	statuses, ok := subscriptionStates[oldState]
+func SubscriptionStateCanBeChanged(oldState, newState string) (bool, SubscriptionStates) {
+	old := SubscriptionState(oldState)
+	next := SubscriptionState(newState)
+
+	statuses, ok := subscriptionStates[old]
 	if !ok {
 		return false, nil
 	}
 
 	for _, state := range statuses {
-		if newState == state {
+		if next == state {
 			return true, nil
 		}
 	}
@@ -84,7 +104,10 @@ func SubscriptionStateCanBeChanged(oldState, newState string) (bool, []string) {
 
 // SubscriptionStateAllowedToChange checks if user has permission to assign a new subscription state
 // returns allowed states to move if it is available
-func SubscriptionStateAllowedToChange(isGlobalAdmin, isAdmin bool, oldState, newState string) (bool, []string) {
+func SubscriptionStateAllowedToChange(isGlobalAdmin, isAdmin bool, oldState, newState string) (bool, SubscriptionStates) {
+	old := SubscriptionState(oldState)
+	next := SubscriptionState(newState)
+
 	if isGlobalAdmin {
 		return true, nil
 	}
@@ -94,13 +117,13 @@ func SubscriptionStateAllowedToChange(isGlobalAdmin, isAdmin bool, oldState, new
 		statesMap = orgUserStates
 	}
 
-	statuses, ok := statesMap[oldState]
+	statuses, ok := statesMap[old]
 	if !ok {
 		return false, nil
 	}
 
 	for _, state := range statuses {
-		if newState == state {
+		if next == state {
 			return true, nil
 		}
 	}
@@ -140,7 +163,7 @@ func NewSubscription(owner string, user string, plan string, duration int) *Subs
 		User:        owner + "/" + user,
 		Plan:        owner + "/" + plan,
 		CreatedTime: util.GetCurrentTime(),
-		State:       defaultStatus,
+		State:       defaultStatus.String(),
 		Duration:    duration,
 		StartDate:   time.Now(),
 		EndDate:     time.Now().AddDate(0, 0, duration),
