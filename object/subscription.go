@@ -89,30 +89,19 @@ func SubscriptionStateAllowedToChange(isGlobalAdmin, isAdmin bool, oldState, new
 		return true, nil
 	}
 
-	var statuses []string
-	var ok bool
+	statesMap := orgAdminStates
+	if !isAdmin {
+		statesMap = orgUserStates
+	}
 
-	if isAdmin {
-		statuses, ok = orgAdminStates[oldState]
-		if !ok {
-			return false, nil
-		}
+	statuses, ok := statesMap[oldState]
+	if !ok {
+		return false, nil
+	}
 
-		for _, state := range statuses {
-			if newState == state {
-				return true, nil
-			}
-		}
-	} else {
-		statuses, ok = orgUserStates[oldState]
-		if !ok {
-			return false, nil
-		}
-
-		for _, state := range statuses {
-			if newState == state {
-				return true, nil
-			}
+	for _, state := range statuses {
+		if newState == state {
+			return true, nil
 		}
 	}
 
