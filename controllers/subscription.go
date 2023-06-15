@@ -21,7 +21,6 @@ import (
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/pt_af_logic"
 	"github.com/casdoor/casdoor/util"
-	"strings"
 )
 
 // GetSubscriptions
@@ -106,18 +105,98 @@ func (c *ApiController) UpdateSubscription() {
 
 	// get current user
 	currentUser := c.getCurrentUser()
+	isGlobalAdmin := currentUser.IsGlobalAdmin
+	isOrgAdmin := currentUser.IsAdmin
 
 	// check subscription status
 	old, _ := object.GetSubscription(subscription.Owner + "/" + subscription.Name)
 	stateChanged := old.State != subscription.State
 	if stateChanged {
 		valid, statuses := object.SubscriptionStateCanBeChanged(old.State, subscription.State)
-		if !valid {
+		// global admin can move states in an unrestricted way
+		if !valid && !isGlobalAdmin {
 			c.ResponseError(fmt.Sprintf(
-				"Invalid subscription state. Can be changed to: '%s'",
-				strings.Join(statuses, ", "),
+				"Invalid subscription state. Can be changed to: '%s'", statuses,
 			))
 			return
+		}
+
+		// check for user permissions before allow state to change
+		allowed, statuses2 := object.SubscriptionStateAllowedToChange(isGlobalAdmin, isOrgAdmin, old.State, subscription.State)
+		if !allowed {
+			var errText string
+			if len(statuses2) == 0 {
+				errText = "State change for current user is restricted"
+			} else {
+				errText = fmt.Sprintf(
+					"Invalid subscription state. Can be changed to: '%s'", statuses2,
+				)
+			}
+			c.ResponseError(errText)
+			return
+		}
+	}
+
+	isNameChanged := old.Name != subscription.Name
+	isStartDateChanged := old.StartDate != subscription.StartDate
+	isEndDateChanged := old.EndDate != subscription.EndDate
+	isSubUserChanged := old.User != subscription.User
+	isPlanChanged := old.Plan != subscription.Plan
+	isDiscountChanged := old.Discount != subscription.Discount
+
+	currentState := object.SubscriptionState(subscription.State)
+
+	if currentState != object.SubscriptionNew {
+		if isNameChanged && !isGlobalAdmin {
+			c.ResponseError("Name change is restricted to New subscriptions only")
+			return
+		}
+
+		if isSubUserChanged {
+			c.ResponseError("User change is restricted to New subscriptions only")
+			return
+		}
+
+		if isPlanChanged {
+			if currentState != object.SubscriptionPending && currentState != object.SubscriptionUnauthorized {
+				c.ResponseError("Plan change is restricted to New subscriptions only")
+				return
+			}
+		}
+
+		if isDiscountChanged {
+			if currentState != object.SubscriptionPending && currentState != object.SubscriptionUnauthorized {
+				c.ResponseError("Discount change is restricted to New subscriptions only")
+				return
+			}
+		}
+
+		if isStartDateChanged {
+			if !isGlobalAdmin {
+				if !isOrgAdmin {
+					c.ResponseError("Restricted to organization admin")
+					return
+				}
+
+				if currentState != object.SubscriptionAuthorized {
+					c.ResponseError("Restricted to Authorized subscription state only")
+					return
+				}
+			}
+		}
+
+		if isEndDateChanged {
+			if !isGlobalAdmin {
+				if !isOrgAdmin {
+					c.ResponseError("Restricted to organization admin")
+					return
+				}
+
+				if currentState != object.SubscriptionPreFinished {
+					c.ResponseError("Restricted to PreFinished subscription state only")
+					return
+				}
+			}
 		}
 	}
 
@@ -165,6 +244,17 @@ func (c *ApiController) DeleteSubscription() {
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &subscription)
 	if err != nil {
 		c.ResponseError(err.Error())
+		return
+	}
+
+	existing, err := object.GetSubscription(subscription.GetId())
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if existing.State != "New" && !c.IsGlobalAdmin() {
+		c.ResponseError("Cannot delete subscription with current status")
 		return
 	}
 
