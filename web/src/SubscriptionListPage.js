@@ -43,7 +43,7 @@ class SubscriptionListPage extends BaseListPage {
       submitter: this.props.account.name,
       approver: this.props.account.name,
       approveTime: moment().format(),
-      state: "Approved",
+      state: "New",
     };
   }
 
