@@ -37,6 +37,7 @@ class SubscriptionListPage extends BaseListPage {
       endDate: moment().add(defaultDuration, "d").format(),
       duration: defaultDuration,
       description: "",
+      discaunt: 0,
       user: "",
       plan: "",
       isEnabled: true,

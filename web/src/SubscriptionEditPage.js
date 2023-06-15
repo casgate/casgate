@@ -206,8 +206,8 @@ class SubscriptionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("general:Discount"), i18next.t("general:Discount - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Input value={this.state.subscription.discount} onChange={e => {
-              this.updateSubscriptionField("Discount", e.target.value);
+            <InputNumber min={0} max={40} value={this.state.subscription.discount} onChange={e => {
+              this.updateSubscriptionField("discount", e);
             }} />
           </Col>
         </Row>
