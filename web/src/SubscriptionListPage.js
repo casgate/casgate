@@ -177,10 +177,24 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("state"),
         render: (text, record, index) => {
           switch (text) {
-          case "Approved":
-            return Setting.getTag("success", i18next.t("permission:Approved"));
+          case "New":
+            return Setting.getTag("success", i18next.t("permission:New"));
           case "Pending":
-            return Setting.getTag("error", i18next.t("permission:Pending"));
+            return Setting.getTag("warning", i18next.t("permission:Pending"));
+          case "PreAuthorized":
+            return Setting.getTag("success", i18next.t("permission:Pre-Authorized"));
+          case "Unauthorized":
+            return Setting.getTag("error", i18next.t("permission:Unauthorized"));
+          case "Authorized":
+            return Setting.getTag("success", i18next.t("permission:Authorized"));
+          case "Started":
+            return Setting.getTag("success", i18next.t("permission:Started"));
+          case "PreFinished":
+            return Setting.getTag("warning", i18next.t("permission:PreFinished"));
+          case "Finished":
+            return Setting.getTag("success", i18next.t("permission:Finished"));
+          case "Cancelled":
+            return Setting.getTag("error", i18next.t("permission:Cancelled"));
           default:
             return null;
           }
