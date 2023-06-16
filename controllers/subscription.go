@@ -179,7 +179,7 @@ func (c *ApiController) UpdateSubscription() {
 				}
 
 				if currentState != object.SubscriptionAuthorized {
-					c.ResponseError("Restricted to Authorized subscription state only")
+					c.ResponseError("StartDate change restricted to Authorized subscription state only")
 					return
 				}
 			}
@@ -193,7 +193,7 @@ func (c *ApiController) UpdateSubscription() {
 				}
 
 				if currentState != object.SubscriptionPreFinished {
-					c.ResponseError("Restricted to PreFinished subscription state only")
+					c.ResponseError("EndDate change restricted to PreFinished subscription state only")
 					return
 				}
 			}
