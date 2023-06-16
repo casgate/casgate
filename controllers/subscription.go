@@ -114,6 +114,10 @@ func (c *ApiController) UpdateSubscription() {
 		c.ResponseError(err.Error())
 		return
 	}
+	if old == nil {
+		c.ResponseError("Could not find subscription to update")
+		return
+	}
 
 	stateChanged := old.State != subscription.State
 	if stateChanged {
