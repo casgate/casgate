@@ -109,7 +109,12 @@ func (c *ApiController) UpdateSubscription() {
 	isOrgAdmin := currentUser.IsAdmin
 
 	// check subscription status
-	old, _ := object.GetSubscription(subscription.Owner + "/" + subscription.Name)
+	old, err := object.GetSubscription(id)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
 	stateChanged := old.State != subscription.State
 	if stateChanged {
 		valid, statuses := object.SubscriptionStateCanBeChanged(old.State, subscription.State)
