@@ -109,7 +109,16 @@ func (c *ApiController) UpdateSubscription() {
 	isOrgAdmin := currentUser.IsAdmin
 
 	// check subscription status
-	old, _ := object.GetSubscription(subscription.Owner + "/" + subscription.Name)
+	old, err := object.GetSubscription(id)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+	if old == nil {
+		c.ResponseError("Could not find subscription to update")
+		return
+	}
+
 	stateChanged := old.State != subscription.State
 	if stateChanged {
 		valid, statuses := object.SubscriptionStateCanBeChanged(old.State, subscription.State)
@@ -179,7 +188,7 @@ func (c *ApiController) UpdateSubscription() {
 				}
 
 				if currentState != object.SubscriptionAuthorized {
-					c.ResponseError("Restricted to Authorized subscription state only")
+					c.ResponseError("StartDate change restricted to Authorized subscription state only")
 					return
 				}
 			}
@@ -193,7 +202,7 @@ func (c *ApiController) UpdateSubscription() {
 				}
 
 				if currentState != object.SubscriptionPreFinished {
-					c.ResponseError("Restricted to PreFinished subscription state only")
+					c.ResponseError("EndDate change restricted to PreFinished subscription state only")
 					return
 				}
 			}
