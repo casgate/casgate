@@ -36,6 +36,7 @@ class SubscriptionEditPage extends React.Component {
       planes: [],
       providers: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
+      isGlobalAdmin: Setting.isAdminUser(props.account),
     };
   }
 
@@ -120,7 +121,7 @@ class SubscriptionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("general:Organization"), i18next.t("general:Organization - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Select virtual={false} style={{width: "100%"}} value={this.state.subscription.owner} onChange={(owner => {
+            <Select disabled={!this.state.isGlobalAdmin} virtual={false} style={{width: "100%"}} value={this.state.subscription.owner} onChange={(owner => {
               this.updateSubscriptionField("owner", owner);
               this.getUsers(owner);
               this.getPlanes(owner);
