@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -46,7 +47,7 @@ func (c *ApiController) ApplyBlueprint() {
 			c.ResponseError(err.Error())
 			return
 		}
-		
+
 		url, _ := url.Parse(record.RequestUri)
 		id := url.Query().Get("id")
 
@@ -111,6 +112,7 @@ func (c *ApiController) ApplyBlueprint() {
 				newApp.Providers = app.Providers
 				newApp.ClientId = util.GenerateClientId()
 				newApp.ClientSecret = util.GenerateClientSecret()
+				newApp.SigninUrl = fmt.Sprintf("/login/%s", org.Name)
 				object.AddApplication(newApp)
 			}
 		}
@@ -161,9 +163,13 @@ func (c *ApiController) ApplyBlueprint() {
 			object.AddPricing(newPricing)
 		}
 
+		*currentOrganization = org
 		currentOrganization.BlueprintsApplied = true
-		currentOrganization.Name = org.Name
-		object.UpdateOrganization(util.GetId(org.Owner, org.Name), currentOrganization)
+		_, err = object.UpdateOrganization(util.GetId(org.Owner, org.Name), currentOrganization)
+		if err != nil {
+			c.ResponseError(fmt.Sprintf("object.UpdateOrganization: %v", err))
+			return
+		}
 
 	} else if record.Action == "delete-organization" {
 		var org object.Organization

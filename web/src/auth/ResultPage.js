@@ -81,8 +81,8 @@ class ResultPage extends React.Component {
             }
             <Result
               status="success"
-              title={i18next.t("signup:Your account has been created!")}
-              subTitle={i18next.t("signup:Please click the below button to sign in")}
+              title={i18next.t("signup:Your registration request has been sent!")}
+              subTitle={i18next.t("signup:Please, wait for approval")}
               extra={[
                 <Button type="primary" key="login" onClick={() => {
                   const linkInStorage = sessionStorage.getItem("signinUrl");

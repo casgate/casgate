@@ -784,7 +784,9 @@
     "Username - Tooltip": "Username - Tooltip",
     "Your account has been created!": "Ваш аккаунт был создан!",
     "Your confirmed password is inconsistent with the password!": "Ваш подтвержденный пароль не соответствует паролю!",
-    "sign in now": "войти сейчас"
+    "sign in now": "войти сейчас",
+    "Your registration request has been sent!": "Ваша заявка на регистрацию отправлена!",
+    "Please, wait for approval": "Пожалуйста, дождитесь одобрения"
   },
   "subscription": {
     "Authorized": "Authorized",

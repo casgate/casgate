@@ -784,7 +784,9 @@
     "Username - Tooltip": "Username - Tooltip",
     "Your account has been created!": "Your account has been created!",
     "Your confirmed password is inconsistent with the password!": "Your confirmed password is inconsistent with the password!",
-    "sign in now": "sign in now"
+    "sign in now": "sign in now",
+    "Your registration request has been sent!": "Your registration request has been sent!",
+    "Please, wait for approval" : "Please, wait for approval"
   },
   "subscription": {
     "Authorized": "Authorized",
