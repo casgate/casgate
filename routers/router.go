@@ -281,6 +281,4 @@ func initAPI() {
 
 	beego.Router("/api/apply-blueprint", &controllers.ApiController{}, "POST:ApplyBlueprint")
 
-	beego.Router("/api/update-subscription-postback", &controllers.ApiController{}, "POST:UpdateSubscriptionPostBack")
-
 }

@@ -13,51 +13,34 @@ type LoginResponse struct {
 	AccessToken  string `json:"access_token"`
 }
 
-type TenantRequest struct {
-	Name              string                   `json:"name"`
-	Description       string                   `json:"description"`
-	IsActive          bool                     `json:"is_active"`
-	TrafficProcessing TrafficProcessingRequest `json:"traffic_processing"`
-	Administrator     AdministratorRequest     `json:"administrator"`
-}
-
-type TrafficProcessingRequest struct {
-	TrafficProcessingType string `json:"traffic_processing_type"`
-}
-
-type AdministratorRequest struct {
-	Email                  string `json:"email"`
-	Username               string `json:"username"`
-	Password               string `json:"password"`
-	PasswordChangeRequired bool   `json:"password_change_required"`
-}
-
 type Tenant struct {
-	ID                     string            `json:"id"`
-	Name                   string            `json:"name"`
-	Description            string            `json:"description"`
+	ID                     string            `json:"id,omitempty"`
+	Name                   string            `json:"name,omitempty"`
+	Description            string            `json:"description,omitempty"`
 	IsDefault              bool              `json:"is_default"`
 	IsActive               bool              `json:"is_active"`
-	BorderConnectionString string            `json:"border_connection_string"`
-	TrafficProcessing      TrafficProcessing `json:"traffic_processing"`
-	Administrator          Administrator     `json:"administrator"`
+	BorderConnectionString string            `json:"border_connection_string,omitempty"`
+	TrafficProcessing      TrafficProcessing `json:"traffic_processing,omitempty"`
+	Administrator          Administrator     `json:"administrator,omitempty"`
 }
 
 type TrafficProcessing struct {
-	TrafficProcessingType string `json:"traffic_processing_type"`
-	Zone                  string `json:"zone"`
-	MaxPods               int    `json:"max_pods"`
-	MinPods               int    `json:"min_pods"`
-	PodSize               string `json:"pod_size"`
-	MaxPodsPerNode        int    `json:"max_pods_per_node"`
-	MinPodsPerNode        int    `json:"min_pods_per_node"`
+	TrafficProcessingType string `json:"traffic_processing_type,omitempty"`
+	Zone                  string `json:"zone,omitempty"`
+	MaxPods               int    `json:"max_pods,omitempty"`
+	MinPods               int    `json:"min_pods,omitempty"`
+	PodSize               string `json:"pod_size,omitempty"`
+	MaxPodsPerNode        int    `json:"max_pods_per_node,omitempty"`
+	MinPodsPerNode        int    `json:"min_pods_per_node,omitempty"`
 }
 
 type Administrator struct {
-	ID       string `json:"id"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	IsActive bool   `json:"is_active"`
+	ID                     string `json:"id,omitempty"`
+	Email                  string `json:"email,omitempty"`
+	Username               string `json:"username,omitempty"`
+	Password               string `json:"password,omitempty"`
+	IsActive               bool   `json:"is_active"`
+	PasswordChangeRequired bool   `json:"password_change_required"`
 }
 
 type CreateUserRequest struct {

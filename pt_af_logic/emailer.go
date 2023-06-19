@@ -2,13 +2,13 @@ package pt_af_logic
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/casdoor/casdoor/object"
-	af_client "github.com/casdoor/casdoor/pt_af_sdk"
 	"html/template"
 	"strings"
+
+	"github.com/casdoor/casdoor/object"
+	af_client "github.com/casdoor/casdoor/pt_af_sdk"
 )
 
 type Message struct {
@@ -38,151 +38,55 @@ type SubscriptionStateChangeMessage struct {
 	OldStatus      string
 }
 
-// default organization
-const builtInOrgCode = "built-in"
+type PTAFTenantCreatedMessage struct {
+	ClientName          string
+	ClientDisplayName   string
+	ClientURL           string
+	ServiceUserName     string
+	ServiceUserPwd      string
+	UserROName          string
+	UserROPwd           string
+	TenantAdminName     string
+	TenantAdminPassword string
+	PTAFLoginLink       string
+}
 
 const subscriptionStateChangeEmailSubject = `Subscription status changed`
 
-func getEmailSubjectAndTemplate(action string) (string, string, bool) {
-	switch action {
-	case action:
-
-	}
-	return "", "", false
-}
-
-func Email(subscription *object.Subscription) error {
+func notifyPTAFTenantCreated(msg *PTAFTenantCreatedMessage, email string) error {
 	provider := getBuiltInEmailProvider()
 	if provider == nil {
 		return errors.New("no email provider registered")
 	}
-	if subscription.User == "" {
-		return errors.New("no client detected in subscription")
-	}
 
-	orgId := fmt.Sprintf("admin/%s", subscription.Owner)
-	organization, _ := object.GetOrganization(orgId)
-	partnerManager := getPartnerManager(subscription.Owner)
-	if partnerManager == nil {
-		return errors.New("no partner manager detected")
-	}
-	client, _ := object.GetUser(subscription.User)
-
-	var clientProps = make(map[string]string)
-	for prop := range client.Properties {
-		if !strings.HasPrefix(prop, af_client.PtPropPref) {
-			clientProps[prop] = client.Properties[prop]
-		}
-	}
-
-	msg := Message{
-		PartnerShortName: organization.Name,
-		Plan:             subscription.Plan,
-		ClientShortName:  client.Name,
-		ClientContact: ContactData{
-			Email: client.Email,
-			Phone: client.Phone,
-			Name:  client.DisplayName,
-		},
-		ClientProperties: clientProps,
-		PartnerManagerContact: ContactData{
-			Email: partnerManager.Email,
-			Phone: partnerManager.Phone,
-			Name:  partnerManager.DisplayName,
-		},
-		Product: "PT Application Firewall",
-	}
-
-	var recipients []string
-	var subject string
-	switch subscription.State {
-	case "Pending":
-		{
-			recipients = getBuiltInAdmins()
-			subject = "Subscription created"
-			msg.Action = "Create"
-		}
-	case "Pre-authorized":
-		{
-			recipients = getAdmins(subscription.Owner)
-			partnerAdmin := getPartnerManager(subscription.Owner)
-			if partnerAdmin != nil {
-				recipients = append(recipients, partnerAdmin.Email)
-			}
-			subject = "Subscription pre-authorized"
-			msg.Action = "Pre-authorized"
-		}
-	case "Unauthorized":
-		{
-			recipients = getAdmins(subscription.Owner)
-			partnerAdmin := getPartnerManager(subscription.Owner)
-			if partnerAdmin != nil {
-				recipients = append(recipients, partnerAdmin.Email)
-			}
-			subject = "Subscription unauthorized"
-			msg.Action = "Approve"
-		}
-	case "Authorized":
-		{
-			recipients = getAdmins(subscription.Owner)
-			partnerUser := getPartnerUser(subscription.Owner)
-			if partnerUser != nil {
-				recipients = append(recipients, partnerUser.Email)
-			}
-			subject = "Subscription authorized"
-			msg.Action = "Authorized"
-		}
-	case "Started":
-		{
-			recipients = getAdmins(subscription.Owner)
-			partnerAdmin := getPartnerManager(subscription.Owner)
-			if partnerAdmin != nil {
-				recipients = append(recipients, partnerAdmin.Email)
-			}
-			subject = "Subscription started"
-			msg.Action = "Started"
-		}
-	case "Cancelled":
-		{
-			recipients = getAdmins(subscription.Owner)
-			subject = "Subscription cancelled"
-			msg.Action = "Cancelled"
-		}
-	case "Finished":
-		{
-			recipients = getAdmins(subscription.Owner)
-			subject = "Subscription finished"
-			msg.Action = "Finished"
-		}
-	default:
-		return fmt.Errorf("could not handle subscription status: %s", subscription.State)
-	}
-
-	data, err := json.Marshal(msg)
-	content := string(data)
+	titleTmpl, err := template.New("").Parse(partnerCreateAccountsSubjTmpl)
 	if err != nil {
-		return err
+		return fmt.Errorf("template.Parse: %w", err)
 	}
 
-	errors := make(chan error, 256)
-	defer close(errors)
-	for _, email := range recipients {
-		go func(dst string) {
-			errors <- object.SendEmail(provider, subject, content, dst, provider.DisplayName)
-		}(email)
+	var titleBuf bytes.Buffer
+	err = titleTmpl.Execute(&titleBuf, msg)
+	if err != nil {
+		return fmt.Errorf("titleTmpl.Execute: %w", err)
 	}
 
-	for range recipients {
-		if e := <-errors; e != nil {
-			if err != nil {
-				err = fmt.Errorf("%w; %w", err, e)
-			} else {
-				err = e
-			}
-		}
+	bodyTmpl, err := template.New("").Parse(partnerCreateAccountsBodyTmpl)
+	if err != nil {
+		return fmt.Errorf("template.Parse: %w", err)
 	}
 
-	return err
+	var bodyBuf bytes.Buffer
+	err = bodyTmpl.Execute(&bodyBuf, msg)
+	if err != nil {
+		return fmt.Errorf("bodyTmpl.Execute: %w", err)
+	}
+
+	err = object.SendEmail(provider, titleBuf.String(), bodyBuf.String(), email, provider.DisplayName)
+	if err != nil {
+		return fmt.Errorf("object.SendEmail: %w", err)
+	}
+
+	return nil
 }
 
 // NotifySubscriptionMembers composes subscription state change message and sends emails to its members
@@ -269,7 +173,7 @@ func NotifySubscriptionMembers(actor *object.User, old, current *object.Subscrip
 	for range recipients {
 		if e := <-errors; e != nil {
 			if err != nil {
-				err = fmt.Errorf("%w; %w", err, e)
+				err = fmt.Errorf("%v; %v", err, e)
 			} else {
 				err = e
 			}

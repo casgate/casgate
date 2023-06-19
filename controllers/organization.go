@@ -19,6 +19,7 @@ import (
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/pt_af_logic"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -102,6 +103,12 @@ func (c *ApiController) UpdateOrganization() {
 		return
 	}
 
+	err = pt_af_logic.ValidateName(organization.Name)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
 	c.Data["json"] = wrapActionResponse(object.UpdateOrganization(id, &organization))
 	c.ServeJSON()
 }
@@ -116,6 +123,12 @@ func (c *ApiController) UpdateOrganization() {
 func (c *ApiController) AddOrganization() {
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	err = pt_af_logic.ValidateName(organization.Name)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

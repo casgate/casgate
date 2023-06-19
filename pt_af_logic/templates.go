@@ -17,3 +17,20 @@ const partnerSubscriptionTmpl = `
 <p>Статус: {{ .OldStatus }} -> {{ .NewStatus }}</p>
 <p>Автор изменения: {{ .Actor.Name }}</p>
 `
+
+const partnerCreateAccountsSubjTmpl = `[PT LM] Accounts for {{ .ClientName }}`
+
+const partnerCreateAccountsBodyTmpl = `
+<p>В PT AF создано изолированное пространство для клиента <a href="{{ .ClientURL }}">{{ .ClientDisplayName }}</a>. <br>
+Ссылка для входа: {{ .PTAFLoginLink }}</p>
+
+<p>При первом входе потребуется сменить пароль.</p>
+
+<p>Сервисная учётная запись<br>
+Логин: {{ .ServiceUserName }}<br>
+Временный пароль: {{ .ServiceUserPwd }}</p>
+
+<p>Пользовательская учётная запись<br>
+Логин: {{ .UserROName }}<br>
+Временный пароль: {{ .UserROPwd }}</p>
+`

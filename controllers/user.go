@@ -21,6 +21,7 @@ import (
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/pt_af_logic"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -226,6 +227,12 @@ func (c *ApiController) UpdateUser() {
 		return
 	}
 
+	err = pt_af_logic.ValidateName(user.Name)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
 	if id == "" {
 		id = c.GetSessionUsername()
 		if id == "" {
@@ -293,6 +300,12 @@ func (c *ApiController) UpdateUser() {
 func (c *ApiController) AddUser() {
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	err = pt_af_logic.ValidateName(user.Name)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

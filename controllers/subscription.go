@@ -17,6 +17,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/pt_af_logic"
@@ -209,17 +210,32 @@ func (c *ApiController) UpdateSubscription() {
 		}
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateSubscription(id, &subscription))
+	affected, err := object.UpdateSubscription(id, &subscription)
+
+	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 
-	// send emails if response handler above not panics
-	if stateChanged {
-		util.SafeGoroutine(func() {
-			if err := pt_af_logic.NotifySubscriptionMembers(currentUser, old, &subscription); err != nil {
-				util.LogError(c.Ctx, err.Error())
-			}
-		})
+	if affected {
+		// send emails if response handler above not panics
+		if stateChanged {
+			util.SafeGoroutine(func() {
+				if err := pt_af_logic.NotifySubscriptionMembers(currentUser, old, &subscription); err != nil {
+					util.LogError(c.Ctx, err.Error())
+				}
+			})
+		}
+
+		// create tenant at pt af
+		if object.SubscriptionState(subscription.State) == object.SubscriptionStarted {
+			util.SafeGoroutine(func() {
+				err := pt_af_logic.CreateTenant(c.Ctx, &subscription)
+				if err != nil {
+					util.LogError(c.Ctx, err.Error())
+				}
+			})
+		}
 	}
+
 }
 
 // AddSubscription

@@ -131,7 +131,6 @@ p, *, *, GET, /api/get-plans, *, *
 p, *, *, GET, /api/get-pricing, *, *
 p, *, *, GET, /api/get-plan, *, *
 p, *, *, GET, /api/get-organization-names, *, *
-p, *, *, *, /api/update-subscription-postback, *, *
 p, *, *, *, /api/apply-blueprint, *, *
 `
 
