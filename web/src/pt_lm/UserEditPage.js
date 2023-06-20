@@ -20,7 +20,7 @@ import * as Setting from "../Setting";
 import i18next from "i18next";
 import CropperDivModal from "../common/modal/CropperDivModal.js";
 import * as ApplicationBackend from "../backend/ApplicationBackend";
-import PasswordModal from "../common/modal/PasswordModal";
+import PasswordModal from "./PasswordModal";
 import ResetModal from "../common/modal/ResetModal";
 import AffiliationSelect from "../common/select/AffiliationSelect";
 import OAuthWidget from "../common/OAuthWidget";
@@ -280,7 +280,7 @@ class UserEditPage extends React.Component {
             {Setting.getLabel(i18next.t("general:Password"), i18next.t("general:Password - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <PasswordModal user={this.state.user} account={this.props.account} disabled={disabled} />
+            <PasswordModal user={this.state.user} account={this.props.account} organizationName={this.state.organizationName} userName={this.state.userName} disabled={disabled} />
           </Col>
         </Row>
       );

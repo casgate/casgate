@@ -453,6 +453,11 @@ func (c *ApiController) SetPassword() {
 		return
 	}
 
+	if targetUser == nil {
+		c.ResponseError(fmt.Sprintf("no user with id %s", userId))
+		return
+	}
+
 	if oldPassword != "" {
 		msg := object.CheckPassword(targetUser, oldPassword, c.GetAcceptLanguage())
 		if msg != "" {
