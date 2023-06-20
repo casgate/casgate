@@ -165,7 +165,7 @@ func (c *ApiController) Signup() {
 		Score:             initScore,
 		IsAdmin:           false,
 		IsGlobalAdmin:     false,
-		IsForbidden:       false,
+		IsForbidden:       true,
 		IsDeleted:         false,
 		SignupApplication: application.Name,
 		Properties:        map[string]string{},
