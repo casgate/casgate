@@ -157,15 +157,17 @@ class UserEditPage extends React.Component {
     //   </div>
     // )
 
-    // if (accountItem.viewRule === "Self") {
-    //   if (!this.isSelfOrAdmin()) {
-    //     return null;
-    //   }
-    // } else if (accountItem.viewRule === "Admin") {
-    //   if (!isAdmin) {
-    //     return null;
-    //   }
-    // }
+    if (accountItem.name !== "Properties") {
+      if (accountItem.viewRule === "Self") {
+        if (!this.isSelfOrAdmin()) {
+          return null;
+        }
+      } else if (accountItem.viewRule === "Admin") {
+        if (!isAdmin) {
+          return null;
+        }
+      }
+    }
 
     let disabled = false;
     if (accountItem.modifyRule === "Self") {
@@ -216,7 +218,7 @@ class UserEditPage extends React.Component {
             {Setting.getLabel(i18next.t("general:Name"), i18next.t("general:Name - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Input value={this.state.user.name} disabled={disabled} onChange={e => {
+            <Input value={this.state.user.name} disabled={!Setting.isLocalAdminUser(this.props.account) && disabled} onChange={e => {
               this.updateUserField("name", e.target.value);
             }} />
           </Col>
@@ -292,7 +294,7 @@ class UserEditPage extends React.Component {
             <Input
               value={this.state.user.email}
               style={{width: "280Px"}}
-              disabled={!Setting.isLocalAdminUser(this.props.account) ? true : disabled}
+              disabled={!Setting.isLocalAdminUser(this.props.account) && disabled}
               onChange={e => {
                 this.updateUserField("email", e.target.value);
               }}

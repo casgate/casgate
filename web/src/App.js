@@ -29,8 +29,11 @@ import OrganizationEditPage from "./pt_lm/OrganizationEditPage";
 
 // import OrganizationListPage from "./OrganizationListPage";
 // import OrganizationEditPage from "./OrganizationEditPage";
-import UserListPage from "./UserListPage";
-import UserEditPage from "./UserEditPage";
+
+import UserListPage from "./pt_lm/UserListPage";
+import UserEditPage from "./pt_lm/UserEditPage";
+// import UserListPage from "./UserListPage";
+// import UserEditPage from "./UserEditPage";
 import RoleListPage from "./RoleListPage";
 import RoleEditPage from "./RoleEditPage";
 import PermissionListPage from "./PermissionListPage";

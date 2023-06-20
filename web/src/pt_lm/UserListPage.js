@@ -22,7 +22,7 @@ import * as Setting from "../Setting";
 import * as UserBackend from "../backend/UserBackend";
 import i18next from "i18next";
 import BaseListPage from "../BaseListPage";
-import PopconfirmModal from "../PopconfirmModal";
+import PopconfirmModal from "../common/modal/PopconfirmModal";
 
 class UserListPage extends BaseListPage {
   constructor(props) {
@@ -60,8 +60,11 @@ class UserListPage extends BaseListPage {
       IsForbidden: false,
       score: this.state.organization.initScore,
       isDeleted: false,
-      properties: {},
-      signupApplication: "app-built-in",
+      properties: {
+        "ИНН": "",
+        "КПП": "",
+      },
+      signupApplication: owner,
     };
   }
 

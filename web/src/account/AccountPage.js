@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from "react";
-import UserEditPage from "../UserEditPage";
+import UserEditPage from "../pt_lm/UserEditPage";
 
 class AccountPage extends React.Component {
   render() {
