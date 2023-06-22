@@ -421,8 +421,8 @@ class App extends Component {
       res.push(Setting.getItem(<Link to="/organizations">{i18next.t("general:Organizations")}</Link>,
         "/organizations"));
 
-      res.push(Setting.getItem(<Link to="/groups">{i18next.t("general:Groups")}</Link>,
-        "/groups"));
+      // res.push(Setting.getItem(<Link to="/groups">{i18next.t("general:Groups")}</Link>,
+      //   "/groups"));
     }
 
     if (Setting.isLocalAdminUser(this.state.account)) {
@@ -444,9 +444,9 @@ class App extends Component {
       //   "/models"
       // ));
 
-      res.push(Setting.getItem(<Link to="/adapters">{i18next.t("general:Adapters")}</Link>,
-        "/adapters"
-      ));
+      // res.push(Setting.getItem(<Link to="/adapters">{i18next.t("general:Adapters")}</Link>,
+      //   "/adapters"
+      // ));
     }
 
     if (Setting.isLocalAdminUser(this.state.account)) {
