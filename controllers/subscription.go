@@ -148,8 +148,8 @@ func (c *ApiController) UpdateSubscription() {
 	}
 
 	isNameChanged := old.Name != subscription.Name
-	isStartDateChanged := old.StartDate != subscription.StartDate
-	isEndDateChanged := old.EndDate != subscription.EndDate
+	isStartDateChanged := !old.StartDate.Equal(subscription.StartDate)
+	isEndDateChanged := !old.EndDate.Equal(subscription.EndDate)
 	isSubUserChanged := old.User != subscription.User
 	isPlanChanged := old.Plan != subscription.Plan
 	isDiscountChanged := old.Discount != subscription.Discount
