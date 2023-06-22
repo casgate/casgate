@@ -107,6 +107,12 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 		}
 		af.Token = token.AccessToken
 
+		tenant, err = af.GetTenant(tenant.ID)
+		if err != nil {
+			return fmt.Errorf("af.GetTenant: %w", err)
+		}
+		connectionString := tenant.BorderConnectionString
+
 		// create proper roles
 		var serviceRole af_client.Role
 		var userRORole af_client.Role
@@ -198,10 +204,12 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 			customer.Properties = make(map[string]string)
 		}
 
+		customer.Properties[af_client.PtPropPref+"Tenant Name"] = tenantName
 		customer.Properties[af_client.PtPropPref+"Tenant ID"] = tenant.ID
+		customer.Properties[af_client.PtPropPref+"Connection String"] = connectionString
 		customer.Properties[af_client.PtPropPref+"ClientAccountLogin"] = userROName
 		customer.Properties[af_client.PtPropPref+"ServiceAccountLogin"] = serviceUserName
-		customer.Properties[af_client.PtPropPref+"tenantAdminAccountLogin"] = tenantAdminName
+		customer.Properties[af_client.PtPropPref+"TenantAdminAccountLogin"] = tenantAdminName
 
 		affected, err := object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
 		if err != nil {
@@ -224,6 +232,7 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 			TenantAdminName:     tenantAdminName,
 			TenantAdminPassword: tenantAdminPassword,
 			PTAFLoginLink:       util.GetUrlHost(afHost),
+			ConnectionString:    connectionString,
 		}, customerCompanyAdmin.Email)
 		if err != nil {
 			return fmt.Errorf("notifyPTAFTenantCreated: %w", err)

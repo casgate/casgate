@@ -116,7 +116,7 @@ func (af PtAF) GetTenant(tenantID string) (*Tenant, error) {
 		return nil, fmt.Errorf("util.JsonToStruct: %w", err)
 	}
 
-	return nil, nil
+	return result, nil
 }
 
 func (af PtAF) CreateTenant(request Tenant) (*Tenant, error) {

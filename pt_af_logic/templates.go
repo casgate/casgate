@@ -21,10 +21,12 @@ const partnerSubscriptionTmpl = `
 const partnerCreateAccountsSubjTmpl = `[PT LM] Accounts for {{ .ClientName }}`
 
 const partnerCreateAccountsBodyTmpl = `
-<p>В PT AF создано изолированное пространство для клиента <a href="{{ .ClientURL }}">{{ .ClientDisplayName }}</a>. <br>
-Ссылка для входа: {{ .PTAFLoginLink }}</p>
+<p>В PT AF создано изолированное пространство для клиента <a href="{{ .ClientURL }}">{{ .ClientDisplayName }}</a>.</p>
 
-<p>При первом входе потребуется сменить пароль.</p>
+<p>Строка подключения для агента: {{ .ConnectionString }}</p>
+
+<p>Ссылка для входа: {{ .PTAFLoginLink }}<br>
+При первом входе потребуется сменить пароль.</p>
 
 <p>Сервисная учётная запись<br>
 Логин: {{ .ServiceUserName }}<br>

@@ -49,6 +49,7 @@ type PTAFTenantCreatedMessage struct {
 	TenantAdminName     string
 	TenantAdminPassword string
 	PTAFLoginLink       string
+	ConnectionString    string
 }
 
 const subscriptionStateChangeEmailSubject = `Subscription status changed`

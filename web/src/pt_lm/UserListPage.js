@@ -64,7 +64,7 @@ class UserListPage extends BaseListPage {
         "ИНН": "",
         "КПП": "",
       },
-      signupApplication: owner,
+      signupApplication: (owner === "built-in" ? "app-built-in" : owner),
     };
   }
 
