@@ -27,6 +27,14 @@
           ]
         },
         {
+          "namespace": "auth",
+          "entity": "users",
+          "actions": [
+            "view",
+            "list"
+          ]
+        },
+        {
           "namespace": "configuration",
           "entity": "actions",
           "actions": [
