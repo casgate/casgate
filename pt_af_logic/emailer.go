@@ -91,7 +91,7 @@ func notifyPTAFTenantCreated(msg *PTAFTenantCreatedMessage, email string) error 
 }
 
 // NotifySubscriptionMembers composes subscription state change message and sends emails to its members
-func NotifySubscriptionMembers(actor *object.User, old, current *object.Subscription) error {
+func NotifySubscriptionMembers(actor *object.User, current *object.Subscription, oldState string) error {
 	provider := getBuiltInEmailProvider()
 	if provider == nil {
 		return errors.New("no email provider registered")
@@ -135,7 +135,7 @@ func NotifySubscriptionMembers(actor *object.User, old, current *object.Subscrip
 		Organization: organization,
 		Subscription: current,
 		NewStatus:    current.State,
-		OldStatus:    old.State,
+		OldStatus:    oldState,
 	}
 
 	recipients := getSubscriptionStateRecipients(current)

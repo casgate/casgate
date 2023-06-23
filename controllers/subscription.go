@@ -16,7 +16,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -104,12 +103,8 @@ func (c *ApiController) UpdateSubscription() {
 		return
 	}
 
-	// get current user
 	currentUser := c.getCurrentUser()
-	isGlobalAdmin := currentUser.IsGlobalAdmin
-	isOrgAdmin := currentUser.IsAdmin
 
-	// check subscription status
 	old, err := object.GetSubscription(id)
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -120,122 +115,22 @@ func (c *ApiController) UpdateSubscription() {
 		return
 	}
 
-	stateChanged := old.State != subscription.State
-	if stateChanged {
-		valid, statuses := object.SubscriptionStateCanBeChanged(old.State, subscription.State)
-		// global admin can move states in an unrestricted way
-		if !valid && !isGlobalAdmin {
-			c.ResponseError(fmt.Sprintf(
-				"Invalid subscription state. Can be changed to: '%s'", statuses,
-			))
-			return
-		}
-
-		// check for user permissions before allow state to change
-		allowed, statuses2 := object.SubscriptionStateAllowedToChange(isGlobalAdmin, isOrgAdmin, old.State, subscription.State)
-		if !allowed {
-			var errText string
-			if len(statuses2) == 0 {
-				errText = "State change for current user is restricted"
-			} else {
-				errText = fmt.Sprintf(
-					"Invalid subscription state. Can be changed to: '%s'", statuses2,
-				)
-			}
-			c.ResponseError(errText)
-			return
-		}
-	}
-
-	isNameChanged := old.Name != subscription.Name
-	isStartDateChanged := !old.StartDate.Equal(subscription.StartDate)
-	isEndDateChanged := !old.EndDate.Equal(subscription.EndDate)
-	isSubUserChanged := old.User != subscription.User
-	isPlanChanged := old.Plan != subscription.Plan
-	isDiscountChanged := old.Discount != subscription.Discount
-
-	currentState := object.SubscriptionState(subscription.State)
-
-	if currentState != object.SubscriptionNew {
-		if isNameChanged && !isGlobalAdmin {
-			c.ResponseError("Name change is restricted to New subscriptions only")
-			return
-		}
-
-		if isSubUserChanged {
-			c.ResponseError("User change is restricted to New subscriptions only")
-			return
-		}
-
-		if isPlanChanged {
-			if currentState != object.SubscriptionPending && currentState != object.SubscriptionUnauthorized {
-				c.ResponseError("Plan change is restricted to New subscriptions only")
-				return
-			}
-		}
-
-		if isDiscountChanged {
-			if currentState != object.SubscriptionPending && currentState != object.SubscriptionUnauthorized {
-				c.ResponseError("Discount change is restricted to New subscriptions only")
-				return
-			}
-		}
-
-		if isStartDateChanged {
-			if !isGlobalAdmin {
-				if !isOrgAdmin {
-					c.ResponseError("Restricted to organization admin")
-					return
-				}
-
-				if currentState != object.SubscriptionAuthorized {
-					c.ResponseError("StartDate change restricted to Authorized subscription state only")
-					return
-				}
-			}
-		}
-
-		if isEndDateChanged {
-			if !isGlobalAdmin {
-				if !isOrgAdmin {
-					c.ResponseError("Restricted to organization admin")
-					return
-				}
-
-				if currentState != object.SubscriptionPreFinished {
-					c.ResponseError("EndDate change restricted to PreFinished subscription state only")
-					return
-				}
-			}
-		}
+	err = pt_af_logic.ValidateSubscriptionUpdate(currentUser, &subscription, old)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
 	}
 
 	affected, err := object.UpdateSubscription(id, &subscription)
-
 	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 
 	if affected {
-		// send emails if response handler above not panics
-		if stateChanged {
-			util.SafeGoroutine(func() {
-				if err := pt_af_logic.NotifySubscriptionMembers(currentUser, old, &subscription); err != nil {
-					util.LogError(c.Ctx, err.Error())
-				}
-			})
-		}
+		util.SafeGoroutine(func() {
+			pt_af_logic.ProcessSubscriptionUpdatePostActions(c.Ctx, currentUser, &subscription, old.State)
+		})
 
-		// create tenant at pt af
-		if object.SubscriptionState(subscription.State) == object.SubscriptionStarted {
-			util.SafeGoroutine(func() {
-				err := pt_af_logic.CreateTenant(c.Ctx, &subscription)
-				if err != nil {
-					util.LogError(c.Ctx, err.Error())
-				}
-			})
-		}
 	}
-
 }
 
 // AddSubscription
