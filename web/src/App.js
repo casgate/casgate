@@ -79,7 +79,6 @@ import * as Auth from "./auth/Auth";
 import EntryPage from "./EntryPage";
 import * as AuthBackend from "./auth/AuthBackend";
 import AuthCallback from "./auth/AuthCallback";
-import LanguageSelect from "./common/select/LanguageSelect";
 import i18next from "i18next";
 import OdicDiscoveryPage from "./auth/OidcDiscoveryPage";
 import SamlCallback from "./auth/SamlCallback";
@@ -402,7 +401,6 @@ class App extends Component {
                 logo: this.getLogo(nextThemeAlgorithm),
               });
             }} />
-          <LanguageSelect languages={this.state.account.organization.languages} />
         </React.Fragment>
       );
     }
