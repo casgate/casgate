@@ -7,9 +7,14 @@ import (
 	"github.com/casdoor/casdoor/object"
 	PTAFLTypes "github.com/casdoor/casdoor/pt_af_logic/types"
 	"github.com/casdoor/casdoor/util"
+	"github.com/xorm-io/builder"
 )
 
-func getUserRole(user *object.User) PTAFLTypes.UserRole {
+func GetUserRole(user *object.User) PTAFLTypes.UserRole {
+	if user == nil {
+		return PTAFLTypes.UserRoleUnknown
+	}
+
 	if user.IsGlobalAdmin {
 		return PTAFLTypes.UserRoleGlobalAdmin
 	}
@@ -17,8 +22,15 @@ func getUserRole(user *object.User) PTAFLTypes.UserRole {
 	if user.IsAdmin {
 		return PTAFLTypes.UserRolePartner
 	}
-
-	//todo: add check for PTAFLTypes.UserRoleDistributor
+	role, _ := object.GetRole(util.GetId("built-in", string(PTAFLTypes.UserRoleDistributor)))
+	if role != nil {
+		userId := user.GetId()
+		for _, roleUserId := range role.Users {
+			if roleUserId == userId {
+				return PTAFLTypes.UserRoleDistributor
+			}
+		}
+	}
 
 	return PTAFLTypes.UserRoleUnknown
 
@@ -133,7 +145,7 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 }
 
 func ValidateSubscriptionUpdate(user *object.User, subscription *object.Subscription, old *object.Subscription) error {
-	subscriptionRole := getUserRole(user)
+	subscriptionRole := GetUserRole(user)
 
 	if subscriptionRole == PTAFLTypes.UserRoleGlobalAdmin {
 		return nil
@@ -172,4 +184,18 @@ func ProcessSubscriptionUpdatePostActions(ctx *context.Context, user *object.Use
 			util.LogError(ctx, fmt.Errorf("CreateTenant: %w", err).Error())
 		}
 	}
+}
+
+func GetSubscriptionFilter(user *object.User) builder.Cond {
+	userRole := GetUserRole(user)
+	if userRole == PTAFLTypes.UserRoleDistributor {
+		return builder.Eq{"state": []string{
+			PTAFLTypes.SubscriptionAuthorized.String(),
+			PTAFLTypes.SubscriptionStarted.String(),
+			PTAFLTypes.SubscriptionPreFinished.String(),
+			PTAFLTypes.SubscriptionFinished.String(),
+		}}.Or(builder.Eq{"state": PTAFLTypes.SubscriptionCancelled.String(), "approver": user.GetId()})
+	}
+
+	return nil
 }

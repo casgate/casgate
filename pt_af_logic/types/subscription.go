@@ -5,13 +5,13 @@ import (
 	"strings"
 )
 
-type UserRole int
+type UserRole string
 
 const (
-	UserRoleUnknown UserRole = iota
-	UserRoleGlobalAdmin
-	UserRolePartner
-	UserRoleDistributor
+	UserRoleUnknown     UserRole = "unknown"
+	UserRoleGlobalAdmin UserRole = "admin"
+	UserRolePartner     UserRole = "partner"
+	UserRoleDistributor UserRole = "distributor"
 )
 
 type SubscriptionStateName string

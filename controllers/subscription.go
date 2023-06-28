@@ -48,15 +48,18 @@ func (c *ApiController) GetSubscriptions() {
 		c.Data["json"] = subscriptions
 		c.ServeJSON()
 	} else {
+		user := c.getCurrentUser()
+		filter := pt_af_logic.GetSubscriptionFilter(user)
+
 		limit := util.ParseInt(limit)
-		count, err := object.GetSubscriptionCount(owner, field, value)
+		count, err := object.GetSubscriptionCount(owner, field, value, filter)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		subscription, err := object.GetPaginationSubscriptions(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
+		subscription, err := object.GetPaginationSubscriptions(owner, paginator.Offset(), limit, field, value, sortField, sortOrder, filter)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -76,7 +79,10 @@ func (c *ApiController) GetSubscriptions() {
 func (c *ApiController) GetSubscription() {
 	id := c.Input().Get("id")
 
-	subscription, err := object.GetSubscription(id)
+	user := c.getCurrentUser()
+	filter := pt_af_logic.GetSubscriptionFilter(user)
+
+	subscription, err := object.GetSubscription(id, filter)
 	if err != nil {
 		panic(err)
 	}
@@ -104,8 +110,13 @@ func (c *ApiController) UpdateSubscription() {
 	}
 
 	currentUser := c.getCurrentUser()
+	if currentUser == nil {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
 
-	old, err := object.GetSubscription(id)
+	filter := pt_af_logic.GetSubscriptionFilter(currentUser)
+	old, err := object.GetSubscription(id, filter)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -119,6 +130,10 @@ func (c *ApiController) UpdateSubscription() {
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
+	}
+
+	if old.State != subscription.State {
+		subscription.Approver = currentUser.GetId()
 	}
 
 	affected, err := object.UpdateSubscription(id, &subscription)
@@ -147,7 +162,7 @@ func (c *ApiController) AddSubscription() {
 		c.ResponseError(err.Error())
 		return
 	}
-
+	subscription.Approver = c.GetSessionUsername()
 	c.Data["json"] = wrapActionResponse(object.AddSubscription(&subscription))
 	c.ServeJSON()
 }
@@ -167,7 +182,9 @@ func (c *ApiController) DeleteSubscription() {
 		return
 	}
 
-	existing, err := object.GetSubscription(subscription.GetId())
+	user := c.getCurrentUser()
+	filter := pt_af_logic.GetSubscriptionFilter(user)
+	existing, err := object.GetSubscription(subscription.GetId(), filter)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

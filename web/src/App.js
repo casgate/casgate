@@ -54,8 +54,10 @@ import SyncerListPage from "./SyncerListPage";
 import SyncerEditPage from "./SyncerEditPage";
 import CertListPage from "./CertListPage";
 import CertEditPage from "./CertEditPage";
-import SubscriptionListPage from "./SubscriptionListPage";
-import SubscriptionEditPage from "./SubscriptionEditPage";
+import SubscriptionListPage from "./pt_lm/SubscriptionListPage";
+import SubscriptionEditPage from "./pt_lm/SubscriptionEditPage";
+// import SubscriptionListPage from "./SubscriptionListPage";
+// import SubscriptionEditPage from "./SubscriptionEditPage";
 import PricingListPage from "./PricingListPage";
 import PricingEditPage from "./PricingEditPage";
 import PlanListPage from "./PlanListPage";
@@ -527,6 +529,12 @@ class App extends Component {
       //   href={Setting.isLocalhost() ? `${Setting.ServerUrl}/swagger` : "/swagger"}>{i18next.t("general:Swagger")}</a>,
       // "/swagger"
       // ));
+    }
+
+    if (Setting.isDistributor(this.state.account)) {
+      res.push(Setting.getItem(<Link to="/subscriptions">{i18next.t("general:Subscriptions")}</Link>,
+        "/subscriptions"
+      ));
     }
 
     return res;

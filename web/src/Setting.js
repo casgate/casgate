@@ -545,7 +545,7 @@ export function isAdminUser(account) {
   if (account === undefined || account === null) {
     return false;
   }
-  return account.owner === "built-in" || account.isGlobalAdmin === true;
+  return account.isGlobalAdmin === true;
 }
 
 export function isLocalAdminUser(account) {
@@ -553,6 +553,13 @@ export function isLocalAdminUser(account) {
     return false;
   }
   return account.isAdmin === true || isAdminUser(account);
+}
+
+export function isDistributor(account) {
+  if (account === undefined || account === null) {
+    return false;
+  }
+  return account.roles.filter(role => role.name === Conf.DistibutorRoleName).length > 0;
 }
 
 export function deepCopy(obj) {

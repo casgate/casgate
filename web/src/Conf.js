@@ -30,3 +30,5 @@ export const ThemeDefault = {
 };
 
 export const CustomFooter = null;
+
+export const DistibutorRoleName = "distributor";

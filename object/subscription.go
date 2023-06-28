@@ -20,6 +20,7 @@ import (
 
 	PTAFLTypes "github.com/casdoor/casdoor/pt_af_logic/types"
 	"github.com/casdoor/casdoor/util"
+	"github.com/xorm-io/builder"
 	"github.com/xorm-io/core"
 )
 
@@ -64,8 +65,11 @@ func NewSubscription(owner string, user string, plan string, duration int) *Subs
 	}
 }
 
-func GetSubscriptionCount(owner, field, value string) (int64, error) {
+func GetSubscriptionCount(owner, field, value string, filter builder.Cond) (int64, error) {
 	session := GetSession(owner, -1, -1, field, value, "", "")
+	if filter != nil {
+		session = session.Where(filter)
+	}
 	return session.Count(&Subscription{})
 }
 
@@ -79,9 +83,12 @@ func GetSubscriptions(owner string) ([]*Subscription, error) {
 	return subscriptions, nil
 }
 
-func GetPaginationSubscriptions(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Subscription, error) {
+func GetPaginationSubscriptions(owner string, offset, limit int, field, value, sortField, sortOrder string, filter builder.Cond) ([]*Subscription, error) {
 	subscriptions := []*Subscription{}
 	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	if filter != nil {
+		session = session.Where(filter)
+	}
 	err := session.Find(&subscriptions)
 	if err != nil {
 		return subscriptions, err
@@ -90,13 +97,17 @@ func GetPaginationSubscriptions(owner string, offset, limit int, field, value, s
 	return subscriptions, nil
 }
 
-func getSubscription(owner string, name string) (*Subscription, error) {
+func getSubscription(owner string, name string, filter builder.Cond) (*Subscription, error) {
 	if owner == "" || name == "" {
 		return nil, nil
 	}
 
 	subscription := Subscription{Owner: owner, Name: name}
-	existed, err := adapter.Engine.Get(&subscription)
+	session := adapter.Engine.NewSession()
+	if filter != nil {
+		session = session.Where(filter)
+	}
+	existed, err := session.Get(&subscription)
 	if err != nil {
 		return nil, err
 	}
@@ -108,14 +119,14 @@ func getSubscription(owner string, name string) (*Subscription, error) {
 	}
 }
 
-func GetSubscription(id string) (*Subscription, error) {
+func GetSubscription(id string, filter builder.Cond) (*Subscription, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	return getSubscription(owner, name)
+	return getSubscription(owner, name, filter)
 }
 
 func UpdateSubscription(id string, subscription *Subscription) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if s, err := getSubscription(owner, name); err != nil {
+	if s, err := getSubscription(owner, name, nil); err != nil {
 		return false, err
 	} else if s == nil {
 		return false, nil
