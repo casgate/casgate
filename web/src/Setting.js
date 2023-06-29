@@ -556,10 +556,10 @@ export function isLocalAdminUser(account) {
 }
 
 export function isDistributor(account) {
-  if (account === undefined || account === null) {
+  if (account === undefined || account === null || account.roles === null) {
     return false;
   }
-  return account.roles.filter(role => role.name === Conf.DistibutorRoleName).length > 0;
+  return account.roles.filter(role => role.name === Conf.DistibutorRoleName && role.owner === "built-in").length > 0;
 }
 
 export function deepCopy(obj) {

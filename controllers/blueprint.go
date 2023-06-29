@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/casdoor/casdoor/object"
+	PTAFLTypes "github.com/casdoor/casdoor/pt_af_logic/types"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -119,10 +120,12 @@ func (c *ApiController) ApplyBlueprint() {
 
 		//copy roles
 		for _, role := range masterRoles {
-			newRole := role
-			newRole.Owner = org.Name
-			newRole.CreatedTime = date
-			object.AddRole(newRole)
+			if role.Name != string(PTAFLTypes.UserRoleDistributor) {
+				newRole := role
+				newRole.Owner = org.Name
+				newRole.CreatedTime = date
+				object.AddRole(newRole)
+			}
 		}
 
 		//copy permissions
