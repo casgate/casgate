@@ -14,6 +14,10 @@ import (
 const defaultPasswordLength = 12
 
 func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) error {
+	afHost := conf.GetConfigString("PT_AF_URL")
+	afLogin := conf.GetConfigString("PT_AF_LOGIN")
+	afPwd := conf.GetConfigString("PT_AF_PASSWORD")
+	afFingerPrint := conf.GetConfigString("PT_AF_FINGERPRINT")
 	af := af_client.NewPtAF(afHost)
 
 	allRoles := af.GetRoles()
