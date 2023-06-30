@@ -151,7 +151,7 @@ class UserListPage extends BaseListPage {
         width: (Setting.isMobile()) ? "100px" : "120px",
         fixed: "left",
         sorter: true,
-        ...this.getColumnSearchProps("owner"),
+        ...this.getColumnSearchProps("owner", true),
         render: (text, record, index) => {
           return (
             <Link to={`/organizations/${text}`}>
@@ -167,7 +167,7 @@ class UserListPage extends BaseListPage {
         width: (Setting.isMobile()) ? "80px" : "110px",
         fixed: "left",
         sorter: true,
-        ...this.getColumnSearchProps("name"),
+        ...this.getColumnSearchProps("name", true),
         render: (text, record, index) => {
           return (
             <Link to={`/users/${record.owner}/${text}`}>
@@ -182,7 +182,7 @@ class UserListPage extends BaseListPage {
         key: "displayName",
         // width: '100px',
         sorter: true,
-        ...this.getColumnSearchProps("displayName"),
+        ...this.getColumnSearchProps("displayName", true),
       },
       {
         title: i18next.t("general:ИНН"),
@@ -203,7 +203,7 @@ class UserListPage extends BaseListPage {
         key: "email",
         width: "160px",
         sorter: true,
-        ...this.getColumnSearchProps("email"),
+        ...this.getColumnSearchProps("email", true),
         render: (text, record, index) => {
           return (
             <a href={`mailto:${text}`}>
@@ -218,7 +218,7 @@ class UserListPage extends BaseListPage {
         key: "phone",
         width: "120px",
         sorter: true,
-        ...this.getColumnSearchProps("phone"),
+        ...this.getColumnSearchProps("phone", true),
       },
       {
         title: i18next.t("general:Дата создания"),

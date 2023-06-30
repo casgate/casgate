@@ -26,7 +26,7 @@ class BaseListPage extends React.Component {
       data: [],
       pagination: {
         current: 1,
-        pageSize: 10,
+        pageSize: 50,
       },
       loading: false,
       searchText: "",
@@ -40,7 +40,7 @@ class BaseListPage extends React.Component {
     this.fetch({pagination});
   }
 
-  getColumnSearchProps = dataIndex => ({
+  getColumnSearchProps = (dataIndex, disableSearch) => ({
     filterDropdown: ({setSelectedKeys, selectedKeys, confirm, clearFilters}) => (
       <div style={{padding: 8}}>
         <Input
@@ -55,15 +55,17 @@ class BaseListPage extends React.Component {
         />
 
         <Space>
-          <Button
-            type="primary"
-            onClick={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
-            icon={<SearchOutlined />}
-            size="small"
-            style={{width: 90}}
-          >
+          {disableSearch ? null : (
+            <Button
+              type="primary"
+              onClick={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{width: 90}}
+            >
                         Search
-          </Button>
+            </Button>
+          )}
           <Button onClick={() => this.handleReset(clearFilters)} size="small" style={{width: 90}}>
                         Reset
           </Button>
