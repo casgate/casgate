@@ -27,18 +27,21 @@ import PopconfirmModal from "../common/modal/PopconfirmModal";
 class UserListPage extends BaseListPage {
   constructor(props) {
     super(props);
+    this.state = {
+      ...this.state,
+      organizationName: this.props.organizationName ?? this.props.match?.params.organizationName ?? this.props.account.owner,
+      organization: null,
+    };
   }
 
-  componentDidMount() {
-    this.setState({
-      organizationName: this.props.match.params.organizationName,
-      organization: null,
-    });
+  UNSAFE_componentWillMount() {
+    super.UNSAFE_componentWillMount();
+    this.getOrganization(this.state.organizationName);
   }
 
   newUser() {
     const randomName = Setting.getRandomName();
-    const owner = (this.state.organizationName !== undefined) ? this.state.organizationName : this.props.account.owner;
+    const owner = Setting.isDefaultOrganizationSelected(this.props.account) ? this.state.organizationName : Setting.getRequestOrganization(this.props.account);
     return {
       owner: owner,
       name: `user_${randomName}`,
@@ -307,7 +310,7 @@ class UserListPage extends BaseListPage {
     const sortField = params.sortField, sortOrder = params.sortOrder;
     this.setState({loading: true});
     if (this.props.match.params.organizationName === undefined) {
-      (Setting.isAdminUser(this.props.account) ? UserBackend.getGlobalUsers(params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder) : UserBackend.getUsers(this.props.account.owner, params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder))
+      (Setting.isDefaultOrganizationSelected(this.props.account) ? UserBackend.getGlobalUsers(params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder) : UserBackend.getUsers(Setting.getRequestOrganization(this.props.account), params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder))
         .then((res) => {
           if (res.status === "ok") {
             this.setState({
@@ -371,10 +374,14 @@ class UserListPage extends BaseListPage {
 
   getOrganization(organizationName) {
     OrganizationBackend.getOrganization("admin", organizationName)
-      .then((organization) => {
-        this.setState({
-          organization: organization,
-        });
+      .then((res) => {
+        if (res.status === "ok") {
+          this.setState({
+            organization: res.data,
+          });
+        } else {
+          Setting.showMessage("error", `Failed to get organization: ${res.msg}`);
+        }
       });
   }
 }

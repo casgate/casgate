@@ -48,10 +48,20 @@ class OrganizationEditPage extends React.Component {
 
   getOrganization() {
     OrganizationBackend.getOrganization("admin", this.state.organizationName)
-      .then((organization) => {
-        this.setState({
-          organization: organization,
-        });
+      .then((res) => {
+        if (res.status === "ok") {
+          const organization = res.data;
+          if (organization === null) {
+            this.props.history.push("/404");
+            return;
+          }
+
+          this.setState({
+            organization: organization,
+          });
+        } else {
+          Setting.showMessage("error", res.msg);
+        }
       });
   }
 
@@ -343,6 +353,7 @@ class OrganizationEditPage extends React.Component {
           this.setState({
             organizationName: this.state.organization.name,
           });
+          window.dispatchEvent(new Event("storageOrganizationsChanged"));
 
           if (willExist) {
             this.props.history.push("/organizations");

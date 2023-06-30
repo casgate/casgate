@@ -450,15 +450,15 @@ class App extends Component {
 
       // res.push(Setting.getItem(<Link to="/groups">{i18next.t("general:Groups")}</Link>,
       //   "/groups"));
+
+      res.push(Setting.getItem(<Link to="/users">{i18next.t("general:Users")}</Link>,
+        "/users"
+      ));
+
+      res.push(Setting.getItem(<Link to="/clients">{i18next.t("general:Clients")}</Link>,
+        "/clients"
+      ));
     }
-
-    res.push(Setting.getItem(<Link to="/users">{i18next.t("general:Users")}</Link>,
-      "/users"
-    ));
-
-    res.push(Setting.getItem(<Link to="/clients">{i18next.t("general:Clients")}</Link>,
-      "/clients"
-    ));
 
     // res.push(Setting.getItem(<Link to="/roles">{i18next.t("general:Roles")}</Link>,
     //   "/roles"

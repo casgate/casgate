@@ -111,10 +111,13 @@ func GetLanguage(language string) string {
 	}
 
 	if len(language) != 2 {
-		return language[:2]
-	} else {
-		return language
+		language = language[:2]
 	}
+
+	if language == "ru" {
+		return "lm"
+	}
+	return language
 }
 
 func IsDemoMode() bool {

@@ -86,6 +86,7 @@ class OrganizationListPage extends BaseListPage {
         if (res.status === "ok") {
           this.props.history.push({pathname: `/organizations/${newOrganization.name}`, mode: "add"});
           Setting.showMessage("success", i18next.t("general:Successfully added"));
+          window.dispatchEvent(new Event("storageOrganizationsChanged"));
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to add")}: ${res.msg}`);
         }
@@ -104,6 +105,7 @@ class OrganizationListPage extends BaseListPage {
             data: Setting.deleteRow(this.state.data, i),
             pagination: {total: this.state.pagination.total - 1},
           });
+          window.dispatchEvent(new Event("storageOrganizationsChanged"));
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to delete")}: ${res.msg}`);
         }
@@ -249,7 +251,7 @@ class OrganizationListPage extends BaseListPage {
       value = params.passwordType;
     }
     this.setState({loading: true});
-    OrganizationBackend.getOrganizations("admin", params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    OrganizationBackend.getOrganizations("admin", Setting.isDefaultOrganizationSelected(this.props.account) ? "" : Setting.getRequestOrganization(this.props.account), params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({
