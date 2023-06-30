@@ -50,15 +50,21 @@ class UserListPage extends BaseListPage {
       avatar: "https://static.vecteezy.com/system/resources/thumbnails/000/439/863/small/Basic_Ui__28186_29.jpg",
       email: `${randomName}@example.com`,
       phone: Setting.getRandomNumber(),
-      countryCode: this.state.organization.countryCodes?.length > 0 ? this.state.organization.countryCodes[0] : "",
+      countryCode: "",
       address: [],
       affiliation: "Example Inc.",
-      tag: "manager",
+      tag: "client",
       region: "",
-      isAdmin: true,
+      isAdmin: false,
       isGlobalAdmin: false,
       IsForbidden: false,
-      score: this.state.organization.initScore,
+      properties: {
+        "ИНН": "",
+        "КПП": "",
+        "ФИО менеджера": "",
+      },
+
+      score: 0,
       isDeleted: false,
       signupApplication: (owner === "built-in" ? "app-built-in" : owner),
     };
@@ -70,7 +76,7 @@ class UserListPage extends BaseListPage {
       .then((res) => {
         if (res.status === "ok") {
           sessionStorage.setItem("userListUrl", window.location.pathname);
-          this.props.history.push({pathname: `/users/${newUser.owner}/${newUser.name}`, mode: "add"});
+          this.props.history.push({pathname: `/clients/${newUser.owner}/${newUser.name}`, mode: "add"});
           Setting.showMessage("success", i18next.t("general:Successfully added"));
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to add")}: ${res.msg}`);
@@ -155,7 +161,7 @@ class UserListPage extends BaseListPage {
         },
       },
       {
-        title: i18next.t("general:Логин"),
+        title: i18next.t("general:Идентификатор"),
         dataIndex: "name",
         key: "name",
         width: (Setting.isMobile()) ? "80px" : "110px",
@@ -171,12 +177,25 @@ class UserListPage extends BaseListPage {
         },
       },
       {
-        title: i18next.t("general:Имя"),
+        title: i18next.t("general:Наименование"),
         dataIndex: "displayName",
         key: "displayName",
         // width: '100px',
         sorter: true,
         ...this.getColumnSearchProps("displayName", true),
+      },
+      {
+        title: i18next.t("general:ИНН"),
+        dataIndex: "user:inn",
+        key: "user:inn",
+        sorter: false,
+        render: (text, record, index) => {
+          return (
+            <span>
+              {record?.properties?.["ИНН"] || ""}
+            </span>
+          );
+        },
       },
       {
         title: i18next.t("Email"),
@@ -212,30 +231,6 @@ class UserListPage extends BaseListPage {
         },
       },
       {
-        title: i18next.t("user:Менеджер"),
-        dataIndex: "isAdmin",
-        key: "isAdmin",
-        width: "110px",
-        sorter: true,
-        render: (text, record, index) => {
-          return (
-            <Switch disabled checkedChildren="ON" unCheckedChildren="OFF" checked={text} />
-          );
-        },
-      },
-      {
-        title: i18next.t("user:Администратор"),
-        dataIndex: "isGlobalAdmin",
-        key: "isGlobalAdmin",
-        width: "140px",
-        sorter: true,
-        render: (text, record, index) => {
-          return (
-            <Switch disabled checkedChildren="ON" unCheckedChildren="OFF" checked={text} />
-          );
-        },
-      },
-      {
         title: i18next.t("user:Отключен"),
         dataIndex: "isForbidden",
         key: "isForbidden",
@@ -259,7 +254,7 @@ class UserListPage extends BaseListPage {
             <div>
               <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => {
                 sessionStorage.setItem("userListUrl", window.location.pathname);
-                this.props.history.push(`/users/${record.owner}/${record.name}`);
+                this.props.history.push(`/clients/${record.owner}/${record.name}`);
               }}>{i18next.t("general:Edit")}</Button>
               <PopconfirmModal
                 title={i18next.t("general:Sure to delete") + `: ${record.name} ?`}
@@ -287,7 +282,7 @@ class UserListPage extends BaseListPage {
         <Table scroll={{x: "max-content"}} columns={columns} dataSource={users} rowKey={(record) => `${record.owner}/${record.name}`} size="middle" bordered pagination={paginationProps}
           title={() => (
             <div>
-              {i18next.t("general:Менеджеры")}&nbsp;&nbsp;&nbsp;&nbsp;
+              {i18next.t("general:Заказчики")}&nbsp;&nbsp;&nbsp;&nbsp;
               <Button style={{marginRight: "5px"}} type="primary" size="small" onClick={this.addUser.bind(this)}>{i18next.t("general:Add")}</Button>
             </div>
           )}
@@ -302,7 +297,7 @@ class UserListPage extends BaseListPage {
     let field = params.searchedColumn, value = params.searchText;
 
     field = "tag";
-    value = "manager";
+    value = "client";
 
     const sortField = params.sortField, sortOrder = params.sortOrder;
     this.setState({loading: true});
