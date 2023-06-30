@@ -34,7 +34,7 @@ class OrganizationListPage extends BaseListPage {
       favicon: `${Setting.StaticBaseUrl}/img/favicon.png`,
       passwordType: "plain",
       PasswordSalt: "",
-      countryCodes: ["CN"],
+      countryCodes: ["RU"],
       defaultAvatar: "https://static.vecteezy.com/system/resources/thumbnails/000/439/863/small/Basic_Ui__28186_29.jpg",
       defaultApplication: "",
       tags: [],
