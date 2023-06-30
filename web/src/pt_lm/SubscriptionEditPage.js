@@ -76,7 +76,7 @@ class SubscriptionEditPage extends React.Component {
       .then((res) => {
         console.log(res);
         this.setState({
-          users: res.filter(user => !Setting.isLocalAdminUser(user) && user.owner !== "built-in"),
+          users: res.filter(user => user.tag === "client"),
         });
       });
   }
