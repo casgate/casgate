@@ -37,6 +37,7 @@ type Subscription struct {
 	EndDate     time.Time `json:"endDate"`
 	Duration    int       `json:"duration"`
 	Description string    `xorm:"varchar(100)" json:"description"`
+	Comment     string    `xorm:"varchar(100)" json:"comment"`
 
 	User string `xorm:"mediumtext" json:"user"`
 	Plan string `xorm:"varchar(100)" json:"plan"`

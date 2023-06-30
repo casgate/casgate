@@ -185,10 +185,16 @@ class UserListPage extends BaseListPage {
       },
       {
         title: i18next.t("general:ИНН"),
-        dataIndex: "inn",
-        key: "inn",
+        dataIndex: "user:inn",
+        key: "user:inn",
         sorter: false,
-        ...this.getColumnSearchProps("inn"),
+        render: (text, record, index) => {
+          return (
+            <span>
+              {record?.properties?.["ИНН"] || ""}
+            </span>
+          );
+        },
       },
       {
         title: i18next.t("Email"),

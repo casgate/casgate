@@ -215,7 +215,7 @@ class UserEditPage extends React.Component {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Name"), i18next.t("general:Name - Tooltip"))} :
+            {Setting.getLabel(i18next.t("general:Идентификатор"), i18next.t("general:Name - Tooltip"))} :
           </Col>
           <Col span={22} >
             <Input value={this.state.user.name} disabled={!Setting.isLocalAdminUser(this.props.account) && disabled} onChange={e => {
@@ -632,7 +632,7 @@ class UserEditPage extends React.Component {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Properties"), i18next.t("user:Properties - Tooltip"))} :
+            {Setting.getLabel(i18next.t("user:Атрибуты"), i18next.t("user:Properties - Tooltip"))} :
           </Col>
           <Col span={22} >
             <PropertyTable properties={this.state.user.properties} onUpdateTable={(value) => {this.updateUserField("properties", value);}} />
@@ -669,24 +669,11 @@ class UserEditPage extends React.Component {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Is forbidden"), i18next.t("user:Is forbidden - Tooltip"))} :
+            {Setting.getLabel(i18next.t("user:Отключен"), i18next.t("user:Is forbidden - Tooltip"))} :
           </Col>
           <Col span={(Setting.isMobile()) ? 22 : 2} >
             <Switch checked={this.state.user.isForbidden} onChange={checked => {
               this.updateUserField("isForbidden", checked);
-            }} />
-          </Col>
-        </Row>
-      );
-    } else if (accountItem.name === "Is deleted") {
-      return (
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Is deleted"), i18next.t("user:Is deleted - Tooltip"))} :
-          </Col>
-          <Col span={(Setting.isMobile()) ? 22 : 2} >
-            <Switch checked={this.state.user.isDeleted} onChange={checked => {
-              this.updateUserField("isDeleted", checked);
             }} />
           </Col>
         </Row>

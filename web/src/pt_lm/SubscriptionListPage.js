@@ -37,6 +37,7 @@ class SubscriptionListPage extends BaseListPage {
       endDate: moment().add(defaultDuration, "d").format(),
       duration: defaultDuration,
       description: "",
+      comment: "",
       discaunt: 0,
       user: "",
       plan: "",
@@ -85,22 +86,6 @@ class SubscriptionListPage extends BaseListPage {
   renderTable(subscriptions) {
     const columns = [
       {
-        title: i18next.t("general:Name"),
-        dataIndex: "name",
-        key: "name",
-        width: "140px",
-        fixed: "left",
-        sorter: true,
-        ...this.getColumnSearchProps("name"),
-        render: (text, record, index) => {
-          return (
-            <Link to={`/subscriptions/${record.owner}/${record.name}`}>
-              {text}
-            </Link>
-          );
-        },
-      },
-      {
         title: i18next.t("general:Organization"),
         dataIndex: "owner",
         key: "owner",
@@ -116,29 +101,34 @@ class SubscriptionListPage extends BaseListPage {
         },
       },
       {
-        title: i18next.t("general:Created time"),
-        dataIndex: "createdTime",
-        key: "createdTime",
-        width: "160px",
+        title: i18next.t("subscription:Name"),
+        dataIndex: "name",
+        key: "name",
+        width: "140px",
+        fixed: "left",
         sorter: true,
+        ...this.getColumnSearchProps("name"),
         render: (text, record, index) => {
-          return Setting.getFormattedDate(text);
+          return (
+            <Link to={`/subscriptions/${record.owner}/${record.name}`}>
+              {text}
+            </Link>
+          );
         },
       },
       {
-        title: i18next.t("general:Display name"),
-        dataIndex: "displayName",
-        key: "displayName",
-        width: "170px",
-        sorter: true,
-        ...this.getColumnSearchProps("displayName"),
-      },
-      {
-        title: i18next.t("subscription:Duration"),
-        dataIndex: "duration",
-        key: "duration",
+        title: i18next.t("subscription:User"),
+        dataIndex: "user",
+        key: "user",
         width: "140px",
-        ...this.getColumnSearchProps("duration"),
+        ...this.getColumnSearchProps("user"),
+        render: (text, record, index) => {
+          return (
+            <Link to={`/users/${text}`}>
+              {text}
+            </Link>
+          );
+        },
       },
       {
         title: i18next.t("general:Plan"),
@@ -155,17 +145,23 @@ class SubscriptionListPage extends BaseListPage {
         },
       },
       {
-        title: i18next.t("general:User"),
-        dataIndex: "user",
-        key: "user",
-        width: "140px",
-        ...this.getColumnSearchProps("user"),
+        title: i18next.t("subscription:Start date"),
+        dataIndex: "startDate",
+        key: "startDate",
+        width: "160px",
+        sorter: true,
         render: (text, record, index) => {
-          return (
-            <Link to={`/users/${text}`}>
-              {text}
-            </Link>
-          );
+          return Setting.getFormattedDate(text);
+        },
+      },
+      {
+        title: i18next.t("subscription:End date"),
+        dataIndex: "endDate",
+        key: "endDate",
+        width: "160px",
+        sorter: true,
+        render: (text, record, index) => {
+          return Setting.getFormattedDate(text);
         },
       },
       {
@@ -178,26 +174,36 @@ class SubscriptionListPage extends BaseListPage {
         render: (text, record, index) => {
           switch (text) {
           case "New":
-            return Setting.getTag("success", i18next.t("permission:New"));
+            return Setting.getTag("success", i18next.t("subscription:New"));
           case "Pending":
-            return Setting.getTag("warning", i18next.t("permission:Pending"));
+            return Setting.getTag("warning", i18next.t("subscription:Pending"));
           case "PreAuthorized":
-            return Setting.getTag("success", i18next.t("permission:Pre-Authorized"));
+            return Setting.getTag("success", i18next.t("subscription:Pre-Authorized"));
           case "Unauthorized":
-            return Setting.getTag("error", i18next.t("permission:Unauthorized"));
+            return Setting.getTag("error", i18next.t("subscription:Unauthorized"));
           case "Authorized":
-            return Setting.getTag("success", i18next.t("permission:Authorized"));
+            return Setting.getTag("success", i18next.t("subscription:Authorized"));
           case "Started":
-            return Setting.getTag("success", i18next.t("permission:Started"));
+            return Setting.getTag("success", i18next.t("subscription:Started"));
           case "PreFinished":
-            return Setting.getTag("warning", i18next.t("permission:PreFinished"));
+            return Setting.getTag("warning", i18next.t("subscription:PreFinished"));
           case "Finished":
-            return Setting.getTag("success", i18next.t("permission:Finished"));
+            return Setting.getTag("success", i18next.t("subscription:Finished"));
           case "Cancelled":
-            return Setting.getTag("error", i18next.t("permission:Cancelled"));
+            return Setting.getTag("error", i18next.t("subscription:Cancelled"));
           default:
             return null;
           }
+        },
+      },
+      {
+        title: i18next.t("subscription:Approve time"),
+        dataIndex: "approveTime",
+        key: "approveTime",
+        width: "160px",
+        sorter: true,
+        render: (text, record, index) => {
+          return Setting.getFormattedDate(text);
         },
       },
       {

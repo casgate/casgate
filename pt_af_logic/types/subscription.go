@@ -63,6 +63,7 @@ const (
 	SubscriptionFieldNameSubPlan     SubscriptionFieldName = "Sub plan"
 	SubscriptionFieldNameDiscount    SubscriptionFieldName = "Discount"
 	SubscriptionFieldNameDescription SubscriptionFieldName = "Description"
+	SubscriptionFieldNameComment     SubscriptionFieldName = "Comment"
 )
 
 type SubscriptionFieldNames []SubscriptionFieldName
@@ -111,6 +112,7 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 				SubscriptionFieldNameSubPlan,
 				SubscriptionFieldNameDiscount,
 				SubscriptionFieldNameDescription,
+				SubscriptionFieldNameComment,
 			},
 		},
 		Transitions: nil,

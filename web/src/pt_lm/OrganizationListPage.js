@@ -14,7 +14,7 @@
 
 import React from "react";
 import {Link} from "react-router-dom";
-import {Button, Switch, Table} from "antd";
+import {Button, Table} from "antd";
 import moment from "moment";
 import * as Setting from "../Setting";
 import * as OrganizationBackend from "../backend/OrganizationBackend";
@@ -46,6 +46,9 @@ class OrganizationListPage extends BaseListPage {
         "ИНН": "",
         "КПП": "",
       },
+      email: "",
+      phone: "",
+      manager: "",
       accountItems: [
         {name: "Organization", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "ID", visible: true, viewRule: "Public", modifyRule: "Immutable"},
@@ -114,7 +117,7 @@ class OrganizationListPage extends BaseListPage {
 
     const columns = [
       {
-        title: i18next.t("general:Name"),
+        title: i18next.t("organization:Name"),
         dataIndex: "name",
         key: "name",
         width: "120px",
@@ -130,6 +133,14 @@ class OrganizationListPage extends BaseListPage {
         },
       },
       {
+        title: i18next.t("general:Display name"),
+        dataIndex: "displayName",
+        key: "displayName",
+        width: "250px",
+        sorter: true,
+        ...this.getColumnSearchProps("displayName"),
+      },
+      {
         title: i18next.t("general:Created time"),
         dataIndex: "createdTime",
         key: "createdTime",
@@ -140,80 +151,47 @@ class OrganizationListPage extends BaseListPage {
         },
       },
       {
-        title: i18next.t("general:Display name"),
-        dataIndex: "displayName",
-        key: "displayName",
-        // width: '100px',
-        sorter: true,
-        ...this.getColumnSearchProps("displayName"),
-      },
-      {
-        title: i18next.t("organization:Website URL"),
-        dataIndex: "websiteUrl",
-        key: "websiteUrl",
-        width: "300px",
-        sorter: true,
-        ...this.getColumnSearchProps("websiteUrl"),
-        render: (text, record, index) => {
-          return (
-            <a target="_blank" rel="noreferrer" href={text}>
-              {text}
-            </a>
-          );
-        },
-      },
-      {
         title: i18next.t("organization:INN"),
-        dataIndex: "websiteUrl",
-        key: "websiteUrl",
-        width: "300px",
+        dataIndex: "organization:INN",
+        key: "organization:INN",
+        width: "120px",
         sorter: true,
-        ...this.getColumnSearchProps("websiteUrl"),
+        ...this.getColumnSearchProps("properties"),
         render: (text, record, index) => {
           return (
             <span>
-              {Math.floor(Math.random() * 9999999)}
+              {record?.properties?.["ИНН"] || ""}
             </span>
           );
         },
       },
       {
         title: i18next.t("organization:KPP"),
-        dataIndex: "websiteUrl",
-        key: "websiteUrl",
-        width: "300px",
+        dataIndex: "organization:KPP",
+        key: "organization:KPP",
+        width: "120px",
         sorter: true,
-        ...this.getColumnSearchProps("websiteUrl"),
+        ...this.getColumnSearchProps("properties"),
         render: (text, record, index) => {
           return (
             <span>
-              {Math.floor(Math.random() * 9999999)}
+              {record?.properties?.["КПП"] || ""}
             </span>
           );
         },
       },
       {
-        title: i18next.t("general:Default avatar"),
-        dataIndex: "defaultAvatar",
-        key: "defaultAvatar",
-        width: "120px",
-        render: (text, record, index) => {
-          return (
-            <a target="_blank" rel="noreferrer" href={text}>
-              <img src={text} alt={text} width={40} />
-            </a>
-          );
-        },
-      },
-      {
-        title: i18next.t("organization:Soft deletion"),
-        dataIndex: "enableSoftDeletion",
-        key: "enableSoftDeletion",
-        width: "140px",
+        title: i18next.t("organization:Tags"),
+        dataIndex: "tags",
+        key: "tags",
+        width: "100px",
         sorter: true,
+        ...this.getColumnSearchProps("tags"),
         render: (text, record, index) => {
           return (
-            <Switch disabled checkedChildren="ON" unCheckedChildren="OFF" checked={text} />
+            <span>
+              {Setting.getTags(record.tags)}
+            </span>
           );
         },
       },

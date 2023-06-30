@@ -22,7 +22,7 @@ func GetUserRole(user *object.User) PTAFLTypes.UserRole {
 	if user.IsAdmin {
 		return PTAFLTypes.UserRolePartner
 	}
-	role, _ := object.GetRole(util.GetId("built-in", string(PTAFLTypes.UserRoleDistributor)))
+	role, _ := object.GetRole(util.GetId(builtInOrgCode, string(PTAFLTypes.UserRoleDistributor)))
 	if role != nil {
 		userId := user.GetId()
 		for _, roleUserId := range role.Users {
@@ -138,6 +138,14 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameDescription)
 		if !oldContains && !newContains {
 			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameDescription)
+		}
+	}
+
+	if old.Comment != new.Comment {
+		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameComment)
+		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameComment)
+		if !oldContains && !newContains {
+			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameComment)
 		}
 	}
 
