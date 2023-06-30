@@ -252,7 +252,7 @@ class OrganizationEditPage extends React.Component {
             </Row>
           </Col>
         </Row>
-        <Row style={{marginTop: "20px"}} >
+        <Row style={{marginTop: "20px", display: "none"}}>
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("general:Languages"), i18next.t("general:Languages - Tooltip"))} :
           </Col>
