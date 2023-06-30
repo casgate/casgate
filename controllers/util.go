@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/i18n"
@@ -234,4 +235,16 @@ func getInvalidSmsReceivers(smsForm SmsForm) []string {
 		}
 	}
 	return invalidReceivers
+}
+
+func getEmailDomain(email string) (string, error) {
+	if email == "" {
+		return "", fmt.Errorf("util:empty email")
+	}
+	emailParts := strings.Split(email, "@")
+	if len(emailParts) != 2 {
+		return "", fmt.Errorf("util:wrong email format")
+	}
+
+	return emailParts[1], nil
 }

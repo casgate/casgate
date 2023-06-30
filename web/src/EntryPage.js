@@ -20,7 +20,7 @@ import * as ApplicationBackend from "./backend/ApplicationBackend";
 import PricingPage from "./pricing/PricingPage";
 import * as Setting from "./Setting";
 import * as Conf from "./Conf";
-import SignupPage from "./auth/SignupPage";
+import SignupPage from "./pt_lm/SignupPage";
 import SelfLoginPage from "./auth/SelfLoginPage";
 import LoginPage from "./auth/LoginPage";
 import SelfForgetPage from "./auth/SelfForgetPage";

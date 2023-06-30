@@ -95,6 +95,23 @@ func (c *ApiController) Signup() {
 		return
 	}
 
+	organizationEmailDomain, err := getEmailDomain(organization.Email)
+	if err != nil {
+		c.ResponseError(fmt.Sprintf(c.T("account:organization has %s"), c.T(err.Error())))
+		return
+	}
+
+	userEmailDomain, err := getEmailDomain(authForm.Email)
+	if err != nil {
+		c.ResponseError(fmt.Sprintf(c.T("account:user has %s"), c.T(err.Error())))
+		return
+	}
+
+	if userEmailDomain != organizationEmailDomain {
+		c.ResponseError(c.T("account:user email domain must be equal to organization email domain"))
+		return
+	}
+
 	msg := object.CheckUserSignup(application, organization, &authForm, c.GetAcceptLanguage())
 	if msg != "" {
 		c.ResponseError(msg)

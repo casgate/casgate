@@ -3,7 +3,10 @@
     "Failed to add user": "Не удалось добавить пользователя",
     "Get init score failed, error: %w": "Не удалось получить исходный балл, ошибка: %w",
     "Please sign out first": "Пожалуйста, сначала выйдите из системы",
-    "The application does not allow to sign up new account": "Приложение не позволяет зарегистрироваться новому аккаунту"
+    "The application does not allow to sign up new account": "Приложение не позволяет зарегистрироваться новому аккаунту",
+    "organization has %s": "у партнера %s",
+    "user has %s": "у пользователя  %s",
+    "user email domain must be equal to organization email domain": "Email должен соответствовать домену организации"
   },
   "auth": {
     "Challenge method should be S256": "Метод испытаний должен быть S256",
@@ -129,7 +132,9 @@
   "util": {
     "No application is found for userId: %s": "Не найдено заявки для пользователя с идентификатором: %s",
     "No provider for category: %s is found for application: %s": "Нет поставщика для категории: %s для приложения: %s",
-    "The provider: %s is not found": "Поставщик: %s не найден"
+    "The provider: %s is not found": "Поставщик: %s не найден",
+    "empty email": "email отсутствует",
+    "wrong email format": "неверный формат email-а"
   },
   "verification": {
     "Code has not been sent yet!": "Код еще не был отправлен!",

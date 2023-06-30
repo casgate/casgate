@@ -769,7 +769,7 @@
   "signup": {
     "Accept": "Принимать",
     "Agreement": "Соглашение",
-    "Confirm": "Подтвердить",
+    "Confirm": "Подтверждение пароля",
     "Decline": "Снижение",
     "Have account?": "У вас есть аккаунт?",
     "Please accept the agreement!": "Пожалуйста, примите соглашение!",
@@ -793,7 +793,7 @@
     "The input is not invoice title!": "Входные данные не являются названием счета-фактуры!",
     "The input is not valid Email!": "Ввод не является действительным адресом электронной почты!",
     "The input is not valid Phone!": "Ввод не является действительным телефоном!",
-    "Username": "Имя пользователя",
+    "Username": "Логин",
     "Username - Tooltip": "Username - Tooltip",
     "Your confirmed password is inconsistent with the password!": "Ваш подтвержденный пароль не соответствует паролю!",
     "Your registration request has been sent!": "Ваша заявка на регистрацию отправлена!",
