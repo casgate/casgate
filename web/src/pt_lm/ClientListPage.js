@@ -160,7 +160,7 @@ class UserListPage extends BaseListPage {
         },
       },
       {
-        title: i18next.t("general:Логин"),
+        title: i18next.t("general:Идентификатор"),
         dataIndex: "name",
         key: "name",
         width: (Setting.isMobile()) ? "80px" : "110px",
@@ -191,22 +191,7 @@ class UserListPage extends BaseListPage {
         ...this.getColumnSearchProps("inn"),
       },
       {
-        title: i18next.t("general:Email"),
-        dataIndex: "email",
-        key: "email",
-        width: "160px",
-        sorter: true,
-        ...this.getColumnSearchProps("email"),
-        render: (text, record, index) => {
-          return (
-            <a href={`mailto:${text}`}>
-              {text}
-            </a>
-          );
-        },
-      },
-      {
-        title: i18next.t("general:Менеджера"),
+        title: i18next.t("Email"),
         dataIndex: "email",
         key: "email",
         width: "160px",

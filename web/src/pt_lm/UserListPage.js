@@ -139,7 +139,7 @@ class UserListPage extends BaseListPage {
   renderTable(users) {
     const columns = [
       {
-        title: i18next.t("general:Organization"),
+        title: i18next.t("general:Партнер"),
         dataIndex: "owner",
         key: "owner",
         width: (Setting.isMobile()) ? "100px" : "120px",
