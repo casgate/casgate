@@ -3,7 +3,10 @@
     "Failed to add user": "Failed to add user",
     "Get init score failed, error: %w": "Get init score failed, error: %w",
     "Please sign out first": "Please sign out first",
-    "The application does not allow to sign up new account": "The application does not allow to sign up new account"
+    "The application does not allow to sign up new account": "The application does not allow to sign up new account",
+    "organization has %s": "organization has %s",
+    "user email domain must be equal to organization email domain": "user email domain must be equal to organization email domain",
+    "user has %s": "user has %s"
   },
   "auth": {
     "Challenge method should be S256": "Challenge method should be S256",
@@ -120,6 +123,7 @@
   },
   "user": {
     "Display name cannot be empty": "Display name cannot be empty",
+    "Forbidden update username for user with subscriptions": "Forbidden update username for user with subscriptions",
     "New password cannot contain blank space.": "New password cannot contain blank space.",
     "New password must have at least 6 characters": "New password must have at least 6 characters"
   },

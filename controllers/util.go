@@ -239,11 +239,11 @@ func getInvalidSmsReceivers(smsForm SmsForm) []string {
 
 func getEmailDomain(email string) (string, error) {
 	if email == "" {
-		return "", fmt.Errorf("util:empty email")
+		return "", fmt.Errorf("util:empty email") // i18n.Translate(lang, "util:empty email")
 	}
 	emailParts := strings.Split(email, "@")
 	if len(emailParts) != 2 {
-		return "", fmt.Errorf("util:wrong email format")
+		return "", fmt.Errorf("util:wrong email format") // i18n.Translate(lang, "util:wrong email format")
 	}
 
 	return emailParts[1], nil

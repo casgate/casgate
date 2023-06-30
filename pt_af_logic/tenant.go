@@ -25,8 +25,14 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 		return fmt.Errorf("no roles found")
 	}
 
-	customer, _ := object.GetUser(subscription.User)
-	allCustomerCompanyUsers, _ := object.GetUsers(customer.Owner)
+	customer, err := object.GetUser(subscription.User)
+	if err != nil {
+		return fmt.Errorf("object.GetUser: %w", err)
+	}
+	allCustomerCompanyUsers, err := object.GetUsers(customer.Owner)
+	if err != nil {
+		return fmt.Errorf("object.GetUsers: %w", err)
+	}
 
 	var customerCompanyAdmin *object.User
 	for _, user := range allCustomerCompanyUsers {

@@ -26,6 +26,7 @@ import (
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/util"
 	goldap "github.com/go-ldap/ldap/v3"
+	"github.com/xorm-io/builder"
 )
 
 var (
@@ -411,6 +412,14 @@ func CheckUpdateUser(oldUser, user *User, lang string) string {
 		}
 		if HasUserByField(user.Owner, "name", user.Name) {
 			return i18n.Translate(lang, "check:Username already exists")
+		}
+
+		SubscriptionCount, err := GetSubscriptionCount(oldUser.Owner, "", "", builder.Eq{"subscription.user": util.GetId(oldUser.Owner, oldUser.Name)})
+		if err != nil {
+			return fmt.Sprintf("GetSubscriptionCount: %s", err)
+		}
+		if SubscriptionCount > 0 {
+			return i18n.Translate(lang, "user:Forbidden update username for user with subscriptions")
 		}
 	}
 	if oldUser.Email != user.Email {
