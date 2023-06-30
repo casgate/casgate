@@ -91,12 +91,12 @@ class GroupEditPage extends React.Component {
   }
 
   getParentIdOptions() {
-    const groups = this.state.groups.filter((group) => group.id !== this.state.group.id);
+    const groups = this.state.groups.filter((group) => group.name !== this.state.group.name);
     const organization = this.state.organizations.find((organization) => organization.name === this.state.group.owner);
     if (organization !== undefined) {
-      groups.push({id: organization.name, displayName: organization.displayName});
+      groups.push({name: organization.name, displayName: organization.displayName});
     }
-    return groups.map((group) => ({label: group.displayName, value: group.id}));
+    return groups.map((group) => ({label: group.displayName, value: group.name}));
   }
 
   renderGroup() {
@@ -171,8 +171,8 @@ class GroupEditPage extends React.Component {
           <Col span={22} >
             <Select style={{width: "100%"}}
               options={this.getParentIdOptions()}
-              value={this.state.group.parentGroupId} onChange={(value => {
-                this.updateGroupField("parentGroupId", value);
+              value={this.state.group.parentId} onChange={(value => {
+                this.updateGroupField("parentId", value);
               }
               )} />
           </Col>
@@ -193,7 +193,7 @@ class GroupEditPage extends React.Component {
 
   submitGroupEdit(willExist) {
     const group = Setting.deepCopy(this.state.group);
-    group["isTopGroup"] = this.state.organizations.some((organization) => organization.name === group.parentGroupId);
+    group["isTopGroup"] = this.state.organizations.some((organization) => organization.name === group.parentId);
 
     GroupBackend.updateGroup(this.state.organizationName, this.state.groupName, group)
       .then((res) => {

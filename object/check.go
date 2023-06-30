@@ -16,7 +16,6 @@ package object
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -29,20 +28,10 @@ import (
 	"github.com/xorm-io/builder"
 )
 
-var (
-	reWhiteSpace     *regexp.Regexp
-	reFieldWhiteList *regexp.Regexp
-)
-
 const (
 	SigninWrongTimesLimit     = 5
 	LastSignWrongTimeDuration = time.Minute * 15
 )
-
-func init() {
-	reWhiteSpace, _ = regexp.Compile(`\s`)
-	reFieldWhiteList, _ = regexp.Compile(`^[A-Za-z0-9]+$`)
-}
 
 func CheckUserSignup(application *Application, organization *Organization, form *form.AuthForm, lang string) string {
 	if organization == nil {
@@ -59,7 +48,7 @@ func CheckUserSignup(application *Application, organization *Organization, form 
 		if util.IsEmailValid(form.Username) {
 			return i18n.Translate(lang, "check:Username cannot be an email address")
 		}
-		if reWhiteSpace.MatchString(form.Username) {
+		if util.ReWhiteSpace.MatchString(form.Username) {
 			return i18n.Translate(lang, "check:Username cannot contain white spaces")
 		}
 
@@ -204,6 +193,16 @@ func CheckPassword(user *User, password string, lang string, options ...bool) st
 	}
 }
 
+func CheckPasswordComplexityByOrg(organization *Organization, password string) string {
+	errorMsg := checkPasswordComplexity(password, organization.PasswordOptions)
+	return errorMsg
+}
+
+func CheckPasswordComplexity(user *User, password string) string {
+	organization, _ := GetOrganizationByUser(user)
+	return CheckPasswordComplexityByOrg(organization, password)
+}
+
 func checkLdapUserPassword(user *User, password string, lang string) string {
 	ldaps, err := GetLdaps(user.Owner)
 	if err != nil {
@@ -285,10 +284,6 @@ func CheckUserPassword(organization string, username string, password string, la
 	return user, ""
 }
 
-func filterField(field string) bool {
-	return reFieldWhiteList.MatchString(field)
-}
-
 func CheckUserPermission(requestUserId, userId string, strict bool, lang string) (bool, error) {
 	if requestUserId == "" {
 		return false, fmt.Errorf(i18n.Translate(lang, "general:Please login first"))
@@ -354,7 +349,7 @@ func CheckAccessPermission(userId string, application *Application) (bool, error
 
 	allowed := true
 	for _, permission := range permissions {
-		if !permission.IsEnabled || len(permission.Users) == 0 {
+		if !permission.IsEnabled {
 			continue
 		}
 
@@ -387,14 +382,9 @@ func CheckUsername(username string, lang string) string {
 		return i18n.Translate(lang, "check:Username is too long (maximum is 39 characters).")
 	}
 
-	exclude, _ := regexp.Compile("^[\u0021-\u007E]+$")
-	if !exclude.MatchString(username) {
-		return ""
-	}
-
 	// https://stackoverflow.com/questions/58726546/github-username-convention-using-regex
-	re, _ := regexp.Compile("^[a-zA-Z0-9]+((?:-[a-zA-Z0-9]+)|(?:_[a-zA-Z0-9]+))*$")
-	if !re.MatchString(username) {
+
+	if !util.ReUserName.MatchString(username) {
 		return i18n.Translate(lang, "check:The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.")
 	}
 

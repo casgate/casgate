@@ -264,18 +264,48 @@ func DeletePermission(permission *Permission) (bool, error) {
 	return affected != 0, nil
 }
 
-func GetPermissionsByUser(userId string) ([]*Permission, error) {
+func GetPermissionsAndRolesByUser(userId string) ([]*Permission, []*Role, error) {
 	permissions := []*Permission{}
 	err := adapter.Engine.Where("users like ?", "%"+userId+"\"%").Find(&permissions)
 	if err != nil {
-		return permissions, err
+		return nil, nil, err
 	}
 
-	for i := range permissions {
-		permissions[i].Users = nil
+	existedPerms := map[string]struct{}{}
+
+	for _, perm := range permissions {
+		perm.Users = nil
+
+		if _, ok := existedPerms[perm.Name]; !ok {
+			existedPerms[perm.Name] = struct{}{}
+		}
 	}
 
-	return permissions, nil
+	permFromRoles := []*Permission{}
+
+	roles, err := GetRolesByUser(userId)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, role := range roles {
+		perms := []*Permission{}
+		err := adapter.Engine.Where("roles like ?", "%"+role.Name+"\"%").Find(&perms)
+		if err != nil {
+			return nil, nil, err
+		}
+		permFromRoles = append(permFromRoles, perms...)
+	}
+
+	for _, perm := range permFromRoles {
+		perm.Users = nil
+		if _, ok := existedPerms[perm.Name]; !ok {
+			existedPerms[perm.Name] = struct{}{}
+			permissions = append(permissions, perm)
+		}
+	}
+
+	return permissions, roles, nil
 }
 
 func GetPermissionsByRole(roleId string) ([]*Permission, error) {
@@ -339,4 +369,25 @@ func GetMaskedPermissions(permissions []*Permission) []*Permission {
 	}
 
 	return permissions
+}
+
+// GroupPermissionsByModelAdapter group permissions by model and adapter.
+// Every model and adapter will be a key, and the value is a list of permission ids.
+// With each list of permission ids have the same key, we just need to init the
+// enforcer and do the enforce/batch-enforce once (with list of permission ids
+// as the policyFilter when the enforcer load policy).
+func GroupPermissionsByModelAdapter(permissions []*Permission) map[string][]string {
+	m := make(map[string][]string)
+
+	for _, permission := range permissions {
+		key := permission.Model + permission.Adapter
+		permissionIds, ok := m[key]
+		if !ok {
+			m[key] = []string{permission.GetId()}
+		} else {
+			m[key] = append(permissionIds, permission.GetId())
+		}
+	}
+
+	return m
 }

@@ -79,7 +79,8 @@ func (c *ApiController) getCurrentUser() *object.User {
 	} else {
 		user, err = object.GetUser(userId)
 		if err != nil {
-			panic(err)
+			c.ResponseError(err.Error())
+			return nil
 		}
 	}
 	return user
@@ -112,7 +113,8 @@ func (c *ApiController) GetSessionApplication() *object.Application {
 	}
 	application, err := object.GetApplicationByClientId(clientId.(string))
 	if err != nil {
-		panic(err)
+		c.ResponseError(err.Error())
+		return nil
 	}
 
 	return application
@@ -177,6 +179,10 @@ func (c *ApiController) SetSessionData(s *SessionData) {
 }
 
 func (c *ApiController) setMfaSessionData(data *object.MfaSessionData) {
+	if data == nil {
+		c.SetSession(object.MfaSessionUserId, nil)
+		return
+	}
 	c.SetSession(object.MfaSessionUserId, data.UserId)
 }
 

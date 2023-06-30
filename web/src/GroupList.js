@@ -49,14 +49,15 @@ class GroupListPage extends BaseListPage {
 
   newGroup() {
     const randomName = Setting.getRandomName();
+    const owner = Setting.getRequestOrganization(this.props.account);
     return {
-      owner: this.props.account.owner,
+      owner: owner,
       name: `group_${randomName}`,
       createdTime: moment().format(),
       updatedTime: moment().format(),
       displayName: `New Group - ${randomName}`,
       type: "Virtual",
-      parentGroupId: this.props.account.owner,
+      parentId: this.props.account.owner,
       isTopGroup: true,
       isEnabled: true,
     };
@@ -96,7 +97,7 @@ class GroupListPage extends BaseListPage {
       });
   }
 
-  renderTable(groups) {
+  renderTable(data) {
     const columns = [
       {
         title: i18next.t("general:Name"),
@@ -174,18 +175,18 @@ class GroupListPage extends BaseListPage {
       },
       {
         title: i18next.t("group:Parent group"),
-        dataIndex: "parentGroupId",
-        key: "parentGroupId",
+        dataIndex: "parentId",
+        key: "parentId",
         width: "110px",
         sorter: true,
-        ...this.getColumnSearchProps("parentGroupId"),
+        ...this.getColumnSearchProps("parentId"),
         render: (text, record, index) => {
           if (record.isTopGroup) {
-            return <Link to={`/organizations/${record.parentGroupId}`}>
-              {record.parentGroupId}
+            return <Link to={`/organizations/${record.parentId}`}>
+              {record.parentId}
             </Link>;
           }
-          const parentGroup = this.state.groups.find((group) => group.id === text);
+          const parentGroup = this.state.groups.find((group) => group.name === text);
           if (parentGroup === undefined) {
             return "";
           }
@@ -201,10 +202,12 @@ class GroupListPage extends BaseListPage {
         width: "170px",
         fixed: (Setting.isMobile()) ? "false" : "right",
         render: (text, record, index) => {
+          const haveChildren = this.state.groups.find((group) => group.parentId === record.id) !== undefined;
           return (
             <div>
               <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/groups/${record.owner}/${record.name}`)}>{i18next.t("general:Edit")}</Button>
               <PopconfirmModal
+                disabled={haveChildren}
                 title={i18next.t("general:Sure to delete") + `: ${record.name} ?`}
                 onConfirm={() => this.deleteGroup(index)}
               >
@@ -224,7 +227,7 @@ class GroupListPage extends BaseListPage {
 
     return (
       <div>
-        <Table scroll={{x: "max-content"}} columns={columns} dataSource={groups} rowKey={(record) => `${record.owner}/${record.name}`} size="middle" bordered pagination={paginationProps}
+        <Table scroll={{x: "max-content"}} columns={columns} dataSource={data} rowKey={(record) => `${record.owner}/${record.name}`} size="middle" bordered pagination={paginationProps}
           title={() => (
             <div>
               {i18next.t("general:Groups")}&nbsp;&nbsp;&nbsp;&nbsp;
@@ -249,7 +252,7 @@ class GroupListPage extends BaseListPage {
       value = params.type;
     }
     this.setState({loading: true});
-    GroupBackend.getGroups(this.state.owner, false, params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    GroupBackend.getGroups(Setting.isDefaultOrganizationSelected(this.props.account) ? "" : Setting.getRequestOrganization(this.props.account), false, params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         this.setState({
           loading: false,

@@ -157,6 +157,13 @@ func (c *ApiController) Signup() {
 		username = id
 	}
 
+	password := authForm.Password
+	msg = object.CheckPasswordComplexityByOrg(organization, password)
+	if msg != "" {
+		c.ResponseError(msg)
+		return
+	}
+
 	initScore, err := organization.GetInitScore()
 	if err != nil {
 		c.ResponseError(fmt.Errorf(c.T("account:Get init score failed, error: %w"), err).Error())
@@ -380,6 +387,7 @@ func (c *ApiController) GetAccount() {
 
 	user.Permissions = object.GetMaskedPermissions(user.Permissions)
 	user.Roles = object.GetMaskedRoles(user.Roles)
+	user.MultiFactorAuths = object.GetAllMfaProps(user, true)
 
 	organization, err := object.GetMaskedOrganization(object.GetOrganizationByUser(user))
 	if err != nil {

@@ -69,9 +69,18 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 		return
 	}
 
+	// check user's tag
+	if !user.IsGlobalAdmin && !user.IsAdmin && len(application.Tags) > 0 {
+		// only users with the tag that is listed in the application tags can login
+		if !util.InSlice(application.Tags, user.Tag) {
+			c.ResponseError(fmt.Sprintf(c.T("auth:User's tag: %s is not listed in the application's tags"), user.Tag))
+			return
+		}
+	}
+
 	if form.Password != "" && user.IsMfaEnabled() {
 		c.setMfaSessionData(&object.MfaSessionData{UserId: userId})
-		resp = &Response{Status: object.NextMfa, Data: user.GetPreferMfa(true)}
+		resp = &Response{Status: object.NextMfa, Data: user.GetPreferredMfaProps(true)}
 		return
 	}
 
@@ -238,7 +247,7 @@ func isProxyProviderType(providerType string) bool {
 // @Param code_challenge_method   query    string  false code_challenge_method
 // @Param code_challenge          query    string  false code_challenge
 // @Param   form   body   controllers.AuthForm  true        "Login information"
-// @Success 200 {object} Response The Response object
+// @Success 200 {object} controllers.Response The Response object
 // @router /login [post]
 func (c *ApiController) Login() {
 	resp := &Response{}
@@ -656,15 +665,20 @@ func (c *ApiController) Login() {
 		}
 
 		if authForm.Passcode != "" {
-			MfaUtil := object.GetMfaUtil(authForm.MfaType, user.GetPreferMfa(false))
-			err = MfaUtil.Verify(authForm.Passcode)
+			mfaUtil := object.GetMfaUtil(authForm.MfaType, user.GetPreferredMfaProps(false))
+			if mfaUtil == nil {
+				c.ResponseError("Invalid multi-factor authentication type")
+				return
+			}
+
+			err = mfaUtil.Verify(authForm.Passcode)
 			if err != nil {
 				c.ResponseError(err.Error())
 				return
 			}
 		}
 		if authForm.RecoveryCode != "" {
-			err = object.RecoverTfs(user, authForm.RecoveryCode)
+			err = object.MfaRecover(user, authForm.RecoveryCode)
 			if err != nil {
 				c.ResponseError(err.Error())
 				return
@@ -751,7 +765,8 @@ func (c *ApiController) HandleSamlLogin() {
 func (c *ApiController) HandleOfficialAccountEvent() {
 	respBytes, err := ioutil.ReadAll(c.Ctx.Request.Body)
 	if err != nil {
-		panic(err)
+		c.ResponseError(err.Error())
+		return
 	}
 
 	var data struct {
@@ -761,7 +776,8 @@ func (c *ApiController) HandleOfficialAccountEvent() {
 	}
 	err = xml.Unmarshal(respBytes, &data)
 	if err != nil {
-		panic(err)
+		c.ResponseError(err.Error())
+		return
 	}
 
 	lock.Lock()

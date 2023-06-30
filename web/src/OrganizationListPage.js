@@ -34,6 +34,7 @@ class OrganizationListPage extends BaseListPage {
       favicon: `${Setting.StaticBaseUrl}/img/favicon.png`,
       passwordType: "plain",
       PasswordSalt: "",
+      passwordOptions: [],
       countryCodes: ["CN"],
       defaultAvatar: `${Setting.StaticBaseUrl}/img/casbin.svg`,
       defaultApplication: "",
@@ -60,6 +61,7 @@ class OrganizationListPage extends BaseListPage {
         {name: "Bio", visible: true, viewRule: "Public", modifyRule: "Self"},
         {name: "Tag", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "Signup application", visible: true, viewRule: "Public", modifyRule: "Admin"},
+        {name: "API key", label: i18next.t("general:API key")},
         {name: "Roles", visible: true, viewRule: "Public", modifyRule: "Immutable"},
         {name: "Permissions", visible: true, viewRule: "Public", modifyRule: "Immutable"},
         {name: "Groups", visible: true, viewRule: "Public", modifyRule: "Immutable"},
@@ -81,6 +83,7 @@ class OrganizationListPage extends BaseListPage {
         if (res.status === "ok") {
           this.props.history.push({pathname: `/organizations/${newOrganization.name}`, mode: "add"});
           Setting.showMessage("success", i18next.t("general:Successfully added"));
+          window.dispatchEvent(new Event("storageOrganizationsChanged"));
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to add")}: ${res.msg}`);
         }
@@ -97,8 +100,11 @@ class OrganizationListPage extends BaseListPage {
           Setting.showMessage("success", i18next.t("general:Successfully deleted"));
           this.setState({
             data: Setting.deleteRow(this.state.data, i),
-            pagination: {total: this.state.pagination.total - 1},
+            pagination: {
+              ...this.state.pagination,
+              total: this.state.pagination.total - 1},
           });
+          window.dispatchEvent(new Event("storageOrganizationsChanged"));
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to delete")}: ${res.msg}`);
         }
@@ -227,7 +233,7 @@ class OrganizationListPage extends BaseListPage {
         render: (text, record, index) => {
           return (
             <div>
-              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/group-tree/${record.name}`)}>{i18next.t("general:Groups")}</Button>
+              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/trees/${record.name}`)}>{i18next.t("general:Groups")}</Button>
               <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/organizations/${record.name}/users`)}>{i18next.t("general:Users")}</Button>
               <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} onClick={() => this.props.history.push(`/organizations/${record.name}`)}>{i18next.t("general:Edit")}</Button>
               <PopconfirmModal
@@ -255,7 +261,7 @@ class OrganizationListPage extends BaseListPage {
           title={() => (
             <div>
               {i18next.t("general:Organizations")}&nbsp;&nbsp;&nbsp;&nbsp;
-              <Button type="primary" size="small" onClick={this.addOrganization.bind(this)}>{i18next.t("general:Add")}</Button>
+              <Button type="primary" size="small" disabled={!Setting.isAdminUser(this.props.account)} onClick={this.addOrganization.bind(this)}>{i18next.t("general:Add")}</Button>
             </div>
           )}
           loading={this.state.loading}
@@ -273,7 +279,7 @@ class OrganizationListPage extends BaseListPage {
       value = params.passwordType;
     }
     this.setState({loading: true});
-    OrganizationBackend.getOrganizations("admin", params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    OrganizationBackend.getOrganizations("admin", Setting.isDefaultOrganizationSelected(this.props.account) ? "" : Setting.getRequestOrganization(this.props.account), params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         this.setState({
           loading: false,

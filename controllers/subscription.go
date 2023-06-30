@@ -43,7 +43,8 @@ func (c *ApiController) GetSubscriptions() {
 	if limit == "" || page == "" {
 		subscriptions, err := object.GetSubscriptions(owner)
 		if err != nil {
-			panic(err)
+			c.ResponseError(err.Error())
+			return
 		}
 
 		c.Data["json"] = subscriptions
@@ -75,7 +76,7 @@ func (c *ApiController) GetSubscriptions() {
 // @Tag Subscription API
 // @Description get subscription
 // @Param   id     query    string  true        "The id ( owner/name ) of the subscription"
-// @Success 200 {object} object.subscription The Response object
+// @Success 200 {object} object.Subscription The Response object
 // @router /get-subscription [get]
 func (c *ApiController) GetSubscription() {
 	id := c.Input().Get("id")
@@ -85,7 +86,8 @@ func (c *ApiController) GetSubscription() {
 
 	subscription, err := object.GetSubscription(id, filter)
 	if err != nil {
-		panic(err)
+		c.ResponseError(err.Error())
+		return
 	}
 
 	c.Data["json"] = subscription

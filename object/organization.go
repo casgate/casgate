@@ -22,6 +22,7 @@ import (
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/util"
+	"github.com/xorm-io/builder"
 	"github.com/xorm-io/core"
 )
 
@@ -55,6 +56,7 @@ type Organization struct {
 	Favicon            string     `xorm:"varchar(100)" json:"favicon"`
 	PasswordType       string     `xorm:"varchar(100)" json:"passwordType"`
 	PasswordSalt       string     `xorm:"varchar(100)" json:"passwordSalt"`
+	PasswordOptions    []string   `xorm:"varchar(100)" json:"passwordOptions"`
 	CountryCodes       []string   `xorm:"varchar(200)"  json:"countryCodes"`
 	DefaultAvatar      string     `xorm:"varchar(200)" json:"defaultAvatar"`
 	DefaultApplication string     `xorm:"varchar(100)" json:"defaultApplication"`
@@ -81,11 +83,18 @@ func GetOrganizationCount(owner, field, value string) (int64, error) {
 	return session.Count(&Organization{})
 }
 
-func GetOrganizations(owner string) ([]*Organization, error) {
+func GetOrganizations(owner string, name ...string) ([]*Organization, error) {
 	organizations := []*Organization{}
-	err := adapter.Engine.Desc("created_time").Find(&organizations, &Organization{Owner: owner})
-	if err != nil {
-		return nil, err
+	if name != nil && len(name) > 0 {
+		err := adapter.Engine.Desc("created_time").Where(builder.In("name", name)).Find(&organizations)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := adapter.Engine.Desc("created_time").Find(&organizations, &Organization{Owner: owner})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return organizations, nil
@@ -101,10 +110,15 @@ func GetOrganizationsByFields(owner string, fields ...string) ([]*Organization, 
 	return organizations, nil
 }
 
-func GetPaginationOrganizations(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Organization, error) {
+func GetPaginationOrganizations(owner string, name string, offset, limit int, field, value, sortField, sortOrder string) ([]*Organization, error) {
 	organizations := []*Organization{}
 	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
-	err := session.Find(&organizations)
+	var err error
+	if name != "" {
+		err = session.Find(&organizations, &Organization{Name: name})
+	} else {
+		err = session.Find(&organizations)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +413,6 @@ func organizationChangeTrigger(oldName string, newName string) error {
 
 	casbinAdapter := new(CasbinAdapter)
 	casbinAdapter.Owner = newName
-	casbinAdapter.Organization = newName
 	_, err = session.Where("owner=?", oldName).Update(casbinAdapter)
 	if err != nil {
 		return err

@@ -145,11 +145,6 @@ func (a *Adapter) createTable() {
 		panic(err)
 	}
 
-	err = a.Engine.Sync2(new(UserGroupRelation))
-	if err != nil {
-		panic(err)
-	}
-
 	err = a.Engine.Sync2(new(Role))
 	if err != nil {
 		panic(err)
@@ -280,7 +275,7 @@ func GetSession(owner string, offset, limit int, field, value, sortField, sortOr
 		session = session.And("owner=?", owner)
 	}
 	if field != "" && value != "" {
-		if filterField(field) {
+		if util.FilterField(field) {
 			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), fmt.Sprintf("%%%s%%", value))
 		}
 	}
@@ -308,7 +303,7 @@ func GetSessionForUser(owner string, offset, limit int, field, value, sortField,
 		}
 	}
 	if field != "" && value != "" {
-		if filterField(field) {
+		if util.FilterField(field) {
 			if offset != -1 {
 				field = fmt.Sprintf("a.%s", field)
 			}

@@ -96,6 +96,7 @@ import {withTranslation} from "react-i18next";
 import ThemeSelect from "./common/select/ThemeSelect";
 import SessionListPage from "./SessionListPage";
 import MfaSetupPage from "./auth/MfaSetupPage";
+import OrganizationSelect from "./common/select/OrganizationSelect";
 
 const {Header, Footer, Content} = Layout;
 
@@ -142,7 +143,7 @@ class App extends Component {
     });
     if (uri === "/") {
       this.setState({selectedMenuKey: "/"});
-    } else if (uri.includes("/organizations")) {
+    } else if (uri.includes("/organizations") || uri.includes("/trees")) {
       this.setState({selectedMenuKey: "/organizations"});
     } else if (uri.includes("/users")) {
       this.setState({selectedMenuKey: "/users"});
@@ -356,9 +357,11 @@ class App extends Component {
     items.push(Setting.getItem(<><SettingOutlined />&nbsp;&nbsp;{i18next.t("account:My Account")}</>,
       "/account"
     ));
-    items.push(Setting.getItem(<><CommentOutlined />&nbsp;&nbsp;{i18next.t("account:Chats & Messages")}</>,
-      "/chat"
-    ));
+    if (Conf.EnableChatPages) {
+      items.push(Setting.getItem(<><CommentOutlined />&nbsp;&nbsp;{i18next.t("account:Chats & Messages")}</>,
+        "/chat"
+      ));
+    }
     items.push(Setting.getItem(<><LogoutOutlined />&nbsp;&nbsp;{i18next.t("account:Logout")}</>,
       "/logout"));
 
@@ -408,6 +411,17 @@ class App extends Component {
                 logo: this.getLogo(nextThemeAlgorithm),
               });
             }} />
+          {Setting.isAdminUser(this.state.account) && !Setting.isMobile() &&
+            <OrganizationSelect
+              initValue={Setting.getOrganization()}
+              withAll={true}
+              style={{marginRight: "20px", width: "180px", display: "flex"}}
+              onChange={(value) => {
+                Setting.setOrganization(value);
+              }}
+              className="select-box"
+            />
+          }
         </React.Fragment>
       );
     }
@@ -422,7 +436,15 @@ class App extends Component {
 
     res.push(Setting.getItem(<Link to="/">{i18next.t("general:Home")}</Link>, "/"));
 
-    if (Setting.isAdminUser(this.state.account)) {
+    if (Setting.isLocalAdminUser(this.state.account)) {
+      if (Conf.ShowGithubCorner) {
+        res.push(Setting.getItem(<a href={"https://casdoor.com"}>
+          <span style={{fontWeight: "bold", backgroundColor: "rgba(87,52,211,0.4)", marginTop: "12px", paddingLeft: "5px", paddingRight: "5px", display: "flex", alignItems: "center", height: "40px", borderRadius: "5px"}}>
+            🚀 SaaS Hosting 🔥
+          </span>
+        </a>, "#"));
+      }
+
       res.push(Setting.getItem(<Link to="/organizations">{i18next.t("general:Organizations")}</Link>,
         "/organizations"));
 
@@ -430,23 +452,21 @@ class App extends Component {
       //   "/groups"));
     }
 
-    if (Setting.isLocalAdminUser(this.state.account)) {
-      res.push(Setting.getItem(<Link to="/users">{i18next.t("general:Users")}</Link>,
-        "/users"
-      ));
+    res.push(Setting.getItem(<Link to="/users">{i18next.t("general:Users")}</Link>,
+      "/users"
+    ));
 
-      res.push(Setting.getItem(<Link to="/clients">{i18next.t("general:Clients")}</Link>,
-        "/clients"
-      ));
+    res.push(Setting.getItem(<Link to="/clients">{i18next.t("general:Clients")}</Link>,
+      "/clients"
+    ));
 
-      // res.push(Setting.getItem(<Link to="/roles">{i18next.t("general:Roles")}</Link>,
-      //   "/roles"
-      // ));
+    // res.push(Setting.getItem(<Link to="/roles">{i18next.t("general:Roles")}</Link>,
+    //   "/roles"
+    // ));
 
-      // res.push(Setting.getItem(<Link to="/permissions">{i18next.t("general:Permissions")}</Link>,
-      //   "/permissions"
-      // ));
-    }
+    // res.push(Setting.getItem(<Link to="/permissions">{i18next.t("general:Permissions")}</Link>,
+    //   "/permissions"
+    // ));
 
     if (Setting.isLocalAdminUser(this.state.account)) {
       // res.push(Setting.getItem(<Link to="/models">{i18next.t("general:Models")}</Link>,
@@ -494,7 +514,6 @@ class App extends Component {
       res.push(Setting.getItem(<Link to="/subscriptions">{i18next.t("general:Subscriptions")}</Link>,
         "/subscriptions"
       ));
-
     }
 
     if (Setting.isLocalAdminUser(this.state.account)) {
@@ -528,8 +547,8 @@ class App extends Component {
         //   "/payments"
         // ));
       }
-
     }
+
     if (Setting.isAdminUser(this.state.account)) {
       // res.push(Setting.getItem(<Link to="/sysinfo">{i18next.t("general:System Info")}</Link>,
       //   "/sysinfo"
@@ -582,8 +601,8 @@ class App extends Component {
         <Route exact path="/organizations" render={(props) => this.renderLoginIfNotLoggedIn(<OrganizationListPage account={this.state.account} {...props} />)} />
         <Route exact path="/organizations/:organizationName" render={(props) => this.renderLoginIfNotLoggedIn(<OrganizationEditPage account={this.state.account} onChangeTheme={this.setTheme} {...props} />)} />
         <Route exact path="/organizations/:organizationName/users" render={(props) => this.renderLoginIfNotLoggedIn(<UserListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/group-tree/:organizationName" render={(props) => this.renderLoginIfNotLoggedIn(<GroupTreePage account={this.state.account} {...props} />)} />
-        <Route exact path="/group-tree/:organizationName/:groupName" render={(props) => this.renderLoginIfNotLoggedIn(<GroupTreePage account={this.state.account} {...props} />)} />
+        <Route exact path="/trees/:organizationName" render={(props) => this.renderLoginIfNotLoggedIn(<GroupTreePage account={this.state.account} {...props} />)} />
+        <Route exact path="/trees/:organizationName/:groupName" render={(props) => this.renderLoginIfNotLoggedIn(<GroupTreePage account={this.state.account} {...props} />)} />
         <Route exact path="/groups" render={(props) => this.renderLoginIfNotLoggedIn(<GroupListPage account={this.state.account} {...props} />)} />
         <Route exact path="/groups/:organizationName/:groupName" render={(props) => this.renderLoginIfNotLoggedIn(<GroupEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/users" render={(props) => this.renderLoginIfNotLoggedIn(<UserListPage account={this.state.account} {...props} />)} />
@@ -627,7 +646,7 @@ class App extends Component {
         <Route exact path="/subscriptions" render={(props) => this.renderLoginIfNotLoggedIn(<SubscriptionListPage account={this.state.account} {...props} />)} />
         <Route exact path="/subscriptions/:organizationName/:subscriptionName" render={(props) => this.renderLoginIfNotLoggedIn(<SubscriptionEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/products" render={(props) => this.renderLoginIfNotLoggedIn(<ProductListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/products/:productName" render={(props) => this.renderLoginIfNotLoggedIn(<ProductEditPage account={this.state.account} {...props} />)} />
+        <Route exact path="/products/:organizationName/:productName" render={(props) => this.renderLoginIfNotLoggedIn(<ProductEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/products/:productName/buy" render={(props) => this.renderLoginIfNotLoggedIn(<ProductBuyPage account={this.state.account} {...props} />)} />
         <Route exact path="/payments" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentListPage account={this.state.account} {...props} />)} />
         <Route exact path="/payments/:paymentName" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentEditPage account={this.state.account} {...props} />)} />
@@ -656,7 +675,7 @@ class App extends Component {
 
   isWithoutCard() {
     return Setting.isMobile() || window.location.pathname === "/chat" ||
-      window.location.pathname.startsWith("/group-tree");
+      window.location.pathname.startsWith("/trees");
   }
 
   renderContent() {
@@ -667,6 +686,7 @@ class App extends Component {
         this.props.history.push(key);
       }
     };
+    const menuStyleRight = Setting.isAdminUser(this.state.account) && !Setting.isMobile() ? "calc(180px + 260px)" : "260px";
     return (
       <Layout id="parent-area">
         <Header style={{padding: "0", marginBottom: "3px", backgroundColor: this.state.themeAlgorithm.includes("dark") ? "black" : "white"}}>
@@ -696,7 +716,7 @@ class App extends Component {
               items={this.getMenuItems()}
               mode={"horizontal"}
               selectedKeys={[this.state.selectedMenuKey]}
-              style={{position: "absolute", left: "145px", right: "260px"}}
+              style={{position: "absolute", left: "145px", right: menuStyleRight}}
             />
           }
           {

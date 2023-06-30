@@ -38,31 +38,51 @@ func (c *ApiController) GetOrganizations() {
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
+	organizationName := c.Input().Get("organizationName")
 
+	isGlobalAdmin := c.IsGlobalAdmin()
 	if limit == "" || page == "" {
-		maskedOrganizations, err := object.GetMaskedOrganizations(object.GetOrganizations(owner))
+		var maskedOrganizations []*object.Organization
+		var err error
+
+		if isGlobalAdmin {
+			maskedOrganizations, err = object.GetMaskedOrganizations(object.GetOrganizations(owner))
+		} else {
+			maskedOrganizations, err = object.GetMaskedOrganizations(object.GetOrganizations(owner, c.getCurrentUser().Owner))
+		}
+
 		if err != nil {
-			panic(err)
+			c.ResponseError(err.Error())
+			return
 		}
 
 		c.Data["json"] = maskedOrganizations
 		c.ServeJSON()
 	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetOrganizationCount(owner, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
+		if !isGlobalAdmin {
+			maskedOrganizations, err := object.GetMaskedOrganizations(object.GetOrganizations(owner, c.getCurrentUser().Owner))
+			if err != nil {
+				c.ResponseError(err.Error())
+				return
+			}
+			c.ResponseOk(maskedOrganizations)
+		} else {
+			limit := util.ParseInt(limit)
+			count, err := object.GetOrganizationCount(owner, field, value)
+			if err != nil {
+				c.ResponseError(err.Error())
+				return
+			}
 
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		organizations, err := object.GetMaskedOrganizations(object.GetPaginationOrganizations(owner, paginator.Offset(), limit, field, value, sortField, sortOrder))
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
+			paginator := pagination.SetPaginator(c.Ctx, limit, count)
+			organizations, err := object.GetMaskedOrganizations(object.GetPaginationOrganizations(owner, organizationName, paginator.Offset(), limit, field, value, sortField, sortOrder))
+			if err != nil {
+				c.ResponseError(err.Error())
+				return
+			}
 
-		c.ResponseOk(organizations, paginator.Nums())
+			c.ResponseOk(organizations, paginator.Nums())
+		}
 	}
 }
 
@@ -75,14 +95,13 @@ func (c *ApiController) GetOrganizations() {
 // @router /get-organization [get]
 func (c *ApiController) GetOrganization() {
 	id := c.Input().Get("id")
-
 	maskedOrganization, err := object.GetMaskedOrganization(object.GetOrganization(id))
 	if err != nil {
-		panic(err)
+		c.ResponseError(err.Error())
+		return
 	}
 
-	c.Data["json"] = maskedOrganization
-	c.ServeJSON()
+	c.ResponseOk(maskedOrganization)
 }
 
 // UpdateOrganization ...
