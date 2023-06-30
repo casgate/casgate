@@ -272,6 +272,8 @@ class UserListPage extends BaseListPage {
       total: this.state.pagination.total,
       showQuickJumper: true,
       showSizeChanger: true,
+      defaultPageSize: 50,
+      pageSizeOptions: [50, 100],
       showTotal: () => i18next.t("general:{total} in total").replace("{total}", this.state.pagination.total),
     };
 
