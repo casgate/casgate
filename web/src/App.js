@@ -431,11 +431,11 @@ class App extends Component {
     }
 
     if (Setting.isLocalAdminUser(this.state.account)) {
-      res.push(Setting.getItem(<Link to="/users">{i18next.t("general:Менеджеры")}</Link>,
+      res.push(Setting.getItem(<Link to="/users">{i18next.t("general:Users")}</Link>,
         "/users"
       ));
 
-      res.push(Setting.getItem(<Link to="/clients">{i18next.t("general:Заказчики")}</Link>,
+      res.push(Setting.getItem(<Link to="/clients">{i18next.t("general:Clients")}</Link>,
         "/clients"
       ));
 

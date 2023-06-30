@@ -21,9 +21,10 @@ import de from "./locales/de/data.json";
 import id from "./locales/id/data.json";
 import ja from "./locales/ja/data.json";
 import ko from "./locales/ko/data.json";
-import ru from "./locales/ru/data.json";
+import ru from "./locales/lm/data.json";
 import vi from "./locales/vi/data.json";
 import pt from "./locales/pt/data.json";
+
 import * as Conf from "./Conf";
 import {initReactI18next} from "react-i18next";
 
