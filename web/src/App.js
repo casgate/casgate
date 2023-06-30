@@ -32,6 +32,9 @@ import OrganizationEditPage from "./pt_lm/OrganizationEditPage";
 
 import UserListPage from "./pt_lm/UserListPage";
 import UserEditPage from "./pt_lm/UserEditPage";
+
+import ClientListPage from "./pt_lm/ClientListPage";
+import ClientEditPage from "./pt_lm/ClientEditPage";
 // import UserListPage from "./UserListPage";
 // import UserEditPage from "./UserEditPage";
 import RoleListPage from "./RoleListPage";
@@ -93,6 +96,7 @@ import {withTranslation} from "react-i18next";
 import ThemeSelect from "./common/select/ThemeSelect";
 import SessionListPage from "./SessionListPage";
 import MfaSetupPage from "./auth/MfaSetupPage";
+import LanguageSelect from "./common/select/LanguageSelect";
 
 const {Header, Footer, Content} = Layout;
 
@@ -143,6 +147,8 @@ class App extends Component {
       this.setState({selectedMenuKey: "/organizations"});
     } else if (uri.includes("/users")) {
       this.setState({selectedMenuKey: "/users"});
+    } else if (uri.includes("/clients")) {
+      this.setState({selectedMenuKey: "/clients"});
     } else if (uri.includes("/groups")) {
       this.setState({selectedMenuKey: "/groups"});
     } else if (uri.includes("/roles")) {
@@ -403,6 +409,7 @@ class App extends Component {
                 logo: this.getLogo(nextThemeAlgorithm),
               });
             }} />
+          <LanguageSelect languages={this.state.account.organization.languages} />
         </React.Fragment>
       );
     }
@@ -428,6 +435,10 @@ class App extends Component {
     if (Setting.isLocalAdminUser(this.state.account)) {
       res.push(Setting.getItem(<Link to="/users">{i18next.t("general:Users")}</Link>,
         "/users"
+      ));
+
+      res.push(Setting.getItem(<Link to="/clients">{i18next.t("general:Заказчики")}</Link>,
+        "/clients"
       ));
 
       // res.push(Setting.getItem(<Link to="/roles">{i18next.t("general:Roles")}</Link>,
@@ -571,7 +582,6 @@ class App extends Component {
         <Route exact path="/" render={(props) => this.renderLoginIfNotLoggedIn(<HomePage account={this.state.account} {...props} />)} />
         <Route exact path="/account" render={(props) => this.renderLoginIfNotLoggedIn(<AccountPage account={this.state.account} {...props} />)} />
         <Route exact path="/organizations" render={(props) => this.renderLoginIfNotLoggedIn(<OrganizationListPage account={this.state.account} {...props} />)} />
-
         <Route exact path="/organizations/:organizationName" render={(props) => this.renderLoginIfNotLoggedIn(<OrganizationEditPage account={this.state.account} onChangeTheme={this.setTheme} {...props} />)} />
         <Route exact path="/organizations/:organizationName/users" render={(props) => this.renderLoginIfNotLoggedIn(<UserListPage account={this.state.account} {...props} />)} />
         <Route exact path="/group-tree/:organizationName" render={(props) => this.renderLoginIfNotLoggedIn(<GroupTreePage account={this.state.account} {...props} />)} />
@@ -580,6 +590,8 @@ class App extends Component {
         <Route exact path="/groups/:organizationName/:groupName" render={(props) => this.renderLoginIfNotLoggedIn(<GroupEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/users" render={(props) => this.renderLoginIfNotLoggedIn(<UserListPage account={this.state.account} {...props} />)} />
         <Route exact path="/users/:organizationName/:userName" render={(props) => <UserEditPage account={this.state.account} {...props} />} />
+        <Route exact path="/clients" render={(props) => this.renderLoginIfNotLoggedIn(<ClientListPage account={this.state.account} {...props} />)} />
+        <Route exact path="/clients/:organizationName/:userName" render={(props) => <ClientEditPage account={this.state.account} {...props} />} />
         <Route exact path="/roles" render={(props) => this.renderLoginIfNotLoggedIn(<RoleListPage account={this.state.account} {...props} />)} />
         <Route exact path="/roles/:organizationName/:roleName" render={(props) => this.renderLoginIfNotLoggedIn(<RoleEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/permissions" render={(props) => this.renderLoginIfNotLoggedIn(<PermissionListPage account={this.state.account} {...props} />)} />

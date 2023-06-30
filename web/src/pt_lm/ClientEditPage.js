@@ -215,7 +215,7 @@ class UserEditPage extends React.Component {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Логин"), i18next.t("general:Логин используетя для входа в систему"))} :
+            {Setting.getLabel(i18next.t("general:Name"), i18next.t("general:Name - Tooltip"))} :
           </Col>
           <Col span={22} >
             <Input value={this.state.user.name} disabled={!Setting.isLocalAdminUser(this.props.account) && disabled} onChange={e => {
@@ -228,7 +228,7 @@ class UserEditPage extends React.Component {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Имя"), i18next.t("general:Имя пользователя, к примеру ФИО"))} :
+            {Setting.getLabel(i18next.t("general:Display name"), i18next.t("general:Display name - Tooltip"))} :
           </Col>
           <Col span={22} >
             <Input value={this.state.user.displayName} onChange={e => {
@@ -288,7 +288,7 @@ class UserEditPage extends React.Component {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("Email"), i18next.t("general:Email - Tooltip"))} :
+            {Setting.getLabel(i18next.t("general:Email"), i18next.t("general:Email - Tooltip"))} :
           </Col>
           <Col style={{paddingRight: "20px"}} span={11} >
             <Input
@@ -632,7 +632,7 @@ class UserEditPage extends React.Component {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Атрибуты"), i18next.t("user:Любая информация которая относится к менеджеру"))} :
+            {Setting.getLabel(i18next.t("user:Properties"), i18next.t("user:Properties - Tooltip"))} :
           </Col>
           <Col span={22} >
             <PropertyTable properties={this.state.user.properties} onUpdateTable={(value) => {this.updateUserField("properties", value);}} />
@@ -643,7 +643,7 @@ class UserEditPage extends React.Component {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Менеджер"), i18next.t("user:Менеджер - представитель партнера"))} :
+            {Setting.getLabel(i18next.t("user:Is admin"), i18next.t("user:Is admin - Tooltip"))} :
           </Col>
           <Col span={(Setting.isMobile()) ? 22 : 2} >
             <Switch disabled={disabled} checked={this.state.user.isAdmin} onChange={checked => {
@@ -656,7 +656,7 @@ class UserEditPage extends React.Component {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Администратор"), i18next.t("user:Администратор системы"))} :
+            {Setting.getLabel(i18next.t("user:Is global admin"), i18next.t("user:Is global admin - Tooltip"))} :
           </Col>
           <Col span={(Setting.isMobile()) ? 22 : 2} >
             <Switch disabled={disabled} checked={this.state.user.isGlobalAdmin} onChange={checked => {
@@ -669,7 +669,7 @@ class UserEditPage extends React.Component {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Отключен"), i18next.t("user:Отключенный пользователь не может ввойти в систему"))} :
+            {Setting.getLabel(i18next.t("user:Is forbidden"), i18next.t("user:Is forbidden - Tooltip"))} :
           </Col>
           <Col span={(Setting.isMobile()) ? 22 : 2} >
             <Switch checked={this.state.user.isForbidden} onChange={checked => {

@@ -72,7 +72,7 @@ class SubscriptionEditPage extends React.Component {
   }
 
   getUsers(organizationName) {
-    UserBackend.getUsers(organizationName)
+    UserBackend.getUsers(organizationName, "", "", "tag", "client")
       .then((res) => {
         this.setState({
           users: res,
