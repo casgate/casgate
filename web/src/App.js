@@ -96,7 +96,6 @@ import {withTranslation} from "react-i18next";
 import ThemeSelect from "./common/select/ThemeSelect";
 import SessionListPage from "./SessionListPage";
 import MfaSetupPage from "./auth/MfaSetupPage";
-import LanguageSelect from "./common/select/LanguageSelect";
 
 const {Header, Footer, Content} = Layout;
 
@@ -409,7 +408,6 @@ class App extends Component {
                 logo: this.getLogo(nextThemeAlgorithm),
               });
             }} />
-          <LanguageSelect languages={this.state.account.organization.languages} />
         </React.Fragment>
       );
     }
