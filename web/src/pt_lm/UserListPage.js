@@ -55,8 +55,8 @@ class UserListPage extends BaseListPage {
       affiliation: "Example Inc.",
       tag: "manager",
       region: "",
-      isAdmin: (owner === "built-in"),
-      isGlobalAdmin: (owner === "built-in"),
+      isAdmin: true,
+      isGlobalAdmin: false,
       IsForbidden: false,
       score: this.state.organization.initScore,
       isDeleted: false,
@@ -285,7 +285,7 @@ class UserListPage extends BaseListPage {
         <Table scroll={{x: "max-content"}} columns={columns} dataSource={users} rowKey={(record) => `${record.owner}/${record.name}`} size="middle" bordered pagination={paginationProps}
           title={() => (
             <div>
-              {i18next.t("general:Users")}&nbsp;&nbsp;&nbsp;&nbsp;
+              {i18next.t("general:Менеджеры")}&nbsp;&nbsp;&nbsp;&nbsp;
               <Button style={{marginRight: "5px"}} type="primary" size="small" onClick={this.addUser.bind(this)}>{i18next.t("general:Add")}</Button>
             </div>
           )}

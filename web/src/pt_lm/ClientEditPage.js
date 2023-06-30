@@ -639,19 +639,6 @@ class UserEditPage extends React.Component {
           </Col>
         </Row>
       );
-    } else if (accountItem.name === "Is admin") {
-      return (
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Is admin"), i18next.t("user:Is admin - Tooltip"))} :
-          </Col>
-          <Col span={(Setting.isMobile()) ? 22 : 2} >
-            <Switch disabled={disabled} checked={this.state.user.isAdmin} onChange={checked => {
-              this.updateUserField("isAdmin", checked);
-            }} />
-          </Col>
-        </Row>
-      );
     } else if (accountItem.name === "Is global admin") {
       return (
         <Row style={{marginTop: "20px"}} >

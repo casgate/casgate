@@ -61,6 +61,7 @@ class UserListPage extends BaseListPage {
       properties: {
         "ИНН": "",
         "КПП": "",
+        "ФИО менеджера": "",
       },
 
       score: 0,
