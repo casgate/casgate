@@ -29,21 +29,9 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 	if err != nil {
 		return fmt.Errorf("object.GetUser: %w", err)
 	}
-	allCustomerCompanyUsers, err := object.GetUsers(customer.Owner)
+	customerOrganization, err := object.GetOrganization(util.GetId("admin", customer.Owner))
 	if err != nil {
-		return fmt.Errorf("object.GetUsers: %w", err)
-	}
-
-	var customerCompanyAdmin *object.User
-	for _, user := range allCustomerCompanyUsers {
-		if user.IsAdmin {
-			customerCompanyAdmin = user
-			break
-		}
-	}
-
-	if customerCompanyAdmin == nil {
-		return fmt.Errorf("customerCompanyAdmin doesn't exist for company: %v", customer.Owner)
+		return fmt.Errorf("object.GetOrganization: %w", err)
 	}
 
 	adminLoginResp, err := af.Login(af_client.LoginRequest{
@@ -185,7 +173,7 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 		createServiceUserRequest := af_client.CreateUserRequest{
 			Username:               serviceUserName,
 			Password:               serviceUserPwd,
-			Email:                  customerCompanyAdmin.Email,
+			Email:                  customerOrganization.Email,
 			Role:                   serviceRoleID,
 			PasswordChangeRequired: true,
 			IsActive:               true,
@@ -243,7 +231,7 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 			TenantAdminPassword: tenantAdminPassword,
 			PTAFLoginLink:       util.GetUrlHost(afHost),
 			ConnectionString:    connectionString,
-		}, customerCompanyAdmin.Email)
+		}, customerOrganization.Email)
 		if err != nil {
 			return fmt.Errorf("notifyPTAFTenantCreated: %w", err)
 		}

@@ -292,6 +292,13 @@ func (c *ApiController) UpdateUser() {
 			c.ResponseError(err.Error())
 			return
 		}
+		util.SafeGoroutine(func() {
+			err := pt_af_logic.NotifyPartnerConfirmed(oldUser, &user)
+			if err != nil {
+				util.LogError(c.Ctx, fmt.Errorf("NotifyPartnerConfirmed: %w", err).Error())
+			}
+
+		})
 	}
 
 	c.Data["json"] = wrapActionResponse(affected)

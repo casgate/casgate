@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"strings"
 
+	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/object"
 	af_client "github.com/casdoor/casdoor/pt_af_sdk"
 )
@@ -38,6 +39,14 @@ type SubscriptionStateChangeMessage struct {
 	OldStatus      string
 }
 
+type PartnerCreatedMessage struct {
+	PartnerName        string
+	PartnerDisplayName string
+	PartnerURL         string
+	PartnerAccount     string
+	PartnerUserName    string
+}
+
 type PTAFTenantCreatedMessage struct {
 	ClientName          string
 	ClientDisplayName   string
@@ -52,7 +61,15 @@ type PTAFTenantCreatedMessage struct {
 	ConnectionString    string
 }
 
-const subscriptionStateChangeEmailSubject = `Subscription status changed`
+type PartnerConfirmedMessage struct {
+	PartnerUserName string
+	PartnerLoginURL string
+}
+
+const (
+	subscriptionStateChangeEmailSubject = `[PT LMP] Subscription status changed`
+	partnerConfirmedSubject             = `[PT LMP] Registration confirmed`
+)
 
 func notifyPTAFTenantCreated(msg *PTAFTenantCreatedMessage, email string) error {
 	provider := getBuiltInEmailProvider()
@@ -88,6 +105,100 @@ func notifyPTAFTenantCreated(msg *PTAFTenantCreatedMessage, email string) error 
 	}
 
 	return nil
+}
+
+// NotifyPartnerConfirmed notify that his account confirmed, and now he can log in.
+func NotifyPartnerConfirmed(oldUser, user *object.User) error {
+	userConfirmed := user.IsAdmin == true && user.IsForbidden == false && (oldUser.IsAdmin != true || oldUser.IsForbidden == true)
+	if !userConfirmed {
+		return nil
+	}
+
+	provider := getBuiltInEmailProvider()
+	if provider == nil {
+		return errors.New("no email provider registered")
+	}
+
+	msg := PartnerConfirmedMessage{
+		PartnerUserName: user.Name,
+		PartnerLoginURL: fmt.Sprintf("%s/login/%s", conf.GetConfigString("origin"), user.Owner),
+	}
+
+	bodyTmpl, err := template.New("").Parse(partnerConfirmedBodyTmpl)
+	if err != nil {
+		return fmt.Errorf("template.New.Parse: %w", err)
+	}
+
+	var bodyBuf bytes.Buffer
+	if err := bodyTmpl.Execute(&bodyBuf, msg); err != nil {
+		return fmt.Errorf("tmpl.Execute: %w", err)
+	}
+
+	err = object.SendEmail(provider, partnerConfirmedSubject, bodyBuf.String(), user.Email, provider.DisplayName)
+	if err != nil {
+		return fmt.Errorf("object.SendEmail: %w", err)
+	}
+
+	return nil
+}
+
+// NotifyPartnerCreated notify global admin that first manager in organization is created (signup-ed)
+func NotifyPartnerCreated(user *object.User, organization *object.Organization) error {
+	count, err := object.GetUserCount(user.Owner, "", "", "")
+	if err != nil {
+		return fmt.Errorf("object.GetUserCount: %w", err)
+	}
+
+	if count != 1 {
+		// global admin must be notified only for first registered user
+		return nil
+	}
+
+	provider := getBuiltInEmailProvider()
+	if provider == nil {
+		return errors.New("no email provider registered")
+	}
+
+	msg := PartnerCreatedMessage{
+		PartnerName:        organization.Name,
+		PartnerDisplayName: organization.DisplayName,
+		PartnerURL:         fmt.Sprintf("%s/organizations/%s", conf.GetConfigString("origin"), organization.Name),
+		PartnerAccount:     fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), organization.Name, user.Name),
+		PartnerUserName:    user.Name,
+	}
+
+	titleTmpl, err := template.New("").Parse(partnerCreatedSubjTmpl)
+	if err != nil {
+		return fmt.Errorf("template.Parse: %w", err)
+	}
+
+	var titleBuf bytes.Buffer
+	err = titleTmpl.Execute(&titleBuf, msg)
+	if err != nil {
+		return fmt.Errorf("titleTmpl.Execute: %w", err)
+	}
+
+	bodyTmpl, err := template.New("").Parse(partnerCreatedBodyTmpl)
+	if err != nil {
+		return fmt.Errorf("template.New.Parse: %w", err)
+	}
+
+	var bodyBuf bytes.Buffer
+	if err := bodyTmpl.Execute(&bodyBuf, msg); err != nil {
+		return fmt.Errorf("tmpl.Execute: %w", err)
+	}
+
+	recipients := getBuiltInAdmins()
+	for _, email := range recipients {
+		errS := object.SendEmail(provider, titleBuf.String(), bodyBuf.String(), email, provider.DisplayName)
+		if errS != nil {
+			err = fmt.Errorf("%v; %v", err, errS)
+		} else {
+			err = errS
+		}
+	}
+
+	return err
 }
 
 // NotifySubscriptionMembers composes subscription state change message and sends emails to its members
