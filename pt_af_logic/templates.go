@@ -1,23 +1,5 @@
 package pt_af_logic
 
-const builtInAdminTmpl = `
-<p>PT LMP] Partner '{{ .Organization.Name }}' subscription '{{ .Subscription.Name }}' updated: {{ .OldStatus }} -> {{ .NewStatus }}</p>
-<p>Actor: {{ .Actor.Name }} </p>
-`
-
-const partnerSubscriptionTmpl = `
-<p>Организация: {{ .Organization.Name }}</p>
-<p>Партнёр: {{ .PartnerManager.Name }}</p>
-<p>Клиент: {{ .PartnerUser.Name }}</p>
-<p>Подписка: {{ .Subscription.Name }}</p>
-<p>Тарифный план: {{ .Subscription.Plan }}</p>
-<p>Дата начала: {{ .Subscription.StartDate }}</p>
-<p>Дата окончания: {{ .Subscription.EndDate }}</p>
-<p>Комментарий: {{ .Subscription.Description }}</p>
-<p>Статус: {{ .OldStatus }} -> {{ .NewStatus }}</p>
-<p>Автор изменения: {{ .Actor.Name }}</p>
-`
-
 const partnerCreateAccountsSubjTmpl = `[PT LMP] Accounts for {{ .ClientName }}`
 
 const partnerCreateAccountsBodyTmpl = `
@@ -48,4 +30,41 @@ const partnerConfirmedBodyTmpl = `
 <p>Ваша регистрация на портале подтверждена.</p>
 <p>Логин: {{ .PartnerUserName }}<br>
 Ссылка для входа на портал: <a href="{{ .PartnerLoginURL }}">{{ .PartnerLoginURL }}</a></p>
+`
+
+const SubscriptionUpdatedSubjTmpl = `[PT LMP] Обновлена подписка {{ .SubscriptionName }} (партнёр {{ .PartnerName }}, заказчик {{ .ClientName }}){{if ne .OldSubscriptionStatus .SubscriptionStatus}}: {{ .SubscriptionStatus }}{{end}}`
+
+const SubscriptionUpdatedBodyTmpl = `
+<p>Партнёр: <a href="{{ .PartnerURL }}">{{ .PartnerDisplayName }}</a><br>
+Идентификатор: <a href="{{ .SubscriptionURL }}">{{ .SubscriptionName }}</a><br>
+Заказчик:<a href="{{ .ClientURL }}">{{ .ClientDisplayName }}</a><br>
+Тарифный план: <a href="{{ .OldPlanURL }}">{{ .OldPlanDisplayName }}</a>{{if ne .OldPlanDisplayName .PlanDisplayName}} -> <a href="{{ .PlanURL }}">{{ .PlanDisplayName }}</a>{{end}}<br>
+Скидка: {{ .OldSubscriptionDiscount }}{{if ne .OldSubscriptionDiscount .SubscriptionDiscount}} -> {{ .SubscriptionDiscount }}{{end}}<br>
+Дата начала: {{ .OldSubscriptionStartDate }}{{if ne .OldSubscriptionStartDate .SubscriptionStartDate}} -> {{ .SubscriptionStartDate }}{{end}}<br>
+Дата окончания: {{ .OldSubscriptionEndDate }}{{if ne .OldSubscriptionEndDate .SubscriptionEndDate}} -> {{ .SubscriptionEndDate }}{{end}}<br>
+Статус: {{ .OldSubscriptionStatus }}{{if ne .OldSubscriptionStatus .SubscriptionStatus}} -> {{ .SubscriptionStatus }}{{end}}<br>
+Описание: {{ .OldSubscriptionDescription }}{{if ne .OldSubscriptionDescription .SubscriptionDescription }} -> {{ .SubscriptionDescription }}{{end}}<br>
+Комментарий: {{ .OldSubscriptionComment }}{{if ne .OldSubscriptionComment .SubscriptionComment }} -> {{ .SubscriptionComment }}{{end}}<br>
+Создатель: <a href="{{ .SubscriptionCreatorURL }}">{{ .SubscriptionCreator }}</a><br>
+Последняя смена статуса: <a href="{{ .SubscriptionMoverURL }}">{{ .SubscriptionMover }}</a><br>
+Время последней смены статуса: {{ .SubscriptionMoveTime }}<br>
+{{ if eq .OldSubscriptionStatus .SubscriptionStatus }}
+Последнее изменение: <a href="{{ .SubscriptionEditorURL }}">{{ .SubscriptionEditor }}</a><br>
+Время последнего изменения: {{ .SubscriptionEditTime }}{{end}}</p>
+`
+
+const SubscriptionUpdatedPartnerSubjTmpl = `[PT LMP] Обновлена подписка {{ .SubscriptionName }} (заказчик {{ .ClientName }}): {{ .SubscriptionStatus }}`
+
+const SubscriptionUpdatedPartnerBodyTmpl = `
+<p>Идентификатор: <a href="{{ .SubscriptionURL }}">{{ .SubscriptionName }}</a><br>
+Заказчик:<a href="{{ .ClientURL }}">{{ .ClientDisplayName }}</a><br>
+Тарифный план: <a href="{{ .OldPlanURL }}">{{ .OldPlanDisplayName }}</a>{{if ne .OldPlanDisplayName .PlanDisplayName}} -> <a href="{{ .PlanURL }}">{{ .PlanDisplayName }}</a>{{end}}<br>
+Скидка: {{ .OldSubscriptionDiscount }}{{if ne .OldSubscriptionDiscount .SubscriptionDiscount}} -> {{ .SubscriptionDiscount }}{{end}}<br>
+Дата начала: {{ .OldSubscriptionStartDate }}{{if ne .OldSubscriptionStartDate .SubscriptionStartDate}} -> {{ .SubscriptionStartDate }}{{end}}<br>
+Дата окончания: {{ .OldSubscriptionEndDate }}{{if ne .OldSubscriptionEndDate .SubscriptionEndDate}} -> {{ .SubscriptionEndDate }}{{end}}<br>
+Статус: {{ .OldSubscriptionStatus }}{{if ne .OldSubscriptionStatus .SubscriptionStatus}} -> {{ .SubscriptionStatus }}{{end}}<br>
+Описание: {{ .OldSubscriptionDescription }}{{if ne .OldSubscriptionDescription .SubscriptionDescription }} -> {{ .SubscriptionDescription }}{{end}}<br>
+Комментарий: {{ .OldSubscriptionComment }}{{if ne .OldSubscriptionComment .SubscriptionComment }} -> {{ .SubscriptionComment }}{{end}}<br>
+Создатель: <a href="{{ .SubscriptionCreatorURL }}">{{ .SubscriptionCreator }}</a><br>
+Время последней смены статуса: {{ .SubscriptionMoveTime }}</p>
 `

@@ -152,6 +152,16 @@
     "webauthn": {
       "Found no credentials for this user": "Не найдено учетных данных для этого пользователя",
       "Please call WebAuthnSigninBegin first": "Пожалуйста, сначала вызовите WebAuthnSigninBegin"
+    },
+    "subscription": {
+      "Pending": "На рассмотрении",
+      "Pre-Authorized": "Утверждена",
+      "PreFinished": "Завершается",
+      "Started": "Действующая",
+      "Unauthorized": "Отклонена",
+      "Finished": "Завершена",
+      "New": "Новая",
+      "Authorized": "Авторизована",
+      "Cancelled": "Отменена"
     }
   }
-  

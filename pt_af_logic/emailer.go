@@ -5,11 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"strings"
+	"strconv"
+	"time"
 
+	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/conf"
+	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/object"
-	af_client "github.com/casdoor/casdoor/pt_af_sdk"
+	PTAFLTypes "github.com/casdoor/casdoor/pt_af_logic/types"
+	"github.com/casdoor/casdoor/util"
 )
 
 type Message struct {
@@ -66,9 +70,50 @@ type PartnerConfirmedMessage struct {
 	PartnerLoginURL string
 }
 
+type SubscriptionUpdatedMessage struct {
+	//title
+	SubscriptionName   string
+	PartnerName        string
+	ClientName         string
+	SubscriptionStatus string
+	//body
+	PartnerDisplayName         string
+	PartnerURL                 string
+	SubscriptionURL            string
+	ClientDisplayName          string
+	ClientURL                  string
+	OldPlanDisplayName         string
+	OldPlanURL                 string
+	PlanURL                    string
+	PlanDisplayName            string
+	OldSubscriptionDiscount    string
+	SubscriptionDiscount       string
+	OldSubscriptionStartDate   string
+	SubscriptionStartDate      string
+	OldSubscriptionEndDate     string
+	SubscriptionEndDate        string
+	OldSubscriptionStatus      string
+	OldSubscriptionDescription string
+	SubscriptionDescription    string
+	OldSubscriptionComment     string
+	SubscriptionComment        string
+	SubscriptionCreator        string
+	SubscriptionCreatorURL     string
+	SubscriptionMover          string
+	SubscriptionMoverURL       string
+	SubscriptionMoveTime       string
+	SubscriptionEditor         string
+	SubscriptionEditorURL      string
+	SubscriptionEditTime       string
+}
+
+type SubscriptionUpdatedPartnerMessage struct {
+}
+
 const (
-	subscriptionStateChangeEmailSubject = `[PT LMP] Subscription status changed`
-	partnerConfirmedSubject             = `[PT LMP] Registration confirmed`
+	ptlmLanguage = "lm"
+
+	partnerConfirmedSubject = `[PT LMP] Registration confirmed`
 )
 
 func notifyPTAFTenantCreated(msg *PTAFTenantCreatedMessage, email string) error {
@@ -201,8 +246,8 @@ func NotifyPartnerCreated(user *object.User, organization *object.Organization) 
 	return err
 }
 
-// NotifySubscriptionMembers composes subscription state change message and sends emails to its members
-func NotifySubscriptionMembers(actor *object.User, current *object.Subscription, oldState string) error {
+// NotifySubscriptionUpdated composes subscription state change message and sends emails to its members
+func NotifySubscriptionUpdated(ctx *context.Context, actor *object.User, current, old *object.Subscription) error {
 	provider := getBuiltInEmailProvider()
 	if provider == nil {
 		return errors.New("no email provider registered")
@@ -211,151 +256,36 @@ func NotifySubscriptionMembers(actor *object.User, current *object.Subscription,
 		return errors.New("no client detected in subscription")
 	}
 
-	orgId := fmt.Sprintf("admin/%s", current.Owner)
-	organization, _ := object.GetOrganization(orgId)
-	partnerManager := getPartnerManager(current.Owner)
-	if partnerManager == nil {
-		return errors.New("no partner manager detected")
-	}
-	client, _ := object.GetUser(current.User)
+	stateChanged := old.State != current.State
 
-	var clientProps = make(map[string]string)
-	for prop := range client.Properties {
-		if !strings.HasPrefix(prop, af_client.PtPropPref) {
-			clientProps[prop] = client.Properties[prop]
+	switch current.State {
+	case PTAFLTypes.SubscriptionNew.String():
+		return nil
+	case PTAFLTypes.SubscriptionPreAuthorized.String(), PTAFLTypes.SubscriptionUnauthorized.String():
+		if stateChanged {
+			err := NotifyPartnerSubscriptionUpdated(actor, current, old)
+			if err != nil {
+				util.LogError(ctx, fmt.Errorf("NotifyPartnerSubscriptionUpdated: %w", err).Error())
+			}
 		}
-	}
-
-	// compose payload
-	msg := SubscriptionStateChangeMessage{
-		Actor: ContactData{
-			Email: actor.Email,
-			Phone: actor.Phone,
-			Name:  actor.DisplayName,
-		},
-		PartnerManager: ContactData{
-			Email: partnerManager.Email,
-			Phone: partnerManager.Phone,
-			Name:  partnerManager.DisplayName,
-		},
-		PartnerUser: ContactData{
-			Email: client.Email,
-			Phone: client.Phone,
-			Name:  client.DisplayName,
-		},
-		Organization: organization,
-		Subscription: current,
-		NewStatus:    current.State,
-		OldStatus:    oldState,
-	}
-
-	recipients := getSubscriptionStateRecipients(current)
-
-	errors := make(chan error, len(recipients))
-	defer close(errors)
-	for _, email := range recipients {
-		go func(dst string) {
-			var templateName string
-
-			// im really concerned about this way and sure it have not to be like that
-			// probably should be a separate functional handler to handle each recipient
-			if dst == client.Email || dst == partnerManager.Email {
-				templateName = partnerSubscriptionTmpl
-			} else {
-				templateName = builtInAdminTmpl
-			}
-
-			tmpl, err := template.New("").Parse(templateName)
+	case PTAFLTypes.SubscriptionAuthorized.String():
+		if stateChanged {
+			recipients := getDistributors(ctx)
+			err := NotifyAdminDistributorSubscriptionUpdated(actor, current, old, recipients)
 			if err != nil {
-				errors <- err
-				return
-			}
-
-			var wr bytes.Buffer
-			if err := tmpl.Execute(&wr, msg); err != nil {
-				errors <- err
-				return
-			}
-
-			errors <- object.SendEmail(provider, subscriptionStateChangeEmailSubject, wr.String(), dst, provider.DisplayName)
-		}(email)
-	}
-
-	var err error
-	for range recipients {
-		if e := <-errors; e != nil {
-			if err != nil {
-				err = fmt.Errorf("%v; %v", err, e)
-			} else {
-				err = e
+				util.LogError(ctx, fmt.Errorf("NotifyAdminDistributorSubscriptionUpdated(distributors): %w", err).Error())
 			}
 		}
 	}
 
-	return err
-}
-
-func getSubscriptionStateRecipients(sub *object.Subscription) []string {
+	// send admin notification
 	recipients := getBuiltInAdmins()
-
-	switch sub.State {
-	case "Pending":
-		{
-			// nothing to do
-			break
-		}
-	case "PreAuthorized":
-		{
-			partnerAdmin := getPartnerManager(sub.Owner)
-			if partnerAdmin != nil {
-				recipients = append(recipients, partnerAdmin.Email)
-			}
-			break
-		}
-	case "Unauthorized":
-		{
-			partnerAdmin := getPartnerManager(sub.Owner)
-			if partnerAdmin != nil {
-				recipients = append(recipients, partnerAdmin.Email)
-			}
-			break
-		}
-	case "Authorized":
-		{
-			partnerUser := getPartnerUser(sub.Owner)
-			if partnerUser != nil {
-				recipients = append(recipients, partnerUser.Email)
-			}
-			break
-		}
-	case "Started":
-		{
-			partnerAdmin := getPartnerManager(sub.Owner)
-			if partnerAdmin != nil {
-				recipients = append(recipients, partnerAdmin.Email)
-			}
-			break
-		}
-	case "PreFinished":
-		{
-			recipients = getAdmins(sub.Owner)
-			break
-		}
-	case "Finished":
-		{
-			recipients = getAdmins(sub.Owner)
-			break
-		}
-	case "Cancelled":
-		{
-			recipients = getAdmins(sub.Owner)
-			break
-		}
-	default:
-		return recipients
+	err := NotifyAdminDistributorSubscriptionUpdated(actor, current, old, recipients)
+	if err != nil {
+		util.LogError(ctx, fmt.Errorf("NotifyAdminDistributorSubscriptionUpdated(admins): %w", err).Error())
 	}
 
-	return recipients
+	return nil
 }
 
 func getBuiltInEmailProvider() *object.Provider {
@@ -389,16 +319,6 @@ func getPartnerManager(organization string) *object.User {
 	return nil
 }
 
-func getPartnerUser(organization string) *object.User {
-	users, _ := object.GetUsers(organization)
-	for _, user := range users {
-		if !user.IsAdmin {
-			return user
-		}
-	}
-	return nil
-}
-
 func getBuiltInAdmins() []string {
 	users, _ := object.GetUsers(builtInOrgCode)
 	var emails []string
@@ -408,4 +328,184 @@ func getBuiltInAdmins() []string {
 		}
 	}
 	return emails
+}
+
+func getDistributors(ctx *context.Context) []string {
+	var emails []string
+	role, _ := object.GetRole(util.GetId(builtInOrgCode, string(PTAFLTypes.UserRoleDistributor)))
+	if role != nil {
+		for _, roleUserId := range role.Users {
+			roleUser, err := object.GetUser(roleUserId)
+			if err != nil {
+				util.LogError(ctx, fmt.Errorf("object.GetUser: %w", err).Error())
+			}
+			if roleUser != nil && roleUser.Email != "" {
+				emails = append(emails, roleUser.Email)
+			}
+		}
+	}
+	return emails
+}
+
+func NotifyAdminDistributorSubscriptionUpdated(actor *object.User, current, old *object.Subscription, recipients []string) error {
+	provider := getBuiltInEmailProvider()
+	if provider == nil {
+		return errors.New("no email provider registered")
+	}
+
+	msg, err := getSubscriptionUpdateMessage(actor, current, old)
+	if err != nil {
+		return fmt.Errorf("getSubscriptionUpdateMessage: %w", err)
+	}
+
+	titleTmpl, err := template.New("").Parse(SubscriptionUpdatedSubjTmpl)
+	if err != nil {
+		return fmt.Errorf("template.Parse(title): %w", err)
+	}
+
+	var titleBuf bytes.Buffer
+	err = titleTmpl.Execute(&titleBuf, msg)
+	if err != nil {
+		return fmt.Errorf("titleTmpl.Execute: %w", err)
+	}
+
+	bodyTmpl, err := template.New("").Parse(SubscriptionUpdatedBodyTmpl)
+	if err != nil {
+		return fmt.Errorf("template.Parse(body): %w", err)
+	}
+
+	var bodyBuf bytes.Buffer
+	if err := bodyTmpl.Execute(&bodyBuf, msg); err != nil {
+		return fmt.Errorf("tmpl.Execute: %w", err)
+	}
+
+	for _, email := range recipients {
+		errS := object.SendEmail(provider, titleBuf.String(), bodyBuf.String(), email, provider.DisplayName)
+		if errS != nil {
+			err = fmt.Errorf("%v; %v", err, errS)
+		} else {
+			err = errS
+		}
+	}
+
+	return err
+}
+
+func NotifyPartnerSubscriptionUpdated(actor *object.User, current, old *object.Subscription) error {
+	provider := getBuiltInEmailProvider()
+	if provider == nil {
+		return errors.New("no email provider registered")
+	}
+	orgId := fmt.Sprintf("admin/%s", current.Owner)
+	organization, err := object.GetOrganization(orgId)
+	if err != nil {
+		return fmt.Errorf("object.GetOrganization: %w", err)
+	}
+	if organization.Email == "" {
+		return nil
+	}
+
+	msg, err := getSubscriptionUpdateMessage(actor, current, old)
+	if err != nil {
+		return fmt.Errorf("getSubscriptionUpdateMessage: %w", err)
+	}
+
+	titleTmpl, err := template.New("").Parse(SubscriptionUpdatedPartnerSubjTmpl)
+	if err != nil {
+		return fmt.Errorf("template.Parse(title): %w", err)
+	}
+
+	var titleBuf bytes.Buffer
+	err = titleTmpl.Execute(&titleBuf, msg)
+	if err != nil {
+		return fmt.Errorf("titleTmpl.Execute: %w", err)
+	}
+
+	bodyTmpl, err := template.New("").Parse(SubscriptionUpdatedPartnerBodyTmpl)
+	if err != nil {
+		return fmt.Errorf("template.Parse(body): %w", err)
+	}
+
+	var bodyBuf bytes.Buffer
+	if err := bodyTmpl.Execute(&bodyBuf, msg); err != nil {
+		return fmt.Errorf("tmpl.Execute: %w", err)
+	}
+	err = object.SendEmail(provider, titleBuf.String(), bodyBuf.String(), organization.Email, provider.DisplayName)
+	if err != nil {
+		return fmt.Errorf("object.SendEmail: %w", err)
+	}
+
+	return nil
+}
+
+func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subscription) (*SubscriptionUpdatedMessage, error) {
+	orgId := fmt.Sprintf("admin/%s", current.Owner)
+	organization, err := object.GetOrganization(orgId)
+	if err != nil {
+		return nil, fmt.Errorf("object.GetOrganization: %w", err)
+	}
+
+	client, err := object.GetUser(current.User)
+	if err != nil {
+		return nil, fmt.Errorf("object.GetUser: %w", err)
+	}
+
+	oldPlan, err := object.GetPlan(old.Plan)
+	if err != nil {
+		return nil, fmt.Errorf("object.GetPlan(old): %w", err)
+	}
+
+	plan, err := object.GetPlan(current.Plan)
+	if err != nil {
+		return nil, fmt.Errorf("object.GetPlan(current): %w", err)
+	}
+
+	submitter, err := object.GetUser(current.Submitter)
+	if err != nil {
+		return nil, fmt.Errorf("object.GetUser(submitter): %w", err)
+	}
+
+	approver, err := object.GetUser(current.Approver)
+	if err != nil {
+		return nil, fmt.Errorf("object.GetUser(approver): %w", err)
+	}
+
+	approverTime, err := time.Parse("2006-01-02T15:04:05-07:00", current.ApproveTime)
+	if err != nil {
+		return nil, fmt.Errorf("time.Parse: %w", err)
+	}
+	return &SubscriptionUpdatedMessage{
+		SubscriptionName:           current.Name,
+		PartnerName:                organization.Name,
+		ClientName:                 client.Name,
+		SubscriptionStatus:         i18n.Translate(ptlmLanguage, fmt.Sprintf("subscription:%s", current.State)),
+		PartnerDisplayName:         organization.DisplayName,
+		PartnerURL:                 fmt.Sprintf("%s/organizations/%s", conf.GetConfigString("origin"), organization.Name),
+		SubscriptionURL:            fmt.Sprintf("%s/subscriptions/%s/%s", conf.GetConfigString("origin"), organization.Name, current.Name),
+		ClientDisplayName:          client.DisplayName,
+		ClientURL:                  fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), organization.Name, client.Name),
+		OldPlanDisplayName:         oldPlan.DisplayName,
+		OldPlanURL:                 fmt.Sprintf("%s/plans/%s/%s", conf.GetConfigString("origin"), organization.Name, oldPlan.Name),
+		PlanURL:                    fmt.Sprintf("%s/plans/%s/%s", conf.GetConfigString("origin"), organization.Name, current.Name),
+		PlanDisplayName:            plan.DisplayName,
+		OldSubscriptionDiscount:    strconv.FormatInt(int64(old.Discount), 10),
+		SubscriptionDiscount:       strconv.FormatInt(int64(current.Discount), 10),
+		OldSubscriptionStartDate:   old.StartDate.Format("2006-01-02 15:04:05"),
+		SubscriptionStartDate:      current.StartDate.Format("2006-01-02 15:04:05"),
+		OldSubscriptionEndDate:     old.EndDate.Format("2006-01-02 15:04:05"),
+		SubscriptionEndDate:        current.EndDate.Format("2006-01-02 15:04:05"),
+		OldSubscriptionStatus:      i18n.Translate(ptlmLanguage, fmt.Sprintf("subscription:%s", old.State)),
+		OldSubscriptionDescription: old.Description,
+		SubscriptionDescription:    current.Description,
+		OldSubscriptionComment:     old.Comment,
+		SubscriptionComment:        current.Comment,
+		SubscriptionCreator:        submitter.Name,
+		SubscriptionCreatorURL:     fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), submitter.Owner, submitter.Name),
+		SubscriptionMover:          approver.Name,
+		SubscriptionMoverURL:       fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), approver.Owner, approver.Name),
+		SubscriptionMoveTime:       approverTime.Format("2006-01-02 15:04:05"),
+		SubscriptionEditor:         actor.Name,
+		SubscriptionEditorURL:      fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), actor.Owner, actor.Name),
+		SubscriptionEditTime:       time.Now().Format("2006-01-02 15:04:05"),
+	}, nil
 }
