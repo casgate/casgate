@@ -103,7 +103,9 @@ class OrganizationListPage extends BaseListPage {
           Setting.showMessage("success", i18next.t("general:Successfully deleted"));
           this.setState({
             data: Setting.deleteRow(this.state.data, i),
-            pagination: {total: this.state.pagination.total - 1},
+            pagination: {
+              ...this.state.pagination,
+              total: this.state.pagination.total - 1},
           });
           window.dispatchEvent(new Event("storageOrganizationsChanged"));
         } else {
