@@ -175,14 +175,12 @@ func ValidateSubscriptionUpdate(user *object.User, subscription *object.Subscrip
 	return nil
 }
 
-func ProcessSubscriptionUpdatePostActions(ctx *context.Context, user *object.User, subscription *object.Subscription, oldState string) {
-	stateChanged := oldState != subscription.State
-	// send emails if response handler above not panics
-	if stateChanged {
-		err := NotifySubscriptionMembers(user, subscription, oldState)
-		if err != nil {
-			util.LogError(ctx, fmt.Errorf("NotifySubscriptionMembers: %w", err).Error())
-		}
+func ProcessSubscriptionUpdatePostActions(ctx *context.Context, user *object.User, subscription, old *object.Subscription) {
+	stateChanged := old.State != subscription.State
+
+	err := NotifySubscriptionUpdated(ctx, user, subscription, old)
+	if err != nil {
+		util.LogError(ctx, fmt.Errorf("NotifySubscriptionUpdated: %w", err).Error())
 	}
 
 	// create tenant at pt af

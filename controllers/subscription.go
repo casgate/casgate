@@ -146,7 +146,7 @@ func (c *ApiController) UpdateSubscription() {
 
 	if affected {
 		util.SafeGoroutine(func() {
-			pt_af_logic.ProcessSubscriptionUpdatePostActions(c.Ctx, currentUser, &subscription, old.State)
+			pt_af_logic.ProcessSubscriptionUpdatePostActions(c.Ctx, currentUser, &subscription, old)
 		})
 
 	}
@@ -166,6 +166,7 @@ func (c *ApiController) AddSubscription() {
 		c.ResponseError(err.Error())
 		return
 	}
+	subscription.Submitter = c.GetSessionUsername()
 	subscription.Approver = c.GetSessionUsername()
 	subscription.ApproveTime = time.Now().Format("2006-01-02T15:04:05Z07:00")
 
