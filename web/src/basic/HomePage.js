@@ -47,8 +47,8 @@ class HomePage extends React.Component {
       items = [
         {link: "/organizations", name: i18next.t("general:Organizations"), organizer: i18next.t("general:User containers")},
         {link: "/users", name: i18next.t("general:Users"), organizer: i18next.t("general:Users under all organizations")},
-        {link: "/providers", name: i18next.t("general:Providers"), organizer: i18next.t("general:OAuth providers")},
-        {link: "/applications", name: i18next.t("general:Applications"), organizer: i18next.t("general:Applications that require authentication")},
+        {link: "/clients", name: i18next.t("general:Clients"), organizer: i18next.t("general:OAuth providers")},
+        {link: "/subscriptions", name: i18next.t("general:Subscriptions"), organizer: i18next.t("general:Subscriptions containers")},
       ];
 
       for (let i = 0; i < items.length; i++) {
@@ -88,7 +88,7 @@ class HomePage extends React.Component {
           {
             items.map(item => {
               return (
-                <SingleCard key={item.link} logo={item.logo} link={item.link} title={item.name} desc={item.organizer} isSingle={items.length === 1} />
+                <SingleCard key={item.link} link={item.link} title={item.name} desc={item.organizer} isSingle={items.length === 1} />
               );
             })
           }
@@ -101,7 +101,7 @@ class HomePage extends React.Component {
             {
               items.map(item => {
                 return (
-                  <SingleCard logo={item.logo} link={item.link} title={item.name} desc={item.organizer} time={item.createdTime} isSingle={items.length === 1} key={item.name} />
+                  <SingleCard link={item.link} title={item.name} desc={item.organizer} time={item.createdTime} isSingle={items.length === 1} key={item.name} />
                 );
               })
             }

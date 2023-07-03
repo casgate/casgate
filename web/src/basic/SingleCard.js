@@ -44,7 +44,8 @@ class SingleCard extends React.Component {
 
     return (
       <Card.Grid style={gridStyle} onClick={() => Setting.goToLinkSoft(this, silentSigninLink)}>
-        <img src={logo} alt="logo" width={"100%"} style={{marginBottom: "20px"}} />
+        {logo && (
+          <img src={logo} alt="logo" width={"100%"} style={{marginBottom: "20px"}} />)}
         <Meta
           title={title}
           description={desc}
@@ -61,9 +62,8 @@ class SingleCard extends React.Component {
       <Col style={{paddingLeft: "20px", paddingRight: "20px", paddingBottom: "20px", marginBottom: "20px"}} span={6}>
         <Card
           hoverable
-          cover={
-            <img alt="logo" src={logo} style={{width: "100%", height: "200px", padding: "20px", objectFit: "scale-down"}} />
-          }
+          cover={logo && (
+            <img src={logo} alt="logo" width={"100%"} style={{marginBottom: "20px"}} />)}
           onClick={() => Setting.goToLinkSoft(this, silentSigninLink)}
           style={isSingle ? {width: "320px", height: "100%"} : {width: "100%", height: "100%"}}
         >

@@ -233,11 +233,7 @@ class App extends Component {
   }
 
   getLogo(themes) {
-    if (themes.includes("dark")) {
-      return `${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256_dark.png`;
-    } else {
-      return `${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256.png`;
-    }
+    return "https://www.ptsecurity.com/_nuxt/img/logo_full.8ba3426.svg";
   }
 
   setLanguage(account) {
@@ -692,7 +688,6 @@ class App extends Component {
         <Header style={{padding: "0", marginBottom: "3px", backgroundColor: this.state.themeAlgorithm.includes("dark") ? "black" : "white"}}>
           {Setting.isMobile() ? null : (
             <Link to={"/"}>
-              <div className="logo" style={{background: `url(${this.state.logo})`}} />
             </Link>
           )}
           {Setting.isMobile() ?
