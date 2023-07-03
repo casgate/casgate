@@ -233,7 +233,7 @@ class App extends Component {
   }
 
   getLogo(themes) {
-    return "https://www.ptsecurity.com/_nuxt/img/logo_full.8ba3426.svg";
+    return "https://hsto.org/getpro/habr/company/00b/f9c/27a/00bf9c27a7e0ab9d98f5f973a18d62fd.png";
   }
 
   setLanguage(account) {
@@ -475,13 +475,13 @@ class App extends Component {
     }
 
     if (Setting.isLocalAdminUser(this.state.account)) {
-      res.push(Setting.getItem(<Link to="/applications">{i18next.t("general:Applications")}</Link>,
-        "/applications"
-      ));
+      // res.push(Setting.getItem(<Link to="/applications">{i18next.t("general:Applications")}</Link>,
+      //   "/applications"
+      // ));
 
-      res.push(Setting.getItem(<Link to="/providers">{i18next.t("general:Providers")}</Link>,
-        "/providers"
-      ));
+      // res.push(Setting.getItem(<Link to="/providers">{i18next.t("general:Providers")}</Link>,
+      //   "/providers"
+      // ));
 
       // res.push(Setting.getItem(<Link to="/chats">{i18next.t("general:Chats")}</Link>,
       //   "/chats"
@@ -491,9 +491,9 @@ class App extends Component {
       //   "/messages"
       // ));
 
-      res.push(Setting.getItem(<Link to="/resources">{i18next.t("general:Resources")}</Link>,
-        "/resources"
-      ));
+      // res.push(Setting.getItem(<Link to="/resources">{i18next.t("general:Resources")}</Link>,
+      //   "/resources"
+      // ));
 
       // res.push(Setting.getItem(<Link to="/records">{i18next.t("general:Records")}</Link>,
       //   "/records"
@@ -521,9 +521,9 @@ class App extends Component {
       //   "/sessions"
       // ));
 
-      res.push(Setting.getItem(<Link to="/webhooks">{i18next.t("general:Webhooks")}</Link>,
-        "/webhooks"
-      ));
+      // res.push(Setting.getItem(<Link to="/webhooks">{i18next.t("general:Webhooks")}</Link>,
+      //   "/webhooks"
+      // ));
 
       // res.push(Setting.getItem(<Link to="/syncers">{i18next.t("general:Syncers")}</Link>,
       //   "/syncers"
@@ -688,6 +688,7 @@ class App extends Component {
         <Header style={{padding: "0", marginBottom: "3px", backgroundColor: this.state.themeAlgorithm.includes("dark") ? "black" : "white"}}>
           {Setting.isMobile() ? null : (
             <Link to={"/"}>
+              <div className="logo" style={{background: `url(${this.state.logo})`}} />
             </Link>
           )}
           {Setting.isMobile() ?

@@ -27,11 +27,12 @@ code {
 }
 
 .logo {
-  background: url("https://cdn.casbin.org/img/casdoor-logo_1185x256.png");
-  background-size: 130px, 27px !important;
-  width: 130px;
-  height: 27px;
-  margin: 17px 0 16px 15px;
+  background: url("https://hsto.org/getpro/habr/company/00b/f9c/27a/00bf9c27a7e0ab9d98f5f973a18d62fd.png");
+  background-repeat: no-repeat !important;
+  background-size: 40px, 40px !important;
+  width: 40px;
+  height: 40px;
+  margin: 17px 0 16px 40px;
   float: left;
 }
 
