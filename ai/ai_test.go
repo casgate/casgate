@@ -17,26 +17,26 @@
 
 package ai
 
-import (
-	"testing"
-
-	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/proxy"
-	"github.com/sashabaranov/go-openai"
-)
-
-func TestRun(t *testing.T) {
-	object.InitConfig()
-	proxy.InitHttpClient()
-
-	text, err := queryAnswer("", "hi", 5)
-	if err != nil {
-		panic(err)
-	}
-
-	println(text)
-}
-
-func TestToken(t *testing.T) {
-	println(getTokenSize(openai.GPT3TextDavinci003, ""))
-}
+//import (
+//	"testing"
+//
+//	"github.com/casdoor/casdoor/object"
+//	"github.com/casdoor/casdoor/proxy"
+//	"github.com/sashabaranov/go-openai"
+//)
+//
+//func TestRun(t *testing.T) {
+//	object.InitConfig()
+//	proxy.InitHttpClient()
+//
+//	text, err := queryAnswer("", "hi", 5)
+//	if err != nil {
+//		panic(err)
+//	}
+//
+//	println(text)
+//}
+//
+//func TestToken(t *testing.T) {
+//	println(getTokenSize(openai.GPT3TextDavinci003, ""))
+//}

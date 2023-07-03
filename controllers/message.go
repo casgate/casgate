@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/beego/beego/utils/pagination"
-	"github.com/casdoor/casdoor/ai"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 )
@@ -181,18 +180,18 @@ func (c *ApiController) GetMessageAnswer() {
 	c.Ctx.ResponseWriter.Header().Set("Cache-Control", "no-cache")
 	c.Ctx.ResponseWriter.Header().Set("Connection", "keep-alive")
 
-	authToken := provider.ClientSecret
-	question := questionMessage.Text
+	//authToken := provider.ClientSecret
+	//question := questionMessage.Text
 	var stringBuilder strings.Builder
 
 	fmt.Printf("Question: [%s]\n", questionMessage.Text)
 	fmt.Printf("Answer: [")
 
-	err = ai.QueryAnswerStream(authToken, question, c.Ctx.ResponseWriter, &stringBuilder)
-	if err != nil {
-		c.ResponseErrorStream(err.Error())
-		return
-	}
+	//err = ai.QueryAnswerStream(authToken, question, c.Ctx.ResponseWriter, &stringBuilder)
+	//if err != nil {
+	//	c.ResponseErrorStream(err.Error())
+	//	return
+	//}
 
 	fmt.Printf("]\n")
 

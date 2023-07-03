@@ -14,15 +14,15 @@
 
 package ai
 
-import (
-	"github.com/casdoor/casdoor/proxy"
-	"github.com/sashabaranov/go-openai"
-)
-
-func getProxyClientFromToken(authToken string) *openai.Client {
-	config := openai.DefaultConfig(authToken)
-	config.HTTPClient = proxy.ProxyHttpClient
-
-	c := openai.NewClientWithConfig(config)
-	return c
-}
+//import (
+//	"github.com/casdoor/casdoor/proxy"
+//	"github.com/sashabaranov/go-openai"
+//)
+//
+//func getProxyClientFromToken(authToken string) *openai.Client {
+//	config := openai.DefaultConfig(authToken)
+//	config.HTTPClient = proxy.ProxyHttpClient
+//
+//	c := openai.NewClientWithConfig(config)
+//	return c
+//}
