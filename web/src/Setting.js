@@ -927,7 +927,7 @@ export function redirectToLoginPage(application, history) {
   if (loginLink.startsWith("http://") || loginLink.startsWith("https://")) {
     goToLink(loginLink);
   } else {
-    history.push(loginLink);
+    goToLink(loginLink);
   }
 }
 
