@@ -195,6 +195,7 @@ func (c *ApiController) Signup() {
 		SignupApplication: application.Name,
 		Properties:        map[string]string{},
 		Karma:             0,
+		Tag:               "manager",
 	}
 
 	if len(organization.Tags) > 0 {
