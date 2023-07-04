@@ -135,7 +135,7 @@ class SubscriptionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("subscription:Name"), i18next.t("subscription:Name - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Input value={this.state.subscription.name} onChange={e => {
+            <Input disabled value={this.state.subscription.name} onChange={e => {
               this.updateSubscriptionField("name", e.target.value);
             }} />
           </Col>

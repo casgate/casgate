@@ -275,7 +275,7 @@ class UserEditPage extends React.Component {
       );
     } else if (accountItem.name === "Password") {
       return (
-        <Row style={{marginTop: "20px"}} >
+        <Row style={{marginTop: "20px", display: "none"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("general:Password"), i18next.t("general:Password - Tooltip"))} :
           </Col>
@@ -654,7 +654,7 @@ class UserEditPage extends React.Component {
       );
     } else if (accountItem.name === "Is forbidden") {
       return (
-        <Row style={{marginTop: "20px"}} >
+        <Row style={{marginTop: "20px", display: "none"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("user:Отключен"), i18next.t("user:Is forbidden - Tooltip"))} :
           </Col>

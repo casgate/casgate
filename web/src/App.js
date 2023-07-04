@@ -28,15 +28,17 @@ import OrganizationListPage from "./pt_lm/OrganizationListPage";
 import OrganizationEditPage from "./pt_lm/OrganizationEditPage";
 
 // import OrganizationListPage from "./OrganizationListPage";
-// import OrganizationEditPage from "./OrganizationEditPage";
+
+import OrganizationFullEditPage from "./OrganizationEditPage";
 
 import UserListPage from "./pt_lm/UserListPage";
 import UserEditPage from "./pt_lm/UserEditPage";
 
 import ClientListPage from "./pt_lm/ClientListPage";
 import ClientEditPage from "./pt_lm/ClientEditPage";
-// import UserListPage from "./UserListPage";
-// import UserEditPage from "./UserEditPage";
+
+import UserFullListPage from "./UserListPage";
+import UserFullEditPage from "./UserEditPage";
 import RoleListPage from "./RoleListPage";
 import RoleEditPage from "./RoleEditPage";
 import PermissionListPage from "./PermissionListPage";
@@ -596,6 +598,7 @@ class App extends Component {
         <Route exact path="/account" render={(props) => this.renderLoginIfNotLoggedIn(<AccountPage account={this.state.account} {...props} />)} />
         <Route exact path="/organizations" render={(props) => this.renderLoginIfNotLoggedIn(<OrganizationListPage account={this.state.account} {...props} />)} />
         <Route exact path="/organizations/:organizationName" render={(props) => this.renderLoginIfNotLoggedIn(<OrganizationEditPage account={this.state.account} onChangeTheme={this.setTheme} {...props} />)} />
+        <Route exact path="/organizations_full/:organizationName" render={(props) => this.renderLoginIfNotLoggedIn(<OrganizationFullEditPage account={this.state.account} onChangeTheme={this.setTheme} {...props} />)} />
         <Route exact path="/organizations/:organizationName/users" render={(props) => this.renderLoginIfNotLoggedIn(<UserListPage account={this.state.account} {...props} />)} />
         <Route exact path="/trees/:organizationName" render={(props) => this.renderLoginIfNotLoggedIn(<GroupTreePage account={this.state.account} {...props} />)} />
         <Route exact path="/trees/:organizationName/:groupName" render={(props) => this.renderLoginIfNotLoggedIn(<GroupTreePage account={this.state.account} {...props} />)} />
@@ -605,6 +608,8 @@ class App extends Component {
         <Route exact path="/users/:organizationName/:userName" render={(props) => <UserEditPage account={this.state.account} {...props} />} />
         <Route exact path="/clients" render={(props) => this.renderLoginIfNotLoggedIn(<ClientListPage account={this.state.account} {...props} />)} />
         <Route exact path="/clients/:organizationName/:userName" render={(props) => <ClientEditPage account={this.state.account} {...props} />} />
+        <Route exact path="/users_full" render={(props) => this.renderLoginIfNotLoggedIn(<UserFullListPage account={this.state.account} {...props} />)} />
+        <Route exact path="/users_full/:organizationName/:userName" render={(props) => <UserFullEditPage account={this.state.account} {...props} />} />
         <Route exact path="/roles" render={(props) => this.renderLoginIfNotLoggedIn(<RoleListPage account={this.state.account} {...props} />)} />
         <Route exact path="/roles/:organizationName/:roleName" render={(props) => this.renderLoginIfNotLoggedIn(<RoleEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/permissions" render={(props) => this.renderLoginIfNotLoggedIn(<PermissionListPage account={this.state.account} {...props} />)} />
