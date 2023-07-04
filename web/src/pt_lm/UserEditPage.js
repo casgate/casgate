@@ -325,7 +325,7 @@ class UserEditPage extends React.Component {
               />
               <Input value={this.state.user.phone}
                 style={{width: "70%"}}
-                disabled={!Setting.isLocalAdminUser(this.props.account) ? true : disabled}
+                // disabled={!Setting.isLocalAdminUser(this.props.account) ? true : disabled}
                 onChange={e => {
                   this.updateUserField("phone", e.target.value);
                 }} />
