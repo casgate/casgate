@@ -468,9 +468,6 @@ class LoginPage extends React.Component {
             organization: application.organization,
             application: application.name,
 
-            // organization: "Parner_soft_line",
-            // application: "AF",
-
             autoSignin: true,
             username: Conf.ShowGithubCorner ? "admin" : "",
             password: Conf.ShowGithubCorner ? "123" : "",
@@ -551,7 +548,7 @@ class LoginPage extends React.Component {
               this.renderPasswordOrCodeInput()
             }
           </Row>
-          <div style={{display: "inline-flex", justifyContent: "space-between", width: "320px", marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px"}}>
+          <div style={{display: "none", justifyContent: "space-between", width: "320px", marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px"}}>
             <Form.Item name="autoSignin" valuePropName="checked" noStyle>
               <Checkbox style={{float: "left"}}>
                 {i18next.t("login:Auto sign in")}

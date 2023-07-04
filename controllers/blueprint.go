@@ -114,6 +114,7 @@ func (c *ApiController) ApplyBlueprint() {
 				newApp.ClientId = util.GenerateClientId()
 				newApp.ClientSecret = util.GenerateClientSecret()
 				newApp.SigninUrl = fmt.Sprintf("/login/%s", org.Name)
+				newApp.EnableSignUp = true
 				object.AddApplication(newApp)
 			}
 		}
