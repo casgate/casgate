@@ -42,36 +42,24 @@ class HomePage extends React.Component {
   }
 
   getItems() {
-    let items = [];
+    const items = [];
     if (Setting.isAdminUser(this.props.account)) {
-      items = [
-        {link: "/organizations", name: i18next.t("general:Organizations"), organizer: i18next.t("general:User containers")},
-        {link: "/users", name: i18next.t("general:Users"), organizer: i18next.t("general:Users under all organizations")},
-        {link: "/clients", name: i18next.t("general:Clients"), organizer: i18next.t("general:OAuth providers")},
-        {link: "/subscriptions", name: i18next.t("general:Subscriptions"), organizer: i18next.t("general:Subscriptions containers")},
-      ];
-
-      for (let i = 0; i < items.length; i++) {
-        let filename = items[i].link;
-        if (filename === "/account") {
-          filename = "/users";
-        }
-        items[i].logo = `${Setting.StaticBaseUrl}/img${filename}.png`;
-        items[i].createdTime = "";
-      }
-    } else {
-      this.state.applications.forEach(application => {
-        let homepageUrl = application.homepageUrl;
-        if (homepageUrl === "<custom-url>") {
-          homepageUrl = this.props.account.homepage;
-        }
-
-        items.push({
-          link: homepageUrl, name: application.displayName, organizer: application.description, logo: application.logo, createdTime: "",
-        });
-      });
+      items.push({link: "/organizations", name: i18next.t("general:Organizations"), organizer: i18next.t("general:User containers")});
     }
 
+    if (Setting.isLocalAdminUser) {
+      items.push({link: "/users", name: i18next.t("general:Users"), organizer: i18next.t("general:Users under all organizations")});
+      items.push({link: "/clients", name: i18next.t("general:Clients"), organizer: i18next.t("general:OAuth providers")});
+    }
+    items.push({link: "/subscriptions", name: i18next.t("general:Subscriptions"), organizer: i18next.t("general:Subscriptions containers")});
+    for (let i = 0; i < items.length; i++) {
+      let filename = items[i].link;
+      if (filename === "/account") {
+        filename = "/users";
+      }
+      items[i].logo = `${Setting.StaticBaseUrl}/img${filename}.png`;
+      items[i].createdTime = "";
+    }
     return items;
   }
 
