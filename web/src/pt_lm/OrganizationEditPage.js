@@ -24,6 +24,7 @@ import {LinkOutlined} from "@ant-design/icons";
 import AccountTable from "../table/AccountTable";
 import ThemeEditor from "../common/theme/ThemeEditor";
 import PropertyTable from "../table/propertyTable";
+import {CountryCodeSelect} from "../common/select/CountryCodeSelect";
 
 const {Option} = Select;
 
@@ -178,9 +179,21 @@ class OrganizationEditPage extends React.Component {
             {Setting.getLabel(i18next.t("general:Phone"), i18next.t("general:Phone - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Input value={this.state.organization.phone} onChange={e => {
-              this.updateOrganizationField("phone", e.target.value);
-            }} />
+            <Input.Group compact style={{width: "280Px"}}>
+              <CountryCodeSelect
+                style={{width: "30%"}}
+                value={this.state.organization.countryCode}
+                onChange={(value) => {
+                  this.updateOrganizationField("countryCode", value);
+                }}
+                countryCodes={this.state.organization.countryCodes}
+              />
+              <Input value={this.state.organization.phone}
+                style={{width: "70%"}}
+                onChange={e => {
+                  this.updateOrganizationField("phone", e.target.value);
+                }} />
+            </Input.Group>
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >

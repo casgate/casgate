@@ -216,7 +216,7 @@ class SubscriptionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("subscription:Start date"), i18next.t("subscription:Start date - Tooltip"))}
           </Col>
           <Col span={22} >
-            <DatePicker value={dayjs(this.state.subscription.startDate)} onChange={value => {
+            <DatePicker value={this.state.subscription.startDate !== "0001-01-01T00:00:00Z" && this.state.subscription.startDate !== null ? dayjs(this.state.subscription.startDate) : null} onChange={value => {
               this.updateSubscriptionField("startDate", value);
             }} />
           </Col>
@@ -226,7 +226,7 @@ class SubscriptionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("subscription:End date"), i18next.t("subscription:End date - Tooltip"))}
           </Col>
           <Col span={22} >
-            <DatePicker value={dayjs(this.state.subscription.endDate)} onChange={value => {
+            <DatePicker value={this.state.subscription.endDate !== "0001-01-01T00:00:00Z" && this.state.subscription.endDate !== null ? dayjs(this.state.subscription.endDate) : null} onChange={value => {
               this.updateSubscriptionField("endDate", value);
             }} />
           </Col>

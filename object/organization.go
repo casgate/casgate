@@ -73,9 +73,10 @@ type Organization struct {
 	AccountItems []*AccountItem    `xorm:"varchar(3000)" json:"accountItems"`
 	Properties   map[string]string `json:"properties"`
 
-	Email   string `xorm:"varchar(100)" json:"email"`
-	Phone   string `xorm:"varchar(20)" json:"phone"`
-	Manager string `xorm:"varchar(100)" json:"manager"`
+	Email       string `xorm:"varchar(100)" json:"email"`
+	Phone       string `xorm:"varchar(20)" json:"phone"`
+	CountryCode string `xorm:"varchar(6)" json:"countryCode"`
+	Manager     string `xorm:"varchar(100)" json:"manager"`
 }
 
 func GetOrganizationCount(owner, field, value string) (int64, error) {

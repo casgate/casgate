@@ -48,6 +48,7 @@ class OrganizationListPage extends BaseListPage {
       },
       email: "",
       phone: "",
+      countryCode: "",
       manager: "",
       accountItems: [
         {name: "Organization", visible: true, viewRule: "Public", modifyRule: "Admin"},
