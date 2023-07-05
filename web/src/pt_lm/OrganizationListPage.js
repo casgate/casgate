@@ -72,9 +72,9 @@ class OrganizationListPage extends BaseListPage {
         {name: "Permissions", visible: false, viewRule: "Public", modifyRule: "Immutable"},
         {name: "3rd-party logins", visible: false, viewRule: "Self", modifyRule: "Self"},
         {name: "Properties", visible: true, viewRule: "Admin", modifyRule: "Admin"},
-        {name: "Is admin", visible: true, viewRule: "Admin", modifyRule: "Admin"},
+        {name: "Is admin", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "Is global admin", visible: false, viewRule: "Admin", modifyRule: "Admin"},
-        {name: "Is forbidden", visible: true, viewRule: "Admin", modifyRule: "Admin"},
+        {name: "Is forbidden", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "Is deleted", visible: true, viewRule: "Admin", modifyRule: "Admin"},
       ],
     };
