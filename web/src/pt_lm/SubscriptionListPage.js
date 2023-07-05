@@ -151,7 +151,7 @@ class SubscriptionListPage extends BaseListPage {
         width: "160px",
         sorter: true,
         render: (text, record, index) => {
-          return Setting.getFormattedDate(text);
+          return text === "0001-01-01T00:00:00Z" ? "" : Setting.getFormattedDate(text);
         },
       },
       {
@@ -161,7 +161,7 @@ class SubscriptionListPage extends BaseListPage {
         width: "160px",
         sorter: true,
         render: (text, record, index) => {
-          return Setting.getFormattedDate(text);
+          return text === "0001-01-01T00:00:00Z" ? "" : Setting.getFormattedDate(text);
         },
       },
       {

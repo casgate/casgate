@@ -268,7 +268,7 @@ func NotifySubscriptionUpdated(ctx *context.Context, actor *object.User, current
 				util.LogError(ctx, fmt.Errorf("NotifyPartnerSubscriptionUpdated: %w", err).Error())
 			}
 		}
-	case PTAFLTypes.SubscriptionAuthorized.String():
+	case PTAFLTypes.SubscriptionAuthorized.String(), PTAFLTypes.SubscriptionPreFinished.String():
 		if stateChanged {
 			recipients := getDistributors(ctx)
 			err := NotifyAdminDistributorSubscriptionUpdated(actor, current, old, recipients)
@@ -450,9 +450,18 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		return nil, fmt.Errorf("object.GetUser: %w", err)
 	}
 
-	oldPlan, err := object.GetPlan(old.Plan)
-	if err != nil {
-		return nil, fmt.Errorf("object.GetPlan(old): %w", err)
+	var (
+		oldPlanDisplayName string
+		oldPlanName        string
+	)
+
+	if old.Plan != "" {
+		oldPlan, err := object.GetPlan(old.Plan)
+		if err != nil {
+			return nil, fmt.Errorf("object.GetPlan(old): %w", err)
+		}
+		oldPlanDisplayName = oldPlan.DisplayName
+		oldPlanName = oldPlan.Name
 	}
 
 	plan, err := object.GetPlan(current.Plan)
@@ -470,10 +479,36 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		return nil, fmt.Errorf("object.GetUser(approver): %w", err)
 	}
 
+	mskLoc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		return nil, fmt.Errorf("time.LoadLocation: %w", err)
+	}
+
 	approverTime, err := time.Parse("2006-01-02T15:04:05Z07:00", current.ApproveTime)
 	if err != nil {
 		return nil, fmt.Errorf("time.Parse: %w", err)
 	}
+
+	var (
+		oldSubscriptionStartDate string
+		subscriptionStartDate    string
+		oldSubscriptionEndDate   string
+		subscriptionEndDate      string
+	)
+
+	if !old.StartDate.IsZero() {
+		oldSubscriptionStartDate = old.StartDate.In(mskLoc).Format("2006-01-02 15:04:05")
+	}
+	if !old.EndDate.IsZero() {
+		oldSubscriptionEndDate = old.EndDate.In(mskLoc).Format("2006-01-02 15:04:05")
+	}
+	if !current.StartDate.IsZero() {
+		subscriptionStartDate = current.StartDate.In(mskLoc).Format("2006-01-02 15:04:05")
+	}
+	if !current.EndDate.IsZero() {
+		subscriptionEndDate = current.EndDate.In(mskLoc).Format("2006-01-02 15:04:05")
+	}
+
 	return &SubscriptionUpdatedMessage{
 		SubscriptionName:           current.Name,
 		PartnerName:                organization.Name,
@@ -484,16 +519,16 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		SubscriptionURL:            fmt.Sprintf("%s/subscriptions/%s/%s", conf.GetConfigString("origin"), organization.Name, current.Name),
 		ClientDisplayName:          client.DisplayName,
 		ClientURL:                  fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), organization.Name, client.Name),
-		OldPlanDisplayName:         oldPlan.DisplayName,
-		OldPlanURL:                 fmt.Sprintf("%s/plans/%s/%s", conf.GetConfigString("origin"), organization.Name, oldPlan.Name),
+		OldPlanDisplayName:         oldPlanDisplayName,
+		OldPlanURL:                 fmt.Sprintf("%s/plans/%s/%s", conf.GetConfigString("origin"), organization.Name, oldPlanName),
 		PlanURL:                    fmt.Sprintf("%s/plans/%s/%s", conf.GetConfigString("origin"), organization.Name, current.Name),
 		PlanDisplayName:            plan.DisplayName,
 		OldSubscriptionDiscount:    strconv.FormatInt(int64(old.Discount), 10),
 		SubscriptionDiscount:       strconv.FormatInt(int64(current.Discount), 10),
-		OldSubscriptionStartDate:   old.StartDate.Format("2006-01-02 15:04:05"),
-		SubscriptionStartDate:      current.StartDate.Format("2006-01-02 15:04:05"),
-		OldSubscriptionEndDate:     old.EndDate.Format("2006-01-02 15:04:05"),
-		SubscriptionEndDate:        current.EndDate.Format("2006-01-02 15:04:05"),
+		OldSubscriptionStartDate:   oldSubscriptionStartDate,
+		SubscriptionStartDate:      subscriptionStartDate,
+		OldSubscriptionEndDate:     oldSubscriptionEndDate,
+		SubscriptionEndDate:        subscriptionEndDate,
 		OldSubscriptionStatus:      i18n.Translate(ptlmLanguage, fmt.Sprintf("subscription:%s", old.State)),
 		OldSubscriptionDescription: old.Description,
 		SubscriptionDescription:    current.Description,
@@ -503,9 +538,9 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		SubscriptionCreatorURL:     fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), submitter.Owner, submitter.Name),
 		SubscriptionMover:          approver.Name,
 		SubscriptionMoverURL:       fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), approver.Owner, approver.Name),
-		SubscriptionMoveTime:       approverTime.Format("2006-01-02 15:04:05"),
+		SubscriptionMoveTime:       approverTime.In(mskLoc).Format("2006-01-02 15:04:05"),
 		SubscriptionEditor:         actor.Name,
 		SubscriptionEditorURL:      fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), actor.Owner, actor.Name),
-		SubscriptionEditTime:       time.Now().Format("2006-01-02 15:04:05"),
+		SubscriptionEditTime:       time.Now().In(mskLoc).Format("2006-01-02 15:04:05"),
 	}, nil
 }

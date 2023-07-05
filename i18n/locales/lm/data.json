@@ -155,7 +155,7 @@
     },
     "subscription": {
       "Pending": "На рассмотрении",
-      "Pre-Authorized": "Утверждена",
+      "PreAuthorized": "Утверждена",
       "PreFinished": "Завершается",
       "Started": "Действующая",
       "Unauthorized": "Отклонена",
