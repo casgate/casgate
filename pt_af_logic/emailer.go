@@ -59,6 +59,8 @@ type PTAFTenantCreatedMessage struct {
 	ServiceUserPwd      string
 	UserROName          string
 	UserROPwd           string
+	UserName            string
+	UserPwd             string
 	TenantAdminName     string
 	TenantAdminPassword string
 	PTAFLoginLink       string
@@ -451,8 +453,10 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 	}
 
 	var (
-		oldPlanDisplayName string
-		oldPlanName        string
+		oldPlanDisplayName     string
+		oldPlanName            string
+		currentPlanDisplayName string
+		currentPlanName        string
 	)
 
 	if old.Plan != "" {
@@ -464,9 +468,13 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		oldPlanName = oldPlan.Name
 	}
 
-	plan, err := object.GetPlan(current.Plan)
-	if err != nil {
-		return nil, fmt.Errorf("object.GetPlan(current): %w", err)
+	if current.Plan != "" {
+		plan, err := object.GetPlan(current.Plan)
+		if err != nil {
+			return nil, fmt.Errorf("object.GetPlan(current): %w", err)
+		}
+		currentPlanDisplayName = plan.DisplayName
+		currentPlanName = plan.Name
 	}
 
 	submitter, err := object.GetUser(current.Submitter)
@@ -521,8 +529,8 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		ClientURL:                  fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), organization.Name, client.Name),
 		OldPlanDisplayName:         oldPlanDisplayName,
 		OldPlanURL:                 fmt.Sprintf("%s/plans/%s/%s", conf.GetConfigString("origin"), organization.Name, oldPlanName),
-		PlanURL:                    fmt.Sprintf("%s/plans/%s/%s", conf.GetConfigString("origin"), organization.Name, current.Name),
-		PlanDisplayName:            plan.DisplayName,
+		PlanURL:                    fmt.Sprintf("%s/plans/%s/%s", conf.GetConfigString("origin"), organization.Name, currentPlanName),
+		PlanDisplayName:            currentPlanDisplayName,
 		OldSubscriptionDiscount:    strconv.FormatInt(int64(old.Discount), 10),
 		SubscriptionDiscount:       strconv.FormatInt(int64(current.Discount), 10),
 		OldSubscriptionStartDate:   oldSubscriptionStartDate,

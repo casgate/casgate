@@ -14,9 +14,13 @@ const partnerCreateAccountsBodyTmpl = `
 Логин: {{ .ServiceUserName }}<br>
 Временный пароль: {{ .ServiceUserPwd }}</p>
 
-<p>Пользовательская учётная запись<br>
+<p>Пользовательская учётная запись (только просмотр)<br>
 Логин: {{ .UserROName }}<br>
 Временный пароль: {{ .UserROPwd }}</p>
+
+<p>Пользовательская учётная запись (редактирование конфигурации)<br>
+Логин: {{ .UserName }}<br>
+Временный пароль: {{ .UserPwd }}</p>
 `
 
 const partnerCreatedSubjTmpl = `[PT LMP] Partner {{ .PartnerName }} registered`

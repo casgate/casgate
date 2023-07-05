@@ -112,9 +112,8 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 		connectionString := tenant.BorderConnectionString
 
 		// create proper roles
-		var serviceRole af_client.Role
-		var userRORole af_client.Role
-		var serviceRoleFound, userRORoleFound bool
+		var serviceRole, userRORole, userRole af_client.Role
+		var serviceRoleFound, userRORoleFound, userRoleFound bool
 		for _, role := range allRoles {
 			if strings.EqualFold(role.Name, "Service") {
 				serviceRole = role
@@ -124,6 +123,11 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 			if strings.EqualFold(role.Name, "User RO") {
 				userRORole = role
 				userRORoleFound = true
+			}
+
+			if strings.EqualFold(role.Name, "User") {
+				userRole = role
+				userRoleFound = true
 			}
 		}
 
@@ -135,14 +139,23 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 			return fmt.Errorf("no user RO role found")
 		}
 
-		userRoleID, err := af.CreateRole(userRORole)
+		if !userRoleFound {
+			return fmt.Errorf("no user role found")
+		}
+
+		userRORoleID, err := af.CreateRole(userRORole)
 		if err != nil {
-			return fmt.Errorf("af.CreateRole(userRole): %w", err)
+			return fmt.Errorf("af.CreateRole(userRORole): %w", err)
 		}
 
 		serviceRoleID, err := af.CreateRole(serviceRole)
 		if err != nil {
 			return fmt.Errorf("af.CreateRole(serviceRole): %w", err)
+		}
+
+		userRoleID, err := af.CreateRole(userRole)
+		if err != nil {
+			return fmt.Errorf("af.CreateRole(userRole): %w", err)
 		}
 
 		// create users
@@ -155,7 +168,7 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 			Username:               userROName,
 			Password:               userROPwd,
 			Email:                  customer.Email,
-			Role:                   userRoleID,
+			Role:                   userRORoleID,
 			PasswordChangeRequired: true,
 			IsActive:               true,
 		}
@@ -163,6 +176,25 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 		err = af.CreateUser(createUserRORequest)
 		if err != nil {
 			return fmt.Errorf("af.CreateUser with user RO role: %w", err)
+		}
+
+		userName := fmt.Sprintf("%s_%s_ctrl", customer.Name, customer.Owner)
+		userPwd, err := generatePassword(defaultPasswordLength)
+		if err != nil {
+			return fmt.Errorf("generatePassword: %w", err)
+		}
+		createUserRequest := af_client.CreateUserRequest{
+			Username:               userName,
+			Password:               userPwd,
+			Email:                  fmt.Sprintf("%s_%s_ctrl@example.com", customer.Name, customer.Owner),
+			Role:                   userRoleID,
+			PasswordChangeRequired: true,
+			IsActive:               true,
+		}
+
+		err = af.CreateUser(createUserRequest)
+		if err != nil {
+			return fmt.Errorf("af.CreateUser with user role: %w", err)
 		}
 
 		serviceUserName := fmt.Sprintf("%s_%s_service", customer.Name, customer.Owner)
@@ -206,6 +238,7 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 		customer.Properties[af_client.PtPropPref+"Tenant ID"] = tenant.ID
 		customer.Properties[af_client.PtPropPref+"Connection String"] = connectionString
 		customer.Properties[af_client.PtPropPref+"ClientAccountLogin"] = userROName
+		customer.Properties[af_client.PtPropPref+"ClientControlAccountLogin"] = userName
 		customer.Properties[af_client.PtPropPref+"ServiceAccountLogin"] = serviceUserName
 
 		affected, err := object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
@@ -226,6 +259,8 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 			ServiceUserPwd:      serviceUserPwd,
 			UserROName:          userROName,
 			UserROPwd:           userROPwd,
+			UserName:            userName,
+			UserPwd:             userPwd,
 			TenantAdminName:     tenantAdminName,
 			TenantAdminPassword: tenantAdminPassword,
 			PTAFLoginLink:       util.GetUrlHost(afHost),
