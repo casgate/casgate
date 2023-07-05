@@ -288,7 +288,7 @@
       "Records": "Записи",
       "Request URI": "Запрос URI",
       "Resources": "Ресурсы",
-      "Role": "Role",
+      "Role": "Функциональный пакет",
       "Role - Tooltip": "Role - Tooltip",
       "Roles": "Роли",
       "Roles - Tooltip": "Роли, к которым принадлежит пользователь",
@@ -566,12 +566,12 @@
       "Write": "Написать"
     },
     "plan": {
-      "Edit Plan": "Edit Plan",
-      "New Plan": "New Plan",
-      "Price per month": "Price per month",
-      "Price per month - Tooltip": "Price per month - Tooltip",
-      "Price per year": "Price per year",
-      "Price per year - Tooltip": "Price per year - Tooltip",
+      "Edit Plan": "Редактировать план",
+      "New Plan": "Новый план",
+      "Price per month": "Цена за месяц",
+      "Price per month - Tooltip": "Цена за месяц",
+      "Price per year": "Цена за год",
+      "Price per year - Tooltip": "Цена за год",
       "per month": "в месяц"
     },
     "pricing": {

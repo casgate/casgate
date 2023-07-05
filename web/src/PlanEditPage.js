@@ -207,8 +207,7 @@ class PlanEditPage extends React.Component {
             })}>
               {
                 [
-                  {id: "USD", name: "USD"},
-                  {id: "CNY", name: "CNY"},
+                  {id: "RUB", name: "RUB"},
                 ].map((item, index) => <Option key={index} value={item.id}>{item.name}</Option>)
               }
             </Select>
