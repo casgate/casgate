@@ -207,7 +207,6 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 		customer.Properties[af_client.PtPropPref+"Connection String"] = connectionString
 		customer.Properties[af_client.PtPropPref+"ClientAccountLogin"] = userROName
 		customer.Properties[af_client.PtPropPref+"ServiceAccountLogin"] = serviceUserName
-		customer.Properties[af_client.PtPropPref+"TenantAdminAccountLogin"] = tenantAdminName
 
 		affected, err := object.UpdateUser(customer.GetId(), customer, []string{"properties"}, false)
 		if err != nil {
