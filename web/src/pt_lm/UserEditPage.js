@@ -147,7 +147,7 @@ class UserEditPage extends React.Component {
       return null;
     }
 
-    const isAdmin = Setting.isAdminUser(this.props.account);
+    const isAdmin = Setting.isLocalAdminUser(this.props.account);
 
     // return (
     //   <div>
