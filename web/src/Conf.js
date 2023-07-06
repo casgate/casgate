@@ -21,7 +21,7 @@ export const DefaultLanguage = "ru";
 
 export const EnableExtraPages = true;
 
-export const EnableChatPages = true;
+export const EnableChatPages = false;
 
 export const InitThemeAlgorithm = true;
 export const ThemeDefault = {
