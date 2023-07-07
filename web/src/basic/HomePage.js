@@ -47,7 +47,7 @@ class HomePage extends React.Component {
       items.push({link: "/organizations", name: i18next.t("general:Organizations"), organizer: i18next.t("general:User containers")});
     }
 
-    if (Setting.isLocalAdminUser) {
+    if (Setting.isLocalAdminUser && !Setting.isDistributor) {
       items.push({link: "/users", name: i18next.t("general:Users"), organizer: i18next.t("general:Users under all organizations")});
       items.push({link: "/clients", name: i18next.t("general:Clients"), organizer: i18next.t("general:OAuth providers")});
     }
