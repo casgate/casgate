@@ -49,11 +49,11 @@ func ValidateSubscriptionStateIsAllowed(subscriptionRole PTAFLTypes.UserRole, ol
 
 	roleAvailableTransitions, ok := oldState.Transitions[subscriptionRole]
 	if !ok {
-		return PTAFLTypes.NewStateChangeForbiddenError(nextStateName)
+		return PTAFLTypes.NewStateChangeForbiddenError(roleAvailableTransitions)
 	}
 
 	if !roleAvailableTransitions.Contains(nextStateName) {
-		return PTAFLTypes.NewStateChangeForbiddenError(nextStateName)
+		return PTAFLTypes.NewStateChangeForbiddenError(roleAvailableTransitions)
 	}
 
 	return nil
