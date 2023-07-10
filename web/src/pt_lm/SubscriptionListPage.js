@@ -38,7 +38,7 @@ class SubscriptionListPage extends BaseListPage {
       duration: defaultDuration,
       description: "",
       comment: "",
-      discaunt: 0,
+      discount: 15,
       user: "",
       plan: "",
       isEnabled: true,
