@@ -191,6 +191,8 @@ class SubscriptionListPage extends BaseListPage {
             return Setting.getTag("success", i18next.t("subscription:Finished"));
           case "Cancelled":
             return Setting.getTag("error", i18next.t("subscription:Cancelled"));
+          case "IntoCommerce":
+            return Setting.getTag("warning", i18next.t("subscription:IntoCommerce"));
           default:
             return null;
           }

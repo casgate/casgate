@@ -262,6 +262,7 @@ class SubscriptionEditPage extends React.Component {
               {value: "New", name: i18next.t("subscription:New")},
               {value: "Pending", name: i18next.t("subscription:Pending")},
               {value: "PreAuthorized", name: i18next.t("subscription:PreAuthorized")},
+              {value: "IntoCommerce", name: i18next.t("subscription:IntoCommerce")},
               {value: "Authorized", name: i18next.t("subscription:Authorized")},
               {value: "Unauthorized", name: i18next.t("subscription:Unauthorized")},
               {value: "Started", name: i18next.t("subscription:Started")},
