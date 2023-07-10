@@ -156,6 +156,7 @@
     "subscription": {
       "Pending": "На рассмотрении",
       "PreAuthorized": "Утверждена",
+      "IntoCommerce": "В коммерцию",
       "PreFinished": "Завершается",
       "Started": "Действующая",
       "Unauthorized": "Отклонена",

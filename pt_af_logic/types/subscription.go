@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 	"strings"
+
+	"github.com/casdoor/casdoor/i18n"
 )
 
 type UserRole string
@@ -12,6 +14,8 @@ const (
 	UserRoleGlobalAdmin UserRole = "admin"
 	UserRolePartner     UserRole = "partner"
 	UserRoleDistributor UserRole = "distributor"
+
+	ptlmLanguage = "lm"
 )
 
 type SubscriptionStateName string
@@ -24,6 +28,7 @@ const (
 	SubscriptionNew           SubscriptionStateName = "New"
 	SubscriptionPending       SubscriptionStateName = "Pending"
 	SubscriptionPreAuthorized SubscriptionStateName = "PreAuthorized"
+	SubscriptionIntoCommerce  SubscriptionStateName = "IntoCommerce"
 	SubscriptionUnauthorized  SubscriptionStateName = "Unauthorized"
 	SubscriptionAuthorized    SubscriptionStateName = "Authorized"
 	SubscriptionStarted       SubscriptionStateName = "Started"
@@ -122,11 +127,21 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 			UserRolePartner: {
 				SubscriptionFieldNameDisplayName,
 				SubscriptionFieldNameDescription,
+				SubscriptionFieldNameDiscount,
 			},
 		},
 		Transitions: SubscriptionTransitions{
-			UserRolePartner: SubscriptionStateNames{SubscriptionAuthorized, SubscriptionCancelled},
+			UserRolePartner: SubscriptionStateNames{SubscriptionIntoCommerce, SubscriptionCancelled},
 		},
+	},
+	SubscriptionIntoCommerce: {
+		FieldPermissions: SubscriptionFieldPermissions{
+			UserRolePartner: {
+				SubscriptionFieldNameDisplayName,
+				SubscriptionFieldNameDescription,
+			},
+		},
+		Transitions: nil,
 	},
 	SubscriptionUnauthorized: {
 		FieldPermissions: SubscriptionFieldPermissions{
@@ -196,6 +211,18 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 	},
 }
 
-func NewStateChangeForbiddenError(statusName SubscriptionStateName) error {
-	return fmt.Errorf("You are not allowed to change the state to %s", statusName)
+func NewStateChangeForbiddenError(availableStatusNames []SubscriptionStateName) error {
+	if len(availableStatusNames) == 0 {
+		return fmt.Errorf("Из текущего статуса вам не доступны переходы в другие статусы")
+	}
+	var statuses string
+	for _, availableStatusName := range availableStatusNames {
+		translatedAvailableStatusName := i18n.Translate(ptlmLanguage, fmt.Sprintf("subscription:%s", availableStatusName.String()))
+		if statuses == "" {
+			statuses = translatedAvailableStatusName
+			continue
+		}
+		statuses = fmt.Sprintf("%s, %s", statuses, translatedAvailableStatusName)
+	}
+	return fmt.Errorf("Вы можете перевести подписку только в доступные статусы: %s", statuses)
 }
