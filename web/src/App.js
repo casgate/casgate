@@ -443,9 +443,10 @@ class App extends Component {
         </a>, "#"));
       }
 
-      res.push(Setting.getItem(<Link to="/organizations">{i18next.t("general:Organizations")}</Link>,
-        "/organizations"));
-
+      if (Setting.isAdminUser(this.state.account)) {
+        res.push(Setting.getItem(<Link to="/organizations">{i18next.t("general:Organizations")}</Link>,
+          "/organizations"));
+      }
       // res.push(Setting.getItem(<Link to="/groups">{i18next.t("general:Groups")}</Link>,
       //   "/groups"));
 
