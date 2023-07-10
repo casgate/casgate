@@ -24,6 +24,7 @@ const (
 	SubscriptionNew           SubscriptionStateName = "New"
 	SubscriptionPending       SubscriptionStateName = "Pending"
 	SubscriptionPreAuthorized SubscriptionStateName = "PreAuthorized"
+	SubscriptionIntoCommerce  SubscriptionStateName = "IntoCommerce"
 	SubscriptionUnauthorized  SubscriptionStateName = "Unauthorized"
 	SubscriptionAuthorized    SubscriptionStateName = "Authorized"
 	SubscriptionStarted       SubscriptionStateName = "Started"
@@ -122,11 +123,21 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 			UserRolePartner: {
 				SubscriptionFieldNameDisplayName,
 				SubscriptionFieldNameDescription,
+				SubscriptionFieldNameDiscount,
 			},
 		},
 		Transitions: SubscriptionTransitions{
-			UserRolePartner: SubscriptionStateNames{SubscriptionAuthorized, SubscriptionCancelled},
+			UserRolePartner: SubscriptionStateNames{SubscriptionIntoCommerce, SubscriptionCancelled},
 		},
+	},
+	SubscriptionIntoCommerce: {
+		FieldPermissions: SubscriptionFieldPermissions{
+			UserRolePartner: {
+				SubscriptionFieldNameDisplayName,
+				SubscriptionFieldNameDescription,
+			},
+		},
+		Transitions: nil,
 	},
 	SubscriptionUnauthorized: {
 		FieldPermissions: SubscriptionFieldPermissions{

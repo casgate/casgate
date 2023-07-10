@@ -263,7 +263,7 @@ func NotifySubscriptionUpdated(ctx *context.Context, actor *object.User, current
 	switch current.State {
 	case PTAFLTypes.SubscriptionNew.String():
 		return nil
-	case PTAFLTypes.SubscriptionPreAuthorized.String(), PTAFLTypes.SubscriptionUnauthorized.String():
+	case PTAFLTypes.SubscriptionPreAuthorized.String(), PTAFLTypes.SubscriptionUnauthorized.String(), PTAFLTypes.SubscriptionCancelled.String():
 		if stateChanged {
 			err := NotifyPartnerSubscriptionUpdated(actor, current, old)
 			if err != nil {
