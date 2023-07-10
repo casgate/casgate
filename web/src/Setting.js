@@ -1146,6 +1146,9 @@ export function getRandomName() {
 export function getRandomNumber() {
   return Math.random().toString(10).slice(-11);
 }
+export function getUUID() {
+  return URL.createObjectURL(new Blob([])).slice(-36);
+}
 
 export function getFromLink() {
   const from = sessionStorage.getItem("from");

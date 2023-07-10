@@ -506,9 +506,9 @@ class App extends Component {
         "/plans"
       ));
 
-      res.push(Setting.getItem(<Link to="/pricings">{i18next.t("general:Pricings")}</Link>,
-        "/pricings"
-      ));
+      // res.push(Setting.getItem(<Link to="/pricings">{i18next.t("general:Pricings")}</Link>,
+      //   "/pricings"
+      // ));
 
       res.push(Setting.getItem(<Link to="/subscriptions">{i18next.t("general:Subscriptions")}</Link>,
         "/subscriptions"

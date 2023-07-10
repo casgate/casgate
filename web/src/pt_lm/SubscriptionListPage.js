@@ -25,14 +25,15 @@ import PopconfirmModal from "./../common/modal/PopconfirmModal";
 class SubscriptionListPage extends BaseListPage {
   newSubscription() {
     const randomName = Setting.getRandomName();
+    const uuid = Setting.getUUID();
     const owner = Setting.getRequestOrganization(this.props.account);
     const defaultDuration = 365;
 
     return {
       owner: owner,
-      name: `subscription_${randomName}`,
+      name: uuid,
       createdTime: moment().format(),
-      displayName: `New Subscription - ${randomName}`,
+      displayName: `Новый проект - ${randomName}`,
       startDate: null,
       endDate: null,
       duration: defaultDuration,
