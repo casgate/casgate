@@ -548,7 +548,7 @@ class LoginPage extends React.Component {
               this.renderPasswordOrCodeInput()
             }
           </Row>
-          <div style={{display: "none", justifyContent: "space-between", width: "320px", marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px"}}>
+          <div style={{justifyContent: "space-between", width: "320px", marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px"}}>
             <Form.Item name="autoSignin" valuePropName="checked" noStyle>
               <Checkbox style={{float: "left"}}>
                 {i18next.t("login:Auto sign in")}
