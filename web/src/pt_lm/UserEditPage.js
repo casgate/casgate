@@ -61,7 +61,7 @@ class UserEditPage extends React.Component {
   getUser() {
     UserBackend.getUser(this.state.organizationName, this.state.userName)
       .then((data) => {
-        if (data.status === null || data.status !== "error") {
+        if ((data.status === null || data.status !== "error") && data.tag === "manager") {
           this.setState({
             user: data,
           });

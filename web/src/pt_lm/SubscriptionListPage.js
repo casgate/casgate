@@ -152,7 +152,7 @@ class SubscriptionListPage extends BaseListPage {
         width: "160px",
         sorter: true,
         render: (text, record, index) => {
-          return text === "0001-01-01T00:00:00Z" ? "" : Setting.getFormattedDate(text);
+          return text === "0001-01-01T00:00:00Z" ? "" : Setting.getFormattedDateShort(Setting.getFormattedDate(text));
         },
       },
       {
@@ -162,7 +162,7 @@ class SubscriptionListPage extends BaseListPage {
         width: "160px",
         sorter: true,
         render: (text, record, index) => {
-          return text === "0001-01-01T00:00:00Z" ? "" : Setting.getFormattedDate(text);
+          return text === "0001-01-01T00:00:00Z" ? "" : Setting.getFormattedDateShort(Setting.getFormattedDate(text));
         },
       },
       {
@@ -179,7 +179,7 @@ class SubscriptionListPage extends BaseListPage {
           case "Pending":
             return Setting.getTag("warning", i18next.t("subscription:Pending"));
           case "PreAuthorized":
-            return Setting.getTag("success", i18next.t("subscription:Pre-Authorized"));
+            return Setting.getTag("success", i18next.t("subscription:PreAuthorized"));
           case "Unauthorized":
             return Setting.getTag("error", i18next.t("subscription:Unauthorized"));
           case "Authorized":

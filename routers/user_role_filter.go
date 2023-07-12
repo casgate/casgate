@@ -31,8 +31,7 @@ var distributorAllowedUrls = map[string]bool{
 	"/api/get-plans":                     true,
 	"/api/get-users":                     true,
 	"/api/update-subscription":           true,
-	"/api/get-user":                      true,
-	"/api/get-user-application":          true,	
+	"/api/get-user-application":          true,
 }
 
 func UserRoleFilter(ctx *context.Context) {

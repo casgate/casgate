@@ -37,6 +37,11 @@ class UserListPage extends BaseListPage {
   UNSAFE_componentWillMount() {
     super.UNSAFE_componentWillMount();
     this.getOrganization(this.state.organizationName);
+    if (Setting.isDistributor(this.props.account)) {
+      this.setState({
+        isAuthorized: false,
+      });
+    }
   }
 
   newUser() {
