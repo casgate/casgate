@@ -117,7 +117,6 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 				SubscriptionFieldNameSubPlan,
 				SubscriptionFieldNameDiscount,
 				SubscriptionFieldNameDescription,
-				SubscriptionFieldNameComment,
 			},
 		},
 		Transitions: nil,

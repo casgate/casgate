@@ -505,16 +505,16 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 	)
 
 	if !old.StartDate.IsZero() {
-		oldSubscriptionStartDate = old.StartDate.In(mskLoc).Format("2006-01-02 15:04:05")
+		oldSubscriptionStartDate = old.StartDate.In(mskLoc).Format("2006-01-02")
 	}
 	if !old.EndDate.IsZero() {
-		oldSubscriptionEndDate = old.EndDate.In(mskLoc).Format("2006-01-02 15:04:05")
+		oldSubscriptionEndDate = old.EndDate.In(mskLoc).Format("2006-01-02")
 	}
 	if !current.StartDate.IsZero() {
-		subscriptionStartDate = current.StartDate.In(mskLoc).Format("2006-01-02 15:04:05")
+		subscriptionStartDate = current.StartDate.In(mskLoc).Format("2006-01-02")
 	}
 	if !current.EndDate.IsZero() {
-		subscriptionEndDate = current.EndDate.In(mskLoc).Format("2006-01-02 15:04:05")
+		subscriptionEndDate = current.EndDate.In(mskLoc).Format("2006-01-02")
 	}
 
 	return &SubscriptionUpdatedMessage{
@@ -526,7 +526,7 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		PartnerURL:                 fmt.Sprintf("%s/organizations/%s", conf.GetConfigString("origin"), organization.Name),
 		SubscriptionURL:            fmt.Sprintf("%s/subscriptions/%s/%s", conf.GetConfigString("origin"), organization.Name, current.Name),
 		ClientDisplayName:          client.DisplayName,
-		ClientURL:                  fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), organization.Name, client.Name),
+		ClientURL:                  fmt.Sprintf("%s/clients/%s/%s", conf.GetConfigString("origin"), organization.Name, client.Name),
 		OldPlanDisplayName:         oldPlanDisplayName,
 		OldPlanURL:                 fmt.Sprintf("%s/plans/%s/%s", conf.GetConfigString("origin"), organization.Name, oldPlanName),
 		PlanURL:                    fmt.Sprintf("%s/plans/%s/%s", conf.GetConfigString("origin"), organization.Name, currentPlanName),

@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/beego/beego/utils/pagination"
+	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/pt_af_logic"
 	"github.com/casdoor/casdoor/util"
@@ -192,6 +193,11 @@ func (c *ApiController) GetUser() {
 		user = userFromUserId
 	default:
 		user, err = object.GetUser(id)
+	}
+
+	if user == nil {
+		c.ResponseError(fmt.Sprintf(i18n.Translate(c.GetAcceptLanguage(), "general:The user: %s doesn't exist"), id))
+		return
 	}
 
 	if err != nil {

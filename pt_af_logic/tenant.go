@@ -45,7 +45,7 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 
 	af.Token = adminLoginResp.AccessToken
 
-	tenantName := fmt.Sprintf("%s-%s", customer.Owner, customer.Name)
+	tenantName := fmt.Sprintf("%s - %s", customer.Owner, customer.Name)
 
 	// if tenant already exists - no action required
 	if tenantID, found := customer.Properties[af_client.PtPropPref+"Tenant ID"]; found {
@@ -254,7 +254,7 @@ func CreateTenant(ctx *beegocontext.Context, subscription *object.Subscription) 
 		err = notifyPTAFTenantCreated(&PTAFTenantCreatedMessage{
 			ClientName:          customer.Name,
 			ClientDisplayName:   customer.DisplayName,
-			ClientURL:           fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), customer.Owner, customer.Name),
+			ClientURL:           fmt.Sprintf("%s/clients/%s/%s", conf.GetConfigString("origin"), customer.Owner, customer.Name),
 			ServiceUserName:     serviceUserName,
 			ServiceUserPwd:      serviceUserPwd,
 			UserROName:          userROName,

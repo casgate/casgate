@@ -37,6 +37,11 @@ class UserListPage extends BaseListPage {
   UNSAFE_componentWillMount() {
     super.UNSAFE_componentWillMount();
     this.getOrganization(this.state.organizationName);
+    if (Setting.isDistributor(this.props.account)) {
+      this.setState({
+        isAuthorized: false,
+      });
+    }
   }
 
   newUser() {
@@ -173,7 +178,7 @@ class UserListPage extends BaseListPage {
         ...this.getColumnSearchProps("name", true),
         render: (text, record, index) => {
           return (
-            <Link to={`/users/${record.owner}/${text}`}>
+            <Link to={`/clients/${record.owner}/${text}`}>
               {text}
             </Link>
           );
