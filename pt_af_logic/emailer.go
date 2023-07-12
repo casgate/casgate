@@ -107,6 +107,10 @@ type SubscriptionUpdatedMessage struct {
 	SubscriptionEditor         string
 	SubscriptionEditorURL      string
 	SubscriptionEditTime       string
+	PartnerINN                 string
+	PartnerKPP                 string
+	ClientINN                  string
+	ClientKPP                  string
 }
 
 type SubscriptionUpdatedPartnerMessage struct {
@@ -272,17 +276,22 @@ func NotifySubscriptionUpdated(ctx *context.Context, actor *object.User, current
 		}
 	case PTAFLTypes.SubscriptionAuthorized.String(), PTAFLTypes.SubscriptionPreFinished.String():
 		if stateChanged {
-			recipients := getDistributors(ctx)
-			err := NotifyAdminDistributorSubscriptionUpdated(actor, current, old, recipients)
+			err := NotifyDistributorSubscriptionUpdated(ctx, actor, current, old)
 			if err != nil {
 				util.LogError(ctx, fmt.Errorf("NotifyAdminDistributorSubscriptionUpdated(distributors): %w", err).Error())
 			}
 		}
+	case PTAFLTypes.SubscriptionIntoCommerce.String(), PTAFLTypes.SubscriptionPending.String():
+		if stateChanged {
+			err := NotifyAdminSubscriptionUpdated(actor, current, old)
+			if err != nil {
+				util.LogError(ctx, fmt.Errorf("NotifyAdminDistributorSubscriptionUpdated(admins): %w", err).Error())
+			}
+		}
 	}
 
-	// send admin notification
-	recipients := getBuiltInAdmins()
-	err := NotifyAdminDistributorSubscriptionUpdated(actor, current, old, recipients)
+	// send notification to log email
+	err := NotifyLogSubscriptionUpdated(actor, current, old)
 	if err != nil {
 		util.LogError(ctx, fmt.Errorf("NotifyAdminDistributorSubscriptionUpdated(admins): %w", err).Error())
 	}
@@ -295,27 +304,6 @@ func getBuiltInEmailProvider() *object.Provider {
 	for _, provider := range providers {
 		if provider.Category == "Email" {
 			return provider
-		}
-	}
-	return nil
-}
-
-func getAdmins(organization string) []string {
-	users, _ := object.GetUsers(organization)
-	var emails []string
-	for _, user := range users {
-		if user.IsAdmin {
-			emails = append(emails, user.Email)
-		}
-	}
-	return emails
-}
-
-func getPartnerManager(organization string) *object.User {
-	users, _ := object.GetUsers(organization)
-	for _, user := range users {
-		if user.IsAdmin {
-			return user
 		}
 	}
 	return nil
@@ -349,7 +337,102 @@ func getDistributors(ctx *context.Context) []string {
 	return emails
 }
 
-func NotifyAdminDistributorSubscriptionUpdated(actor *object.User, current, old *object.Subscription, recipients []string) error {
+func NotifyDistributorSubscriptionUpdated(ctx *context.Context, actor *object.User, current, old *object.Subscription) error {
+	recipients := getDistributors(ctx)
+
+	err := NotifyRecipientsSubscriptionUpdated(
+		actor,
+		current,
+		old,
+		SubscriptionUpdatedAdminDistributorSubjTmpl,
+		SubscriptionUpdatedDistributorBodyTmpl,
+		recipients,
+	)
+	if err != nil {
+		return fmt.Errorf("NotifyRecipientsSubscriptionUpdated: %w", err)
+	}
+
+	return err
+}
+
+func NotifyAdminSubscriptionUpdated(actor *object.User, current, old *object.Subscription) error {
+	recipients := getBuiltInAdmins()
+
+	err := NotifyRecipientsSubscriptionUpdated(
+		actor,
+		current,
+		old,
+		SubscriptionUpdatedAdminDistributorSubjTmpl,
+		SubscriptionUpdatedAdminLogBodyTmpl,
+		recipients,
+	)
+
+	return err
+}
+
+func NotifyLogSubscriptionUpdated(actor *object.User, current, old *object.Subscription) error {
+	err := NotifyRecipientsSubscriptionUpdated(
+		actor,
+		current,
+		old,
+		SubscriptionUpdatedSubjLogTmpl,
+		SubscriptionUpdatedAdminLogBodyTmpl,
+		[]string{logEmail},
+	)
+	if err != nil {
+		return fmt.Errorf("NotifyRecipientsSubscriptionUpdated: %w", err)
+	}
+
+	return nil
+}
+
+func NotifyPartnerSubscriptionUpdated(actor *object.User, current, old *object.Subscription) error {
+	orgId := util.GetId("admin", current.Owner)
+	organization, err := object.GetOrganization(orgId)
+	if err != nil {
+		return fmt.Errorf("object.GetOrganization: %w", err)
+	}
+
+	var recipients []string
+	if organization.Email != "" {
+		recipients = append(recipients, organization.Email)
+	}
+
+	submitter, err := object.GetUser(current.Submitter)
+	if err != nil {
+		return fmt.Errorf("object.GetUser(submitter): %w", err)
+	}
+
+	if submitter.Email != organization.Email && submitter.Email != "" {
+		recipients = append(recipients, submitter.Email)
+	}
+
+	err = NotifyRecipientsSubscriptionUpdated(
+		actor,
+		current,
+		old,
+		SubscriptionUpdatedPartnerSubjTmpl,
+		SubscriptionUpdatedPartnerBodyTmpl,
+		recipients,
+	)
+	if err != nil {
+		return fmt.Errorf("NotifyRecipientsSubscriptionUpdated: %w", err)
+	}
+
+	return nil
+}
+
+func NotifyRecipientsSubscriptionUpdated(
+	actor *object.User,
+	current, old *object.Subscription,
+	titleTemplate string,
+	bodyTemplate string,
+	recipients []string,
+) error {
+	if len(recipients) == 0 {
+		return nil
+	}
+
 	provider := getBuiltInEmailProvider()
 	if provider == nil {
 		return errors.New("no email provider registered")
@@ -360,7 +443,7 @@ func NotifyAdminDistributorSubscriptionUpdated(actor *object.User, current, old 
 		return fmt.Errorf("getSubscriptionUpdateMessage: %w", err)
 	}
 
-	titleTmpl, err := template.New("").Parse(SubscriptionUpdatedSubjTmpl)
+	titleTmpl, err := template.New("").Parse(titleTemplate)
 	if err != nil {
 		return fmt.Errorf("template.Parse(title): %w", err)
 	}
@@ -371,7 +454,7 @@ func NotifyAdminDistributorSubscriptionUpdated(actor *object.User, current, old 
 		return fmt.Errorf("titleTmpl.Execute: %w", err)
 	}
 
-	bodyTmpl, err := template.New("").Parse(SubscriptionUpdatedBodyTmpl)
+	bodyTmpl, err := template.New("").Parse(bodyTemplate)
 	if err != nil {
 		return fmt.Errorf("template.Parse(body): %w", err)
 	}
@@ -391,53 +474,6 @@ func NotifyAdminDistributorSubscriptionUpdated(actor *object.User, current, old 
 	}
 
 	return err
-}
-
-func NotifyPartnerSubscriptionUpdated(actor *object.User, current, old *object.Subscription) error {
-	provider := getBuiltInEmailProvider()
-	if provider == nil {
-		return errors.New("no email provider registered")
-	}
-	orgId := fmt.Sprintf("admin/%s", current.Owner)
-	organization, err := object.GetOrganization(orgId)
-	if err != nil {
-		return fmt.Errorf("object.GetOrganization: %w", err)
-	}
-	if organization.Email == "" {
-		return nil
-	}
-
-	msg, err := getSubscriptionUpdateMessage(actor, current, old)
-	if err != nil {
-		return fmt.Errorf("getSubscriptionUpdateMessage: %w", err)
-	}
-
-	titleTmpl, err := template.New("").Parse(SubscriptionUpdatedPartnerSubjTmpl)
-	if err != nil {
-		return fmt.Errorf("template.Parse(title): %w", err)
-	}
-
-	var titleBuf bytes.Buffer
-	err = titleTmpl.Execute(&titleBuf, msg)
-	if err != nil {
-		return fmt.Errorf("titleTmpl.Execute: %w", err)
-	}
-
-	bodyTmpl, err := template.New("").Parse(SubscriptionUpdatedPartnerBodyTmpl)
-	if err != nil {
-		return fmt.Errorf("template.Parse(body): %w", err)
-	}
-
-	var bodyBuf bytes.Buffer
-	if err := bodyTmpl.Execute(&bodyBuf, msg); err != nil {
-		return fmt.Errorf("tmpl.Execute: %w", err)
-	}
-	err = object.SendEmail(provider, titleBuf.String(), bodyBuf.String(), organization.Email, provider.DisplayName)
-	if err != nil {
-		return fmt.Errorf("object.SendEmail: %w", err)
-	}
-
-	return nil
 }
 
 func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subscription) (*SubscriptionUpdatedMessage, error) {
@@ -550,5 +586,9 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		SubscriptionEditor:         actor.Name,
 		SubscriptionEditorURL:      fmt.Sprintf("%s/users/%s/%s", conf.GetConfigString("origin"), actor.Owner, actor.Name),
 		SubscriptionEditTime:       time.Now().In(mskLoc).Format("2006-01-02 15:04:05"),
+		PartnerINN:                 organization.Properties["ИНН"],
+		PartnerKPP:                 organization.Properties["КПП"],
+		ClientINN:                  client.Properties["ИНН"],
+		ClientKPP:                  client.Properties["КПП"],
 	}, nil
 }

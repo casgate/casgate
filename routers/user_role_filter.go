@@ -30,6 +30,7 @@ var distributorAllowedUrls = map[string]bool{
 	"/api/get-subscription":              true,
 	"/api/get-plans":                     true,
 	"/api/get-users":                     true,
+	"/api/get-user":                      true,
 	"/api/update-subscription":           true,
 	"/api/get-user-application":          true,
 }
@@ -46,13 +47,15 @@ func UserRoleFilter(ctx *context.Context) {
 	}
 
 	userRole := pt_af_logic.GetUserRole(user)
-	if userRole != PTAFLTypes.UserRoleDistributor {
-		return
-	}
+	if userRole == PTAFLTypes.UserRoleDistributor {
+		urlPath := getUrlPath(ctx.Request.URL.Path)
 
-	urlPath := getUrlPath(ctx.Request.URL.Path)
+		if !distributorAllowedUrls[urlPath] {
+			denyRequest(ctx)
+		}
 
-	if !distributorAllowedUrls[urlPath] {
-		denyRequest(ctx)
+		if urlPath == "/api/get-user" && ctx.Request.Form.Get("id") != userID {
+			denyRequest(ctx)
+		}
 	}
 }

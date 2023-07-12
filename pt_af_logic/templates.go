@@ -36,11 +36,13 @@ const partnerConfirmedBodyTmpl = `
 Ссылка для входа на портал: <a href="{{ .PartnerLoginURL }}">{{ .PartnerLoginURL }}</a></p>
 `
 
-const SubscriptionUpdatedSubjTmpl = `[PT LMP] Обновлена подписка {{ .SubscriptionName }} (партнёр {{ .PartnerName }}, заказчик {{ .ClientName }}){{if ne .OldSubscriptionStatus .SubscriptionStatus}}: {{ .SubscriptionStatus }}{{end}}`
+const SubscriptionUpdatedSubjLogTmpl = `[PT LMP] Обновлена подписка {{ .SubscriptionName }} (партнёр {{ .PartnerName }}, заказчик {{ .ClientName }}){{if ne .OldSubscriptionStatus .SubscriptionStatus}}: {{ .SubscriptionStatus }}{{end}}`
 
-const SubscriptionUpdatedBodyTmpl = `
-<p>Партнёр: <a href="{{ .PartnerURL }}">{{ .PartnerDisplayName }}</a><br>
-Идентификатор: <a href="{{ .SubscriptionURL }}">{{ .SubscriptionName }}</a><br>
+const SubscriptionUpdatedAdminDistributorSubjTmpl = `[PT LMP] Обновлена подписка (партнёр {{ .PartnerName }}, заказчик {{ .ClientName }}){{if ne .OldSubscriptionStatus .SubscriptionStatus}}: {{ .SubscriptionStatus }}{{end}}`
+
+const SubscriptionUpdatedAdminLogBodyTmpl = `
+<p>Идентификатор: <a href="{{ .SubscriptionURL }}">{{ .SubscriptionName }}</a><br>
+Партнёр: <a href="{{ .PartnerURL }}">{{ .PartnerDisplayName }}</a><br>
 Заказчик:<a href="{{ .ClientURL }}">{{ .ClientDisplayName }}</a><br>
 Тарифный план: <a href="{{ .OldPlanURL }}">{{ .OldPlanDisplayName }}</a>{{if ne .OldPlanDisplayName .PlanDisplayName}} -> <a href="{{ .PlanURL }}">{{ .PlanDisplayName }}</a>{{end}}<br>
 Скидка: {{ .OldSubscriptionDiscount }}{{if ne .OldSubscriptionDiscount .SubscriptionDiscount}} -> {{ .SubscriptionDiscount }}{{end}}<br>
@@ -57,7 +59,7 @@ const SubscriptionUpdatedBodyTmpl = `
 Время последнего изменения: {{ .SubscriptionEditTime }}{{end}}</p>
 `
 
-const SubscriptionUpdatedPartnerSubjTmpl = `[PT LMP] Обновлена подписка {{ .SubscriptionName }} (заказчик {{ .ClientName }}): {{ .SubscriptionStatus }}`
+const SubscriptionUpdatedPartnerSubjTmpl = `[PT LMP] Обновлена подписка (заказчик {{ .ClientName }}): {{ .SubscriptionStatus }}`
 
 const SubscriptionUpdatedPartnerBodyTmpl = `
 <p>Идентификатор: <a href="{{ .SubscriptionURL }}">{{ .SubscriptionName }}</a><br>
@@ -70,5 +72,21 @@ const SubscriptionUpdatedPartnerBodyTmpl = `
 Описание: {{ .OldSubscriptionDescription }}{{if ne .OldSubscriptionDescription .SubscriptionDescription }} -> {{ .SubscriptionDescription }}{{end}}<br>
 Комментарий: {{ .OldSubscriptionComment }}{{if ne .OldSubscriptionComment .SubscriptionComment }} -> {{ .SubscriptionComment }}{{end}}<br>
 Создатель: <a href="{{ .SubscriptionCreatorURL }}">{{ .SubscriptionCreator }}</a><br>
+Время последней смены статуса: {{ .SubscriptionMoveTime }}</p>
+`
+
+const SubscriptionUpdatedDistributorBodyTmpl = `
+<p>Идентификатор подписки: <a href="{{ .SubscriptionURL }}">{{ .SubscriptionName }}</a><br>
+Партнёр: {{ .PartnerDisplayName }}<br>
+ИНН партнёра: {{ .PartnerINN }}<br>
+КПП партнёра: {{ .PartnerKPP }}<br>
+Заказчик: {{ .ClientDisplayName }}<br>
+ИНН заказчика: {{ .ClientINN }}<br>
+КПП заказчика: {{ .ClientKPP }}<br>
+Тарифный план: {{ .PlanDisplayName }}<br>
+Скидка: {{ .SubscriptionDiscount }}<br>
+Дата начала: {{ .SubscriptionStartDate }}<br>
+Дата окончания: {{ .SubscriptionEndDate }}<br>
+Статус: {{ .OldSubscriptionStatus }} -> {{ .SubscriptionStatus }}<br>
 Время последней смены статуса: {{ .SubscriptionMoveTime }}</p>
 `

@@ -3,6 +3,8 @@ package pt_af_logic
 // default organization
 const builtInOrgCode = "built-in"
 
+const logEmail = "lmp-log@ptsecurity.com"
+
 const (
 	lowerCharSet          = "abcdedfghijklmnopqrstuvwxyz"
 	upperCharSet          = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
