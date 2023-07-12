@@ -78,12 +78,6 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 		}
 	}
 
-	if form.Password != "" && user.IsMfaEnabled() {
-		c.setMfaSessionData(&object.MfaSessionData{UserId: userId})
-		resp = &Response{Status: object.NextMfa, Data: user.GetPreferredMfaProps(true)}
-		return
-	}
-
 	if form.Type == ResponseTypeLogin {
 		c.SetSessionUsername(userId)
 		util.LogInfo(c.Ctx, "API: [%s] signed in", userId)
@@ -353,16 +347,25 @@ func (c *ApiController) Login() {
 				return
 			}
 
-			resp = c.HandleLoggedIn(application, user, &authForm)
-
 			organization, err := object.GetOrganizationByUser(user)
 			if err != nil {
 				c.ResponseError(err.Error())
 			}
 
-			if user != nil && organization.HasRequiredMfa() && !user.IsMfaEnabled() {
-				resp.Msg = object.RequiredMfa
+			if object.IsNeedPromptMfa(organization, user) {
+				// The prompt page needs the user to be signed in
+				c.SetSessionUsername(user.GetId())
+				c.ResponseOk(object.RequiredMfa)
+				return
 			}
+
+			if user.IsMfaEnabled() {
+				c.setMfaUserSession(user.GetId())
+				c.ResponseOk(object.NextMfa, user.GetPreferredMfaProps(true))
+				return
+			}
+
+			resp = c.HandleLoggedIn(application, user, &authForm)
 
 			record := object.NewRecord(c.Ctx)
 			record.Organization = application.Organization
@@ -416,15 +419,8 @@ func (c *ApiController) Login() {
 			}
 		} else if provider.Category == "OAuth" {
 			// OAuth
-
-			clientId := provider.ClientId
-			clientSecret := provider.ClientSecret
-			if provider.Type == "WeChat" && strings.Contains(c.Ctx.Request.UserAgent(), "MicroMessenger") {
-				clientId = provider.ClientId2
-				clientSecret = provider.ClientSecret2
-			}
-
-			idProvider := idp.GetIdProvider(provider.Type, provider.SubType, clientId, clientSecret, provider.AppId, authForm.RedirectUri, provider.Domain, provider.CustomAuthUrl, provider.CustomTokenUrl, provider.CustomUserInfoUrl)
+			idpInfo := object.FromProviderToIdpInfo(c.Ctx, provider)
+			idProvider := idp.GetIdProvider(idpInfo, authForm.RedirectUri)
 			if idProvider == nil {
 				c.ResponseError(fmt.Sprintf(c.T("storage:The provider type: %s is not supported"), provider.Type))
 				return
@@ -656,11 +652,14 @@ func (c *ApiController) Login() {
 				resp = &Response{Status: "error", Msg: "Failed to link user account", Data: isLinked}
 			}
 		}
-	} else if c.getMfaSessionData() != nil {
-		mfaSession := c.getMfaSessionData()
-		user, err := object.GetUser(mfaSession.UserId)
+	} else if c.getMfaUserSession() != "" {
+		user, err := object.GetUser(c.getMfaUserSession())
 		if err != nil {
 			c.ResponseError(err.Error())
+			return
+		}
+		if user == nil {
+			c.ResponseError("expired user session")
 			return
 		}
 
@@ -676,13 +675,15 @@ func (c *ApiController) Login() {
 				c.ResponseError(err.Error())
 				return
 			}
-		}
-		if authForm.RecoveryCode != "" {
+		} else if authForm.RecoveryCode != "" {
 			err = object.MfaRecover(user, authForm.RecoveryCode)
 			if err != nil {
 				c.ResponseError(err.Error())
 				return
 			}
+		} else {
+			c.ResponseError("missing passcode or recovery code")
+			return
 		}
 
 		application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
@@ -697,6 +698,7 @@ func (c *ApiController) Login() {
 		}
 
 		resp = c.HandleLoggedIn(application, user, &authForm)
+		c.setMfaUserSession("")
 
 		record := object.NewRecord(c.Ctx)
 		record.Organization = application.Organization

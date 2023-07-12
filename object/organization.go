@@ -243,6 +243,10 @@ func DeleteOrganization(organization *Organization) (bool, error) {
 }
 
 func GetOrganizationByUser(user *User) (*Organization, error) {
+	if user == nil {
+		return nil, nil
+	}
+
 	return getOrganization("admin", user.Owner)
 }
 
@@ -479,10 +483,21 @@ func organizationChangeTrigger(oldName string, newName string) error {
 	return session.Commit()
 }
 
-func (org *Organization) HasRequiredMfa() bool {
+func IsNeedPromptMfa(org *Organization, user *User) bool {
+	if org == nil || user == nil {
+		return false
+	}
 	for _, item := range org.MfaItems {
 		if item.Rule == "Required" {
-			return true
+			if item.Name == EmailType && !user.MfaEmailEnabled {
+				return true
+			}
+			if item.Name == SmsType && !user.MfaPhoneEnabled {
+				return true
+			}
+			if item.Name == TotpType && user.TotpSecret == "" {
+				return true
+			}
 		}
 	}
 	return false
