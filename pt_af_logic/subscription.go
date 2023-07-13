@@ -59,6 +59,51 @@ func ValidateSubscriptionStateIsAllowed(subscriptionRole PTAFLTypes.UserRole, ol
 	return nil
 }
 
+func ValidateSubscriptionRequiredFieldsIsFilled(
+	userRole PTAFLTypes.UserRole,
+	old, new *object.Subscription,
+) error {
+	if userRole == PTAFLTypes.UserRoleGlobalAdmin {
+		return nil
+	}
+
+	if old.State == new.State {
+		return nil
+	}
+
+	newState, ok := PTAFLTypes.SubscriptionStateMap[PTAFLTypes.SubscriptionStateName(new.State)]
+	if !ok {
+		return fmt.Errorf("incorrect state: %s", new.State)
+	}
+	requiredFields := newState.RequiredFields
+	for _, requiredField := range requiredFields {
+		switch requiredField {
+		case PTAFLTypes.SubscriptionFieldNameSubUser:
+			if new.User == "" {
+				return PTAFLTypes.NewRequiredFieldNotFilledError(PTAFLTypes.SubscriptionFieldNameSubUser)
+			}
+		case PTAFLTypes.SubscriptionFieldNameDiscount:
+			if new.Discount < 15 || new.Discount > 40 || new.Discount%5 != 0 {
+				return PTAFLTypes.NewRequiredFieldNotFilledError(PTAFLTypes.SubscriptionFieldNameDiscount)
+			}
+		case PTAFLTypes.SubscriptionFieldNameSubPlan:
+			if new.Plan == "" {
+				return PTAFLTypes.NewRequiredFieldNotFilledError(PTAFLTypes.SubscriptionFieldNameSubPlan)
+			}
+		case PTAFLTypes.SubscriptionFieldNameStartDate:
+			if new.StartDate.IsZero() {
+				return PTAFLTypes.NewRequiredFieldNotFilledError(PTAFLTypes.SubscriptionFieldNameStartDate)
+			}
+		case PTAFLTypes.SubscriptionFieldNameEndDate:
+			if new.EndDate.IsZero() {
+				return PTAFLTypes.NewRequiredFieldNotFilledError(PTAFLTypes.SubscriptionFieldNameEndDate)
+			}
+		}
+	}
+
+	return nil
+}
+
 // ValidateSubscriptionFieldsChangeIsAllowed checks if user has permission to change fields
 func ValidateSubscriptionFieldsChangeIsAllowed(
 	userRole PTAFLTypes.UserRole,
@@ -81,7 +126,7 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameName)
 		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameName)
 		if !oldContains && !newContains {
-			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameName)
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameName)
 		}
 	}
 
@@ -89,7 +134,7 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameDisplayName)
 		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameDisplayName)
 		if !oldContains && !newContains {
-			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameDisplayName)
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameDisplayName)
 		}
 	}
 
@@ -97,7 +142,7 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameStartDate)
 		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameStartDate)
 		if !oldContains && !newContains {
-			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameStartDate)
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameStartDate)
 		}
 	}
 
@@ -105,7 +150,7 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameEndDate)
 		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameEndDate)
 		if !oldContains && !newContains {
-			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameEndDate)
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameEndDate)
 		}
 	}
 
@@ -113,7 +158,7 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameSubUser)
 		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameSubUser)
 		if !oldContains && !newContains {
-			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameSubUser)
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameSubUser)
 		}
 	}
 
@@ -121,7 +166,7 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameSubPlan)
 		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameSubPlan)
 		if !oldContains && !newContains {
-			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameSubPlan)
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameSubPlan)
 		}
 	}
 
@@ -129,7 +174,7 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameDiscount)
 		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameDiscount)
 		if !oldContains && !newContains {
-			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameDiscount)
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameDiscount)
 		}
 	}
 
@@ -137,7 +182,7 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameDescription)
 		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameDescription)
 		if !oldContains && !newContains {
-			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameDescription)
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameDescription)
 		}
 	}
 
@@ -145,7 +190,7 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameComment)
 		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameComment)
 		if !oldContains && !newContains {
-			return fmt.Errorf("You are not allowed to change field %s", PTAFLTypes.SubscriptionFieldNameComment)
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameComment)
 		}
 	}
 
@@ -168,6 +213,11 @@ func ValidateSubscriptionUpdate(user *object.User, subscription *object.Subscrip
 	}
 
 	err = ValidateSubscriptionFieldsChangeIsAllowed(subscriptionRole, old, subscription)
+	if err != nil {
+		return err
+	}
+
+	err = ValidateSubscriptionRequiredFieldsIsFilled(subscriptionRole, old, subscription)
 	if err != nil {
 		return err
 	}

@@ -64,12 +64,16 @@ const (
 	SubscriptionFieldNameDisplayName SubscriptionFieldName = "Display Name"
 	SubscriptionFieldNameStartDate   SubscriptionFieldName = "Start Date"
 	SubscriptionFieldNameEndDate     SubscriptionFieldName = "End Date"
-	SubscriptionFieldNameSubUser     SubscriptionFieldName = "Sub user"
-	SubscriptionFieldNameSubPlan     SubscriptionFieldName = "Sub plan"
+	SubscriptionFieldNameSubUser     SubscriptionFieldName = "User"
+	SubscriptionFieldNameSubPlan     SubscriptionFieldName = "Plan"
 	SubscriptionFieldNameDiscount    SubscriptionFieldName = "Discount"
 	SubscriptionFieldNameDescription SubscriptionFieldName = "Description"
 	SubscriptionFieldNameComment     SubscriptionFieldName = "Comment"
 )
+
+func (s SubscriptionFieldName) String() string {
+	return string(s)
+}
 
 type SubscriptionFieldNames []SubscriptionFieldName
 
@@ -92,6 +96,7 @@ type SubscriptionTransitions map[UserRole]SubscriptionStateNames
 type SubscriptionState struct {
 	FieldPermissions SubscriptionFieldPermissions
 	Transitions      SubscriptionTransitions
+	RequiredFields   SubscriptionFieldNames
 }
 
 var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
@@ -120,6 +125,11 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 			},
 		},
 		Transitions: nil,
+		RequiredFields: SubscriptionFieldNames{
+			SubscriptionFieldNameSubUser,
+			SubscriptionFieldNameSubPlan,
+			SubscriptionFieldNameDiscount,
+		},
 	},
 	SubscriptionPreAuthorized: {
 		FieldPermissions: SubscriptionFieldPermissions{
@@ -177,6 +187,9 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 		Transitions: SubscriptionTransitions{
 			UserRolePartner: SubscriptionStateNames{SubscriptionPreFinished},
 		},
+		RequiredFields: SubscriptionFieldNames{
+			SubscriptionFieldNameStartDate,
+		},
 	},
 	SubscriptionPreFinished: {
 		FieldPermissions: SubscriptionFieldPermissions{
@@ -198,6 +211,9 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 			},
 		},
 		Transitions: nil,
+		RequiredFields: SubscriptionFieldNames{
+			SubscriptionFieldNameEndDate,
+		},
 	},
 	SubscriptionCancelled: {
 		FieldPermissions: SubscriptionFieldPermissions{
@@ -224,4 +240,12 @@ func NewStateChangeForbiddenError(availableStatusNames []SubscriptionStateName) 
 		statuses = fmt.Sprintf("%s, %s", statuses, translatedAvailableStatusName)
 	}
 	return fmt.Errorf("Вы можете перевести подписку только в доступные статусы: %s", statuses)
+}
+
+func NewRequiredFieldNotFilledError(fieldName SubscriptionFieldName) error {
+	return fmt.Errorf("Поле %s должно быть заполнено", i18n.Translate(ptlmLanguage, fmt.Sprintf("subscription:%s", fieldName.String())))
+}
+
+func NewForbiddenFieldChangeError(fieldName SubscriptionFieldName) error {
+	return fmt.Errorf("Вы не можете менять поле %s в текущем статусе", i18n.Translate(ptlmLanguage, fmt.Sprintf("subscription:%s", fieldName.String())))
 }
