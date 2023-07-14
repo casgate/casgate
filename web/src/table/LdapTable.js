@@ -50,6 +50,7 @@ class LdapTable extends React.Component {
       baseDn: "ou=People,dc=example,dc=com",
       autosync: 0,
       lastSync: "",
+      roleMappingItems: [],
     };
   }
 

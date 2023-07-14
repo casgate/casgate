@@ -54,6 +54,8 @@ type LdapUser struct {
 	GroupId string `json:"groupId"`
 	Phone   string `json:"phone"`
 	Address string `json:"address"`
+
+	Roles []string `json:"roles"`
 }
 
 func (ldap *Ldap) GetLdapConn() (c *LdapConn, err error) {
@@ -137,6 +139,10 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 		SearchAttributes = append(SearchAttributes, "uid")
 	}
 
+	for _, roleMappingItem := range ldapServer.RoleMappingItems {
+		SearchAttributes = append(SearchAttributes, roleMappingItem.Attribute)
+	}
+
 	searchReq := goldap.NewSearchRequest(ldapServer.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases,
 		0, 0, false,
 		ldapServer.Filter, SearchAttributes, nil)
@@ -148,6 +154,8 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 	if len(searchResult.Entries) == 0 {
 		return nil, errors.New("no result")
 	}
+
+	roleMappingMap := buildRoleMappingMap(ldapServer.RoleMappingItems)
 
 	var ldapUsers []LdapUser
 	for _, entry := range searchResult.Entries {
@@ -187,7 +195,17 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 			case "postalAddress":
 				user.PostalAddress = attribute.Values[0]
 			}
+
+			// check attribute value with role mapping rules
+			if roleMappingMapItem, ok := roleMappingMap[attribute.Name]; ok {
+				for _, value := range attribute.Values {
+					if roleMappingMapRoles, ok := roleMappingMapItem[value]; ok {
+						user.Roles = append(user.Roles, roleMappingMapRoles...)
+					}
+				}
+			}
 		}
+
 		ldapUsers = append(ldapUsers, user)
 	}
 
@@ -244,6 +262,7 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 			Email:             util.ReturnAnyNotEmpty(user.Email, user.EmailAddress, user.Mail),
 			Mobile:            util.ReturnAnyNotEmpty(user.Mobile, user.MobileTelephoneNumber, user.TelephoneNumber),
 			RegisteredAddress: util.ReturnAnyNotEmpty(user.PostalAddress, user.RegisteredAddress),
+			Roles:             user.Roles,
 		}
 	}
 	return res
@@ -294,13 +313,13 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 			}
 		}
 
+		name, err := syncUser.buildLdapUserName()
+		if err != nil {
+			return nil, nil, err
+		}
+
 		if !found {
 			score, err := organization.GetInitScore()
-			if err != nil {
-				return nil, nil, err
-			}
-
-			name, err := syncUser.buildLdapUserName()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -318,6 +337,11 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				Tag:         tag,
 				Score:       score,
 				Ldap:        syncUser.Uuid,
+				Properties:  map[string]string{},
+			}
+
+			if organization.DefaultApplication != "" {
+				newUser.SignupApplication = organization.DefaultApplication
 			}
 
 			affected, err := AddUser(newUser)
@@ -330,6 +354,20 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				continue
 			}
 		}
+
+		ldap, err := GetLdap(ldapId)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// sync user roles only when ldap has role mapping rules
+		if len(ldap.RoleMappingItems) > 0 {
+			err = SyncRoles(syncUser, name, owner)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+
 	}
 
 	return existUsers, failedUsers, err
@@ -356,6 +394,9 @@ func (ldapUser *LdapUser) buildLdapUserName() (string, error) {
 	}
 
 	if has {
+		if user.Ldap == ldapUser.Uuid {
+			return user.Name, nil
+		}
 		if user.Name == ldapUser.Uid {
 			return uidWithNumber, nil
 		}
@@ -415,4 +456,67 @@ func (user *User) getFieldFromLdapAttribute(attribute string) string {
 	default:
 		return ""
 	}
+}
+
+func buildRoleMappingMap(roleMappingItems []*RoleMappingItem) map[string]map[string][]string {
+	roleMappingMap := make(map[string]map[string][]string)
+	for _, roleMappingItem := range roleMappingItems {
+		for _, roleMappingValue := range roleMappingItem.Values {
+			if _, ok := roleMappingMap[roleMappingItem.Attribute]; !ok {
+				roleMappingMap[roleMappingItem.Attribute] = make(map[string][]string)
+			}
+
+			if _, ok := roleMappingMap[roleMappingItem.Attribute][roleMappingValue]; !ok {
+				roleMappingMap[roleMappingItem.Attribute][roleMappingValue] = make([]string, 0)
+			}
+
+			if roleMappingItem.Role == "" {
+				continue
+			}
+
+			roleMappingMap[roleMappingItem.Attribute][roleMappingValue] = append(roleMappingMap[roleMappingItem.Attribute][roleMappingValue], roleMappingItem.Role)
+		}
+	}
+	return roleMappingMap
+}
+
+func SyncRoles(syncUser LdapUser, name, owner string) error {
+	userId := util.GetId(owner, name)
+
+	currentUserRoles, err := GetRolesByUser(userId)
+	if err != nil {
+		return err
+	}
+
+	for _, role := range currentUserRoles {
+		if !util.InSlice(syncUser.Roles, role.GetId()) {
+			role.Roles = util.DeleteVal(role.Roles, userId)
+			_, err = UpdateRole(role.GetId(), role)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	for _, roleId := range syncUser.Roles {
+		role, err := GetRole(roleId)
+		if err != nil {
+			return err
+		}
+
+		if role.Owner != owner {
+			// we shouldn't add role from another organization (if it happened by any reason) to user, so skip
+			continue
+		}
+
+		if !util.InSlice(role.Users, userId) {
+			role.Users = append(role.Users, userId)
+
+			_, err = UpdateRole(role.GetId(), role)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

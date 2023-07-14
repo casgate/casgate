@@ -19,6 +19,7 @@ import * as LddpBackend from "./backend/LdapBackend";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
+import LdapRoleMappingTable from "./table/LdapRoleMappingTable";
 
 const {Option} = Select;
 
@@ -224,6 +225,19 @@ class LdapEditPage extends React.Component {
                 this.updateLdapField("autoSync", value);
               }} /><span>&nbsp;mins</span>
             {this.renderAutoSyncWarn()}
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+            {Setting.getLabel(i18next.t("ldap:Role mapping"), i18next.t("ldap:Role mapping - Tooltip"))} :
+          </Col>
+          <Col span={21}>
+            <LdapRoleMappingTable
+              title={i18next.t("ldap:Role mapping rules")}
+              table={this.state.ldap.roleMappingItems}
+              owner={this.state.ldap.owner}
+              onUpdateTable={(value) => {this.updateLdapField("roleMappingItems", value);}}
+            />
           </Col>
         </Row>
       </Card>

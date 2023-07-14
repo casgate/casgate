@@ -18,20 +18,27 @@ import (
 	"github.com/casdoor/casdoor/util"
 )
 
+type RoleMappingItem struct {
+	Attribute string   `json:"attribute"`
+	Values    []string `json:"values"`
+	Role      string   `json:"role"`
+}
+
 type Ldap struct {
 	Id          string `xorm:"varchar(100) notnull pk" json:"id"`
 	Owner       string `xorm:"varchar(100)" json:"owner"`
 	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
 
-	ServerName   string   `xorm:"varchar(100)" json:"serverName"`
-	Host         string   `xorm:"varchar(100)" json:"host"`
-	Port         int      `xorm:"int" json:"port"`
-	EnableSsl    bool     `xorm:"bool" json:"enableSsl"`
-	Username     string   `xorm:"varchar(100)" json:"username"`
-	Password     string   `xorm:"varchar(100)" json:"password"`
-	BaseDn       string   `xorm:"varchar(100)" json:"baseDn"`
-	Filter       string   `xorm:"varchar(200)" json:"filter"`
-	FilterFields []string `xorm:"varchar(100)" json:"filterFields"`
+	ServerName       string             `xorm:"varchar(100)" json:"serverName"`
+	Host             string             `xorm:"varchar(100)" json:"host"`
+	Port             int                `xorm:"int" json:"port"`
+	EnableSsl        bool               `xorm:"bool" json:"enableSsl"`
+	Username         string             `xorm:"varchar(100)" json:"username"`
+	Password         string             `xorm:"varchar(100)" json:"password"`
+	BaseDn           string             `xorm:"varchar(100)" json:"baseDn"`
+	Filter           string             `xorm:"varchar(200)" json:"filter"`
+	FilterFields     []string           `xorm:"varchar(100)" json:"filterFields"`
+	RoleMappingItems []*RoleMappingItem `xorm:"varchar(5000)" json:"roleMappingItems"`
 
 	AutoSync int    `json:"autoSync"`
 	LastSync string `xorm:"varchar(100)" json:"lastSync"`
@@ -111,7 +118,7 @@ func UpdateLdap(ldap *Ldap) (bool, error) {
 	}
 
 	affected, err := adapter.Engine.ID(ldap.Id).Cols("owner", "server_name", "host",
-		"port", "enable_ssl", "username", "password", "base_dn", "filter", "filter_fields", "auto_sync").Update(ldap)
+		"port", "enable_ssl", "username", "password", "base_dn", "filter", "filter_fields", "auto_sync", "role_mapping_items").Update(ldap)
 	if err != nil {
 		return false, nil
 	}
