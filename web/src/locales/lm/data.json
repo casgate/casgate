@@ -831,7 +831,9 @@
       "Submitter - Tooltip": "Пользователь, создавший подписку",
       "Unauthorized": "Отклонена",
       "User": "Заказчик",
-      "User - Tooltip": "User - Tooltip"
+      "User - Tooltip": "User - Tooltip",
+      "Pilot": "Пилот",
+      "WasPilot": "Был пилот"
     },
     "syncer": {
       "Affiliation table": "Таблица принадлежности",

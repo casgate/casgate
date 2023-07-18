@@ -26,6 +26,7 @@ func (s SubscriptionStateName) String() string {
 
 const (
 	SubscriptionNew           SubscriptionStateName = "New"
+	SubscriptionPilot         SubscriptionStateName = "Pilot"
 	SubscriptionPending       SubscriptionStateName = "Pending"
 	SubscriptionPreAuthorized SubscriptionStateName = "PreAuthorized"
 	SubscriptionIntoCommerce  SubscriptionStateName = "IntoCommerce"
@@ -69,6 +70,7 @@ const (
 	SubscriptionFieldNameDiscount    SubscriptionFieldName = "Discount"
 	SubscriptionFieldNameDescription SubscriptionFieldName = "Description"
 	SubscriptionFieldNameComment     SubscriptionFieldName = "Comment"
+	SubscriptionFieldNameWasPilot    SubscriptionFieldName = "WasPilot"
 )
 
 func (s SubscriptionFieldName) String() string {
@@ -112,7 +114,22 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 			},
 		},
 		Transitions: SubscriptionTransitions{
-			UserRolePartner: SubscriptionStateNames{SubscriptionPending},
+			UserRolePartner: SubscriptionStateNames{SubscriptionPending, SubscriptionPilot},
+		},
+	},
+	SubscriptionPilot: {
+		FieldPermissions: SubscriptionFieldPermissions{
+			UserRolePartner: {
+				SubscriptionFieldNameSubPlan,
+				SubscriptionFieldNameDiscount,
+				SubscriptionFieldNameDescription,
+			},
+		},
+		Transitions: SubscriptionTransitions{
+			UserRolePartner: SubscriptionStateNames{SubscriptionPending, SubscriptionCancelled},
+		},
+		RequiredFields: SubscriptionFieldNames{
+			SubscriptionFieldNameSubUser,
 		},
 	},
 	SubscriptionPending: {

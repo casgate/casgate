@@ -49,6 +49,7 @@ const SubscriptionUpdatedAdminLogBodyTmpl = `
 Дата начала: {{ .OldSubscriptionStartDate }}{{if ne .OldSubscriptionStartDate .SubscriptionStartDate}} -> {{ .SubscriptionStartDate }}{{end}}<br>
 Дата окончания: {{ .OldSubscriptionEndDate }}{{if ne .OldSubscriptionEndDate .SubscriptionEndDate}} -> {{ .SubscriptionEndDate }}{{end}}<br>
 Статус: {{ .OldSubscriptionStatus }}{{if ne .OldSubscriptionStatus .SubscriptionStatus}} -> {{ .SubscriptionStatus }}{{end}}<br>
+Был пилот: {{ .WasPilot }}<br>
 Описание: {{ .OldSubscriptionDescription }}{{if ne .OldSubscriptionDescription .SubscriptionDescription }} -> {{ .SubscriptionDescription }}{{end}}<br>
 Комментарий: {{ .OldSubscriptionComment }}{{if ne .OldSubscriptionComment .SubscriptionComment }} -> {{ .SubscriptionComment }}{{end}}<br>
 Создатель: <a href="{{ .SubscriptionCreatorURL }}">{{ .SubscriptionCreator }}</a><br>
@@ -69,6 +70,7 @@ const SubscriptionUpdatedPartnerBodyTmpl = `
 Дата начала: {{ .OldSubscriptionStartDate }}{{if ne .OldSubscriptionStartDate .SubscriptionStartDate}} -> {{ .SubscriptionStartDate }}{{end}}<br>
 Дата окончания: {{ .OldSubscriptionEndDate }}{{if ne .OldSubscriptionEndDate .SubscriptionEndDate}} -> {{ .SubscriptionEndDate }}{{end}}<br>
 Статус: {{ .OldSubscriptionStatus }}{{if ne .OldSubscriptionStatus .SubscriptionStatus}} -> {{ .SubscriptionStatus }}{{end}}<br>
+Был пилот: {{ .WasPilot }}<br>
 Описание: {{ .OldSubscriptionDescription }}{{if ne .OldSubscriptionDescription .SubscriptionDescription }} -> {{ .SubscriptionDescription }}{{end}}<br>
 Комментарий: {{ .OldSubscriptionComment }}{{if ne .OldSubscriptionComment .SubscriptionComment }} -> {{ .SubscriptionComment }}{{end}}<br>
 Создатель: <a href="{{ .SubscriptionCreatorURL }}">{{ .SubscriptionCreator }}</a><br>

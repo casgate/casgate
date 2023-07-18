@@ -47,6 +47,7 @@ class SubscriptionListPage extends BaseListPage {
       approver: this.props.account.name,
       approveTime: moment().format(),
       state: "New",
+      wasPilot: false,
     };
   }
 

@@ -111,6 +111,7 @@ type SubscriptionUpdatedMessage struct {
 	PartnerKPP                 string
 	ClientINN                  string
 	ClientKPP                  string
+	WasPilot                   string
 }
 
 type SubscriptionUpdatedPartnerMessage struct {
@@ -564,6 +565,11 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		subscriptionEndDate = current.EndDate.In(mskLoc).Format("2006-01-02")
 	}
 
+	wasPilot := "Нет"
+	if current.WasPilot {
+		wasPilot = "Да"
+	}
+
 	return &SubscriptionUpdatedMessage{
 		SubscriptionName:           current.Name,
 		PartnerName:                organization.Name,
@@ -601,5 +607,6 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		PartnerKPP:                 organization.Properties["КПП"],
 		ClientINN:                  client.Properties["ИНН"],
 		ClientKPP:                  client.Properties["КПП"],
+		WasPilot:                   wasPilot,
 	}, nil
 }
