@@ -239,7 +239,11 @@ func NotifyPartnerCreated(user *object.User, organization *object.Organization) 
 		return fmt.Errorf("tmpl.Execute: %w", err)
 	}
 
-	recipients := getBuiltInAdmins()
+	recipients, err := getBuiltInAdmins()
+	if err != nil {
+		return fmt.Errorf("getBuiltInAdmins: %w", err)
+	}
+
 	for _, email := range recipients {
 		errS := object.SendEmail(provider, titleBuf.String(), bodyBuf.String(), email, provider.DisplayName)
 		if errS != nil {
@@ -309,15 +313,19 @@ func getBuiltInEmailProvider() *object.Provider {
 	return nil
 }
 
-func getBuiltInAdmins() []string {
-	users, _ := object.GetUsers(builtInOrgCode)
-	var emails []string
-	for _, user := range users {
-		if user.IsGlobalAdmin {
-			emails = append(emails, user.Email)
-		}
+func getBuiltInAdmins() ([]string, error) {
+	orgId := util.GetId("admin", builtInOrgCode)
+	organization, err := object.GetOrganization(orgId)
+	if err != nil {
+		return nil, fmt.Errorf("object.GetOrganization: %w", err)
 	}
-	return emails
+
+	var emails []string
+	if organization.Email != "" {
+		emails = append(emails, organization.Email)
+	}
+
+	return emails, nil
 }
 
 func getDistributors(ctx *context.Context) []string {
@@ -356,9 +364,12 @@ func NotifyDistributorSubscriptionUpdated(ctx *context.Context, actor *object.Us
 }
 
 func NotifyAdminSubscriptionUpdated(actor *object.User, current, old *object.Subscription) error {
-	recipients := getBuiltInAdmins()
+	recipients, err := getBuiltInAdmins()
+	if err != nil {
+		return fmt.Errorf("getBuiltInAdmins: %w", err)
+	}
 
-	err := NotifyRecipientsSubscriptionUpdated(
+	err = NotifyRecipientsSubscriptionUpdated(
 		actor,
 		current,
 		old,
