@@ -48,6 +48,8 @@ type Subscription struct {
 	ApproveTime string `xorm:"varchar(100)" json:"approveTime"`
 
 	State string `xorm:"varchar(100)" json:"state"`
+
+	WasPilot bool `json:"wasPilot"`
 }
 
 func NewSubscription(owner string, user string, plan string, duration int) *Subscription {

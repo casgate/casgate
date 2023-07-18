@@ -194,6 +194,14 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		}
 	}
 
+	if old.WasPilot != new.WasPilot {
+		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameWasPilot)
+		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameWasPilot)
+		if !oldContains && !newContains {
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameWasPilot)
+		}
+	}
+
 	return nil
 }
 

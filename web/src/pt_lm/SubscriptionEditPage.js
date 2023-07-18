@@ -44,7 +44,6 @@ class SubscriptionEditPage extends React.Component {
   UNSAFE_componentWillMount() {
     this.getSubscription();
     this.getOrganizations();
-    this.getSubscriptionAvailableStates();
   }
 
   getStateOption(state, disabled) {
@@ -56,7 +55,7 @@ class SubscriptionEditPage extends React.Component {
   }
 
   getSubscriptionAvailableStates() {
-    const allStates = ["New", "Pending", "PreAuthorized", "IntoCommerce", "Authorized", "Unauthorized", "Started", "PreFinished", "Finished", "Cancelled"];
+    const allStates = ["New", "Pilot", "Pending", "PreAuthorized", "IntoCommerce", "Authorized", "Unauthorized", "Started", "PreFinished", "Finished", "Cancelled"];
     SubscriptionBackend.getSubscriptionAvailableStates(this.state.organizationName, this.state.subscriptionName)
       .then((subscriptionStates) => {
         const subscriptionStatesOptions = subscriptionStates.map((state) => this.getStateOption(state, false));
@@ -83,6 +82,7 @@ class SubscriptionEditPage extends React.Component {
 
         this.getUsers(subscription.owner);
         this.getPlanes(subscription.owner);
+        this.getSubscriptionAvailableStates();
       });
   }
 
@@ -286,6 +286,14 @@ class SubscriptionEditPage extends React.Component {
             />
           </Col>
         </Row>
+        <Row style={{marginTop: "20px", display: Setting.isDistributor(this.props.account) ? "none" : ""}}>
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("subscription:WasPilot"), i18next.t("subscription:WasPilot"))} :
+          </Col>
+          <Col span={(Setting.isMobile()) ? 22 : 2} >
+            {this.state.subscription.wasPilot ? "Да" : "Нет"}
+          </Col>
+        </Row>
         <Row style={{marginTop: "20px", display: "none"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
             {Setting.getLabel(i18next.t("general:Is enabled"), i18next.t("general:Is enabled - Tooltip"))} :
@@ -343,7 +351,7 @@ class SubscriptionEditPage extends React.Component {
           if (willExist) {
             this.props.history.push("/subscriptions");
           } else {
-            this.getSubscriptionAvailableStates();
+            this.getSubscription();
             this.props.history.push(`/subscriptions/${this.state.subscription.owner}/${this.state.subscription.name}`);
           }
         } else {

@@ -22,17 +22,18 @@ import (
 )
 
 var distributorAllowedUrls = map[string]bool{
-	"/api/logout":                        true,
-	"/api/get-account":                   true,
-	"/api/get-organization-applications": true,
-	"/api/get-organizations":             true,
-	"/api/get-subscriptions":             true,
-	"/api/get-subscription":              true,
-	"/api/get-plans":                     true,
-	"/api/get-users":                     true,
-	"/api/get-user":                      true,
-	"/api/update-subscription":           true,
-	"/api/get-user-application":          true,
+	"/api/logout":                            true,
+	"/api/get-account":                       true,
+	"/api/get-organization-applications":     true,
+	"/api/get-organizations":                 true,
+	"/api/get-subscriptions":                 true,
+	"/api/get-subscription":                  true,
+	"/api/get-plans":                         true,
+	"/api/get-users":                         true,
+	"/api/get-user":                          true,
+	"/api/update-subscription":               true,
+	"/api/get-user-application":              true,
+	"/api/get-available-subscription-states": true,
 }
 
 func UserRoleFilter(ctx *context.Context) {
