@@ -177,6 +177,8 @@ class SubscriptionListPage extends BaseListPage {
           switch (text) {
           case "New":
             return Setting.getTag("success", i18next.t("subscription:New"));
+          case "Pilot":
+            return Setting.getTag("success", i18next.t("subscription:Pilot"));
           case "Pending":
             return Setting.getTag("warning", i18next.t("subscription:Pending"));
           case "PreAuthorized":
@@ -220,7 +222,7 @@ class SubscriptionListPage extends BaseListPage {
           return (
             <div>
               <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/subscriptions/${record.owner}/${record.name}`)}>{i18next.t("general:Edit")}</Button>
-              {!Setting.isDistributor(this.props.account) &&
+              {!Setting.isDistributor(this.props.account) && record.state === "New" &&
                 <PopconfirmModal
                   title={i18next.t("general:Sure to delete") + `: ${record.name} ?`}
                   onConfirm={() => this.deleteSubscription(index)}

@@ -202,7 +202,7 @@ func (c *ApiController) DeleteSubscription() {
 		return
 	}
 
-	if existing.State != "New" && !c.IsGlobalAdmin() {
+	if existing.State != "New" {
 		c.ResponseError("Cannot delete subscription with current status")
 		return
 	}
