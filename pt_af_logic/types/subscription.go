@@ -124,7 +124,9 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 				SubscriptionFieldNameDescription,
 			},
 		},
-		Transitions: nil,
+		Transitions: SubscriptionTransitions{
+			UserRoleGlobalAdmin: SubscriptionStateNames{SubscriptionUnauthorized, SubscriptionPreAuthorized},
+		},
 		RequiredFields: SubscriptionFieldNames{
 			SubscriptionFieldNameSubUser,
 			SubscriptionFieldNameSubPlan,
@@ -150,7 +152,9 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 				SubscriptionFieldNameDescription,
 			},
 		},
-		Transitions: nil,
+		Transitions: SubscriptionTransitions{
+			UserRoleGlobalAdmin: SubscriptionStateNames{SubscriptionAuthorized, SubscriptionCancelled},
+		},
 	},
 	SubscriptionUnauthorized: {
 		FieldPermissions: SubscriptionFieldPermissions{

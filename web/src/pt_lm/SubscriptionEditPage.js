@@ -31,6 +31,7 @@ class SubscriptionEditPage extends React.Component {
       organizationName: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
       subscriptionName: props.match.params.subscriptionName,
       subscription: null,
+      subscriptionStateOptions: [],
       organizations: [],
       users: [],
       planes: [],
@@ -43,6 +44,29 @@ class SubscriptionEditPage extends React.Component {
   UNSAFE_componentWillMount() {
     this.getSubscription();
     this.getOrganizations();
+    this.getSubscriptionAvailableStates();
+  }
+
+  getStateOption(state, disabled) {
+    const option = Setting.getOption(i18next.t(`subscription:${state}`), state);
+    if (disabled) {
+      option.style = {color: "#000000", opacity: 0.25};
+    }
+    return option;
+  }
+
+  getSubscriptionAvailableStates() {
+    const allStates = ["New", "Pending", "PreAuthorized", "IntoCommerce", "Authorized", "Unauthorized", "Started", "PreFinished", "Finished", "Cancelled"];
+    SubscriptionBackend.getSubscriptionAvailableStates(this.state.organizationName, this.state.subscriptionName)
+      .then((subscriptionStates) => {
+        const subscriptionStatesOptions = subscriptionStates.map((state) => this.getStateOption(state, false));
+        if (this.state.isGlobalAdmin) {
+          subscriptionStatesOptions.push(...allStates.filter(n => !subscriptionStates.includes(n)).map((state) => this.getStateOption(state, true)));
+        }
+        this.setState({
+          subscriptionStateOptions: subscriptionStatesOptions,
+        });
+      });
   }
 
   getSubscription() {
@@ -258,18 +282,7 @@ class SubscriptionEditPage extends React.Component {
 
               this.updateSubscriptionField("state", value);
             })}
-            options={[
-              {value: "New", name: i18next.t("subscription:New")},
-              {value: "Pending", name: i18next.t("subscription:Pending")},
-              {value: "PreAuthorized", name: i18next.t("subscription:PreAuthorized")},
-              {value: "IntoCommerce", name: i18next.t("subscription:IntoCommerce")},
-              {value: "Authorized", name: i18next.t("subscription:Authorized")},
-              {value: "Unauthorized", name: i18next.t("subscription:Unauthorized")},
-              {value: "Started", name: i18next.t("subscription:Started")},
-              {value: "PreFinished", name: i18next.t("subscription:PreFinished")},
-              {value: "Finished", name: i18next.t("subscription:Finished")},
-              {value: "Cancelled", name: i18next.t("subscription:Cancelled")},
-            ].map((item) => Setting.getOption(item.name, item.value))}
+            options={this.state.subscriptionStateOptions}
             />
           </Col>
         </Row>
@@ -330,6 +343,7 @@ class SubscriptionEditPage extends React.Component {
           if (willExist) {
             this.props.history.push("/subscriptions");
           } else {
+            this.getSubscriptionAvailableStates();
             this.props.history.push(`/subscriptions/${this.state.subscription.owner}/${this.state.subscription.name}`);
           }
         } else {

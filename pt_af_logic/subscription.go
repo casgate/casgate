@@ -255,3 +255,18 @@ func GetSubscriptionFilter(user *object.User) builder.Cond {
 
 	return nil
 }
+
+func GetAvailableTransitions(user *object.User, subscription *object.Subscription) ([]PTAFLTypes.SubscriptionStateName, error) {
+	subscriptionRole := GetUserRole(user)
+
+	subscriptionState := PTAFLTypes.SubscriptionStateName(subscription.State)
+	state, ok := PTAFLTypes.SubscriptionStateMap[subscriptionState]
+	if !ok {
+		return nil, fmt.Errorf("incorrect state: %s", subscriptionState)
+	}
+
+	roleAvailableTransitions, _ := state.Transitions[subscriptionRole]
+	roleAvailableTransitions = append([]PTAFLTypes.SubscriptionStateName{subscriptionState}, roleAvailableTransitions...)
+
+	return roleAvailableTransitions, nil
+}

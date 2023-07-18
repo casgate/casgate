@@ -205,3 +205,32 @@ func (c *ApiController) DeleteSubscription() {
 	c.Data["json"] = wrapActionResponse(object.DeleteSubscription(&subscription))
 	c.ServeJSON()
 }
+
+// GetAvailableSubscriptionStates
+// @Title GetAvailableSubscriptionStates
+// @Tag Subscription API
+// @Description get available subscription states for current user
+// @Param   id     query    string  true        "The id ( owner/name ) of the subscription"
+// @Success 200 {object} string The Response object
+// @router /get-available-subscription-states [get]
+func (c *ApiController) GetAvailableSubscriptionStates() {
+	id := c.Input().Get("id")
+
+	user := c.getCurrentUser()
+	filter := pt_af_logic.GetSubscriptionFilter(user)
+
+	subscription, err := object.GetSubscription(id, filter)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	availableStates, err := pt_af_logic.GetAvailableTransitions(user, subscription)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.Data["json"] = availableStates
+	c.ServeJSON()
+}
