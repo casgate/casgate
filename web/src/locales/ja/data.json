@@ -370,6 +370,8 @@
     "Base DN - Tooltip": "LDAP検索中のBase DN",
     "CN": "CN",
     "Edit LDAP": "LDAPを編集",
+    "Enable Role Mapping": "Enable Role Mapping",
+    "Enable Role Mapping - Tooltip": "Enable Role Mapping - Tooltip",
     "Enable SSL": "SSL を有効にする",
     "Enable SSL - Tooltip": "SSLを有効にするかどうか",
     "Filter fields": "Filter fields",

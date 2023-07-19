@@ -370,6 +370,8 @@
     "Base DN - Tooltip": "Base DN selama pencarian LDAP",
     "CN": "CN",
     "Edit LDAP": "Mengedit LDAP",
+    "Enable Role Mapping": "Enable Role Mapping",
+    "Enable Role Mapping - Tooltip": "Enable Role Mapping - Tooltip",
     "Enable SSL": "Aktifkan SSL",
     "Enable SSL - Tooltip": "Apakah untuk mengaktifkan SSL?",
     "Filter fields": "Filter fields",

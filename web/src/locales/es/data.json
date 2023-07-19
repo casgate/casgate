@@ -370,6 +370,8 @@
     "Base DN - Tooltip": "Base DN durante la búsqueda LDAP",
     "CN": "CN (siglas en inglés) podría traducirse como \"Red de Comunicaciones\". Sin embargo, sin más contexto, no es posible saber cuál es el significado exacto de estas siglas",
     "Edit LDAP": "Editar LDAP",
+    "Enable Role Mapping": "Enable Role Mapping",
+    "Enable Role Mapping - Tooltip": "Enable Role Mapping - Tooltip",
     "Enable SSL": "Habilitar SSL",
     "Enable SSL - Tooltip": "Si se habilita SSL",
     "Filter fields": "Filter fields",

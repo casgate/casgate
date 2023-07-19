@@ -370,6 +370,8 @@
     "Base DN - Tooltip": "Đơn vị căn bản (Base DN) trong quá trình tìm kiếm LDAP",
     "CN": "CN",
     "Edit LDAP": "Chỉnh sửa LDAP",
+    "Enable Role Mapping": "Enable Role Mapping",
+    "Enable Role Mapping - Tooltip": "Enable Role Mapping - Tooltip",
     "Enable SSL": "Kích hoạt SSL",
     "Enable SSL - Tooltip": "Có nên kích hoạt SSL hay không?",
     "Filter fields": "Filter fields",

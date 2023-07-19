@@ -197,10 +197,10 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 			}
 
 			// check attribute value with role mapping rules
-			if roleMappingMapItem, ok := roleMappingMap[attribute.Name]; ok {
+			if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attribute.Name)]; ok {
 				for _, value := range attribute.Values {
-					if roleMappingMapRoles, ok := roleMappingMapItem[value]; ok {
-						user.Roles = append(user.Roles, roleMappingMapRoles...)
+					if roleMappingMapRoles, ok := roleMappingMapItem[RoleMappingItemValue(value)]; ok {
+						user.Roles = append(user.Roles, roleMappingMapRoles.StrRoles()...)
 					}
 				}
 			}
@@ -360,8 +360,7 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 			return nil, nil, err
 		}
 
-		// sync user roles only when ldap has role mapping rules
-		if len(ldap.RoleMappingItems) > 0 {
+		if ldap.EnableRoleMapping {
 			err = SyncRoles(syncUser, name, owner)
 			if err != nil {
 				return nil, nil, err
@@ -456,67 +455,4 @@ func (user *User) getFieldFromLdapAttribute(attribute string) string {
 	default:
 		return ""
 	}
-}
-
-func buildRoleMappingMap(roleMappingItems []*RoleMappingItem) map[string]map[string][]string {
-	roleMappingMap := make(map[string]map[string][]string)
-	for _, roleMappingItem := range roleMappingItems {
-		for _, roleMappingValue := range roleMappingItem.Values {
-			if _, ok := roleMappingMap[roleMappingItem.Attribute]; !ok {
-				roleMappingMap[roleMappingItem.Attribute] = make(map[string][]string)
-			}
-
-			if _, ok := roleMappingMap[roleMappingItem.Attribute][roleMappingValue]; !ok {
-				roleMappingMap[roleMappingItem.Attribute][roleMappingValue] = make([]string, 0)
-			}
-
-			if roleMappingItem.Role == "" {
-				continue
-			}
-
-			roleMappingMap[roleMappingItem.Attribute][roleMappingValue] = append(roleMappingMap[roleMappingItem.Attribute][roleMappingValue], roleMappingItem.Role)
-		}
-	}
-	return roleMappingMap
-}
-
-func SyncRoles(syncUser LdapUser, name, owner string) error {
-	userId := util.GetId(owner, name)
-
-	currentUserRoles, err := GetRolesByUser(userId)
-	if err != nil {
-		return err
-	}
-
-	for _, role := range currentUserRoles {
-		if !util.InSlice(syncUser.Roles, role.GetId()) {
-			role.Roles = util.DeleteVal(role.Roles, userId)
-			_, err = UpdateRole(role.GetId(), role)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	for _, roleId := range syncUser.Roles {
-		role, err := GetRole(roleId)
-		if err != nil {
-			return err
-		}
-
-		if role.Owner != owner {
-			// we shouldn't add role from another organization (if it happened by any reason) to user, so skip
-			continue
-		}
-
-		if !util.InSlice(role.Users, userId) {
-			role.Users = append(role.Users, userId)
-
-			_, err = UpdateRole(role.GetId(), role)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }

@@ -171,6 +171,13 @@ func (c *ApiController) UpdateLdap() {
 		return
 	}
 
+	for _, roleMappingItem := range ldap.RoleMappingItems {
+		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
+			c.ResponseError(c.T("general:Missing parameter"))
+			return
+		}
+	}
+
 	prevLdap, err := object.GetLdap(ldap.Id)
 	if err != nil {
 		c.ResponseError(err.Error())

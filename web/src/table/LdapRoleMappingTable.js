@@ -16,7 +16,6 @@ import React from "react";
 import {Button, Col, Divider, Input, Row, Select, Space, Table, Tooltip} from "antd";
 import * as Setting from "../Setting";
 import i18next from "i18next";
-import * as LdapBackend from "../backend/LdapBackend";
 import {DeleteOutlined, PlusOutlined} from "@ant-design/icons";
 import * as RoleBackend from "../backend/RoleBackend";
 
@@ -28,8 +27,14 @@ class LdapRoleMappingTable extends React.Component {
       attributes: this.getDefaultAttributes(),
       newAttributeName: "",
       roles: [],
+      roleMappingTable: this.props.table ? this.props.table.map((item, index) => {
+        item.key = index;
+        return item;
+      }) : [],
     };
   }
+
+  count = this.props.table?.length ?? 0;
 
   componentDidMount() {
     this.getRoles(this.props.owner);
@@ -46,7 +51,15 @@ class LdapRoleMappingTable extends React.Component {
   }
 
   updateTable(table) {
-    this.props.onUpdateTable(table);
+    this.setState({
+      roleMappingTable: table,
+    });
+
+    this.props.onUpdateTable([...table].map((item) => {
+      const newItem = Setting.deepCopy(item);
+      delete newItem.key;
+      return newItem;
+    }));
   }
 
   updateField(table, index, key, value) {
@@ -55,10 +68,12 @@ class LdapRoleMappingTable extends React.Component {
   }
 
   addRow(table) {
-    const row = {attribute: "", values: [], role: ""};
+    const row = {key: this.count, attribute: "", values: [], role: ""};
     if (!table) {
       table = [];
     }
+
+    this.count += 1;
     table = Setting.addRow(table, row);
     this.updateTable(table);
   }
@@ -75,18 +90,8 @@ class LdapRoleMappingTable extends React.Component {
   }
 
   deleteRow(table, i) {
-    LdapBackend.deleteLdap(table[i])
-      .then((res) => {
-        if (res.status === "ok") {
-          table = Setting.deleteRow(table, i);
-          this.updateTable(table);
-        } else {
-          Setting.showMessage("error", `${i18next.t("general:Failed to delete")}: ${res.msg}`);
-        }
-      })
-      .catch(error => {
-        Setting.showMessage("error", `Delete LDAP server failed: ${error}`);
-      });
+    table = Setting.deleteRow(table, i);
+    this.updateTable(table);
   }
 
   getDefaultAttributes() {
@@ -152,7 +157,7 @@ class LdapRoleMappingTable extends React.Component {
         dataIndex: "values",
         key: "values",
         ellipsis: true,
-        sorter: (a, b) => a.attribute.localeCompare(b.attribute),
+        sorter: (a, b) => a.values.length - b.values.length,
         render: (text, record, index) => {
           return (
             <Select virtual={false} style={{width: "100%"}}
@@ -202,7 +207,7 @@ class LdapRoleMappingTable extends React.Component {
     ];
 
     return (
-      <Table scroll={{x: "max-content"}} rowKey={(record) => `${record.attribute}/${record.value}/${record.role}`} columns={columns} dataSource={table} size="middle" bordered pagination={false}
+      <Table scroll={{x: "max-content"}} rowKey="key" columns={columns} dataSource={table} size="middle" bordered pagination={false}
         title={() => (
           <div>
             {this.props.title}&nbsp;&nbsp;&nbsp;&nbsp;
@@ -220,7 +225,7 @@ class LdapRoleMappingTable extends React.Component {
         <Row style={{marginTop: "20px"}}>
           <Col span={24}>
             {
-              this.renderTable(this.props.table)
+              this.renderTable(this.state.roleMappingTable)
             }
           </Col>
         </Row>

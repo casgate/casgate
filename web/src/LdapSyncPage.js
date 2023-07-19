@@ -38,8 +38,6 @@ class LdapSyncPage extends React.Component {
 
   syncUsers() {
     const selectedUsers = this.state.selectedUsers;
-    // eslint-disable-next-line no-console
-    console.log(selectedUsers);
     if (selectedUsers === null || selectedUsers.length === 0) {
       Setting.showMessage("error", "Please select al least 1 user first");
       return;
@@ -205,12 +203,13 @@ class LdapSyncPage extends React.Component {
       },
     ];
 
-    if (this.state.ldap?.roleMappingItems?.length > 0) {
+    if (this.state.ldap?.enableRoleMapping) {
       columns.push({
         title: i18next.t("general:Roles"),
         dataIndex: "roles",
         key: "roles",
-        sorter: false,
+        width: "420px",
+        sorter: (a, b) => (a.roles?.length || 0) - (b.roles?.length || 0),
         render: (text, record, index) => {
           return text?.join(",");
         },
