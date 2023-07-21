@@ -65,6 +65,7 @@ require (
 	github.com/xorm-io/xorm v1.1.6
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/crypto v0.6.0
+	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/net v0.7.0
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914

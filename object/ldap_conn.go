@@ -137,6 +137,12 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 		SearchAttributes = append(SearchAttributes, "uid")
 	}
 
+	var attributeMappingMap AttributeMappingMap
+	if ldapServer.EnableAttributeMapping {
+		attributeMappingMap = buildAttributeMappingMap(ldapServer.AttributeMappingItems)
+		SearchAttributes = append(SearchAttributes, attributeMappingMap.Keys()...)
+	}
+
 	searchReq := goldap.NewSearchRequest(ldapServer.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases,
 		0, 0, false,
 		ldapServer.Filter, SearchAttributes, nil)
@@ -153,6 +159,14 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 	for _, entry := range searchResult.Entries {
 		var user LdapUser
 		for _, attribute := range entry.Attributes {
+			if ldapServer.EnableAttributeMapping {
+				MapAttributeToUser(attribute, &user, attributeMappingMap)
+				continue
+			}
+
+			if user.Uid == "" {
+			}
+
 			switch attribute.Name {
 			case "uidNumber":
 				user.UidNumber = attribute.Values[0]
@@ -243,6 +257,7 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 			DisplayName:       user.DisplayName,
 			Email:             util.ReturnAnyNotEmpty(user.Email, user.EmailAddress, user.Mail),
 			Mobile:            util.ReturnAnyNotEmpty(user.Mobile, user.MobileTelephoneNumber, user.TelephoneNumber),
+			Phone:             user.Phone,
 			RegisteredAddress: util.ReturnAnyNotEmpty(user.PostalAddress, user.RegisteredAddress),
 		}
 	}
@@ -318,6 +333,11 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				Tag:         tag,
 				Score:       score,
 				Ldap:        syncUser.Uuid,
+				Properties:  map[string]string{},
+			}
+
+			if organization.DefaultApplication != "" {
+				newUser.SignupApplication = organization.DefaultApplication
 			}
 
 			affected, err := AddUser(newUser)
