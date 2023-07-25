@@ -29,7 +29,7 @@ type Message struct {
 	PartnerManagerContact ContactData       `json:"partnerManagerContact"`
 	PartnerProperties     map[string]string `json:"partnerProperties"`
 	Discount              int               `json:"sale"`
-	BillingStartDate      string            `json:"billingStartDate"`
+	BillingStartDate      *string           `json:"billingStartDate"`
 	DistribShortName      string            `json:"distribShortName"`
 	DistribProperties     map[string]string `json:"distribProperties"`
 	PtCloudManagerContact ContactData       `json:"ptCloudManagerContact"`
@@ -741,7 +741,6 @@ func NotifyCRMSubscriptionUpdated(ctx *context.Context, _ *object.User, current,
 		},
 		Product:          "Cloud Application Firewall",
 		Discount:         current.Discount,
-		BillingStartDate: subscriptionStartDate,
 		DistribShortName: distributors[0].Name,
 		DistribProperties: map[string]string{
 			"INN": distributors[0].Properties["ИНН"],
@@ -752,6 +751,10 @@ func NotifyCRMSubscriptionUpdated(ctx *context.Context, _ *object.User, current,
 			Phone: getPhoneWithCountryCode(adminOrganization.CountryCode, adminOrganization.Phone),
 			Name:  adminOrganization.Manager,
 		},
+	}
+
+	if subscriptionStartDate != "" {
+		msg.BillingStartDate = &subscriptionStartDate
 	}
 
 	titleTmpl, err := template.New("").Parse(titleTemplate)
