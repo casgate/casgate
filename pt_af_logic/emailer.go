@@ -2,6 +2,7 @@ package pt_af_logic
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -18,6 +19,7 @@ import (
 
 type Message struct {
 	Action                string            `json:"action"`
+	SubscriptionId        string            `json:"subscriptionId"`
 	ClientShortName       string            `json:"clientShortName"`
 	ClientProperties      map[string]string `json:"clientProperties"`
 	ClientContact         ContactData       `json:"clientContact"`
@@ -25,6 +27,12 @@ type Message struct {
 	Plan                  string            `json:"plan"`
 	PartnerShortName      string            `json:"partnerShortName"`
 	PartnerManagerContact ContactData       `json:"partnerManagerContact"`
+	PartnerProperties     map[string]string `json:"partnerProperties"`
+	Discount              int               `json:"sale"`
+	BillingStartDate      string            `json:"billingStartDate"`
+	DistribShortName      string            `json:"distribShortName"`
+	DistribProperties     map[string]string `json:"distribProperties"`
+	PtCloudManagerContact ContactData       `json:"ptCloudManagerContact"`
 }
 
 type ContactData struct {
@@ -240,18 +248,18 @@ func NotifyPartnerCreated(user *object.User, organization *object.Organization) 
 		return fmt.Errorf("tmpl.Execute: %w", err)
 	}
 
-	recipients, err := getBuiltInAdmins()
+	recipient, err := getBuiltInAdminEmail()
 	if err != nil {
 		return fmt.Errorf("getBuiltInAdmins: %w", err)
 	}
 
-	for _, email := range recipients {
-		errS := object.SendEmail(provider, titleBuf.String(), bodyBuf.String(), email, provider.DisplayName)
-		if errS != nil {
-			err = fmt.Errorf("%v; %v", err, errS)
-		} else {
-			err = errS
-		}
+	if recipient == "" {
+		return nil
+	}
+
+	err = object.SendEmail(provider, titleBuf.String(), bodyBuf.String(), recipient, provider.DisplayName)
+	if err != nil {
+		return fmt.Errorf("object.SendEmail: %w", err)
 	}
 
 	return err
@@ -279,18 +287,37 @@ func NotifySubscriptionUpdated(ctx *context.Context, actor *object.User, current
 				util.LogError(ctx, fmt.Errorf("NotifyPartnerSubscriptionUpdated: %w", err).Error())
 			}
 		}
-	case PTAFLTypes.SubscriptionAuthorized.String(), PTAFLTypes.SubscriptionPreFinished.String():
+	case PTAFLTypes.SubscriptionStarted.String(), PTAFLTypes.SubscriptionFinished.String():
+		if stateChanged {
+			err := NotifyCRMSubscriptionUpdated(ctx, actor, current, old)
+			if err != nil {
+				util.LogError(ctx, fmt.Errorf("NotifyCRMSubscriptionUpdated: %w", err).Error())
+			}
+		}
+	case PTAFLTypes.SubscriptionAuthorized.String():
 		if stateChanged {
 			err := NotifyDistributorSubscriptionUpdated(ctx, actor, current, old)
 			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyAdminDistributorSubscriptionUpdated(distributors): %w", err).Error())
+				util.LogError(ctx, fmt.Errorf("NotifyDistributorSubscriptionUpdated: %w", err).Error())
+			}
+
+			err = NotifyCRMSubscriptionUpdated(ctx, actor, current, old)
+			if err != nil {
+				util.LogError(ctx, fmt.Errorf("NotifyCRMSubscriptionUpdated: %w", err).Error())
+			}
+		}
+	case PTAFLTypes.SubscriptionPreFinished.String():
+		if stateChanged {
+			err := NotifyDistributorSubscriptionUpdated(ctx, actor, current, old)
+			if err != nil {
+				util.LogError(ctx, fmt.Errorf("NotifyDistributorSubscriptionUpdated: %w", err).Error())
 			}
 		}
 	case PTAFLTypes.SubscriptionIntoCommerce.String(), PTAFLTypes.SubscriptionPending.String():
 		if stateChanged {
 			err := NotifyAdminSubscriptionUpdated(actor, current, old)
 			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyAdminDistributorSubscriptionUpdated(admins): %w", err).Error())
+				util.LogError(ctx, fmt.Errorf("NotifyAdminSubscriptionUpdated: %w", err).Error())
 			}
 		}
 	}
@@ -314,23 +341,31 @@ func getBuiltInEmailProvider() *object.Provider {
 	return nil
 }
 
-func getBuiltInAdmins() ([]string, error) {
+func getBuiltInAdminOrg() (*object.Organization, error) {
 	orgId := util.GetId("admin", builtInOrgCode)
 	organization, err := object.GetOrganization(orgId)
 	if err != nil {
 		return nil, fmt.Errorf("object.GetOrganization: %w", err)
 	}
-
-	var emails []string
-	if organization.Email != "" {
-		emails = append(emails, organization.Email)
-	}
-
-	return emails, nil
+	return organization, nil
 }
 
-func getDistributors(ctx *context.Context) []string {
-	var emails []string
+func getBuiltInAdminEmail() (string, error) {
+	organization, err := getBuiltInAdminOrg()
+	if err != nil {
+		return "", fmt.Errorf("getBuiltInAdminOrg: %w", err)
+	}
+
+	var email string
+	if organization.Email != "" {
+		email = organization.Email
+	}
+
+	return email, nil
+}
+
+func getDistributors(ctx *context.Context) []*object.User {
+	var distrs []*object.User
 	role, _ := object.GetRole(util.GetId(builtInOrgCode, string(PTAFLTypes.UserRoleDistributor)))
 	if role != nil {
 		for _, roleUserId := range role.Users {
@@ -338,16 +373,27 @@ func getDistributors(ctx *context.Context) []string {
 			if err != nil {
 				util.LogError(ctx, fmt.Errorf("object.GetUser: %w", err).Error())
 			}
-			if roleUser != nil && roleUser.Email != "" {
-				emails = append(emails, roleUser.Email)
+			if roleUser != nil {
+				distrs = append(distrs, roleUser)
 			}
+		}
+	}
+	return distrs
+}
+
+func getDistributorEmails(ctx *context.Context) []string {
+	var emails []string
+	distributors := getDistributors(ctx)
+	for _, distributor := range distributors {
+		if distributor.Email != "" {
+			emails = append(emails, distributor.Email)
 		}
 	}
 	return emails
 }
 
 func NotifyDistributorSubscriptionUpdated(ctx *context.Context, actor *object.User, current, old *object.Subscription) error {
-	recipients := getDistributors(ctx)
+	recipients := getDistributorEmails(ctx)
 
 	err := NotifyRecipientsSubscriptionUpdated(
 		actor,
@@ -365,9 +411,13 @@ func NotifyDistributorSubscriptionUpdated(ctx *context.Context, actor *object.Us
 }
 
 func NotifyAdminSubscriptionUpdated(actor *object.User, current, old *object.Subscription) error {
-	recipients, err := getBuiltInAdmins()
+	recipient, err := getBuiltInAdminEmail()
 	if err != nil {
 		return fmt.Errorf("getBuiltInAdmins: %w", err)
+	}
+
+	if recipient == "" {
+		return nil
 	}
 
 	err = NotifyRecipientsSubscriptionUpdated(
@@ -376,7 +426,7 @@ func NotifyAdminSubscriptionUpdated(actor *object.User, current, old *object.Sub
 		old,
 		SubscriptionUpdatedAdminDistributorSubjTmpl,
 		SubscriptionUpdatedAdminLogBodyTmpl,
-		recipients,
+		[]string{recipient},
 	)
 
 	return err
@@ -609,4 +659,128 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 		ClientKPP:                  client.Properties["КПП"],
 		WasPilot:                   wasPilot,
 	}, nil
+}
+
+func NotifyCRMSubscriptionUpdated(ctx *context.Context, _ *object.User, current, _ *object.Subscription) error {
+	provider := getBuiltInEmailProvider()
+	if provider == nil {
+		return errors.New("no email provider registered")
+	}
+	if current.User == "" {
+		return errors.New("no client detected in subscription")
+	}
+
+	orgId := fmt.Sprintf("admin/%s", current.Owner)
+	organization, err := object.GetOrganization(orgId)
+	if err != nil {
+		return fmt.Errorf("object.GetOrganization: %w", err)
+	}
+
+	client, err := object.GetUser(current.User)
+	if err != nil {
+		return fmt.Errorf("object.GetUser: %w", err)
+	}
+
+	mskLoc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		return fmt.Errorf("time.LoadLocation: %w", err)
+	}
+
+	var subscriptionStartDate string
+
+	if !current.StartDate.IsZero() {
+		subscriptionStartDate = current.StartDate.In(mskLoc).Format("2006-01-02")
+	}
+
+	adminOrganization, err := getBuiltInAdminOrg()
+	if err != nil {
+		return fmt.Errorf("getBuiltInAdminOrg: %w", err)
+	}
+
+	distributors := getDistributors(ctx)
+	if len(distributors) == 0 {
+		return fmt.Errorf("getDistributors got 0 values")
+	}
+
+	msg := Message{
+		Action:          current.State,
+		SubscriptionId:  current.Name,
+		Plan:            current.Plan,
+		ClientShortName: client.Name,
+		ClientContact: ContactData{
+			Email: client.Email,
+			Phone: getPhoneWithCountryCode(client.CountryCode, client.Phone),
+			Name:  client.DisplayName,
+		},
+		ClientProperties: map[string]string{
+			"ИНН": client.Properties["ИНН"],
+			"КПП": client.Properties["КПП"],
+		},
+		PartnerShortName: organization.Name,
+		PartnerManagerContact: ContactData{
+			Email: organization.Email,
+			Phone: getPhoneWithCountryCode(organization.CountryCode, organization.Phone),
+			Name:  organization.Manager,
+		},
+		PartnerProperties: map[string]string{
+			"ИНН": organization.Properties["ИНН"],
+			"КПП": organization.Properties["КПП"],
+		},
+		Product:          "PT Application Firewall",
+		Discount:         current.Discount,
+		BillingStartDate: subscriptionStartDate,
+		DistribShortName: distributors[0].Name,
+		DistribProperties: map[string]string{
+			"ИНН": distributors[0].Properties["ИНН"],
+			"КПП": distributors[0].Properties["КПП"],
+		},
+		PtCloudManagerContact: ContactData{
+			Email: adminOrganization.Email,
+			Phone: getPhoneWithCountryCode(adminOrganization.CountryCode, adminOrganization.Phone),
+			Name:  adminOrganization.Manager,
+		},
+	}
+
+	var titleTemplate string
+	switch current.State {
+	case PTAFLTypes.SubscriptionAuthorized.String():
+		titleTemplate = SubscriptionCreatedSubjCrmTmpl
+	case PTAFLTypes.SubscriptionStarted.String(), PTAFLTypes.SubscriptionFinished.String():
+		titleTemplate = SubscriptionUpdatedSubjCrmTmpl
+	}
+
+	titleTmpl, err := template.New("").Parse(titleTemplate)
+	if err != nil {
+		return fmt.Errorf("template.Parse(title): %w", err)
+	}
+
+	var titleBuf bytes.Buffer
+	err = titleTmpl.Execute(&titleBuf, msg)
+	if err != nil {
+		return fmt.Errorf("titleTmpl.Execute: %w", err)
+	}
+
+	data, err := json.Marshal(msg)
+	content := string(data)
+	if err != nil {
+		return err
+	}
+
+	err = object.SendEmailWithContentType(provider, titleBuf.String(), content, crmEmail, provider.DisplayName, "text/plain")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getPhoneWithCountryCode(countryCode, phone string) string {
+	result := phone
+	switch countryCode {
+	case "RU":
+		result = "+7" + result
+	case "CN":
+		result = "+86" + result
+	}
+	return result
 }

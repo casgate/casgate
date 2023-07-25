@@ -4,6 +4,7 @@ package pt_af_logic
 const builtInOrgCode = "built-in"
 
 const logEmail = "lmp-log@ptsecurity.com"
+const crmEmail = "crm-integration@ptsecurity.com"
 
 const (
 	lowerCharSet          = "abcdedfghijklmnopqrstuvwxyz"

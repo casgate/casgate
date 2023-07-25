@@ -737,10 +737,10 @@ class UserEditPage extends React.Component {
               if (userListUrl !== null) {
                 this.props.history.push(userListUrl);
               } else {
-                this.props.history.push("/users");
+                this.props.history.push("/clients");
               }
             } else {
-              this.props.history.push(`/users/${this.state.user.owner}/${this.state.user.name}`);
+              this.props.history.push(`/clients/${this.state.user.owner}/${this.state.user.name}`);
             }
           } else {
             if (needExit) {

@@ -35,6 +35,14 @@ func getDialer(provider *Provider) *gomail.Dialer {
 }
 
 func SendEmail(provider *Provider, title string, content string, dest string, sender string) error {
+	return sendEmail(provider, title, content, dest, sender, "text/html")
+}
+
+func SendEmailWithContentType(provider *Provider, title string, content string, dest string, sender string, contentType string) error {
+	return sendEmail(provider, title, content, dest, sender, contentType)
+}
+
+func sendEmail(provider *Provider, title string, content string, dest string, sender string, contentType string) error {
 	dialer := getDialer(provider)
 
 	message := gomail.NewMessage()
@@ -52,7 +60,7 @@ func SendEmail(provider *Provider, title string, content string, dest string, se
 	message.SetAddressHeader("From", fromAddress, fromName)
 	message.SetHeader("To", dest)
 	message.SetHeader("Subject", title)
-	message.SetBody("text/html", content)
+	message.SetBody(contentType, content)
 
 	message.SkipUsernameCheck = true
 

@@ -92,3 +92,6 @@ const SubscriptionUpdatedDistributorBodyTmpl = `
 Статус: {{ .OldSubscriptionStatus }} -> {{ .SubscriptionStatus }}<br>
 Время последней смены статуса: {{ .SubscriptionMoveTime }}</p>
 `
+
+const SubscriptionCreatedSubjCrmTmpl = `Создание SP/CP проекта ID: {{ .SubscriptionId }}, Заказчик: {{ .ClientShortName }}], Партнер: {{ .PartnerShortName }}`
+const SubscriptionUpdatedSubjCrmTmpl = `Изменение SP/CP проекта ID: {{ .SubscriptionId }}, Заказчик: {{ .ClientShortName }}], Партнер: {{ .PartnerShortName }}`
