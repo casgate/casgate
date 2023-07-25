@@ -702,8 +702,21 @@ func NotifyCRMSubscriptionUpdated(ctx *context.Context, _ *object.User, current,
 		return fmt.Errorf("getDistributors got 0 values")
 	}
 
+	var titleTemplate, mappedState string
+	switch current.State {
+	case PTAFLTypes.SubscriptionAuthorized.String():
+		titleTemplate = SubscriptionCreatedSubjCrmTmpl
+		mappedState = "approved"
+	case PTAFLTypes.SubscriptionStarted.String():
+		titleTemplate = SubscriptionUpdatedSubjCrmTmpl
+		mappedState = "started"
+	case PTAFLTypes.SubscriptionFinished.String():
+		titleTemplate = SubscriptionUpdatedSubjCrmTmpl
+		mappedState = "cancelled"
+	}
+
 	msg := Message{
-		Action:          current.State,
+		Action:          mappedState,
 		SubscriptionId:  current.Name,
 		Plan:            current.Plan,
 		ClientShortName: client.Name,
@@ -713,8 +726,8 @@ func NotifyCRMSubscriptionUpdated(ctx *context.Context, _ *object.User, current,
 			Name:  client.DisplayName,
 		},
 		ClientProperties: map[string]string{
-			"ИНН": client.Properties["ИНН"],
-			"КПП": client.Properties["КПП"],
+			"INN": client.Properties["ИНН"],
+			"KPP": client.Properties["КПП"],
 		},
 		PartnerShortName: organization.Name,
 		PartnerManagerContact: ContactData{
@@ -723,30 +736,22 @@ func NotifyCRMSubscriptionUpdated(ctx *context.Context, _ *object.User, current,
 			Name:  organization.Manager,
 		},
 		PartnerProperties: map[string]string{
-			"ИНН": organization.Properties["ИНН"],
-			"КПП": organization.Properties["КПП"],
+			"INN": organization.Properties["ИНН"],
+			"KPP": organization.Properties["КПП"],
 		},
 		Product:          "PT Application Firewall",
 		Discount:         current.Discount,
 		BillingStartDate: subscriptionStartDate,
 		DistribShortName: distributors[0].Name,
 		DistribProperties: map[string]string{
-			"ИНН": distributors[0].Properties["ИНН"],
-			"КПП": distributors[0].Properties["КПП"],
+			"INN": distributors[0].Properties["ИНН"],
+			"KPP": distributors[0].Properties["КПП"],
 		},
 		PtCloudManagerContact: ContactData{
 			Email: adminOrganization.Email,
 			Phone: getPhoneWithCountryCode(adminOrganization.CountryCode, adminOrganization.Phone),
 			Name:  adminOrganization.Manager,
 		},
-	}
-
-	var titleTemplate string
-	switch current.State {
-	case PTAFLTypes.SubscriptionAuthorized.String():
-		titleTemplate = SubscriptionCreatedSubjCrmTmpl
-	case PTAFLTypes.SubscriptionStarted.String(), PTAFLTypes.SubscriptionFinished.String():
-		titleTemplate = SubscriptionUpdatedSubjCrmTmpl
 	}
 
 	titleTmpl, err := template.New("").Parse(titleTemplate)
