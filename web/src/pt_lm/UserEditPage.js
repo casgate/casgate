@@ -655,7 +655,7 @@ class UserEditPage extends React.Component {
           </Col>
         </Row>
       );
-    } else if (accountItem.name === "Is global admin") {
+    } else if (accountItem.name === "Is global admin" && Setting.isAdminUser(this.props.account)) {
       return (
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>

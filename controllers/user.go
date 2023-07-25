@@ -270,6 +270,11 @@ func (c *ApiController) UpdateUser() {
 		return
 	}
 
+	if !oldUser.IsGlobalAdmin && oldUser.IsGlobalAdmin != user.IsGlobalAdmin {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	if msg := object.CheckUpdateUser(oldUser, &user, c.GetAcceptLanguage()); msg != "" {
 		c.ResponseError(msg)
 		return
