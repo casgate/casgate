@@ -119,12 +119,12 @@ class LdapRoleMappingTable extends React.Component {
         title: i18next.t("ldap:Attribute"),
         dataIndex: "attribute",
         key: "attribute",
-        width: "600px",
+        width: "300px",
         sorter: (a, b) => a.attribute.localeCompare(b.attribute),
         render: (text, record, index) => {
           return (
             <Select
-              style={{width: 600}}
+              style={{width: "100%"}}
               placeholder="Please select an attribute"
               dropdownRender={(menu) => (
                 <>
@@ -132,7 +132,7 @@ class LdapRoleMappingTable extends React.Component {
                   <Divider style={{margin: "8px 0"}} />
                   <Space style={{padding: "0 8px 4px"}}>
                     <Input
-                      style={{width: 300}}
+                      style={{width: "250px"}}
                       placeholder="Please enter attribute name"
                       value={this.state.newAttributeName}
                       onChange={(event) => this.setState({newAttributeName: event.target.value})}
@@ -156,7 +156,7 @@ class LdapRoleMappingTable extends React.Component {
         title: i18next.t("ldap:Values"),
         dataIndex: "values",
         key: "values",
-        ellipsis: true,
+        width: "400px",
         sorter: (a, b) => a.values.length - b.values.length,
         render: (text, record, index) => {
           return (
@@ -174,7 +174,7 @@ class LdapRoleMappingTable extends React.Component {
         title: i18next.t("ldap:Role"),
         dataIndex: "role",
         key: "role",
-        ellipsis: true,
+        width: "200px",
         sorter: (a, b) => a.role.localeCompare(b.role),
         render: (text, record, index) => {
           return (
@@ -193,7 +193,7 @@ class LdapRoleMappingTable extends React.Component {
         title: i18next.t("general:Action"),
         dataIndex: "",
         key: "op",
-        width: "80px",
+        width: "20px",
         render: (text, record, index) => {
           return (
             <div>
