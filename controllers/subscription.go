@@ -21,7 +21,6 @@ import (
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/pt_af_logic"
-	PTAFLTypes "github.com/casdoor/casdoor/pt_af_logic/types"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -136,13 +135,10 @@ func (c *ApiController) UpdateSubscription() {
 		return
 	}
 
-	if old.State != subscription.State {
-		subscription.Approver = currentUser.GetId()
-		subscription.ApproveTime = time.Now().Format("2006-01-02T15:04:05Z07:00")
-
-		if PTAFLTypes.SubscriptionStateName(subscription.State) == PTAFLTypes.SubscriptionPilot {
-			subscription.WasPilot = true
-		}
+	err = pt_af_logic.UpdateSubscriptionByState(currentUser, &subscription, old)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
 	}
 
 	affected, err := object.UpdateSubscription(id, &subscription)

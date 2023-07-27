@@ -27,6 +27,7 @@ func (s SubscriptionStateName) String() string {
 const (
 	SubscriptionNew           SubscriptionStateName = "New"
 	SubscriptionPilot         SubscriptionStateName = "Pilot"
+	SubscriptionPilotExpired  SubscriptionStateName = "PilotExpired"
 	SubscriptionPending       SubscriptionStateName = "Pending"
 	SubscriptionPreAuthorized SubscriptionStateName = "PreAuthorized"
 	SubscriptionIntoCommerce  SubscriptionStateName = "IntoCommerce"
@@ -61,16 +62,17 @@ func (s SubscriptionStateNames) String() string {
 type SubscriptionFieldName string
 
 const (
-	SubscriptionFieldNameName        SubscriptionFieldName = "Name"
-	SubscriptionFieldNameDisplayName SubscriptionFieldName = "Display Name"
-	SubscriptionFieldNameStartDate   SubscriptionFieldName = "Start Date"
-	SubscriptionFieldNameEndDate     SubscriptionFieldName = "End Date"
-	SubscriptionFieldNameSubUser     SubscriptionFieldName = "User"
-	SubscriptionFieldNameSubPlan     SubscriptionFieldName = "Plan"
-	SubscriptionFieldNameDiscount    SubscriptionFieldName = "Discount"
-	SubscriptionFieldNameDescription SubscriptionFieldName = "Description"
-	SubscriptionFieldNameComment     SubscriptionFieldName = "Comment"
-	SubscriptionFieldNameWasPilot    SubscriptionFieldName = "WasPilot"
+	SubscriptionFieldNameName            SubscriptionFieldName = "Name"
+	SubscriptionFieldNameDisplayName     SubscriptionFieldName = "Display Name"
+	SubscriptionFieldNameStartDate       SubscriptionFieldName = "Start Date"
+	SubscriptionFieldNameEndDate         SubscriptionFieldName = "End Date"
+	SubscriptionFieldNameSubUser         SubscriptionFieldName = "User"
+	SubscriptionFieldNameSubPlan         SubscriptionFieldName = "Plan"
+	SubscriptionFieldNameDiscount        SubscriptionFieldName = "Discount"
+	SubscriptionFieldNameDescription     SubscriptionFieldName = "Description"
+	SubscriptionFieldNameComment         SubscriptionFieldName = "Comment"
+	SubscriptionFieldNameWasPilot        SubscriptionFieldName = "WasPilot"
+	SubscriptionFieldNamePilotExpiryDate SubscriptionFieldName = "PilotExpiryDate"
 )
 
 func (s SubscriptionFieldName) String() string {
@@ -130,6 +132,17 @@ var SubscriptionStateMap = map[SubscriptionStateName]SubscriptionState{
 		},
 		RequiredFields: SubscriptionFieldNames{
 			SubscriptionFieldNameSubUser,
+		},
+	},
+	SubscriptionPilotExpired: {
+		FieldPermissions: SubscriptionFieldPermissions{
+			UserRolePartner: {
+				SubscriptionFieldNameDescription,
+			},
+		},
+		Transitions: SubscriptionTransitions{
+			UserRolePartner:     SubscriptionStateNames{SubscriptionCancelled},
+			UserRoleGlobalAdmin: SubscriptionStateNames{SubscriptionPilot},
 		},
 	},
 	SubscriptionPending: {

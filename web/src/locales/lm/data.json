@@ -833,7 +833,11 @@
       "User": "Заказчик",
       "User - Tooltip": "User - Tooltip",
       "Pilot": "Пилот",
-      "WasPilot": "Был пилот"
+      "PilotExpired": "Истек срок пилота",
+      "Was Pilot": "Был пилот",
+      "Was Pilot - Tooltip": "Был пилот",
+      "Pilot Expiry Date":  "Дата истечения срока пилота",
+      "Pilot Expiry Date - Tooltip":  "Дата истечения срока пилота"
     },
     "syncer": {
       "Affiliation table": "Таблица принадлежности",

@@ -2,6 +2,7 @@ package pt_af_logic
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/object"
@@ -202,6 +203,37 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		}
 	}
 
+	if old.PilotExpiryDate != new.PilotExpiryDate {
+		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNamePilotExpiryDate)
+		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNamePilotExpiryDate)
+		if !oldContains && !newContains {
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNamePilotExpiryDate)
+		}
+	}
+
+	return nil
+}
+
+func UpdateSubscriptionByState(user *object.User, subscription *object.Subscription, old *object.Subscription) error {
+	if old.State == subscription.State {
+		return nil
+	}
+
+	subscription.Approver = user.GetId()
+	subscription.ApproveTime = time.Now().Format("2006-01-02T15:04:05Z07:00")
+
+	state := PTAFLTypes.SubscriptionStateName(subscription.State)
+	switch state {
+	case PTAFLTypes.SubscriptionPilot:
+		subscription.WasPilot = true
+		mskLoc, err := time.LoadLocation("Europe/Moscow")
+		if err != nil {
+			return fmt.Errorf("time.LoadLocation: %w", err)
+		}
+		expiryDate := time.Now().In(mskLoc).Truncate(24*time.Hour).AddDate(0, 1, 0)
+		subscription.PilotExpiryDate = &expiryDate
+	}
+
 	return nil
 }
 
@@ -241,11 +273,31 @@ func ProcessSubscriptionUpdatePostActions(ctx *context.Context, user *object.Use
 		util.LogError(ctx, fmt.Errorf("NotifySubscriptionUpdated: %w", err).Error())
 	}
 
-	// create tenant at pt af
-	if stateChanged && PTAFLTypes.SubscriptionStateName(subscription.State) == PTAFLTypes.SubscriptionStarted {
-		err := CreateTenant(ctx, subscription)
+	if !stateChanged {
+		return
+	}
+
+	switch PTAFLTypes.SubscriptionStateName(subscription.State) {
+	case PTAFLTypes.SubscriptionStarted, PTAFLTypes.SubscriptionPilot:
+		// create or enable tenant at pt af
+		err := CreateOrEnableTenant(ctx, subscription)
 		if err != nil {
 			util.LogError(ctx, fmt.Errorf("CreateTenant: %w", err).Error())
+		}
+	case PTAFLTypes.SubscriptionPilotExpired:
+		// disable Tenant
+		err := DisableTenant(ctx, subscription)
+		if err != nil {
+			util.LogError(ctx, fmt.Errorf("DisableTenant: %w", err).Error())
+		}
+	case PTAFLTypes.SubscriptionCancelled:
+		if !subscription.WasPilot {
+			return
+		}
+		// disable Tenant
+		err := DisableTenant(ctx, subscription)
+		if err != nil {
+			util.LogError(ctx, fmt.Errorf("DisableTenant: %w", err).Error())
 		}
 	}
 }

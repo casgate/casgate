@@ -55,7 +55,7 @@ class SubscriptionEditPage extends React.Component {
   }
 
   getSubscriptionAvailableStates() {
-    const allStates = ["New", "Pilot", "Pending", "PreAuthorized", "IntoCommerce", "Authorized", "Unauthorized", "Started", "PreFinished", "Finished", "Cancelled"];
+    const allStates = ["New", "Pilot", "PilotExpired", "Pending", "PreAuthorized", "IntoCommerce", "Authorized", "Unauthorized", "Started", "PreFinished", "Finished", "Cancelled"];
     SubscriptionBackend.getSubscriptionAvailableStates(this.state.organizationName, this.state.subscriptionName)
       .then((subscriptionStates) => {
         const subscriptionStatesOptions = subscriptionStates.map((state) => this.getStateOption(state, false));
@@ -288,10 +288,34 @@ class SubscriptionEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px", display: Setting.isDistributor(this.props.account) ? "none" : ""}}>
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("subscription:WasPilot"), i18next.t("subscription:WasPilot"))} :
+            {Setting.getLabel(i18next.t("subscription:Was Pilot"), i18next.t("subscription:Was Pilot - Tooltip"))} :
           </Col>
           <Col span={(Setting.isMobile()) ? 22 : 2} >
-            {this.state.subscription.wasPilot ? "Да" : "Нет"}
+            <Select
+              disabled={!Setting.isAdminUser(this.props.account)}
+              value={this.state.subscription.wasPilot}
+              style={{width: 120}}
+              onChange={value => {
+                this.updateSubscriptionField("wasPilot", value);
+              }}
+              options={[
+                {value: true, label: "Да"},
+                {value: false, label: "Нет"},
+              ]}
+            />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px", display: this.state.subscription.state === "Pilot" ? "" : "none"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("subscription:Pilot Expiry Date"), i18next.t("subscription:Pilot Expiry Date - Tooltip"))}
+          </Col>
+          <Col span={22} >
+            <DatePicker
+              disabled={!Setting.isAdminUser(this.props.account)}
+              value={this.state.subscription.pilotExpiryDate !== null ? dayjs(this.state.subscription.pilotExpiryDate) : null}
+              onChange={value => {
+                this.updateSubscriptionField("pilotExpiryDate", value);
+              }} />
           </Col>
         </Row>
         <Row style={{marginTop: "20px", display: "none"}} >
@@ -345,13 +369,13 @@ class SubscriptionEditPage extends React.Component {
         if (res.status === "ok") {
           Setting.showMessage("success", i18next.t("general:Successfully saved"));
           this.setState({
-            subscriptionName: this.state.subscription.name,
-          });
+            subscriptionName: subscription.name,
+            organizationName: subscription.owner,
+          }, this.getSubscription);
 
           if (willExist) {
             this.props.history.push("/subscriptions");
           } else {
-            this.getSubscription();
             this.props.history.push(`/subscriptions/${this.state.subscription.owner}/${this.state.subscription.name}`);
           }
         } else {

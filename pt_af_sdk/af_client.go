@@ -119,6 +119,34 @@ func (af PtAF) GetTenant(tenantID string) (*Tenant, error) {
 	return result, nil
 }
 
+func (af PtAF) SetTenantStatus(tenantID string, status bool) error {
+	body := strings.NewReader(util.StructToJson(Tenant{
+		IsActive: status,
+	}))
+	url := fmt.Sprintf("%sauth/tenants/%s", af.url, tenantID)
+	req, _ := http.NewRequest("PATCH", url, body)
+
+	resp, err := af.doRequest(*req)
+	if err != nil {
+		return fmt.Errorf("af.doRequest: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	response, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("io.ReadAll: %w", err)
+	}
+
+	responseContent := string(response)
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("af.doRequest response status code: %d and body: %s", resp.StatusCode, responseContent)
+	}
+
+	return nil
+}
+
 func (af PtAF) CreateTenant(request Tenant) (*Tenant, error) {
 
 	body := strings.NewReader(util.StructToJson(request))

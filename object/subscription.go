@@ -49,7 +49,8 @@ type Subscription struct {
 
 	State string `xorm:"varchar(100)" json:"state"`
 
-	WasPilot bool `json:"wasPilot"`
+	WasPilot        bool       `json:"wasPilot"`
+	PilotExpiryDate *time.Time `json:"pilotExpiryDate"`
 }
 
 func NewSubscription(owner string, user string, plan string, duration int) *Subscription {

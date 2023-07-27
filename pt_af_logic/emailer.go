@@ -284,40 +284,52 @@ func NotifySubscriptionUpdated(ctx *context.Context, actor *object.User, current
 		if stateChanged {
 			err := NotifyPartnerSubscriptionUpdated(actor, current, old)
 			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyPartnerSubscriptionUpdated: %w", err).Error())
+				util.LogError(ctx, fmt.Errorf("NotifyPartnerSubscriptionUpdated(PreAuthorized,Unauthorized,Cancelled): %w", err).Error())
 			}
 		}
 	case PTAFLTypes.SubscriptionStarted.String(), PTAFLTypes.SubscriptionFinished.String():
 		if stateChanged {
 			err := NotifyCRMSubscriptionUpdated(ctx, actor, current, old)
 			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyCRMSubscriptionUpdated: %w", err).Error())
+				util.LogError(ctx, fmt.Errorf("NotifyCRMSubscriptionUpdated(Started,Finished): %w", err).Error())
 			}
 		}
 	case PTAFLTypes.SubscriptionAuthorized.String():
 		if stateChanged {
 			err := NotifyDistributorSubscriptionUpdated(ctx, actor, current, old)
 			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyDistributorSubscriptionUpdated: %w", err).Error())
+				util.LogError(ctx, fmt.Errorf("NotifyDistributorSubscriptionUpdated(Authorized): %w", err).Error())
 			}
 
 			err = NotifyCRMSubscriptionUpdated(ctx, actor, current, old)
 			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyCRMSubscriptionUpdated: %w", err).Error())
+				util.LogError(ctx, fmt.Errorf("NotifyCRMSubscriptionUpdated(Authorized): %w", err).Error())
 			}
 		}
 	case PTAFLTypes.SubscriptionPreFinished.String():
 		if stateChanged {
 			err := NotifyDistributorSubscriptionUpdated(ctx, actor, current, old)
 			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyDistributorSubscriptionUpdated: %w", err).Error())
+				util.LogError(ctx, fmt.Errorf("NotifyDistributorSubscriptionUpdated(PreFinished): %w", err).Error())
 			}
 		}
 	case PTAFLTypes.SubscriptionIntoCommerce.String(), PTAFLTypes.SubscriptionPending.String():
 		if stateChanged {
 			err := NotifyAdminSubscriptionUpdated(actor, current, old)
 			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyAdminSubscriptionUpdated: %w", err).Error())
+				util.LogError(ctx, fmt.Errorf("NotifyAdminSubscriptionUpdated(IntoCommerce, Pending): %w", err).Error())
+			}
+		}
+	case PTAFLTypes.SubscriptionPilotExpired.String():
+		if stateChanged {
+			err := NotifyAdminSubscriptionUpdated(actor, current, old)
+			if err != nil {
+				util.LogError(ctx, fmt.Errorf("NotifyAdminSubscriptionUpdated(PilotExpired): %w", err).Error())
+			}
+
+			err = NotifyPartnerSubscriptionUpdated(actor, current, old)
+			if err != nil {
+				util.LogError(ctx, fmt.Errorf("NotifyPartnerSubscriptionUpdated(PilotExpired): %w", err).Error())
 			}
 		}
 	}
@@ -325,7 +337,7 @@ func NotifySubscriptionUpdated(ctx *context.Context, actor *object.User, current
 	// send notification to log email
 	err := NotifyLogSubscriptionUpdated(actor, current, old)
 	if err != nil {
-		util.LogError(ctx, fmt.Errorf("NotifyAdminDistributorSubscriptionUpdated(admins): %w", err).Error())
+		util.LogError(ctx, fmt.Errorf("NotifyLogSubscriptionUpdated: %w", err).Error())
 	}
 
 	return nil

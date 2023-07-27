@@ -126,7 +126,7 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("user"),
         render: (text, record, index) => {
           return (
-            <Link to={`/users/${text}`}>
+            <Link to={`/clients/${text}`}>
               {text}
             </Link>
           );
@@ -179,6 +179,8 @@ class SubscriptionListPage extends BaseListPage {
             return Setting.getTag("success", i18next.t("subscription:New"));
           case "Pilot":
             return Setting.getTag("success", i18next.t("subscription:Pilot"));
+          case "PilotExpired":
+            return Setting.getTag("warning", i18next.t("subscription:PilotExpired"));
           case "Pending":
             return Setting.getTag("warning", i18next.t("subscription:Pending"));
           case "PreAuthorized":
