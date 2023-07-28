@@ -23,7 +23,7 @@ import (
 
 	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/pt_af_logic"
+	"github.com/casdoor/casdoor/pt_af_logic/notify"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -261,7 +261,7 @@ func (c *ApiController) Signup() {
 	record.User = user.Name
 	util.SafeGoroutine(func() { object.AddRecord(record) })
 	util.SafeGoroutine(func() {
-		err := pt_af_logic.NotifyPartnerCreated(user, organization)
+		err := notify.NotifyPartnerCreated(user, organization)
 		if err != nil {
 			util.LogError(c.Ctx, fmt.Errorf("NotifyPartnerCreated: %w", err).Error())
 		}

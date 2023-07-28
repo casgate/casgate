@@ -6,38 +6,13 @@ import (
 	"time"
 
 	"github.com/beego/beego/context"
-	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/pt_af_logic/notify"
+	"github.com/casdoor/casdoor/pt_af_logic/subscription_states"
 	PTAFLTypes "github.com/casdoor/casdoor/pt_af_logic/types"
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/builder"
 )
-
-func GetUserRole(user *object.User) PTAFLTypes.UserRole {
-	if user == nil {
-		return PTAFLTypes.UserRoleUnknown
-	}
-
-	if user.IsGlobalAdmin {
-		return PTAFLTypes.UserRoleGlobalAdmin
-	}
-
-	if user.IsAdmin {
-		return PTAFLTypes.UserRolePartner
-	}
-	role, _ := object.GetRole(util.GetId(builtInOrgCode, string(PTAFLTypes.UserRoleDistributor)))
-	if role != nil {
-		userId := user.GetId()
-		for _, roleUserId := range role.Users {
-			if roleUserId == userId {
-				return PTAFLTypes.UserRoleDistributor
-			}
-		}
-	}
-
-	return PTAFLTypes.UserRoleUnknown
-
-}
 
 // ValidateSubscriptionStateIsAllowed checks if user has permission to assign a new subscription state
 func ValidateSubscriptionStateIsAllowed(subscriptionRole PTAFLTypes.UserRole, oldStateName, nextStateName PTAFLTypes.SubscriptionStateName) error {
@@ -45,12 +20,12 @@ func ValidateSubscriptionStateIsAllowed(subscriptionRole PTAFLTypes.UserRole, ol
 		return nil
 	}
 
-	oldState, ok := PTAFLTypes.SubscriptionStateMap[oldStateName]
+	oldState, ok := subscription_states.SubscriptionStateMap[oldStateName]
 	if !ok {
 		return fmt.Errorf("incorrect old state: %s", oldStateName)
 	}
 
-	roleAvailableTransitions, ok := oldState.Transitions[subscriptionRole]
+	roleAvailableTransitions, ok := oldState.Transitions()[subscriptionRole]
 	if !ok {
 		return PTAFLTypes.NewStateChangeForbiddenError(roleAvailableTransitions)
 	}
@@ -74,11 +49,11 @@ func ValidateSubscriptionRequiredFieldsIsFilled(
 		return nil
 	}
 
-	newState, ok := PTAFLTypes.SubscriptionStateMap[PTAFLTypes.SubscriptionStateName(new.State)]
+	newState, ok := subscription_states.SubscriptionStateMap[PTAFLTypes.SubscriptionStateName(new.State)]
 	if !ok {
 		return fmt.Errorf("incorrect state: %s", new.State)
 	}
-	requiredFields := newState.RequiredFields
+	requiredFields := newState.RequiredFields()
 	for _, requiredField := range requiredFields {
 		switch requiredField {
 		case PTAFLTypes.SubscriptionFieldNameSubUser:
@@ -112,18 +87,18 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 	userRole PTAFLTypes.UserRole,
 	old, new *object.Subscription,
 ) error {
-	oldState, ok := PTAFLTypes.SubscriptionStateMap[PTAFLTypes.SubscriptionStateName(old.State)]
+	oldState, ok := subscription_states.SubscriptionStateMap[PTAFLTypes.SubscriptionStateName(old.State)]
 	if !ok {
 		return fmt.Errorf("incorrect state: %s", new.State)
 	}
 
-	newState, ok := PTAFLTypes.SubscriptionStateMap[PTAFLTypes.SubscriptionStateName(new.State)]
+	newState, ok := subscription_states.SubscriptionStateMap[PTAFLTypes.SubscriptionStateName(new.State)]
 	if !ok {
 		return fmt.Errorf("incorrect state: %s", new.State)
 	}
 
-	oldRoleFieldPermission := oldState.FieldPermissions[userRole]
-	newRoleFieldPermission := newState.FieldPermissions[userRole]
+	oldRoleFieldPermission := oldState.FieldPermissions()[userRole]
+	newRoleFieldPermission := newState.FieldPermissions()[userRole]
 
 	if old.Name != new.Name {
 		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameName)
@@ -232,97 +207,20 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 	return nil
 }
 
-func ValidateSubscriptionByState(user *object.User, subscription *object.Subscription, old *object.Subscription) error {
+func ValidateSubscriptionStateRequirements(user *object.User, subscription *object.Subscription, old *object.Subscription) error {
 	if old.State == subscription.State {
 		return nil
 	}
 
-	state := PTAFLTypes.SubscriptionStateName(subscription.State)
-	switch state {
-	case PTAFLTypes.SubscriptionPending:
-		filter := builder.Neq{"state": []string{
-			PTAFLTypes.SubscriptionNew.String(),
-			PTAFLTypes.SubscriptionCancelled.String(),
-			PTAFLTypes.SubscriptionPreFinished.String(),
-			PTAFLTypes.SubscriptionFinished.String(),
-		}}
+	stateName := PTAFLTypes.SubscriptionStateName(subscription.State)
+	state, ok := subscription_states.SubscriptionStateMap[stateName]
+	if !ok {
+		return fmt.Errorf("incorrect state: %s", stateName)
+	}
 
-		if subscription.User == "" {
-			//should never happen - user is required field for pending state
-			return errors.New("empty user")
-		}
-
-		userSubscriptionsCount, err := object.GetSubscriptionCount(subscription.Owner, "subscription.user", subscription.User, filter)
-		if err != nil {
-			return fmt.Errorf("object.GetSubscriptionCount: %w", err)
-		}
-
-		if userSubscriptionsCount > 0 {
-			return errors.New(i18n.Translate(ptlmLanguage, "subscription:Customer has active subscriptions"))
-		}
-
-	case PTAFLTypes.SubscriptionPilot:
-		filter := builder.And(builder.Eq{
-			"subscription.user": subscription.User,
-		},
-			builder.Neq{
-				"state": []string{
-					PTAFLTypes.SubscriptionNew.String(),
-					PTAFLTypes.SubscriptionCancelled.String(),
-					PTAFLTypes.SubscriptionFinished.String(),
-				}}.Or(builder.And(
-				builder.Eq{
-					"state":     PTAFLTypes.SubscriptionCancelled.String(),
-					"was_pilot": true},
-				builder.Expr("TO_DATE(approve_time,'YYYY-MM-DD')>TO_DATE(?,'YYYY-MM-DD')",
-					time.Now().AddDate(0, -3, 0).Format("2006-01-02")),
-			)).Or(builder.And(
-				builder.Eq{
-					"state": PTAFLTypes.SubscriptionFinished.String(),
-				},
-				builder.Gt{
-					"end_date": time.Now().Truncate(24*time.Hour).AddDate(0, -1, 0),
-				},
-			)))
-
-		if subscription.User == "" {
-			//should never happen - user is required field for pending state
-			return errors.New("empty user")
-		}
-
-		userSubscriptionsCount, err := object.GetSubscriptionCount(subscription.Owner, "", "", filter)
-		if err != nil {
-			return fmt.Errorf("object.GetSubscriptionCount(customerLimit): %w", err)
-		}
-
-		if userSubscriptionsCount > 0 {
-			return errors.New(i18n.Translate(ptlmLanguage, "subscription:Customer doesn't meet the requirements for pilot"))
-		}
-
-		filterPilotLimit := builder.Eq{
-			"was_pilot": true,
-			"state": []string{
-				PTAFLTypes.SubscriptionPilot.String(),
-				PTAFLTypes.SubscriptionPending.String(),
-				PTAFLTypes.SubscriptionUnauthorized.String(),
-				PTAFLTypes.SubscriptionPreAuthorized.String(),
-				PTAFLTypes.SubscriptionPilotExpired.String(),
-			},
-		}
-
-		organization, err := object.GetOrganization(util.GetId("admin", subscription.Owner))
-		if err != nil {
-			return fmt.Errorf("object.GetOrganization: %w", err)
-		}
-
-		partnerPilotSubscriptionsCount, err := object.GetSubscriptionCount(subscription.Owner, "", "", filterPilotLimit)
-		if err != nil {
-			return fmt.Errorf("object.GetSubscriptionCount(partnerLimit): %w", err)
-		}
-
-		if uint(partnerPilotSubscriptionsCount) >= organization.PilotLimit {
-			return errors.New(i18n.Translate(ptlmLanguage, "subscription:Pilot Limit exceeded"))
-		}
+	err := state.ValidateRequirements(user, subscription, old)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -336,17 +234,15 @@ func FillSubscriptionByState(user *object.User, subscription *object.Subscriptio
 	subscription.Approver = user.GetId()
 	subscription.ApproveTime = time.Now().Format("2006-01-02T15:04:05Z07:00")
 
-	state := PTAFLTypes.SubscriptionStateName(subscription.State)
-	switch state {
-	case PTAFLTypes.SubscriptionPilot:
+	stateName := PTAFLTypes.SubscriptionStateName(subscription.State)
+	state, ok := subscription_states.SubscriptionStateMap[stateName]
+	if !ok {
+		return fmt.Errorf("incorrect state: %s", stateName)
+	}
 
-		subscription.WasPilot = true
-		mskLoc, err := time.LoadLocation("Europe/Moscow")
-		if err != nil {
-			return fmt.Errorf("time.LoadLocation: %w", err)
-		}
-		expiryDate := time.Now().In(mskLoc).Truncate(24*time.Hour).AddDate(0, 1, 0)
-		subscription.PilotExpiryDate = &expiryDate
+	err := state.FillSubscription(user, subscription, old)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -377,8 +273,7 @@ func ValidateSubscriptionUpdate(user *object.User, subscription *object.Subscrip
 		return err
 	}
 
-	// additional checks for some states
-	err = ValidateSubscriptionByState(user, subscription, old)
+	err = ValidateSubscriptionStateRequirements(user, subscription, old)
 	if err != nil {
 		return err
 	}
@@ -386,40 +281,44 @@ func ValidateSubscriptionUpdate(user *object.User, subscription *object.Subscrip
 	return nil
 }
 
-func ProcessSubscriptionUpdatePostActions(ctx *context.Context, user *object.User, subscription, old *object.Subscription) {
-	stateChanged := old.State != subscription.State
-
-	err := NotifySubscriptionUpdated(ctx, user, subscription, old)
-	if err != nil {
-		util.LogError(ctx, fmt.Errorf("NotifySubscriptionUpdated: %w", err).Error())
+func notifyLogSubscriptionUpdated(actor *object.User, current, old *object.Subscription) error {
+	if current.User == "" {
+		return errors.New("no client detected in subscription")
 	}
 
+	if current.State == PTAFLTypes.SubscriptionNew.String() {
+		return nil
+	}
+
+	// send notification to log email
+	err := notify.NotifyLogSubscriptionUpdated(actor, current, old)
+	if err != nil {
+		return fmt.Errorf("NotifyLogSubscriptionUpdated: %w", err)
+	}
+
+	return nil
+}
+
+func ProcessSubscriptionUpdatePostActions(ctx *context.Context, user *object.User, subscription, old *object.Subscription) {
+	err := notifyLogSubscriptionUpdated(user, subscription, old)
+	if err != nil {
+		util.LogError(ctx, fmt.Errorf("notifyLogSubscriptionUpdated: %w", err).Error())
+	}
+
+	stateChanged := old.State != subscription.State
 	if !stateChanged {
 		return
 	}
 
-	switch PTAFLTypes.SubscriptionStateName(subscription.State) {
-	case PTAFLTypes.SubscriptionStarted, PTAFLTypes.SubscriptionPilot:
-		// create or enable tenant at pt af
-		err := CreateOrEnableTenant(ctx, subscription)
-		if err != nil {
-			util.LogError(ctx, fmt.Errorf("CreateTenant: %w", err).Error())
-		}
-	case PTAFLTypes.SubscriptionPilotExpired:
-		// disable Tenant
-		err := DisableTenant(ctx, subscription)
-		if err != nil {
-			util.LogError(ctx, fmt.Errorf("DisableTenant: %w", err).Error())
-		}
-	case PTAFLTypes.SubscriptionCancelled:
-		if !subscription.WasPilot {
-			return
-		}
-		// disable Tenant
-		err := DisableTenant(ctx, subscription)
-		if err != nil {
-			util.LogError(ctx, fmt.Errorf("DisableTenant: %w", err).Error())
-		}
+	stateName := PTAFLTypes.SubscriptionStateName(subscription.State)
+	state, ok := subscription_states.SubscriptionStateMap[stateName]
+	if !ok {
+		util.LogError(ctx, fmt.Errorf("incorrect state: %s", stateName).Error())
+	}
+
+	errs := state.PostAction(user, subscription, old)
+	for _, err := range errs {
+		util.LogError(ctx, fmt.Errorf("state.PostAction(%s): %w", stateName, err).Error())
 	}
 }
 
@@ -441,12 +340,12 @@ func GetAvailableTransitions(user *object.User, subscription *object.Subscriptio
 	subscriptionRole := GetUserRole(user)
 
 	subscriptionState := PTAFLTypes.SubscriptionStateName(subscription.State)
-	state, ok := PTAFLTypes.SubscriptionStateMap[subscriptionState]
+	state, ok := subscription_states.SubscriptionStateMap[subscriptionState]
 	if !ok {
 		return nil, fmt.Errorf("incorrect state: %s", subscriptionState)
 	}
 
-	roleAvailableTransitions, _ := state.Transitions[subscriptionRole]
+	roleAvailableTransitions, _ := state.Transitions()[subscriptionRole]
 	roleAvailableTransitions = append([]PTAFLTypes.SubscriptionStateName{subscriptionState}, roleAvailableTransitions...)
 
 	return roleAvailableTransitions, nil

@@ -1,19 +1,21 @@
-package pt_af_logic
+package tenant
 
 import (
 	"fmt"
 	"strings"
 
-	beegocontext "github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/pt_af_logic/notify"
+	"github.com/casdoor/casdoor/pt_af_logic/pwd_generator"
+	PTAFLTypes "github.com/casdoor/casdoor/pt_af_logic/types"
 	af_client "github.com/casdoor/casdoor/pt_af_sdk"
 	"github.com/casdoor/casdoor/util"
 )
 
 const defaultPasswordLength = 12
 
-func CreateOrEnableTenant(ctx *beegocontext.Context, subscription *object.Subscription) error {
+func CreateOrEnableTenant(subscription *object.Subscription) error {
 	afHost := conf.GetConfigString("PT_AF_URL")
 	afLogin := conf.GetConfigString("PT_AF_LOGIN")
 	afPwd := conf.GetConfigString("PT_AF_PASSWORD")
@@ -64,14 +66,14 @@ func CreateOrEnableTenant(ctx *beegocontext.Context, subscription *object.Subscr
 		}
 	}
 
-	tenantAdminPassword, err := generatePassword(defaultPasswordLength)
+	tenantAdminPassword, err := pwd_generator.GeneratePassword(defaultPasswordLength)
 	if err != nil {
 		return fmt.Errorf("generatePassword for admin: %w", err)
 	}
 
 	tenantAdminName := fmt.Sprintf("%s_%s_admin", customer.Owner, customer.Name)
 
-	portalAdmin, err := object.GetUser(util.GetId(builtInOrgCode, "admin"))
+	portalAdmin, err := object.GetUser(util.GetId(PTAFLTypes.BuiltInOrgCode, "admin"))
 	if err != nil {
 		return fmt.Errorf("object.GetUser for portal admin: %w", err)
 	}
@@ -93,7 +95,6 @@ func CreateOrEnableTenant(ctx *beegocontext.Context, subscription *object.Subscr
 
 	tenant, err := af.CreateTenant(request)
 	if err != nil {
-		util.LogError(ctx, err.Error())
 		return fmt.Errorf("af.CreateTenant: %w", err)
 	}
 
@@ -164,7 +165,7 @@ func CreateOrEnableTenant(ctx *beegocontext.Context, subscription *object.Subscr
 
 		// create users
 		userROName := fmt.Sprintf("%s_%s", customer.Name, customer.Owner)
-		userROPwd, err := generatePassword(defaultPasswordLength)
+		userROPwd, err := pwd_generator.GeneratePassword(defaultPasswordLength)
 		if err != nil {
 			return fmt.Errorf("generatePassword: %w", err)
 		}
@@ -183,7 +184,7 @@ func CreateOrEnableTenant(ctx *beegocontext.Context, subscription *object.Subscr
 		}
 
 		userName := fmt.Sprintf("%s_%s_ctrl", customer.Name, customer.Owner)
-		userPwd, err := generatePassword(defaultPasswordLength)
+		userPwd, err := pwd_generator.GeneratePassword(defaultPasswordLength)
 		if err != nil {
 			return fmt.Errorf("generatePassword: %w", err)
 		}
@@ -202,7 +203,7 @@ func CreateOrEnableTenant(ctx *beegocontext.Context, subscription *object.Subscr
 		}
 
 		serviceUserName := fmt.Sprintf("%s_%s_service", customer.Name, customer.Owner)
-		serviceUserPwd, err := generatePassword(defaultPasswordLength)
+		serviceUserPwd, err := pwd_generator.GeneratePassword(defaultPasswordLength)
 		if err != nil {
 			return fmt.Errorf("generatePassword: %w", err)
 		}
@@ -255,7 +256,7 @@ func CreateOrEnableTenant(ctx *beegocontext.Context, subscription *object.Subscr
 		}
 
 		// email tenant admin info and accounts for created tenant
-		err = notifyPTAFTenantCreated(&PTAFTenantCreatedMessage{
+		err = notify.NotifyPTAFTenantCreated(&notify.PTAFTenantCreatedMessage{
 			ClientName:          customer.Name,
 			ClientDisplayName:   customer.DisplayName,
 			ClientURL:           fmt.Sprintf("%s/clients/%s/%s", conf.GetConfigString("origin"), customer.Owner, customer.Name),
@@ -272,48 +273,6 @@ func CreateOrEnableTenant(ctx *beegocontext.Context, subscription *object.Subscr
 		}, customerOrganization.Email)
 		if err != nil {
 			return fmt.Errorf("notifyPTAFTenantCreated: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func DisableTenant(ctx *beegocontext.Context, subscription *object.Subscription) error {
-	afHost := conf.GetConfigString("PT_AF_URL")
-	afLogin := conf.GetConfigString("PT_AF_LOGIN")
-	afPwd := conf.GetConfigString("PT_AF_PASSWORD")
-	afFingerPrint := conf.GetConfigString("PT_AF_FINGERPRINT")
-	af := af_client.NewPtAF(afHost)
-
-	adminLoginResp, err := af.Login(af_client.LoginRequest{
-		Username:    afLogin,
-		Password:    afPwd,
-		Fingerprint: afFingerPrint,
-	})
-	if err != nil {
-		return fmt.Errorf("af.Login: %w", err)
-	}
-
-	af.Token = adminLoginResp.AccessToken
-
-	customer, err := object.GetUser(subscription.User)
-	if err != nil {
-		return fmt.Errorf("object.GetUser: %w", err)
-	}
-
-	if tenantID, found := customer.Properties[af_client.PtPropPref+"Tenant ID"]; found {
-		existingTenant, err := af.GetTenant(tenantID)
-		if err != nil {
-			return fmt.Errorf("af.GetTenant: %w", err)
-		}
-
-		if existingTenant != nil {
-			// tenant exist - disable
-			err = af.SetTenantStatus(tenantID, false)
-			if err != nil {
-				return fmt.Errorf("af.SetTenantStatus: %w", err)
-			}
-			return nil
 		}
 	}
 

@@ -1,4 +1,4 @@
-package pt_af_logic
+package notify
 
 const partnerCreateAccountsSubjTmpl = `[PT LMP] Accounts for {{ .ClientName }}`
 

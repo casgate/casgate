@@ -1,4 +1,4 @@
-package pt_af_logic
+package notify
 
 import (
 	"bytes"
@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/object"
@@ -131,7 +130,7 @@ const (
 	partnerConfirmedSubject = `[PT LMP] Registration confirmed`
 )
 
-func notifyPTAFTenantCreated(msg *PTAFTenantCreatedMessage, email string) error {
+func NotifyPTAFTenantCreated(msg *PTAFTenantCreatedMessage, email string) error {
 	provider := getBuiltInEmailProvider()
 	if provider == nil {
 		return errors.New("no email provider registered")
@@ -265,86 +264,8 @@ func NotifyPartnerCreated(user *object.User, organization *object.Organization) 
 	return err
 }
 
-// NotifySubscriptionUpdated composes subscription state change message and sends emails to its members
-func NotifySubscriptionUpdated(ctx *context.Context, actor *object.User, current, old *object.Subscription) error {
-	provider := getBuiltInEmailProvider()
-	if provider == nil {
-		return errors.New("no email provider registered")
-	}
-	if current.User == "" {
-		return errors.New("no client detected in subscription")
-	}
-
-	stateChanged := old.State != current.State
-
-	switch current.State {
-	case PTAFLTypes.SubscriptionNew.String():
-		return nil
-	case PTAFLTypes.SubscriptionPreAuthorized.String(), PTAFLTypes.SubscriptionUnauthorized.String(), PTAFLTypes.SubscriptionCancelled.String():
-		if stateChanged {
-			err := NotifyPartnerSubscriptionUpdated(actor, current, old)
-			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyPartnerSubscriptionUpdated(PreAuthorized,Unauthorized,Cancelled): %w", err).Error())
-			}
-		}
-	case PTAFLTypes.SubscriptionStarted.String(), PTAFLTypes.SubscriptionFinished.String():
-		if stateChanged {
-			err := NotifyCRMSubscriptionUpdated(ctx, actor, current, old)
-			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyCRMSubscriptionUpdated(Started,Finished): %w", err).Error())
-			}
-		}
-	case PTAFLTypes.SubscriptionAuthorized.String():
-		if stateChanged {
-			err := NotifyDistributorSubscriptionUpdated(ctx, actor, current, old)
-			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyDistributorSubscriptionUpdated(Authorized): %w", err).Error())
-			}
-
-			err = NotifyCRMSubscriptionUpdated(ctx, actor, current, old)
-			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyCRMSubscriptionUpdated(Authorized): %w", err).Error())
-			}
-		}
-	case PTAFLTypes.SubscriptionPreFinished.String():
-		if stateChanged {
-			err := NotifyDistributorSubscriptionUpdated(ctx, actor, current, old)
-			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyDistributorSubscriptionUpdated(PreFinished): %w", err).Error())
-			}
-		}
-	case PTAFLTypes.SubscriptionIntoCommerce.String(), PTAFLTypes.SubscriptionPending.String():
-		if stateChanged {
-			err := NotifyAdminSubscriptionUpdated(actor, current, old)
-			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyAdminSubscriptionUpdated(IntoCommerce, Pending): %w", err).Error())
-			}
-		}
-	case PTAFLTypes.SubscriptionPilotExpired.String():
-		if stateChanged {
-			err := NotifyAdminSubscriptionUpdated(actor, current, old)
-			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyAdminSubscriptionUpdated(PilotExpired): %w", err).Error())
-			}
-
-			err = NotifyPartnerSubscriptionUpdated(actor, current, old)
-			if err != nil {
-				util.LogError(ctx, fmt.Errorf("NotifyPartnerSubscriptionUpdated(PilotExpired): %w", err).Error())
-			}
-		}
-	}
-
-	// send notification to log email
-	err := NotifyLogSubscriptionUpdated(actor, current, old)
-	if err != nil {
-		util.LogError(ctx, fmt.Errorf("NotifyLogSubscriptionUpdated: %w", err).Error())
-	}
-
-	return nil
-}
-
 func getBuiltInEmailProvider() *object.Provider {
-	providers, _ := object.GetProviders(builtInOrgCode)
+	providers, _ := object.GetProviders(PTAFLTypes.BuiltInOrgCode)
 	for _, provider := range providers {
 		if provider.Category == "Email" {
 			return provider
@@ -354,7 +275,7 @@ func getBuiltInEmailProvider() *object.Provider {
 }
 
 func getBuiltInAdminOrg() (*object.Organization, error) {
-	orgId := util.GetId("admin", builtInOrgCode)
+	orgId := util.GetId("admin", PTAFLTypes.BuiltInOrgCode)
 	organization, err := object.GetOrganization(orgId)
 	if err != nil {
 		return nil, fmt.Errorf("object.GetOrganization: %w", err)
@@ -376,15 +297,16 @@ func getBuiltInAdminEmail() (string, error) {
 	return email, nil
 }
 
-func getDistributors(ctx *context.Context) []*object.User {
+func getDistributors() []*object.User {
 	var distrs []*object.User
-	role, _ := object.GetRole(util.GetId(builtInOrgCode, string(PTAFLTypes.UserRoleDistributor)))
+	role, _ := object.GetRole(util.GetId(PTAFLTypes.BuiltInOrgCode, string(PTAFLTypes.UserRoleDistributor)))
 	if role != nil {
 		for _, roleUserId := range role.Users {
 			roleUser, err := object.GetUser(roleUserId)
 			if err != nil {
-				util.LogError(ctx, fmt.Errorf("object.GetUser: %w", err).Error())
+				continue
 			}
+
 			if roleUser != nil {
 				distrs = append(distrs, roleUser)
 			}
@@ -393,9 +315,9 @@ func getDistributors(ctx *context.Context) []*object.User {
 	return distrs
 }
 
-func getDistributorEmails(ctx *context.Context) []string {
+func getDistributorEmails() []string {
 	var emails []string
-	distributors := getDistributors(ctx)
+	distributors := getDistributors()
 	for _, distributor := range distributors {
 		if distributor.Email != "" {
 			emails = append(emails, distributor.Email)
@@ -404,8 +326,8 @@ func getDistributorEmails(ctx *context.Context) []string {
 	return emails
 }
 
-func NotifyDistributorSubscriptionUpdated(ctx *context.Context, actor *object.User, current, old *object.Subscription) error {
-	recipients := getDistributorEmails(ctx)
+func NotifyDistributorSubscriptionUpdated(actor *object.User, current, old *object.Subscription) error {
+	recipients := getDistributorEmails()
 
 	err := NotifyRecipientsSubscriptionUpdated(
 		actor,
@@ -451,7 +373,7 @@ func NotifyLogSubscriptionUpdated(actor *object.User, current, old *object.Subsc
 		old,
 		SubscriptionUpdatedSubjLogTmpl,
 		SubscriptionUpdatedAdminLogBodyTmpl,
-		[]string{logEmail},
+		[]string{PTAFLTypes.LogEmail},
 	)
 	if err != nil {
 		return fmt.Errorf("NotifyRecipientsSubscriptionUpdated: %w", err)
@@ -541,8 +463,10 @@ func NotifyRecipientsSubscriptionUpdated(
 	for _, email := range recipients {
 		errS := object.SendEmail(provider, titleBuf.String(), bodyBuf.String(), email, provider.DisplayName)
 		if errS != nil {
-			err = fmt.Errorf("%v; %v", err, errS)
-		} else {
+			if err != nil {
+				err = fmt.Errorf("%v; %v", err, errS)
+				continue
+			}
 			err = errS
 		}
 	}
@@ -673,7 +597,7 @@ func getSubscriptionUpdateMessage(actor *object.User, current, old *object.Subsc
 	}, nil
 }
 
-func NotifyCRMSubscriptionUpdated(ctx *context.Context, _ *object.User, current, _ *object.Subscription) error {
+func NotifyCRMSubscriptionUpdated(_ *object.User, current, _ *object.Subscription) error {
 	provider := getBuiltInEmailProvider()
 	if provider == nil {
 		return errors.New("no email provider registered")
@@ -709,7 +633,7 @@ func NotifyCRMSubscriptionUpdated(ctx *context.Context, _ *object.User, current,
 		return fmt.Errorf("getBuiltInAdminOrg: %w", err)
 	}
 
-	distributors := getDistributors(ctx)
+	distributors := getDistributors()
 	if len(distributors) == 0 {
 		return fmt.Errorf("getDistributors got 0 values")
 	}
@@ -786,7 +710,7 @@ func NotifyCRMSubscriptionUpdated(ctx *context.Context, _ *object.User, current,
 		return err
 	}
 
-	err = object.SendEmailWithContentType(provider, titleBuf.String(), content, crmEmail, provider.DisplayName, "text/plain")
+	err = object.SendEmailWithContentType(provider, titleBuf.String(), content, PTAFLTypes.CrmEmail, provider.DisplayName, "text/plain")
 	if err != nil {
 		return err
 	}

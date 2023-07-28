@@ -23,6 +23,7 @@ import (
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/pt_af_logic"
+	"github.com/casdoor/casdoor/pt_af_logic/notify"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -304,7 +305,7 @@ func (c *ApiController) UpdateUser() {
 			return
 		}
 		util.SafeGoroutine(func() {
-			err := pt_af_logic.NotifyPartnerConfirmed(oldUser, &user)
+			err := notify.NotifyPartnerConfirmed(oldUser, &user)
 			if err != nil {
 				util.LogError(c.Ctx, fmt.Errorf("NotifyPartnerConfirmed: %w", err).Error())
 			}
