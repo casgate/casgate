@@ -108,7 +108,7 @@ class LdapRoleMappingTable extends React.Component {
           return;
         }
         this.setState({
-          roles: res,
+          roles: res.data,
         });
       });
   }

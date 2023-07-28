@@ -37,7 +37,7 @@ func (r RoleMappingItemRoles) Contains(item RoleMappingItemRoleId) bool {
 }
 
 func (r RoleMappingItemRoles) StrRoles() []string {
-	result := make([]string, len(r), 0)
+	result := make([]string, 0, len(r))
 	for _, role := range r {
 		result = append(result, string(role))
 	}

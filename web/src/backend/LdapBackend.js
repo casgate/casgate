@@ -78,7 +78,7 @@ export function getLdapUser(owner, name) {
 }
 
 export function syncUsers(owner, ldapId, body) {
-  return fetch(`${Setting.ServerUrl}/api/sync-ldap-users?owner=${owner}&ldapId=${ldapId}`, {
+  return fetch(`${Setting.ServerUrl}/api/sync-ldap-users?id=${owner}/${ldapId}`, {
     method: "POST",
     credentials: "include",
     body: JSON.stringify(body),
