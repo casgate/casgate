@@ -112,13 +112,13 @@ func getPermission(owner string, name string) (*Permission, error) {
 }
 
 func GetPermission(id string) (*Permission, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
 	return getPermission(owner, name)
 }
 
 // checkPermissionValid verifies if the permission is valid
 func checkPermissionValid(permission *Permission) error {
-	enforcer := getEnforcer(permission)
+	enforcer := getPermissionEnforcer(permission)
 	enforcer.EnableAutoSave(false)
 
 	policies := getPolicies(permission)
@@ -149,7 +149,7 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 		return false, err
 	}
 
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
 	oldPermission, err := getPermission(owner, name)
 	if oldPermission == nil {
 		return false, nil

@@ -17,6 +17,10 @@
 // @Title Casdoor API
 // @Description Documentation of Casdoor API
 // @Contact admin@casbin.org
+// @SecurityDefinition test_apiKey apiKey Authorization header
+// @Schemes http,https
+// @ExternalDocs Find out more about casdoor
+// @ExternalDocsUrl https://casdoor.org/
 package routers
 
 import (
@@ -122,6 +126,12 @@ func initAPI() {
 	beego.Router("/api/update-policy", &controllers.ApiController{}, "POST:UpdatePolicy")
 	beego.Router("/api/add-policy", &controllers.ApiController{}, "POST:AddPolicy")
 	beego.Router("/api/remove-policy", &controllers.ApiController{}, "POST:RemovePolicy")
+
+	beego.Router("/api/get-enforcers", &controllers.ApiController{}, "GET:GetEnforcers")
+	beego.Router("/api/get-enforcer", &controllers.ApiController{}, "GET:GetEnforcer")
+	beego.Router("/api/update-enforcer", &controllers.ApiController{}, "POST:UpdateEnforcer")
+	beego.Router("/api/add-enforcer", &controllers.ApiController{}, "POST:AddEnforcer")
+	beego.Router("/api/delete-enforcer", &controllers.ApiController{}, "POST:DeleteEnforcer")
 
 	beego.Router("/api/set-password", &controllers.ApiController{}, "POST:SetPassword")
 	beego.Router("/api/check-user-password", &controllers.ApiController{}, "POST:CheckUserPassword")

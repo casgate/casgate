@@ -26,9 +26,10 @@ import (
 // @Title GetWebhooks
 // @Tag Webhook API
 // @Description get webhooks
-// @Param   owner     query    string  true        "The owner of webhooks"
+// @Param   owner     query    string  built-in/admin	true        "The owner of webhooks"
 // @Success 200 {array} object.Webhook The Response object
 // @router /get-webhooks [get]
+// @Security test_apiKey
 func (c *ApiController) GetWebhooks() {
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
@@ -46,8 +47,7 @@ func (c *ApiController) GetWebhooks() {
 			return
 		}
 
-		c.Data["json"] = webhooks
-		c.ServeJSON()
+		c.ResponseOk(webhooks)
 	} else {
 		limit := util.ParseInt(limit)
 		count, err := object.GetWebhookCount(owner, organization, field, value)
@@ -72,7 +72,7 @@ func (c *ApiController) GetWebhooks() {
 // @Title GetWebhook
 // @Tag Webhook API
 // @Description get webhook
-// @Param   id     query    string  true        "The id ( owner/name ) of the webhook"
+// @Param   id     query    string  built-in/admin	true        "The id ( owner/name ) of the webhook"
 // @Success 200 {object} object.Webhook The Response object
 // @router /get-webhook [get]
 func (c *ApiController) GetWebhook() {
@@ -84,15 +84,14 @@ func (c *ApiController) GetWebhook() {
 		return
 	}
 
-	c.Data["json"] = webhook
-	c.ServeJSON()
+	c.ResponseOk(webhook)
 }
 
 // UpdateWebhook
 // @Title UpdateWebhook
 // @Tag Webhook API
 // @Description update webhook
-// @Param   id     query    string  true        "The id ( owner/name ) of the webhook"
+// @Param   id     query    string  built-in/admin true        "The id ( owner/name ) of the webhook"
 // @Param   body    body   object.Webhook  true        "The details of the webhook"
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-webhook [post]

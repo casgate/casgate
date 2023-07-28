@@ -151,6 +151,7 @@ class CertListPage extends BaseListPage {
         filterMultiple: false,
         filters: [
           {text: "x509", value: "x509"},
+          {text: "Payment", value: "Payment"},
         ],
         width: "110px",
         sorter: true,
@@ -213,7 +214,7 @@ class CertListPage extends BaseListPage {
 
     return (
       <div>
-        <Table scroll={{x: "max-content"}} columns={columns} dataSource={certs} rowKey="name" size="middle" bordered pagination={paginationProps}
+        <Table scroll={{x: "max-content"}} columns={columns} dataSource={certs} rowKey={(record) => `${record.owner}/${record.name}`} size="middle" bordered pagination={paginationProps}
           title={() => (
             <div>
               {i18next.t("general:Certs")}&nbsp;&nbsp;&nbsp;&nbsp;

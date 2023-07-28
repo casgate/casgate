@@ -69,7 +69,7 @@ func getObject(ctx *context.Context) (string, string) {
 		// query == "?id=built-in/admin"
 		id := ctx.Input.Query("id")
 		if id != "" {
-			return util.GetOwnerAndNameFromId(id)
+			return util.GetOwnerAndNameFromIdNoCheck(id)
 		}
 
 		owner := ctx.Input.Query("owner")
@@ -156,7 +156,7 @@ func AuthzFilter(ctx *context.Context) {
 	urlPath := getUrlPath(ctx.Request.URL.Path)
 
 	objOwner, objName := "", ""
-	if urlPath != "/api/get-app-login" {
+	if urlPath != "/api/get-app-login" && urlPath != "/api/get-resource" {
 		objOwner, objName = getObject(ctx)
 	}
 

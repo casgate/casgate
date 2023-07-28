@@ -52,14 +52,6 @@ func (c *ApiController) GetResources() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
-	userObj, ok := c.RequireSignedInUser()
-	if !ok {
-		return
-	}
-	if userObj.IsAdmin {
-		user = ""
-	}
-
 	if limit == "" || page == "" {
 		resources, err := object.GetResources(owner, user)
 		if err != nil {
@@ -67,8 +59,7 @@ func (c *ApiController) GetResources() {
 			return
 		}
 
-		c.Data["json"] = resources
-		c.ServeJSON()
+		c.ResponseOk(resources)
 	} else {
 		limit := util.ParseInt(limit)
 		count, err := object.GetResourceCount(owner, user, field, value)
@@ -104,8 +95,7 @@ func (c *ApiController) GetResource() {
 		return
 	}
 
-	c.Data["json"] = resource
-	c.ServeJSON()
+	c.ResponseOk(resource)
 }
 
 // UpdateResource

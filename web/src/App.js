@@ -15,10 +15,6 @@
 import React, {Component} from "react";
 import "./App.less";
 import {Helmet} from "react-helmet";
-import EnableMfaNotification from "./common/notifaction/EnableMfaNotification";
-import GroupTreePage from "./GroupTreePage";
-import GroupEditPage from "./GroupEdit";
-import GroupListPage from "./GroupList";
 import {MfaRuleRequired} from "./Setting";
 import * as Setting from "./Setting";
 import {StyleProvider, legacyLogicalPropertiesTransformer} from "@ant-design/cssinjs";
@@ -33,6 +29,11 @@ import RoleListPage from "./RoleListPage";
 import RoleEditPage from "./RoleEditPage";
 import PermissionListPage from "./PermissionListPage";
 import PermissionEditPage from "./PermissionEditPage";
+import EnforcerEditPage from "./EnforcerEditPage";
+import EnforcerListPage from "./EnforcerListPage";
+import GroupTreePage from "./GroupTreePage";
+import GroupEditPage from "./GroupEdit";
+import GroupListPage from "./GroupList";
 import ProviderListPage from "./ProviderListPage";
 import ProviderEditPage from "./ProviderEditPage";
 import ApplicationListPage from "./ApplicationListPage";
@@ -86,9 +87,12 @@ import OdicDiscoveryPage from "./auth/OidcDiscoveryPage";
 import SamlCallback from "./auth/SamlCallback";
 import i18next from "i18next";
 import {withTranslation} from "react-i18next";
+import EnableMfaNotification from "./common/notifaction/EnableMfaNotification";
 import LanguageSelect from "./common/select/LanguageSelect";
 import ThemeSelect from "./common/select/ThemeSelect";
 import OrganizationSelect from "./common/select/OrganizationSelect";
+import {clearWeb3AuthToken} from "./auth/Web3Auth";
+import AccountAvatar from "./account/AccountAvatar";
 
 const {Header, Footer, Content} = Layout;
 
@@ -130,10 +134,8 @@ class App extends Component {
       this.setState({
         requiredEnableMfa: requiredEnableMfa,
       });
-    }
 
-    if (this.state.requiredEnableMfa !== prevState.requiredEnableMfa || this.state.account !== prevState.account) {
-      if (this.state.requiredEnableMfa === true) {
+      if (requiredEnableMfa === true) {
         const mfaType = Setting.getMfaItemsByRules(this.state.account, this.state.account?.organization, [MfaRuleRequired])
           .find((item) => item.rule === MfaRuleRequired)?.name;
         if (mfaType !== undefined) {
@@ -144,7 +146,6 @@ class App extends Component {
   }
 
   updateMenuKey() {
-    // eslint-disable-next-line no-restricted-globals
     const uri = location.pathname;
     this.setState({
       uri: uri,
@@ -165,6 +166,8 @@ class App extends Component {
       this.setState({selectedMenuKey: "/models"});
     } else if (uri.includes("/adapters")) {
       this.setState({selectedMenuKey: "/adapters"});
+    } else if (uri.includes("/enforcers")) {
+      this.setState({selectedMenuKey: "/enforcers"});
     } else if (uri.includes("/providers")) {
       this.setState({selectedMenuKey: "/providers"});
     } else if (uri.includes("/applications")) {
@@ -315,12 +318,11 @@ class App extends Component {
       .then((res) => {
         if (res.status === "ok") {
           const owner = this.state.account.owner;
-
           this.setState({
             account: null,
             themeAlgorithm: ["default"],
           });
-
+          clearWeb3AuthToken();
           Setting.showMessage("success", i18next.t("application:Logged out successfully"));
           const redirectUri = res.data2;
           if (redirectUri !== null && redirectUri !== undefined && redirectUri !== "") {
@@ -351,7 +353,9 @@ class App extends Component {
       );
     } else {
       return (
-        <Avatar src={this.state.account.avatar} style={{verticalAlign: "middle"}} size="large">
+        <Avatar src={this.state.account.avatar} style={{verticalAlign: "middle"}} size="large"
+          icon={<AccountAvatar src={this.state.account.avatar} style={{verticalAlign: "middle"}} size={40} />}
+        >
           {Setting.getShortName(this.state.account.name)}
         </Avatar>
       );
@@ -481,6 +485,10 @@ class App extends Component {
       res.push(Setting.getItem(<Link to="/adapters">{i18next.t("general:Adapters")}</Link>,
         "/adapters"
       ));
+
+      res.push(Setting.getItem(<Link to="/enforcers">{i18next.t("general:Enforcers")}</Link>,
+        "/enforcers"
+      ));
     }
 
     if (Setting.isLocalAdminUser(this.state.account)) {
@@ -599,6 +607,8 @@ class App extends Component {
         <Route exact path="/permissions/:organizationName/:permissionName" render={(props) => this.renderLoginIfNotLoggedIn(<PermissionEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/models" render={(props) => this.renderLoginIfNotLoggedIn(<ModelListPage account={this.state.account} {...props} />)} />
         <Route exact path="/models/:organizationName/:modelName" render={(props) => this.renderLoginIfNotLoggedIn(<ModelEditPage account={this.state.account} {...props} />)} />
+        <Route exact path="/enforcers" render={(props) => this.renderLoginIfNotLoggedIn(<EnforcerListPage account={this.state.account} {...props} />)} />
+        <Route exact path="/enforcers/:organizationName/:enforcerName" render={(props) => this.renderLoginIfNotLoggedIn(<EnforcerEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/adapters" render={(props) => this.renderLoginIfNotLoggedIn(<AdapterListPage account={this.state.account} {...props} />)} />
         <Route exact path="/adapters/:organizationName/:adapterName" render={(props) => this.renderLoginIfNotLoggedIn(<AdapterEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/providers" render={(props) => this.renderLoginIfNotLoggedIn(<ProviderListPage account={this.state.account} {...props} />)} />
@@ -631,12 +641,12 @@ class App extends Component {
         <Route exact path="/subscriptions/:organizationName/:subscriptionName" render={(props) => this.renderLoginIfNotLoggedIn(<SubscriptionEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/products" render={(props) => this.renderLoginIfNotLoggedIn(<ProductListPage account={this.state.account} {...props} />)} />
         <Route exact path="/products/:organizationName/:productName" render={(props) => this.renderLoginIfNotLoggedIn(<ProductEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/products/:productName/buy" render={(props) => this.renderLoginIfNotLoggedIn(<ProductBuyPage account={this.state.account} {...props} />)} />
+        <Route exact path="/products/:organizationName/:productName/buy" render={(props) => this.renderLoginIfNotLoggedIn(<ProductBuyPage account={this.state.account} {...props} />)} />
         <Route exact path="/payments" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentListPage account={this.state.account} {...props} />)} />
         <Route exact path="/payments/:paymentName" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/payments/:paymentName/result" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentResultPage account={this.state.account} {...props} />)} />
         <Route exact path="/records" render={(props) => this.renderLoginIfNotLoggedIn(<RecordListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/mfa/setup" render={(props) => this.renderLoginIfNotLoggedIn(<MfaSetupPage account={this.state.account} onfinish={result => this.setState({requiredEnableMfa: result})} {...props} />)} />
+        <Route exact path="/mfa/setup" render={(props) => this.renderLoginIfNotLoggedIn(<MfaSetupPage account={this.state.account} onfinish={() => this.setState({requiredEnableMfa: false})} {...props} />)} />
         <Route exact path="/.well-known/openid-configuration" render={(props) => <OdicDiscoveryPage />} />
         <Route exact path="/sysinfo" render={(props) => this.renderLoginIfNotLoggedIn(<SystemInfo account={this.state.account} {...props} />)} />
         <Route path="" render={() => <Result status="404" title="404 NOT FOUND" subTitle={i18next.t("general:Sorry, the page you visited does not exist.")}

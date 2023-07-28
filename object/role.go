@@ -82,12 +82,12 @@ func getRole(owner string, name string) (*Role, error) {
 }
 
 func GetRole(id string) (*Role, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
 	return getRole(owner, name)
 }
 
 func UpdateRole(id string, role *Role) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
 	oldRole, err := getRole(owner, name)
 	if err != nil {
 		return false, err
@@ -391,9 +391,12 @@ func GetAncestorRoles(roleIds ...string) ([]*Role, error) {
 
 // containsRole is a helper function to check if a roles is related to any role in the given list roles
 func containsRole(role *Role, roleMap map[string]*Role, visited map[string]bool, roleIds ...string) bool {
-	if isContain, ok := visited[role.GetId()]; ok {
+	roleId := role.GetId()
+	if isContain, ok := visited[roleId]; ok {
 		return isContain
 	}
+
+	visited[role.GetId()] = false
 
 	for _, subRole := range role.Roles {
 		if util.HasString(roleIds, subRole) {

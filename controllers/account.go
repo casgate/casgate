@@ -290,10 +290,11 @@ func (c *ApiController) Logout() {
 		c.ResponseOk(user, application.HomepageUrl)
 		return
 	} else {
-		if redirectUri == "" {
-			c.ResponseError(c.T("general:Missing parameter") + ": post_logout_redirect_uri")
-			return
-		}
+		// "post_logout_redirect_uri" has been made optional, see: https://github.com/casdoor/casdoor/issues/2151
+		// if redirectUri == "" {
+		// 	c.ResponseError(c.T("general:Missing parameter") + ": post_logout_redirect_uri")
+		// 	return
+		// }
 		if accessToken == "" {
 			c.ResponseError(c.T("general:Missing parameter") + ": id_token_hint")
 			return
@@ -368,9 +369,11 @@ func (c *ApiController) GetAccount() {
 		return
 	}
 
-	user.Permissions = object.GetMaskedPermissions(user.Permissions)
-	user.Roles = object.GetMaskedRoles(user.Roles)
-	user.MultiFactorAuths = object.GetAllMfaProps(user, true)
+	if user != nil {
+		user.Permissions = object.GetMaskedPermissions(user.Permissions)
+		user.Roles = object.GetMaskedRoles(user.Roles)
+		user.MultiFactorAuths = object.GetAllMfaProps(user, true)
+	}
 
 	organization, err := object.GetMaskedOrganization(object.GetOrganizationByUser(user))
 	if err != nil {
@@ -378,7 +381,8 @@ func (c *ApiController) GetAccount() {
 		return
 	}
 
-	u, err := object.GetMaskedUser(user)
+	isAdminOrSelf := c.IsAdminOrSelf(user)
+	u, err := object.GetMaskedUser(user, isAdminOrSelf)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

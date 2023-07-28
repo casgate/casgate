@@ -6,6 +6,9 @@ info:
   contact:
     email: admin@casbin.org
 basePath: /
+schemes:
+- http
+- https
 paths:
   /.well-known/jwks:
     get:
@@ -100,6 +103,24 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/add-enforcer:
+    post:
+      tags:
+      - Enforcer API
+      description: add enforcer
+      operationId: ApiController.AddEnforcer
+      parameters:
+      - in: body
+        name: enforcer
+        description: The enforcer object
+        required: true
+        schema:
+          $ref: '#/definitions/object'
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/object'
   /api/add-group:
     post:
       tags:
@@ -122,7 +143,20 @@ paths:
     post:
       tags:
       - Account API
+      description: add ldap
       operationId: ApiController.AddLdap
+      parameters:
+      - in: body
+        name: body
+        description: The details of the ldap
+        required: true
+        schema:
+          $ref: '#/definitions/object.Ldap'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/add-message:
     post:
       tags:
@@ -680,6 +714,24 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/delete-enforcer:
+    post:
+      tags:
+      - Enforcer API
+      description: delete enforcer
+      operationId: ApiController.DeleteEnforcer
+      parameters:
+      - in: body
+        name: body
+        description: The enforcer object
+        required: true
+        schema:
+          $ref: '#/definitions/object.Enforce'
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/object'
   /api/delete-group:
     post:
       tags:
@@ -702,7 +754,20 @@ paths:
     post:
       tags:
       - Account API
+      description: delete ldap
       operationId: ApiController.DeleteLdap
+      parameters:
+      - in: body
+        name: body
+        description: The details of the ldap
+        required: true
+        schema:
+          $ref: '#/definitions/object.Ldap'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/delete-message:
     post:
       tags:
@@ -1281,6 +1346,42 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/get-enforcer:
+    get:
+      tags:
+      - Enforcer API
+      description: get enforcer
+      operationId: ApiController.GetEnforcer
+      parameters:
+      - in: query
+        name: id
+        description: The id ( owner/name )  of enforcer
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/object'
+  /api/get-enforcers:
+    get:
+      tags:
+      - Enforcer API
+      description: get enforcers
+      operationId: ApiController.GetEnforcers
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of enforcers
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/object.Enforcer'
   /api/get-global-providers:
     get:
       tags:
@@ -1360,17 +1461,48 @@ paths:
     get:
       tags:
       - Account API
+      description: get ldap
       operationId: ApiController.GetLdap
+      parameters:
+      - in: query
+        name: id
+        description: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.Ldap'
   /api/get-ldap-users:
     get:
       tags:
       - Account API
+      description: get ldap users
       operationId: ApiController.GetLdapser
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/LdapResp'
   /api/get-ldaps:
     get:
       tags:
       - Account API
+      description: get ldaps
       operationId: ApiController.GetLdaps
+      parameters:
+      - in: query
+        name: owner
+        description: owner
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/object.Ldap'
   /api/get-message:
     get:
       tags:
@@ -2272,6 +2404,7 @@ paths:
         description: The id ( owner/name ) of the webhook
         required: true
         type: string
+        default: built-in/admin
       responses:
         "200":
           description: The Response object
@@ -2289,6 +2422,7 @@ paths:
         description: The owner of webhooks
         required: true
         type: string
+        default: built-in/admin
       responses:
         "200":
           description: The Response object
@@ -2296,6 +2430,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Webhook'
+      security:
+      - test_apiKey: []
   /api/health:
     get:
       tags:
@@ -2703,7 +2839,19 @@ paths:
     post:
       tags:
       - Account API
+      description: sync ldap users
       operationId: ApiController.SyncLdapUsers
+      parameters:
+      - in: query
+        name: id
+        description: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/LdapSyncResp'
   /api/unlink:
     post:
       tags:
@@ -2800,6 +2948,29 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/update-enforcer:
+    post:
+      tags:
+      - Enforcer API
+      description: update enforcer
+      operationId: ApiController.UpdateEnforcer
+      parameters:
+      - in: query
+        name: id
+        description: The id ( owner/name )  of enforcer
+        required: true
+        type: string
+      - in: body
+        name: enforcer
+        description: The enforcer object
+        required: true
+        schema:
+          $ref: '#/definitions/object'
+      responses:
+        "200":
+          description: ""
+          schema:
+            $ref: '#/definitions/object'
   /api/update-group:
     post:
       tags:
@@ -2827,7 +2998,20 @@ paths:
     post:
       tags:
       - Account API
+      description: update ldap
       operationId: ApiController.UpdateLdap
+      parameters:
+      - in: body
+        name: body
+        description: The details of the ldap
+        required: true
+        schema:
+          $ref: '#/definitions/object.Ldap'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/update-message:
     post:
       tags:
@@ -3204,6 +3388,7 @@ paths:
         description: The id ( owner/name ) of the webhook
         required: true
         type: string
+        default: built-in/admin
       - in: body
         name: body
         description: The details of the webhook
@@ -3367,8 +3552,17 @@ definitions:
   LaravelResponse:
     title: LaravelResponse
     type: object
+  LdapResp:
+    title: LdapResp
+    type: object
+  LdapSyncResp:
+    title: LdapSyncResp
+    type: object
   Response:
     title: Response
+    type: object
+  casbin.Enforcer:
+    title: Enforcer
     type: object
   controllers.AuthForm:
     title: AuthForm
@@ -3395,11 +3589,11 @@ definitions:
     properties:
       data:
         additionalProperties:
-          description: support string, struct or []struct
+          description: support string | class | List<class> and os on
           type: string
       data2:
         additionalProperties:
-          description: support string, struct or []struct
+          description: support string | class | List<class> and os on
           type: string
       msg:
         type: string
@@ -3622,6 +3816,31 @@ definitions:
         type: array
         items:
           type: string
+  object.Enforce:
+    title: Enforce
+    type: object
+  object.Enforcer:
+    title: Enforcer
+    type: object
+    properties:
+      adapter:
+        type: string
+      createdTime:
+        type: string
+      description:
+        type: string
+      displayName:
+        type: string
+      isEnabled:
+        type: boolean
+      model:
+        type: string
+      name:
+        type: string
+      owner:
+        type: string
+      updatedTime:
+        type: string
   object.GaugeVecInfo:
     title: GaugeVecInfo
     type: object
@@ -3722,6 +3941,42 @@ definitions:
       sub:
         type: string
       token_type:
+        type: string
+      username:
+        type: string
+  object.Ldap:
+    title: Ldap
+    type: object
+    properties:
+      autoSync:
+        type: integer
+        format: int64
+      baseDn:
+        type: string
+      createdTime:
+        type: string
+      enableSsl:
+        type: boolean
+      filter:
+        type: string
+      filterFields:
+        type: array
+        items:
+          type: string
+      host:
+        type: string
+      id:
+        type: string
+      lastSync:
+        type: string
+      owner:
+        type: string
+      password:
+        type: string
+      port:
+        type: integer
+        format: int64
+      serverName:
         type: string
       username:
         type: string
@@ -4704,6 +4959,8 @@ definitions:
           $ref: '#/definitions/object.ManagedAccount'
       meetup:
         type: string
+      metamask:
+        type: string
       mfaEmailEnabled:
         type: boolean
       mfaPhoneEnabled:
@@ -4869,31 +5126,51 @@ definitions:
     type: object
     properties:
       contentType:
+        default: application/json
         type: string
+        example: application/json
       createdTime:
+        default: "2023-07-27T17:09:12+08:00"
         type: string
+        example: "2023-07-27T17:09:12+08:00"
       events:
+        default: '[ddd]'
         type: array
         items:
           type: string
       headers:
+        default: '[]'
         type: array
         items:
           $ref: '#/definitions/object.Header'
       isEnabled:
+        default: true
         type: boolean
+        example: true
       isUserExtended:
+        default: true
         type: boolean
+        example: true
       method:
+        default: POST
         type: string
+        example: POST
       name:
+        default: test
         type: string
+        example: test
       organization:
+        default: built-in
         type: string
+        example: built-in
       owner:
+        default: built-in
         type: string
+        example: built-in
       url:
+        default: https://example.com/callback
         type: string
+        example: https://example.com/callback
   protocol.CredentialAssertion:
     title: CredentialAssertion
     type: object
@@ -4938,3 +5215,11 @@ definitions:
   xorm.Engine:
     title: Engine
     type: object
+securityDefinitions:
+  test_apiKey:
+    type: apiKey
+    name: Authorization
+    in: header
+externalDocs:
+  description: Find out more about casdoor
+  url: https://casdoor.org/

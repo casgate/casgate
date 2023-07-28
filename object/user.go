@@ -156,6 +156,7 @@ type User struct {
 	Yammer          string `xorm:"yammer varchar(100)" json:"yammer"`
 	Yandex          string `xorm:"yandex varchar(100)" json:"yandex"`
 	Zoom            string `xorm:"zoom varchar(100)" json:"zoom"`
+	MetaMask        string `xorm:"metamask varchar(100)" json:"metamask"`
 	Custom          string `xorm:"custom varchar(100)" json:"custom"`
 
 	WebauthnCredentials []webauthn.Credential `xorm:"webauthnCredentials blob" json:"webauthnCredentials"`
@@ -418,7 +419,7 @@ func GetUserNoCheck(id string) (*User, error) {
 	return getUser(owner, name)
 }
 
-func GetMaskedUser(user *User, errs ...error) (*User, error) {
+func GetMaskedUser(user *User, isAdminOrSelf bool, errs ...error) (*User, error) {
 	if len(errs) > 0 && errs[0] != nil {
 		return nil, errs[0]
 	}
@@ -430,9 +431,13 @@ func GetMaskedUser(user *User, errs ...error) (*User, error) {
 	if user.Password != "" {
 		user.Password = "***"
 	}
-	if user.AccessSecret != "" {
-		user.AccessSecret = "***"
+
+	if !isAdminOrSelf {
+		if user.AccessSecret != "" {
+			user.AccessSecret = "***"
+		}
 	}
+
 	if user.ManagedAccounts != nil {
 		for _, manageAccount := range user.ManagedAccounts {
 			manageAccount.Password = "***"
@@ -456,7 +461,7 @@ func GetMaskedUsers(users []*User, errs ...error) ([]*User, error) {
 
 	var err error
 	for _, user := range users {
-		user, err = GetMaskedUser(user)
+		user, err = GetMaskedUser(user, false)
 		if err != nil {
 			return nil, err
 		}
@@ -854,4 +859,12 @@ func AddUserkeys(user *User, isAdmin bool) (bool, error) {
 	user.AccessSecret = util.GenerateId()
 
 	return UpdateUser(user.GetId(), user, []string{}, isAdmin)
+}
+
+func (user *User) IsApplicationAdmin(application *Application) bool {
+	if user == nil {
+		return false
+	}
+
+	return (user.Owner == application.Organization && user.IsAdmin) || user.IsGlobalAdmin
 }
