@@ -484,7 +484,9 @@
       "View rule": "Правило просмотра",
       "Visible": "Видимый",
       "Website URL": "Веб-адрес сайта",
-      "Website URL - Tooltip": "Главная страница URL организации. Это поле не используется в Casdoor"
+      "Website URL - Tooltip": "Главная страница URL организации. Это поле не используется в Casdoor",
+      "Pilot Limit": "Лимит пилотных подписок",
+      "Pilot Limit - Tooltip": "Лимит пилотных подписок"
     },
     "payment": {
       "Confirm your invoice information": "Подтвердите информацию в вашем счете-фактуре",

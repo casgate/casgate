@@ -73,6 +73,8 @@ const (
 	SubscriptionFieldNameComment         SubscriptionFieldName = "Comment"
 	SubscriptionFieldNameWasPilot        SubscriptionFieldName = "WasPilot"
 	SubscriptionFieldNamePilotExpiryDate SubscriptionFieldName = "PilotExpiryDate"
+	SubscriptionFieldNameApprover        SubscriptionFieldName = "Approver"
+	SubscriptionFieldNameApproveTime     SubscriptionFieldName = "Approve Time"
 )
 
 func (s SubscriptionFieldName) String() string {

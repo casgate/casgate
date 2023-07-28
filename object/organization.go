@@ -77,6 +77,8 @@ type Organization struct {
 	Phone       string `xorm:"varchar(20)" json:"phone"`
 	CountryCode string `xorm:"varchar(6)" json:"countryCode"`
 	Manager     string `xorm:"varchar(100)" json:"manager"`
+
+	PilotLimit uint `json:"pilotLimit"`
 }
 
 func GetOrganizationCount(owner, field, value string) (int64, error) {

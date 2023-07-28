@@ -77,6 +77,7 @@ class OrganizationListPage extends BaseListPage {
         {name: "Is forbidden", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "Is deleted", visible: true, viewRule: "Admin", modifyRule: "Admin"},
       ],
+      pilotLimit: 5,
     };
   }
 

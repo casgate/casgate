@@ -122,6 +122,23 @@ func (c *ApiController) UpdateOrganization() {
 		return
 	}
 
+	userID := c.GetSessionUsername()
+	if userID == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	user, err := object.GetUser(userID)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if !user.IsGlobalAdmin {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	err = pt_af_logic.ValidateName(organization.Name)
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -144,6 +161,23 @@ func (c *ApiController) AddOrganization() {
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
 		c.ResponseError(err.Error())
+		return
+	}
+
+	userID := c.GetSessionUsername()
+	if userID == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	user, err := object.GetUser(userID)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if !user.IsGlobalAdmin {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
 
@@ -180,6 +214,23 @@ func (c *ApiController) DeleteOrganization() {
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
 		c.ResponseError(err.Error())
+		return
+	}
+
+	userID := c.GetSessionUsername()
+	if userID == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	user, err := object.GetUser(userID)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if !user.IsGlobalAdmin {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
 

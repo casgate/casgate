@@ -348,6 +348,22 @@ class OrganizationEditPage extends React.Component {
             }
           </Col>
         </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("organization:Pilot Limit"), i18next.t("organization:Pilot Limit - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Input
+              value={this.state.organization.pilotLimit}
+              disabled={!Setting.isAdminUser(this.props.account)}
+              onChange={e => {
+                const reg = /^\d+?$/;
+                if (reg.test(e.target.value) || e.target.value === "") {
+                  this.updateOrganizationField("pilotLimit", Setting.myParseInt(e.target.value));
+                }
+              }} />
+          </Col>
+        </Row>
       </Card>
     );
   }

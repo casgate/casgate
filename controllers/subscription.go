@@ -135,7 +135,8 @@ func (c *ApiController) UpdateSubscription() {
 		return
 	}
 
-	err = pt_af_logic.UpdateSubscriptionByState(currentUser, &subscription, old)
+	// fills some calculated subscription fields for transition to state
+	err = pt_af_logic.FillSubscriptionByState(currentUser, &subscription, old)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

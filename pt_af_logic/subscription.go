@@ -1,10 +1,12 @@
 package pt_af_logic
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/beego/beego/context"
+	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/object"
 	PTAFLTypes "github.com/casdoor/casdoor/pt_af_logic/types"
 	"github.com/casdoor/casdoor/util"
@@ -211,10 +213,122 @@ func ValidateSubscriptionFieldsChangeIsAllowed(
 		}
 	}
 
+	if old.Approver != new.Approver {
+		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameApprover)
+		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameApprover)
+		if !oldContains && !newContains {
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameApprover)
+		}
+	}
+
+	if old.ApproveTime != new.ApproveTime {
+		oldContains := oldRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameApproveTime)
+		newContains := newRoleFieldPermission.Contains(PTAFLTypes.SubscriptionFieldNameApproveTime)
+		if !oldContains && !newContains {
+			return PTAFLTypes.NewForbiddenFieldChangeError(PTAFLTypes.SubscriptionFieldNameApproveTime)
+		}
+	}
+
 	return nil
 }
 
-func UpdateSubscriptionByState(user *object.User, subscription *object.Subscription, old *object.Subscription) error {
+func ValidateSubscriptionByState(user *object.User, subscription *object.Subscription, old *object.Subscription) error {
+	if old.State == subscription.State {
+		return nil
+	}
+
+	state := PTAFLTypes.SubscriptionStateName(subscription.State)
+	switch state {
+	case PTAFLTypes.SubscriptionPending:
+		filter := builder.Neq{"state": []string{
+			PTAFLTypes.SubscriptionNew.String(),
+			PTAFLTypes.SubscriptionCancelled.String(),
+			PTAFLTypes.SubscriptionPreFinished.String(),
+			PTAFLTypes.SubscriptionFinished.String(),
+		}}
+
+		if subscription.User == "" {
+			//should never happen - user is required field for pending state
+			return errors.New("empty user")
+		}
+
+		userSubscriptionsCount, err := object.GetSubscriptionCount(subscription.Owner, "subscription.user", subscription.User, filter)
+		if err != nil {
+			return fmt.Errorf("object.GetSubscriptionCount: %w", err)
+		}
+
+		if userSubscriptionsCount > 0 {
+			return errors.New(i18n.Translate(ptlmLanguage, "subscription:Customer has active subscriptions"))
+		}
+
+	case PTAFLTypes.SubscriptionPilot:
+		filter := builder.And(builder.Eq{
+			"subscription.user": subscription.User,
+		},
+			builder.Neq{
+				"state": []string{
+					PTAFLTypes.SubscriptionNew.String(),
+					PTAFLTypes.SubscriptionCancelled.String(),
+					PTAFLTypes.SubscriptionFinished.String(),
+				}}.Or(builder.And(
+				builder.Eq{
+					"state":     PTAFLTypes.SubscriptionCancelled.String(),
+					"was_pilot": true},
+				builder.Expr("TO_DATE(approve_time,'YYYY-MM-DD')>TO_DATE(?,'YYYY-MM-DD')",
+					time.Now().AddDate(0, -3, 0).Format("2006-01-02")),
+			)).Or(builder.And(
+				builder.Eq{
+					"state": PTAFLTypes.SubscriptionFinished.String(),
+				},
+				builder.Gt{
+					"end_date": time.Now().Truncate(24*time.Hour).AddDate(0, -1, 0),
+				},
+			)))
+
+		if subscription.User == "" {
+			//should never happen - user is required field for pending state
+			return errors.New("empty user")
+		}
+
+		userSubscriptionsCount, err := object.GetSubscriptionCount(subscription.Owner, "", "", filter)
+		if err != nil {
+			return fmt.Errorf("object.GetSubscriptionCount(customerLimit): %w", err)
+		}
+
+		if userSubscriptionsCount > 0 {
+			return errors.New(i18n.Translate(ptlmLanguage, "subscription:Customer doesn't meet the requirements for pilot"))
+		}
+
+		filterPilotLimit := builder.Eq{
+			"was_pilot": true,
+			"state": []string{
+				PTAFLTypes.SubscriptionPilot.String(),
+				PTAFLTypes.SubscriptionPending.String(),
+				PTAFLTypes.SubscriptionUnauthorized.String(),
+				PTAFLTypes.SubscriptionPreAuthorized.String(),
+				PTAFLTypes.SubscriptionPilotExpired.String(),
+			},
+		}
+
+		organization, err := object.GetOrganization(util.GetId("admin", subscription.Owner))
+		if err != nil {
+			return fmt.Errorf("object.GetOrganization: %w", err)
+		}
+
+		partnerPilotSubscriptionsCount, err := object.GetSubscriptionCount(subscription.Owner, "", "", filterPilotLimit)
+		if err != nil {
+			return fmt.Errorf("object.GetSubscriptionCount(partnerLimit): %w", err)
+		}
+
+		if uint(partnerPilotSubscriptionsCount) >= organization.PilotLimit {
+			return errors.New(i18n.Translate(ptlmLanguage, "subscription:Pilot Limit exceeded"))
+		}
+	}
+
+	return nil
+}
+
+func FillSubscriptionByState(user *object.User, subscription *object.Subscription, old *object.Subscription) error {
 	if old.State == subscription.State {
 		return nil
 	}
@@ -225,6 +339,7 @@ func UpdateSubscriptionByState(user *object.User, subscription *object.Subscript
 	state := PTAFLTypes.SubscriptionStateName(subscription.State)
 	switch state {
 	case PTAFLTypes.SubscriptionPilot:
+
 		subscription.WasPilot = true
 		mskLoc, err := time.LoadLocation("Europe/Moscow")
 		if err != nil {
@@ -258,6 +373,12 @@ func ValidateSubscriptionUpdate(user *object.User, subscription *object.Subscrip
 	}
 
 	err = ValidateSubscriptionRequiredFieldsIsFilled(subscriptionRole, old, subscription)
+	if err != nil {
+		return err
+	}
+
+	// additional checks for some states
+	err = ValidateSubscriptionByState(user, subscription, old)
 	if err != nil {
 		return err
 	}

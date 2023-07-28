@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import moment from "moment";
 import React from "react";
 import {Button, Card, Col, DatePicker, Input, InputNumber, Row, Select, Switch} from "antd";
 import * as OrganizationBackend from "./../backend/OrganizationBackend";
@@ -270,16 +269,6 @@ class SubscriptionEditPage extends React.Component {
           </Col>
           <Col span={22} >
             <Select virtual={false} disabled={!Setting.isLocalAdminUser(this.props.account) && !Setting.isDistributor(this.props.account)} style={{width: "100%"}} value={this.state.subscription.state} onChange={(value => {
-              if (this.state.subscription.state !== value) {
-                if (value === "Approved") {
-                  this.updateSubscriptionField("approver", this.props.account.name);
-                  this.updateSubscriptionField("approveTime", moment().format());
-                } else {
-                  this.updateSubscriptionField("approver", "");
-                  this.updateSubscriptionField("approveTime", "");
-                }
-              }
-
               this.updateSubscriptionField("state", value);
             })}
             options={this.state.subscriptionStateOptions}
