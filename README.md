@@ -4,47 +4,22 @@
   <h1 align="center" style="border-bottom: none;">CasGate</h1>
   <h3 align="center">A UI-first centralized authentication / Single-Sign-On (SSO) platform based on OAuth 2.0 / OIDC.</h3>
 
-## Online demo
+----------------
 
-- Read-only site: https://door.casdoor.com (any modification operation will fail)
-- Writable site: https://demo.casdoor.com (original data will be restored for every 5 minutes)
+<div style="padding: 10px; font-size: large; border: 1px solid orange">
+This repository is a fork of <a href="https://github.com/casdoor/casdoor">Casdoor</a>, an open-source authentication and authorization server, tailored to meet enterprise requirements and prioritize security. While this fork is currently fully compatible with the original Casdoor, it's essential to note that future features may diverge from the main project.
+</div>
 
-## Documentation
+## Features
+This fork retains all the core features of the original Casdoor project.
 
-https://casdoor.org
-
-## Install
-
-- By source code: https://casdoor.org/docs/basic/server-installation
-- By Docker: https://casdoor.org/docs/basic/try-with-docker
-
-## How to connect to Casdoor?
-
-https://casdoor.org/docs/how-to-connect/overview
-
-## Casdoor Public API
-
-- Docs: https://casdoor.org/docs/basic/public-api
-- Swagger: https://door.casdoor.com/swagger
-
-## Integrations
-
-https://casdoor.org/docs/category/integrations
-
-## How to contact?
-
-- Discord: https://discord.gg/5rPsrAzK7S
-- Forum: https://forum.casbin.com
-- Contact: https://tawk.to/chat/623352fea34c2456412b8c51/1fuc7od6e
-
-## Contribute
-
-For casdoor, if you have any questions, you can give Issues, or you can also directly start Pull Requests(but we recommend giving issues first to communicate with the community).
-
-### I18n translation
-
-If you are contributing to casdoor, please note that we use [Crowdin](https://crowdin.com/project/casdoor-site) as translating platform and i18next as translating tool. When you add some words using i18next in the `web/` directory, please remember to add what you have added to the `web/src/locales/en/data.json` file.
+### Additionally, CasGate aims to introduce or enhance the following features:
+<ul>
+<li>Temporary user password. Administrator may force specific user to change his password after first login.</li>
+<li>Auto assign user role by LDAP attributes</li>
+<li>and much more in development</li>
+</ul>
 
 ## License
 
-[Apache-2.0](https://github.com/casdoor/casdoor/blob/master/LICENSE)
+[Apache-2.0](https://github.com/casgate/casgate/blob/master/LICENSE)
