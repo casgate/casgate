@@ -6,14 +6,14 @@
 
 ----------------
 
-<div style="padding: 10px; font-size: large; border: 1px solid orange">
+<div style="padding: 10px; font-size: large;">
 This repository is a fork of <a href="https://github.com/casdoor/casdoor">Casdoor</a>, an open-source authentication and authorization server, tailored to meet enterprise requirements and prioritize security. While this fork is currently fully compatible with the original Casdoor, it's essential to note that future features may diverge from the main project.
 </div>
 
 ## Features
 This fork retains all the core features of the original Casdoor project.
 
-### Additionally, CasGate aims to introduce or enhance the following features:
+### Additionally, CasGate aims to introduce the following features:
 <ul>
 <li>Temporary user password. Administrator may force specific user to change his password after first login.</li>
 <li>Auto assign user role by LDAP attributes</li>
