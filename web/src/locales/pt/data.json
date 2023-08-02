@@ -144,7 +144,7 @@
   },
   "forget": {
     "Account": "Conta",
-    "Change Password": "Alterar Senha",
+    "Password change required": "Alterar Senha",
     "Choose email or phone": "Escolha e-mail ou telefone",
     "Next Step": "Próxima Etapa",
     "Please input your username!": "Por favor, insira seu nome de usuário!",
@@ -879,6 +879,7 @@
     "Birthday - Tooltip": "Aniversário - Tooltip",
     "Captcha Verify Failed": "Falha na verificação de captcha",
     "Captcha Verify Success": "Verificação de captcha bem-sucedida",
+    "Password change required - Tooltip": "O sistema exigirá que o usuário altere a senha após o próximo login",
     "Country code": "Código do país",
     "Country/Region": "País/Região",
     "Country/Region - Tooltip": "País ou região",

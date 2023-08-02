@@ -91,6 +91,7 @@ func SetUserField(user *User, field string, value string) (bool, error) {
 		user.UpdateUserPassword(organization)
 		bean[strings.ToLower(field)] = user.Password
 		bean["password_type"] = user.PasswordType
+		bean["password_change_required"] = false
 	} else {
 		bean[strings.ToLower(field)] = value
 	}
@@ -320,6 +321,10 @@ func CheckPermissionForUpdateUser(oldUser, newUser *User, isAdmin bool, lang str
 	}
 	if oldUser.IsDeleted != newUser.IsDeleted {
 		item := GetAccountItemByName("Is deleted", organization)
+		itemsChanged = append(itemsChanged, item)
+	}
+	if oldUser.PasswordChangeRequired != newUser.PasswordChangeRequired {
+		item := GetAccountItemByName("Password change required", organization)
 		itemsChanged = append(itemsChanged, item)
 	}
 

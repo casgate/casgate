@@ -144,7 +144,7 @@
   },
   "forget": {
     "Account": "Akun",
-    "Change Password": "Ubah Kata Sandi",
+    "Password change required": "Ubah Kata Sandi",
     "Choose email or phone": "Pilih email atau telepon",
     "Next Step": "Langkah selanjutnya",
     "Please input your username!": "Silakan masukkan nama pengguna Anda!",
@@ -879,6 +879,7 @@
     "Birthday - Tooltip": "Birthday - Tooltip",
     "Captcha Verify Failed": "Gagal memverifikasi Captcha",
     "Captcha Verify Success": "Captcha Verifikasi Berhasil",
+    "Password change required - Tooltip": "Sistem akan meminta pengguna untuk mengubah kata sandi setelah masuk berikutnya",
     "Country code": "Kode negara",
     "Country/Region": "Negara/daerah",
     "Country/Region - Tooltip": "Negara atau wilayah",

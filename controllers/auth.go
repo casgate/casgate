@@ -370,6 +370,12 @@ func (c *ApiController) Login() {
 				return
 			}
 
+			if user.PasswordChangeRequired {
+				c.setChangePasswordUserSession(user.GetId())
+				c.ResponseOk(object.NextChangePasswordForm)
+				return
+			}
+
 			resp = c.HandleLoggedIn(application, user, &authForm)
 
 			record := object.NewRecord(c.Ctx)
@@ -702,8 +708,49 @@ func (c *ApiController) Login() {
 			return
 		}
 
+		if user.PasswordChangeRequired {
+			c.setChangePasswordUserSession(user.GetId())
+			c.setMfaUserSession("")
+			c.ResponseOk(object.NextChangePasswordForm)
+			return
+		}
+
 		resp = c.HandleLoggedIn(application, user, &authForm)
 		c.setMfaUserSession("")
+
+		record := object.NewRecord(c.Ctx)
+		record.Organization = application.Organization
+		record.User = user.Name
+		util.SafeGoroutine(func() { object.AddRecord(record) })
+	} else if c.getChangePasswordUserSession() != "" {
+		user, err := object.GetUser(c.getChangePasswordUserSession())
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+		if user == nil {
+			c.ResponseError("expired user session")
+			return
+		}
+
+		if user.PasswordChangeRequired {
+			c.ResponseOk(object.NextChangePasswordForm)
+			return
+		}
+
+		application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+
+		if application == nil {
+			c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
+			return
+		}
+
+		resp = c.HandleLoggedIn(application, user, &authForm)
+		c.setChangePasswordUserSession("")
 
 		record := object.NewRecord(c.Ctx)
 		record.Organization = application.Organization

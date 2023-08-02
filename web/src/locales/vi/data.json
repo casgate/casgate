@@ -144,7 +144,7 @@
   },
   "forget": {
     "Account": "Tài khoản",
-    "Change Password": "Đổi mật khẩu",
+    "Password change required": "Đổi mật khẩu",
     "Choose email or phone": "Chọn điện thư hay điện thoại",
     "Next Step": "Bước tiếp theo",
     "Please input your username!": "Vui lòng nhập tên đăng nhập của bạn!",
@@ -879,6 +879,7 @@
     "Birthday - Tooltip": "Birthday - Tooltip",
     "Captcha Verify Failed": "Xác thực Captcha không thành công",
     "Captcha Verify Success": "Xác thực Captcha Thành công",
+    "Password change required - Tooltip": "Hệ thống sẽ yêu cầu người dùng thay đổi mật khẩu sau lần đăng nhập tiếp theo",
     "Country code": "Mã quốc gia",
     "Country/Region": "Quốc gia / Vùng miền",
     "Country/Region - Tooltip": "Quốc gia hoặc khu vực",

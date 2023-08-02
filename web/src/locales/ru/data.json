@@ -144,7 +144,7 @@
   },
   "forget": {
     "Account": "Счет",
-    "Change Password": "Изменить пароль",
+    "Password change required": "Изменить пароль",
     "Choose email or phone": "Выберите электронную почту или телефон",
     "Next Step": "Следующий шаг",
     "Please input your username!": "Пожалуйста, введите своё имя пользователя!",
@@ -879,6 +879,7 @@
     "Birthday - Tooltip": "Birthday - Tooltip",
     "Captcha Verify Failed": "Ошибка верификации Captcha",
     "Captcha Verify Success": "Успешно прошли проверку Captcha",
+    "Password change required - Tooltip": "Система потребует от пользователя смены пароля после следующего входа",
     "Country code": "Код страны",
     "Country/Region": "Страна/регион",
     "Country/Region - Tooltip": "Страна или регион",

@@ -56,6 +56,7 @@ func getBuiltInAccountItems() []*AccountItem {
 		{Name: "Avatar", Visible: true, ViewRule: "Public", ModifyRule: "Self"},
 		{Name: "User type", Visible: true, ViewRule: "Public", ModifyRule: "Admin"},
 		{Name: "Password", Visible: true, ViewRule: "Self", ModifyRule: "Self"},
+		{Name: "Password change required", Visible: true, ViewRule: "Admin", ModifyRule: "Admin"},
 		{Name: "Email", Visible: true, ViewRule: "Public", ModifyRule: "Self"},
 		{Name: "Phone", Visible: true, ViewRule: "Public", ModifyRule: "Self"},
 		{Name: "Country code", Visible: true, ViewRule: "Public", ModifyRule: "Admin"},
