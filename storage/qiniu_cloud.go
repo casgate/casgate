@@ -1,4 +1,4 @@
-// Copyright 2022 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casdoor Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package util
+package storage
 
-import xormadapter "github.com/casdoor/xorm-adapter/v3"
+import (
+	"github.com/casdoor/oss"
+	"github.com/casdoor/oss/qiniu"
+)
 
-func CasbinToSlice(casbinRule xormadapter.CasbinRule) []string {
-	s := []string{
-		casbinRule.V0,
-		casbinRule.V1,
-		casbinRule.V2,
-		casbinRule.V3,
-		casbinRule.V4,
-		casbinRule.V5,
-	}
-	// remove empty strings from end, for update model policy map
-	for i := len(s) - 1; i >= 0; i-- {
-		if s[i] != "" {
-			s = s[:i+1]
-			break
-		}
-	}
-	return s
+func NewQiniuCloudKodoStorageProvider(clientId string, clientSecret string, region string, bucket string, endpoint string) oss.StorageInterface {
+	sp := qiniu.New(&qiniu.Config{
+		AccessID:  clientId,
+		AccessKey: clientSecret,
+		Region:    region,
+		Bucket:    bucket,
+		Endpoint:  endpoint,
+	})
+
+	return sp
 }
