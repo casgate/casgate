@@ -140,7 +140,7 @@ func AddSession(session *Session) (bool, error) {
 func DeleteSession(id string) (bool, error) {
 	owner, name, applicationName := util.GetOwnerAndNameAndOtherFromId(id)
 
-	application, err := GetApplication(util.GetId(owner, applicationName))
+	application, err := GetApplication(util.GetId("admin", applicationName))
 	if err != nil {
 		return false, err
 	}
