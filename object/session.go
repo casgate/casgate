@@ -138,8 +138,14 @@ func AddSession(session *Session) (bool, error) {
 }
 
 func DeleteSession(id string) (bool, error) {
-	owner, name, application := util.GetOwnerAndNameAndOtherFromId(id)
-	if owner == CasdoorOrganization && application == CasdoorApplication {
+	owner, name, applicationName := util.GetOwnerAndNameAndOtherFromId(id)
+
+	application, err := GetApplication(util.GetId(owner, applicationName))
+	if err != nil {
+		return false, err
+	}
+
+	if (owner == CasdoorOrganization && applicationName == CasdoorApplication) || application.EnableSigninSession {
 		session, err := GetSingleSession(id)
 		if err != nil {
 			return false, err
