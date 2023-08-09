@@ -17,8 +17,14 @@ package object
 import (
 	"fmt"
 
-	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
+)
+
+const (
+	scopeCertJWT    = "JWT"
+	scopeCertCACert = "CA Certificate"
 )
 
 type Cert struct {
@@ -37,6 +43,8 @@ type Cert struct {
 	PrivateKey             string `xorm:"mediumtext" json:"privateKey"`
 	AuthorityPublicKey     string `xorm:"mediumtext" json:"authorityPublicKey"`
 	AuthorityRootPublicKey string `xorm:"mediumtext" json:"authorityRootPublicKey"`
+
+	CACertificate string `xorm:"mediumtext" json:"caCertificate"`
 }
 
 func GetMaskedCert(cert *Cert) *Cert {

@@ -124,7 +124,9 @@
     "Private key - Tooltip": "Приватный ключ, соответствующий сертификату открытого ключа",
     "Private key copied to clipboard successfully": "Приватный ключ успешно скопирован в буфер обмена",
     "Scope - Tooltip": "Сценарии использования сертификата",
-    "Type - Tooltip": "Тип сертификата"
+    "Type - Tooltip": "Тип сертификата",
+    "CA Certificate": "Сертификат УЦ",
+    "CA Certificate - Tooltip": "Cертификат удостоверяющего центра (УЦ) в PEM-формате"
   },
   "code": {
     "Code you received": "Код, который вы получили",
@@ -359,7 +361,9 @@
     "CN": "CN",
     "Edit LDAP": "Изменить LDAP",
     "Enable SSL": "Включить SSL",
-    "Enable SSL - Tooltip": "Перевод: Следует ли включать SSL",
+    "Enable SSL - Tooltip": "Следует ли включать SSL",
+    "CA Certificate": "Сертификат УЦ",
+    "CA Certificate - Tooltip": "Доверенный X.509 сертификат удостоверяющего центра (УЦ) в PEM-формате. Используется для устновки доверенного SSL-соединения с сервером LDAP",
     "Filter fields": "Filter fields",
     "Filter fields - Tooltip": "Filter fields - Tooltip",
     "Group ID": "Идентификатор группы",

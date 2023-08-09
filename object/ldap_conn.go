@@ -15,13 +15,16 @@
 package object
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/casdoor/casdoor/util"
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/thanhpk/randstr"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type LdapConn struct {
@@ -58,10 +61,36 @@ type LdapUser struct {
 	MemberOf string `json:"memberOf"`
 }
 
-func (ldap *Ldap) GetLdapConn() (c *LdapConn, err error) {
-	var conn *goldap.Conn
+var (
+	ErrX509CertsPEMParse = errors.New("x509: malformed CA certificate")
+	ErrX509CertsEmpty    = errors.New("x509: empty CA certificate body")
+)
+
+func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
+	var (
+		conn *goldap.Conn
+		err  error
+	)
+
 	if ldap.EnableSsl {
-		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), nil)
+		if len(ldap.Cert) == 0 {
+			return nil, ErrX509CertsEmpty
+		}
+
+		rootCACert, err := getCertByName(ldap.Cert)
+		if err != nil {
+			return nil, err
+		}
+
+		ca := x509.NewCertPool()
+		if ok := ca.AppendCertsFromPEM([]byte(rootCACert.CACertificate)); !ok {
+			return nil, ErrX509CertsPEMParse
+		}
+
+		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), &tls.Config{
+			PreferServerCipherSuites: true,
+			RootCAs:                  ca,
+		})
 	} else {
 		conn, err = goldap.Dial("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port))
 	}
