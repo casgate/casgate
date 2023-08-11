@@ -242,7 +242,11 @@ class CertEditPage extends React.Component {
               this.updateCertField("certificate", e.target.value);
             }} />
           </Col>
-          <Col span={1} />
+          {
+            this.state.cert.scope !== Setting.CertScopeJWT ? null : (
+              <Col span={1} />
+            )
+          }
           {
             this.state.cert.scope !== Setting.CertScopeJWT ? null : (
               <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
