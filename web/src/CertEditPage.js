@@ -138,6 +138,8 @@ class CertEditPage extends React.Component {
           <Col span={22} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.cert.scope} onChange={(value => {
               this.updateCertField("scope", value);
+              this.updateCertField("certificate", "");
+              this.updateCertField("privateKey", "");
             })}>
               {
                 [
@@ -148,20 +150,6 @@ class CertEditPage extends React.Component {
             </Select>
           </Col>
         </Row>
-        {
-          this.state.cert.scope !== Setting.CertScopeCACert ? null : (
-            <Row style={{marginTop: "20px"}} >
-              <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                {Setting.getLabel(i18next.t("cert:CA Certificate"), i18next.t("cert:CA Certificate - Tooltip"))} :
-              </Col>
-              <Col span={22} >
-                <TextArea autoSize={{minRows: 20, maxRows: 30}} value={this.state.cert.caCertificate} onChange={e => {
-                  this.updateCertField("caCertificate", e.target.value);
-                }} />
-              </Col>
-            </Row>
-          )
-        }
         {
           this.state.cert.scope !== Setting.CertScopeJWT ? null : (
             <Row style={{marginTop: "20px"}} >
@@ -231,35 +219,39 @@ class CertEditPage extends React.Component {
             </Row>
           )
         }
-        {
-          this.state.cert.scope !== Setting.CertScopeJWT ? null : (
-            <Row style={{marginTop: "20px"}} >
-              <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                {Setting.getLabel(i18next.t("cert:Certificate"), i18next.t("cert:Certificate - Tooltip"))} :
-              </Col>
-              <Col span={editorWidth} >
-                <Button style={{marginRight: "10px", marginBottom: "10px"}} onClick={() => {
-                  copy(this.state.cert.certificate);
-                  Setting.showMessage("success", i18next.t("cert:Certificate copied to clipboard successfully"));
-                }}
-                >
-                  {i18next.t("cert:Copy certificate")}
-                </Button>
-                <Button type="primary" onClick={() => {
-                  const blob = new Blob([this.state.cert.certificate], {type: "text/plain;charset=utf-8"});
-                  FileSaver.saveAs(blob, "token_jwt_key.pem");
-                }}
-                >
-                  {i18next.t("cert:Download certificate")}
-                </Button>
-                <TextArea autoSize={{minRows: 30, maxRows: 30}} value={this.state.cert.certificate} onChange={e => {
-                  this.updateCertField("certificate", e.target.value);
-                }} />
-              </Col>
-              <Col span={1} />
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("cert:Certificate"), i18next.t("cert:Certificate - Tooltip"))} :
+          </Col>
+          <Col span={editorWidth} >
+            <Button style={{marginRight: "10px", marginBottom: "10px"}} onClick={() => {
+              copy(this.state.cert.certificate);
+              Setting.showMessage("success", i18next.t("cert:Certificate copied to clipboard successfully"));
+            }}
+            >
+              {i18next.t("cert:Copy certificate")}
+            </Button>
+            <Button type="primary" onClick={() => {
+              const blob = new Blob([this.state.cert.certificate], {type: "text/plain;charset=utf-8"});
+              FileSaver.saveAs(blob, "token_jwt_key.pem");
+            }}
+            >
+              {i18next.t("cert:Download certificate")}
+            </Button>
+            <TextArea autoSize={{minRows: 30, maxRows: 30}} value={this.state.cert.certificate} onChange={e => {
+              this.updateCertField("certificate", e.target.value);
+            }} />
+          </Col>
+          <Col span={1} />
+          {
+            this.state.cert.scope !== Setting.CertScopeJWT ? null : (
               <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                 {Setting.getLabel(i18next.t("cert:Private key"), i18next.t("cert:Private key - Tooltip"))} :
               </Col>
+            )
+          }
+          {
+            this.state.cert.scope !== Setting.CertScopeJWT ? null : (
               <Col span={editorWidth} >
                 <Button style={{marginRight: "10px", marginBottom: "10px"}} onClick={() => {
                   copy(this.state.cert.privateKey);
@@ -279,9 +271,9 @@ class CertEditPage extends React.Component {
                   this.updateCertField("privateKey", e.target.value);
                 }} />
               </Col>
-            </Row>
-          )
-        }
+            )
+          }
+        </Row>
       </Card>
     );
   }

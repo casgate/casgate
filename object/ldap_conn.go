@@ -81,7 +81,7 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 			}
 
 			ca := x509.NewCertPool()
-			if ok := ca.AppendCertsFromPEM([]byte(rootCACert.CACertificate)); !ok {
+			if ok := ca.AppendCertsFromPEM([]byte(rootCACert.Certificate)); !ok {
 				return nil, ErrX509CertsPEMParse
 			}
 			tlsConf.RootCAs = ca

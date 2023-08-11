@@ -49,7 +49,6 @@ class CertListPage extends BaseListPage {
       expireInYears: 20,
       certificate: "",
       privateKey: "",
-      caCertificate: "",
     };
   }
 

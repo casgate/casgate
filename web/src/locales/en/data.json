@@ -118,7 +118,7 @@
     "Bit size": "Bit size",
     "Bit size - Tooltip": "Secret key length",
     "Certificate": "Certificate",
-    "Certificate - Tooltip": "Public key certificate, used for decrypting the JWT signature of the Access Token. This certificate usually needs to be deployed on the Casdoor SDK side (i.e., the application) to parse the JWT",
+    "Certificate - Tooltip": "Public key certificate in PEM format. It used for decrypting the JWT signature of the Access Token or Certification authority (CA)",
     "Certificate copied to clipboard successfully": "Certificate copied to clipboard successfully",
     "Copy certificate": "Copy certificate",
     "Copy private key": "Copy private key",
@@ -134,9 +134,7 @@
     "Private key - Tooltip": "Private key corresponding to the public key certificate",
     "Private key copied to clipboard successfully": "Private key copied to clipboard successfully",
     "Scope - Tooltip": "Usage scenarios of the certificate",
-    "Type - Tooltip": "Type of certificate",
-    "CA Certificate": "CA Certificate",
-    "CA Certificate - Tooltip": "Certification authority (CA) certificate in PEM format"
+    "Type - Tooltip": "Type of certificate"
   },
   "code": {
     "Code you received": "Code you received",
