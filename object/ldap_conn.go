@@ -61,10 +61,7 @@ type LdapUser struct {
 	MemberOf string `json:"memberOf"`
 }
 
-var (
-	ErrX509CertsPEMParse = errors.New("x509: malformed CA certificate")
-	ErrX509CertsEmpty    = errors.New("x509: empty CA certificate body")
-)
+var ErrX509CertsPEMParse = errors.New("x509: malformed CA certificate")
 
 func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 	var (
@@ -73,24 +70,24 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 	)
 
 	if ldap.EnableSsl {
-		if len(ldap.Cert) == 0 {
-			return nil, ErrX509CertsEmpty
-		}
-
-		rootCACert, err := getCertByName(ldap.Cert)
-		if err != nil {
-			return nil, err
-		}
-
-		ca := x509.NewCertPool()
-		if ok := ca.AppendCertsFromPEM([]byte(rootCACert.CACertificate)); !ok {
-			return nil, ErrX509CertsPEMParse
-		}
-
-		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), &tls.Config{
+		tlsConf := tls.Config{
 			PreferServerCipherSuites: true,
-			RootCAs:                  ca,
-		})
+		}
+
+		if len(ldap.Cert) > 0 {
+			rootCACert, err := getCertByName(ldap.Cert)
+			if err != nil {
+				return nil, err
+			}
+
+			ca := x509.NewCertPool()
+			if ok := ca.AppendCertsFromPEM([]byte(rootCACert.CACertificate)); !ok {
+				return nil, ErrX509CertsPEMParse
+			}
+			tlsConf.RootCAs = ca
+		}
+
+		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), &tlsConf)
 	} else {
 		conn, err = goldap.Dial("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port))
 	}
