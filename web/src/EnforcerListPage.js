@@ -14,36 +14,33 @@
 
 import React from "react";
 import {Link} from "react-router-dom";
-import {Button, Table} from "antd";
+import {Button, Switch, Table} from "antd";
 import moment from "moment";
 import * as Setting from "./Setting";
-import * as MessageBackend from "./backend/MessageBackend";
+import * as EnforcerBackend from "./backend/EnforcerBackend";
 import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
 import PopconfirmModal from "./common/modal/PopconfirmModal";
 
-class MessageListPage extends BaseListPage {
-  newMessage() {
+class EnforcerListPage extends BaseListPage {
+  newEnforcer() {
     const randomName = Setting.getRandomName();
-    const organizationName = Setting.getRequestOrganization(this.props.account);
+    const owner = Setting.getRequestOrganization(this.props.account);
     return {
-      owner: "admin", // this.props.account.messagename,
-      name: `message_${randomName}`,
+      owner: owner,
+      name: `enforcer_${randomName}`,
       createdTime: moment().format(),
-      organization: organizationName,
-      chat: "",
-      replyTo: "",
-      author: `${this.props.account.owner}/${this.props.account.name}`,
-      text: "",
+      displayName: `New Enforcer - ${randomName}`,
+      isEnabled: true,
     };
   }
 
-  addMessage() {
-    const newMessage = this.newMessage();
-    MessageBackend.addMessage(newMessage)
+  addEnforcer() {
+    const newEnforcer = this.newEnforcer();
+    EnforcerBackend.addEnforcer(newEnforcer)
       .then((res) => {
         if (res.status === "ok") {
-          this.props.history.push({pathname: `/messages/${newMessage.name}`, mode: "add"});
+          this.props.history.push({pathname: `/enforcers/${newEnforcer.owner}/${newEnforcer.name}`, mode: "add"});
           Setting.showMessage("success", i18next.t("general:Successfully added"));
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to add")}: ${res.msg}`);
@@ -54,8 +51,8 @@ class MessageListPage extends BaseListPage {
       });
   }
 
-  deleteMessage(i) {
-    MessageBackend.deleteMessage(this.state.data[i])
+  deleteEnforcer(i) {
+    EnforcerBackend.deleteEnforcer(this.state.data[i])
       .then((res) => {
         if (res.status === "ok") {
           Setting.showMessage("success", i18next.t("general:Successfully deleted"));
@@ -72,16 +69,31 @@ class MessageListPage extends BaseListPage {
       });
   }
 
-  renderTable(messages) {
+  renderTable(enforcers) {
     const columns = [
       {
-        title: i18next.t("general:Organization"),
-        dataIndex: "organization",
-        key: "organization",
+        title: i18next.t("general:Name"),
+        dataIndex: "name",
+        key: "name",
         width: "150px",
         fixed: "left",
         sorter: true,
-        ...this.getColumnSearchProps("organization"),
+        ...this.getColumnSearchProps("name"),
+        render: (text, record, index) => {
+          return (
+            <Link to={`/enforcers/${record.owner}/${text}`}>
+              {text}
+            </Link>
+          );
+        },
+      },
+      {
+        title: i18next.t("general:Organization"),
+        dataIndex: "owner",
+        key: "owner",
+        width: "120px",
+        sorter: true,
+        ...this.getColumnSearchProps("owner"),
         render: (text, record, index) => {
           return (
             <Link to={`/organizations/${text}`}>
@@ -91,68 +103,34 @@ class MessageListPage extends BaseListPage {
         },
       },
       {
-        title: i18next.t("general:Name"),
-        dataIndex: "name",
-        key: "name",
-        width: "120px",
-        fixed: "left",
-        sorter: true,
-        ...this.getColumnSearchProps("name"),
-        render: (text, record, index) => {
-          return (
-            <Link to={`/messages/${text}`}>
-              {text}
-            </Link>
-          );
-        },
-      },
-      {
         title: i18next.t("general:Created time"),
         dataIndex: "createdTime",
         key: "createdTime",
-        width: "150px",
+        width: "160px",
         sorter: true,
         render: (text, record, index) => {
           return Setting.getFormattedDate(text);
         },
       },
       {
-        title: i18next.t("message:Chat"),
-        dataIndex: "chat",
-        key: "chat",
-        width: "120px",
+        title: i18next.t("general:Display name"),
+        dataIndex: "displayName",
+        key: "displayName",
+        width: "200px",
         sorter: true,
-        ...this.getColumnSearchProps("chat"),
-        render: (text, record, index) => {
-          return (
-            <Link to={`/chats/${text}`}>
-              {text}
-            </Link>
-          );
-        },
+        ...this.getColumnSearchProps("displayName"),
       },
       {
-        title: i18next.t("message:Author"),
-        dataIndex: "author",
-        key: "author",
+        title: i18next.t("general:Is enabled"),
+        dataIndex: "isEnabled",
+        key: "isEnabled",
         width: "120px",
         sorter: true,
-        ...this.getColumnSearchProps("author"),
         render: (text, record, index) => {
           return (
-            <Link to={`/users/${text}`}>
-              {text}
-            </Link>
+            <Switch disabled checkedChildren="ON" unCheckedChildren="OFF" checked={text} />
           );
         },
-      },
-      {
-        title: i18next.t("message:Text"),
-        dataIndex: "text",
-        key: "text",
-        // width: '100px',
-        sorter: true,
-        ...this.getColumnSearchProps("text"),
       },
       {
         title: i18next.t("general:Action"),
@@ -163,10 +141,12 @@ class MessageListPage extends BaseListPage {
         render: (text, record, index) => {
           return (
             <div>
-              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/messages/${record.name}`)}>{i18next.t("general:Edit")}</Button>
+              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary"
+                onClick={() => this.props.history.push(`/enforcers/${record.owner}/${record.name}`)}>{i18next.t("general:Edit")}</Button>
               <PopconfirmModal
+                disabled={Setting.builtInObject(record)}
                 title={i18next.t("general:Sure to delete") + `: ${record.name} ?`}
-                onConfirm={() => this.deleteMessage(index)}
+                onConfirm={() => this.deleteEnforcer(index)}
               >
               </PopconfirmModal>
             </div>
@@ -184,11 +164,13 @@ class MessageListPage extends BaseListPage {
 
     return (
       <div>
-        <Table scroll={{x: "max-content"}} columns={columns} dataSource={messages} rowKey={(record) => `${record.owner}/${record.name}`}size="middle" bordered pagination={paginationProps}
+        <Table scroll={{x: "max-content"}} columns={columns} dataSource={enforcers} rowKey={(record) => `${record.owner}/${record.name}`} size="middle" bordered
+          pagination={paginationProps}
           title={() => (
             <div>
-              {i18next.t("general:Messages")}&nbsp;&nbsp;&nbsp;&nbsp;
-              <Button type="primary" size="small" onClick={this.addMessage.bind(this)}>{i18next.t("general:Add")}</Button>
+              {i18next.t("general:Enforcers")}&nbsp;&nbsp;&nbsp;&nbsp;
+              <Button type="primary" size="small"
+                onClick={this.addEnforcer.bind(this)}>{i18next.t("general:Add")}</Button>
             </div>
           )}
           loading={this.state.loading}
@@ -201,15 +183,12 @@ class MessageListPage extends BaseListPage {
   fetch = (params = {}) => {
     let field = params.searchedColumn, value = params.searchText;
     const sortField = params.sortField, sortOrder = params.sortOrder;
-    if (params.category !== undefined && params.category !== null) {
-      field = "category";
-      value = params.category;
-    } else if (params.type !== undefined && params.type !== null) {
+    if (params.type !== undefined && params.type !== null) {
       field = "type";
       value = params.type;
     }
     this.setState({loading: true});
-    MessageBackend.getMessages("admin", Setting.isDefaultOrganizationSelected(this.props.account) ? "" : Setting.getRequestOrganization(this.props.account), params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    EnforcerBackend.getEnforcers(Setting.isDefaultOrganizationSelected(this.props.account) ? "" : Setting.getRequestOrganization(this.props.account), params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         this.setState({
           loading: false,
@@ -237,4 +216,4 @@ class MessageListPage extends BaseListPage {
   };
 }
 
-export default MessageListPage;
+export default EnforcerListPage;

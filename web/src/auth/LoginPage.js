@@ -32,11 +32,12 @@ import i18next from "i18next";
 import CustomGithubCorner from "../common/CustomGithubCorner";
 import {SendCodeInput} from "../common/SendCodeInput";
 import LanguageSelect from "../common/select/LanguageSelect";
-import {CaptchaModal} from "../common/modal/CaptchaModal";
-import {CaptchaRule} from "../common/modal/CaptchaModal";
+import {CaptchaModal, CaptchaRule} from "../common/modal/CaptchaModal";
 import RedirectForm from "../common/RedirectForm";
 import {MfaAuthVerifyForm, NextMfa, RequiredMfa} from "./mfa/MfaAuthVerifyForm";
+import {ChangePasswordForm, NextChangePasswordForm} from "./ChangePasswordForm";
 
+import {GoogleOneTapLoginVirtualButton} from "./GoogleLoginButton";
 class LoginPage extends React.Component {
   constructor(props) {
     super(props);
@@ -170,10 +171,15 @@ class LoginPage extends React.Component {
             Setting.showMessage("error", res.msg);
             return;
           }
-          this.onUpdateApplication(res);
+          this.onUpdateApplication(res.data);
         });
     } else {
-      OrganizationBackend.getDefaultApplication("admin", this.state.owner)
+      let redirectUri = "";
+      if (this.state.type === "cas") {
+        const casParams = Util.getCasParameters();
+        redirectUri = casParams.service;
+      }
+      OrganizationBackend.getDefaultApplication("admin", this.state.owner, this.state.type, redirectUri)
         .then((res) => {
           if (res.status === "ok") {
             const application = res.data;
@@ -183,9 +189,9 @@ class LoginPage extends React.Component {
             });
           } else {
             this.onUpdateApplication(null);
-            Setting.showMessage("error", res.msg);
-
-            this.props.history.push("/404");
+            this.setState({
+              msg: res.msg,
+            });
           }
         });
     }
@@ -383,6 +389,29 @@ class LoginPage extends React.Component {
             }
           };
 
+          const changePasswordForm = () => {
+            return (
+              <ChangePasswordForm
+                application={this.getApplicationObj()}
+                userOwner={values.organization}
+                userName={this.state.username}
+                onSuccess={(newValues) => {
+                  values.password = newValues.newPassword;
+                  AuthBackend.login(values, oAuthParams).then((res) => {
+                    if (res.status === "ok") {
+                      return callback(res);
+                    } else {
+                      Setting.showMessage("error", `${i18next.t("application:Failed to sign in")}: ${res.msg}`);
+                    }
+                  });
+                }}
+                onFail={(res) => {
+                  Setting.showMessage("error", i18next.t(`signup:${res.msg}`));
+                }}
+              />
+            );
+          };
+
           if (res.status === "ok") {
             if (res.data === NextMfa) {
               this.setState({
@@ -396,9 +425,23 @@ class LoginPage extends React.Component {
                       onFail={() => {
                         Setting.showMessage("error", i18next.t("mfa:Verification failed"));
                       }}
-                      onSuccess={(res) => callback(res)}
+                      onSuccess={(res) => {
+                        if (res.data === NextChangePasswordForm) {
+                          this.setState({
+                            getVerifyTotp: undefined,
+                            getChangePasswordForm: changePasswordForm,
+                          });
+                        } else {
+                          return callback(res);
+                        }
+                      }}
                     />);
                 },
+              });
+            } else if (res.data === NextChangePasswordForm) {
+              this.setState({
+                values: values,
+                getChangePasswordForm: changePasswordForm,
               });
             } else {
               callback(res);
@@ -415,6 +458,16 @@ class LoginPage extends React.Component {
       return Setting.isProviderVisibleForSignUp(providerItem);
     } else {
       return Setting.isProviderVisibleForSignIn(providerItem);
+    }
+  }
+
+  renderOtherFormProvider(application) {
+    for (const providerConf of application.providers) {
+      if (providerConf.provider?.type === "Google" && providerConf.rule === "OneTap" && this.props.preview !== "auto") {
+        return (
+          <GoogleOneTapLoginVirtualButton application={application} providerConf={providerConf} />
+        );
+      }
     }
   }
 
@@ -457,7 +510,6 @@ class LoginPage extends React.Component {
         <Form
           name="normal_login"
           initialValues={{
-
             organization: application.organization,
             application: application.name,
             autoSignin: true,
@@ -575,6 +627,9 @@ class LoginPage extends React.Component {
                 return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
               })
             }
+            {
+              this.renderOtherFormProvider(application)
+            }
           </Form.Item>
         </Form>
       );
@@ -588,13 +643,16 @@ class LoginPage extends React.Component {
                 {application.displayName}
               </span>
             </a>
-              :
+            :
           </div>
           <br />
           {
             application.providers?.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
               return ProviderButton.renderProviderLogo(providerItem.provider, application, 40, 10, "big", this.props.location);
             })
+          }
+          {
+            this.renderOtherFormProvider(application)
           }
           <div>
             <br />
@@ -841,6 +899,8 @@ class LoginPage extends React.Component {
 
     if (this.state.getVerifyTotp !== undefined) {
       return this.state.getVerifyTotp();
+    } else if (this.state.getChangePasswordForm !== undefined) {
+      return this.state.getChangePasswordForm();
     } else {
       return (
         <React.Fragment>

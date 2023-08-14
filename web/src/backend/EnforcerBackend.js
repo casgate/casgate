@@ -14,8 +14,8 @@
 
 import * as Setting from "../Setting";
 
-export function getChats(owner, page = "", pageSize = "", field = "", value = "", sortField = "", sortOrder = "") {
-  return fetch(`${Setting.ServerUrl}/api/get-chats?owner=${owner}&p=${page}&pageSize=${pageSize}&field=${field}&value=${value}&sortField=${sortField}&sortOrder=${sortOrder}`, {
+export function getEnforcers(owner, page = "", pageSize = "", field = "", value = "", sortField = "", sortOrder = "") {
+  return fetch(`${Setting.ServerUrl}/api/get-enforcers?owner=${owner}&p=${page}&pageSize=${pageSize}&field=${field}&value=${value}&sortField=${sortField}&sortOrder=${sortOrder}`, {
     method: "GET",
     credentials: "include",
     headers: {
@@ -24,8 +24,8 @@ export function getChats(owner, page = "", pageSize = "", field = "", value = ""
   }).then(res => res.json());
 }
 
-export function getChat(owner, name) {
-  return fetch(`${Setting.ServerUrl}/api/get-chat?id=${owner}/${encodeURIComponent(name)}`, {
+export function getEnforcer(owner, name) {
+  return fetch(`${Setting.ServerUrl}/api/get-enforcer?id=${owner}/${encodeURIComponent(name)}`, {
     method: "GET",
     credentials: "include",
     headers: {
@@ -34,36 +34,36 @@ export function getChat(owner, name) {
   }).then(res => res.json());
 }
 
-export function updateChat(owner, name, chat) {
-  const newChat = Setting.deepCopy(chat);
-  return fetch(`${Setting.ServerUrl}/api/update-chat?id=${owner}/${encodeURIComponent(name)}`, {
+export function updateEnforcer(owner, name, enforcer) {
+  const newEnforcer = Setting.deepCopy(enforcer);
+  return fetch(`${Setting.ServerUrl}/api/update-enforcer?id=${owner}/${encodeURIComponent(name)}`, {
     method: "POST",
     credentials: "include",
-    body: JSON.stringify(newChat),
+    body: JSON.stringify(newEnforcer),
     headers: {
       "Accept-Language": Setting.getAcceptLanguage(),
     },
   }).then(res => res.json());
 }
 
-export function addChat(chat) {
-  const newChat = Setting.deepCopy(chat);
-  return fetch(`${Setting.ServerUrl}/api/add-chat`, {
+export function addEnforcer(enforcer) {
+  const newEnforcer = Setting.deepCopy(enforcer);
+  return fetch(`${Setting.ServerUrl}/api/add-enforcer`, {
     method: "POST",
     credentials: "include",
-    body: JSON.stringify(newChat),
+    body: JSON.stringify(newEnforcer),
     headers: {
       "Accept-Language": Setting.getAcceptLanguage(),
     },
   }).then(res => res.json());
 }
 
-export function deleteChat(chat) {
-  const newChat = Setting.deepCopy(chat);
-  return fetch(`${Setting.ServerUrl}/api/delete-chat`, {
+export function deleteEnforcer(enforcer) {
+  const newEnforcer = Setting.deepCopy(enforcer);
+  return fetch(`${Setting.ServerUrl}/api/delete-enforcer`, {
     method: "POST",
     credentials: "include",
-    body: JSON.stringify(newChat),
+    body: JSON.stringify(newEnforcer),
     headers: {
       "Accept-Language": Setting.getAcceptLanguage(),
     },

@@ -1,6 +1,5 @@
 {
   "account": {
-    "Chats & Messages": "Chats & Messages",
     "Logout": "Выход",
     "My Account": "Мой аккаунт",
     "Sign Up": "Зарегистрироваться"
@@ -127,19 +126,6 @@
     "Scope - Tooltip": "Сценарии использования сертификата",
     "Type - Tooltip": "Тип сертификата"
   },
-  "chat": {
-    "AI": "AI",
-    "Edit Chat": "Edit Chat",
-    "Group": "Group",
-    "Message count": "Message count",
-    "New Chat": "New Chat",
-    "Single": "Single",
-    "User1": "User1",
-    "User1 - Tooltip": "User1 - Tooltip",
-    "User2": "User2",
-    "User2 - Tooltip": "User2 - Tooltip",
-    "Users - Tooltip": "Users - Tooltip"
-  },
   "code": {
     "Code you received": "Код, который вы получили",
     "Email code": "Электронный код письма",
@@ -152,9 +138,13 @@
     "Sending": "Отправка",
     "Submit and complete": "Отправить и завершить"
   },
+  "enforcer": {
+    "Edit Enforcer": "Edit Enforcer",
+    "New Enforcer": "New Enforcer"
+  },
   "forget": {
     "Account": "Счет",
-    "Change Password": "Изменить пароль",
+    "Password change required": "Изменить пароль",
     "Choose email or phone": "Выберите электронную почту или телефон",
     "Next Step": "Следующий шаг",
     "Please input your username!": "Пожалуйста, введите своё имя пользователя!",
@@ -190,13 +180,13 @@
     "Cert": "Сертификат",
     "Cert - Tooltip": "Сертификат открытого ключа, который требуется проверить клиентским SDK, соответствующим этому приложению",
     "Certs": "сертификаты",
-    "Chats": "Chats",
     "Click to Upload": "Нажмите, чтобы загрузить",
     "Client IP": "Клиентский IP",
     "Close": "Близко",
     "Confirm": "Confirm",
     "Created time": "Созданное время",
     "Custom": "Custom",
+    "Default": "Default",
     "Default application": "Приложение по умолчанию",
     "Default application - Tooltip": "По умолчанию приложение для пользователей, зарегистрированных непосредственно со страницы организации",
     "Default avatar": "Стандартный аватар",
@@ -214,11 +204,11 @@
     "Enable": "Enable",
     "Enabled": "Enabled",
     "Enabled successfully": "Enabled successfully",
+    "Enforcers": "Enforcers",
     "Failed to add": "Не удалось добавить",
     "Failed to connect to server": "Не удалось подключиться к серверу",
     "Failed to delete": "Не удалось удалить",
     "Failed to enable": "Failed to enable",
-    "Failed to get answer": "Failed to get answer",
     "Failed to remove": "Failed to remove",
     "Failed to save": "Не удалось сохранить",
     "Failed to verify": "Failed to verify",
@@ -251,7 +241,6 @@
     "Master password": "Главный пароль",
     "Master password - Tooltip": "Можно использовать для входа в учетные записи всех пользователей этой организации, что удобно для администраторов, чтобы войти в качестве этого пользователя и решить технические проблемы",
     "Menu": "Меню",
-    "Messages": "Messages",
     "Method": "Метод",
     "Model": "Модель",
     "Model - Tooltip": "Модель контроля доступа Casbin",
@@ -399,9 +388,11 @@
     "Auto sign in": "Автоматическая авторизация",
     "Continue with": "Продолжайте с",
     "Email or phone": "Электронная почта или телефон",
+    "Failed to obtain MetaMask authorization": "Failed to obtain MetaMask authorization",
     "Forgot password?": "Забыли пароль?",
     "Loading": "Загрузка",
     "Logging out...": "Выход...",
+    "MetaMask plugin not detected": "MetaMask plugin not detected",
     "No account?": "Нет аккаунта?",
     "Or sign in with another account": "Или войти с другой учетной записью",
     "Please input your Email or Phone!": "Пожалуйста, введите свой адрес электронной почты или номер телефона!",
@@ -423,16 +414,6 @@
     "WebAuthn": "WebAuthn",
     "sign up now": "Зарегистрируйтесь сейчас",
     "username, Email or phone": "имя пользователя, электронная почта или телефон"
-  },
-  "message": {
-    "Author": "Author",
-    "Author - Tooltip": "Author - Tooltip",
-    "Chat": "Chat",
-    "Chat - Tooltip": "Chat - Tooltip",
-    "Edit Message": "Edit Message",
-    "New Message": "New Message",
-    "Text": "Text",
-    "Text - Tooltip": "Text - Tooltip"
   },
   "mfa": {
     "Each time you sign in to your Account, you'll need your password and a authentication code": "Each time you sign in to your Account, you'll need your password and a authentication code",
@@ -905,6 +886,7 @@
     "Birthday - Tooltip": "Birthday - Tooltip",
     "Captcha Verify Failed": "Ошибка верификации Captcha",
     "Captcha Verify Success": "Успешно прошли проверку Captcha",
+    "Password change required - Tooltip": "Система потребует от пользователя смены пароля после следующего входа",
     "Country code": "Код страны",
     "Country/Region": "Страна/регион",
     "Country/Region - Tooltip": "Страна или регион",

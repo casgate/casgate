@@ -30,7 +30,7 @@ class PermissionEditPage extends React.Component {
     this.state = {
       classes: props,
       organizationName: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
-      permissionName: props.match.params.permissionName,
+      permissionName: decodeURIComponent(props.match.params.permissionName),
       permission: null,
       organizations: [],
       model: null,
@@ -50,7 +50,9 @@ class PermissionEditPage extends React.Component {
   getPermission() {
     PermissionBackend.getPermission(this.state.organizationName, this.state.permissionName)
       .then((res) => {
-        if (res === null) {
+        const permission = res.data;
+
+        if (permission === null) {
           this.props.history.push("/404");
           return;
         }
@@ -61,14 +63,14 @@ class PermissionEditPage extends React.Component {
         }
 
         this.setState({
-          permission: res,
+          permission: permission,
         });
 
-        this.getUsers(res.owner);
-        this.getRoles(res.owner);
-        this.getModels(res.owner);
-        this.getResources(res.owner);
-        this.getModel(res.owner, res.model);
+        this.getUsers(permission.owner);
+        this.getRoles(permission.owner);
+        this.getModels(permission.owner);
+        this.getResources(permission.owner);
+        this.getModel(permission.owner, permission.model);
       });
   }
 
@@ -76,7 +78,7 @@ class PermissionEditPage extends React.Component {
     OrganizationBackend.getOrganizations("admin")
       .then((res) => {
         this.setState({
-          organizations: (res.msg === undefined) ? res : [],
+          organizations: res.data || [],
         });
       });
   }
@@ -88,8 +90,9 @@ class PermissionEditPage extends React.Component {
           Setting.showMessage("error", res.msg);
           return;
         }
+
         this.setState({
-          users: res,
+          users: res.data,
         });
       });
   }
@@ -101,8 +104,9 @@ class PermissionEditPage extends React.Component {
           Setting.showMessage("error", res.msg);
           return;
         }
+
         this.setState({
-          roles: res,
+          roles: res.data,
         });
       });
   }
@@ -114,21 +118,21 @@ class PermissionEditPage extends React.Component {
           Setting.showMessage("error", res.msg);
           return;
         }
+
         this.setState({
-          models: res,
+          models: res.data,
         });
       });
   }
 
   getModel(organizationName, modelName) {
+    if (modelName === "") {
+      return;
+    }
     ModelBackend.getModel(organizationName, modelName)
       .then((res) => {
-        if (res.status === "error") {
-          Setting.showMessage("error", res.msg);
-          return;
-        }
         this.setState({
-          model: res,
+          model: res.data,
         });
       });
   }
@@ -137,7 +141,7 @@ class PermissionEditPage extends React.Component {
     ApplicationBackend.getApplicationsByOrganization("admin", organizationName)
       .then((res) => {
         this.setState({
-          resources: (res.msg === undefined) ? res : [],
+          resources: res.data || [],
         });
       });
   }
@@ -316,7 +320,7 @@ class PermissionEditPage extends React.Component {
             {Setting.getLabel(i18next.t("permission:Actions"), i18next.t("permission:Actions - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Select virtual={false} mode="multiple" style={{width: "100%"}} value={this.state.permission.actions} onChange={(value => {
+            <Select virtual={false} mode={(this.state.permission.resourceType === "Custom") ? "tags" : "multiple"} style={{width: "100%"}} value={this.state.permission.actions} onChange={(value => {
               this.updatePermissionField("actions", value);
             })}
             options={[
@@ -445,7 +449,7 @@ class PermissionEditPage extends React.Component {
           if (willExist) {
             this.props.history.push("/permissions");
           } else {
-            this.props.history.push(`/permissions/${this.state.permission.owner}/${this.state.permission.name}`);
+            this.props.history.push(`/permissions/${this.state.permission.owner}/${encodeURIComponent(this.state.permission.name)}`);
           }
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to save")}: ${res.msg}`);

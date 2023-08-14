@@ -15,14 +15,10 @@
 import React, {Component} from "react";
 import "./App.less";
 import {Helmet} from "react-helmet";
-import EnableMfaNotification from "./common/notifaction/EnableMfaNotification";
-import GroupTreePage from "./GroupTreePage";
-import GroupEditPage from "./GroupEdit";
-import GroupListPage from "./GroupList";
 import {MfaRuleRequired} from "./Setting";
 import * as Setting from "./Setting";
 import {StyleProvider, legacyLogicalPropertiesTransformer} from "@ant-design/cssinjs";
-import {BarsOutlined, CommentOutlined, DownOutlined, InfoCircleFilled, LogoutOutlined, SettingOutlined} from "@ant-design/icons";
+import {AppstoreTwoTone, BarsOutlined, DollarTwoTone, DownOutlined, HomeTwoTone, InfoCircleFilled, LockTwoTone, LogoutOutlined, SafetyCertificateTwoTone, SettingOutlined, SettingTwoTone, WalletTwoTone} from "@ant-design/icons";
 import {Alert, Avatar, Button, Card, ConfigProvider, Drawer, Dropdown, FloatButton, Layout, Menu, Result} from "antd";
 import {Link, Redirect, Route, Switch, withRouter} from "react-router-dom";
 import OrganizationListPage from "./OrganizationListPage";
@@ -33,6 +29,11 @@ import RoleListPage from "./RoleListPage";
 import RoleEditPage from "./RoleEditPage";
 import PermissionListPage from "./PermissionListPage";
 import PermissionEditPage from "./PermissionEditPage";
+import EnforcerEditPage from "./EnforcerEditPage";
+import EnforcerListPage from "./EnforcerListPage";
+import GroupTreePage from "./GroupTreePage";
+import GroupEditPage from "./GroupEdit";
+import GroupListPage from "./GroupList";
 import ProviderListPage from "./ProviderListPage";
 import ProviderEditPage from "./ProviderEditPage";
 import ApplicationListPage from "./ApplicationListPage";
@@ -55,11 +56,6 @@ import PricingListPage from "./PricingListPage";
 import PricingEditPage from "./PricingEditPage";
 import PlanListPage from "./PlanListPage";
 import PlanEditPage from "./PlanEditPage";
-import ChatListPage from "./ChatListPage";
-import ChatEditPage from "./ChatEditPage";
-import ChatPage from "./ChatPage";
-import MessageEditPage from "./MessageEditPage";
-import MessageListPage from "./MessageListPage";
 import ProductListPage from "./ProductListPage";
 import ProductEditPage from "./ProductEditPage";
 import ProductBuyPage from "./ProductBuyPage";
@@ -86,11 +82,18 @@ import OdicDiscoveryPage from "./auth/OidcDiscoveryPage";
 import SamlCallback from "./auth/SamlCallback";
 import i18next from "i18next";
 import {withTranslation} from "react-i18next";
+import EnableMfaNotification from "./common/notifaction/EnableMfaNotification";
 import LanguageSelect from "./common/select/LanguageSelect";
 import ThemeSelect from "./common/select/ThemeSelect";
 import OrganizationSelect from "./common/select/OrganizationSelect";
+import {clearWeb3AuthToken} from "./auth/Web3Auth";
+import AccountAvatar from "./account/AccountAvatar";
 
 const {Header, Footer, Content} = Layout;
+
+import {setTwoToneColor} from "@ant-design/icons";
+
+setTwoToneColor("rgb(87,52,211)");
 
 class App extends Component {
   constructor(props) {
@@ -148,60 +151,24 @@ class App extends Component {
     });
     if (uri === "/") {
       this.setState({selectedMenuKey: "/"});
-    } else if (uri.includes("/organizations") || uri.includes("/trees")) {
-      this.setState({selectedMenuKey: "/organizations"});
-    } else if (uri.includes("/users")) {
-      this.setState({selectedMenuKey: "/users"});
-    } else if (uri.includes("/groups")) {
-      this.setState({selectedMenuKey: "/groups"});
-    } else if (uri.includes("/roles")) {
-      this.setState({selectedMenuKey: "/roles"});
-    } else if (uri.includes("/permissions")) {
-      this.setState({selectedMenuKey: "/permissions"});
-    } else if (uri.includes("/models")) {
-      this.setState({selectedMenuKey: "/models"});
-    } else if (uri.includes("/adapters")) {
-      this.setState({selectedMenuKey: "/adapters"});
-    } else if (uri.includes("/providers")) {
-      this.setState({selectedMenuKey: "/providers"});
-    } else if (uri.includes("/applications")) {
-      this.setState({selectedMenuKey: "/applications"});
-    } else if (uri.includes("/resources")) {
-      this.setState({selectedMenuKey: "/resources"});
-    } else if (uri.includes("/records")) {
-      this.setState({selectedMenuKey: "/records"});
-    } else if (uri.includes("/tokens")) {
-      this.setState({selectedMenuKey: "/tokens"});
-    } else if (uri.includes("/sessions")) {
-      this.setState({selectedMenuKey: "/sessions"});
-    } else if (uri.includes("/webhooks")) {
-      this.setState({selectedMenuKey: "/webhooks"});
-    } else if (uri.includes("/syncers")) {
-      this.setState({selectedMenuKey: "/syncers"});
-    } else if (uri.includes("/certs")) {
-      this.setState({selectedMenuKey: "/certs"});
-    } else if (uri.includes("/chats")) {
-      this.setState({selectedMenuKey: "/chats"});
-    } else if (uri.includes("/messages")) {
-      this.setState({selectedMenuKey: "/messages"});
-    } else if (uri.includes("/products")) {
-      this.setState({selectedMenuKey: "/products"});
-    } else if (uri.includes("/payments")) {
-      this.setState({selectedMenuKey: "/payments"});
+    } else if (uri.includes("/organizations") || uri.includes("/trees") || uri.includes("/users") || uri.includes("/groups")) {
+      this.setState({selectedMenuKey: "/orgs"});
+    } else if (uri.includes("/roles") || uri.includes("/permissions") || uri.includes("/models") || uri.includes("/adapters") || uri.includes("/enforcers")) {
+      this.setState({selectedMenuKey: "/auth"});
+    } else if (uri.includes("/applications") || uri.includes("/providers") || uri.includes("/resources") || uri.includes("/certs")) {
+      this.setState({selectedMenuKey: "/identity"});
+    } else if (uri.includes("/records") || uri.includes("/tokens") || uri.includes("/sessions")) {
+      this.setState({selectedMenuKey: "/logs"});
+    } else if (uri.includes("/products") || uri.includes("/payments") || uri.includes("/plans") || uri.includes("/pricings") || uri.includes("/subscriptions")) {
+      this.setState({selectedMenuKey: "/business"});
+    } else if (uri.includes("/sysinfo") || uri.includes("/syncers") || uri.includes("/webhooks")) {
+      this.setState({selectedMenuKey: "/admin"});
     } else if (uri.includes("/signup")) {
       this.setState({selectedMenuKey: "/signup"});
     } else if (uri.includes("/login")) {
       this.setState({selectedMenuKey: "/login"});
     } else if (uri.includes("/result")) {
       this.setState({selectedMenuKey: "/result"});
-    } else if (uri.includes("/sysinfo")) {
-      this.setState({selectedMenuKey: "/sysinfo"});
-    } else if (uri.includes("/subscriptions")) {
-      this.setState({selectedMenuKey: "/subscriptions"});
-    } else if (uri.includes("/plans")) {
-      this.setState({selectedMenuKey: "/plans"});
-    } else if (uri.includes("/pricings")) {
-      this.setState({selectedMenuKey: "/pricings"});
     } else {
       this.setState({selectedMenuKey: -1});
     }
@@ -312,12 +279,11 @@ class App extends Component {
       .then((res) => {
         if (res.status === "ok") {
           const owner = this.state.account.owner;
-
           this.setState({
             account: null,
             themeAlgorithm: ["default"],
           });
-
+          clearWeb3AuthToken();
           Setting.showMessage("success", i18next.t("application:Logged out successfully"));
           const redirectUri = res.data2;
           if (redirectUri !== null && redirectUri !== undefined && redirectUri !== "") {
@@ -348,7 +314,9 @@ class App extends Component {
       );
     } else {
       return (
-        <Avatar src={this.state.account.avatar} style={{verticalAlign: "middle"}} size="large">
+        <Avatar src={this.state.account.avatar} style={{verticalAlign: "middle"}} size="large"
+          icon={<AccountAvatar src={this.state.account.avatar} style={{verticalAlign: "middle"}} size={40} />}
+        >
           {Setting.getShortName(this.state.account.name)}
         </Avatar>
       );
@@ -361,11 +329,6 @@ class App extends Component {
       items.push(Setting.getItem(<><SettingOutlined />&nbsp;&nbsp;{i18next.t("account:My Account")}</>,
         "/account"
       ));
-      if (Conf.EnableChatPages) {
-        items.push(Setting.getItem(<><CommentOutlined />&nbsp;&nbsp;{i18next.t("account:Chats & Messages")}</>,
-          "/chat"
-        ));
-      }
     }
     items.push(Setting.getItem(<><LogoutOutlined />&nbsp;&nbsp;{i18next.t("account:Logout")}</>,
       "/logout"));
@@ -375,8 +338,6 @@ class App extends Component {
         this.props.history.push("/account");
       } else if (e.key === "/subscription") {
         this.props.history.push("/subscription");
-      } else if (e.key === "/chat") {
-        this.props.history.push("/chat");
       } else if (e.key === "/logout") {
         this.logout();
       }
@@ -440,7 +401,7 @@ class App extends Component {
       return [];
     }
 
-    res.push(Setting.getItem(<Link to="/">{i18next.t("general:Home")}</Link>, "/"));
+    res.push(Setting.getItem(<Link to="/">{i18next.t("general:Home")}</Link>, "/", <HomeTwoTone />));
 
     if (Setting.isLocalAdminUser(this.state.account)) {
       if (Conf.ShowGithubCorner) {
@@ -451,115 +412,54 @@ class App extends Component {
         </a>, "#"));
       }
 
-      res.push(Setting.getItem(<Link to="/organizations">{i18next.t("general:Organizations")}</Link>,
-        "/organizations"));
+      res.push(Setting.getItem(<Link style={{color: "black"}} to="/organizations">{i18next.t("general:User Management")}</Link>, "/orgs", <AppstoreTwoTone />, [
+        Setting.getItem(<Link to="/organizations">{i18next.t("general:Organizations")}</Link>, "/organizations"),
+        Setting.getItem(<Link to="/groups">{i18next.t("general:Groups")}</Link>, "/groups"),
+        Setting.getItem(<Link to="/users">{i18next.t("general:Users")}</Link>, "/users"),
+      ]));
 
-      res.push(Setting.getItem(<Link to="/groups">{i18next.t("general:Groups")}</Link>,
-        "/groups"));
-
-      res.push(Setting.getItem(<Link to="/users">{i18next.t("general:Users")}</Link>,
-        "/users"
-      ));
-
-      res.push(Setting.getItem(<Link to="/roles">{i18next.t("general:Roles")}</Link>,
-        "/roles"
-      ));
-
-      res.push(Setting.getItem(<Link to="/permissions">{i18next.t("general:Permissions")}</Link>,
-        "/permissions"
-      ));
+      res.push(Setting.getItem(<Link style={{color: "black"}} to="/roles">{i18next.t("general:Authorization")}</Link>, "/auth", <SafetyCertificateTwoTone />, [
+        Setting.getItem(<Link to="/roles">{i18next.t("general:Roles")}</Link>, "/roles"),
+        Setting.getItem(<Link to="/permissions">{i18next.t("general:Permissions")}</Link>, "/permissions"),
+        Setting.getItem(<Link to="/models">{i18next.t("general:Models")}</Link>, "/models"),
+        Setting.getItem(<Link to="/adapters">{i18next.t("general:Adapters")}</Link>, "/adapters"),
+        Setting.getItem(<Link to="/enforcers">{i18next.t("general:Enforcers")}</Link>, "/enforcers"),
+      ].filter(item => {
+        if (!Setting.isLocalAdminUser(this.state.account) && ["/models", "/adapters", "/enforcers"].includes(item.key)) {
+          return false;
+        } else {
+          return true;
+        }
+      })));
     }
 
     if (Setting.isLocalAdminUser(this.state.account)) {
-      res.push(Setting.getItem(<Link to="/models">{i18next.t("general:Models")}</Link>,
-        "/models"
-      ));
+      res.push(Setting.getItem(<Link style={{color: "black"}} to="/applications">{i18next.t("general:Identity")}</Link>, "/identity", <LockTwoTone />, [
+        Setting.getItem(<Link to="/applications">{i18next.t("general:Applications")}</Link>, "/applications"),
+        Setting.getItem(<Link to="/providers">{i18next.t("general:Providers")}</Link>, "/providers"),
+        Setting.getItem(<Link to="/resources">{i18next.t("general:Resources")}</Link>, "/resources"),
+        Setting.getItem(<Link to="/certs">{i18next.t("general:Certs")}</Link>, "/certs"),
+      ]));
 
-      res.push(Setting.getItem(<Link to="/adapters">{i18next.t("general:Adapters")}</Link>,
-        "/adapters"
-      ));
-    }
+      res.push(Setting.getItem(<Link style={{color: "black"}} to="/records">{i18next.t("general:Logging & Auditing")}</Link>, "/logs", <WalletTwoTone />, [
+        Setting.getItem(<Link to="/records">{i18next.t("general:Records")}</Link>, "/records"),
+        Setting.getItem(<Link to="/tokens">{i18next.t("general:Tokens")}</Link>, "/tokens"),
+        Setting.getItem(<Link to="/sessions">{i18next.t("general:Sessions")}</Link>, "/sessions"),
+      ]));
 
-    if (Setting.isLocalAdminUser(this.state.account)) {
-      res.push(Setting.getItem(<Link to="/applications">{i18next.t("general:Applications")}</Link>,
-        "/applications"
-      ));
+      res.push(Setting.getItem(<Link style={{color: "black"}} to="/products">{i18next.t("general:Business & Payments")}</Link>, "/business", <DollarTwoTone />, [
+        Setting.getItem(<Link to="/products">{i18next.t("general:Products")}</Link>, "/products"),
+        Setting.getItem(<Link to="/payments">{i18next.t("general:Payments")}</Link>, "/payments"),
+        Setting.getItem(<Link to="/plans">{i18next.t("general:Plans")}</Link>, "/plans"),
+        Setting.getItem(<Link to="/pricings">{i18next.t("general:Pricings")}</Link>, "/pricings"),
+        Setting.getItem(<Link to="/subscriptions">{i18next.t("general:Subscriptions")}</Link>, "/subscriptions"),
+      ]));
 
-      res.push(Setting.getItem(<Link to="/providers">{i18next.t("general:Providers")}</Link>,
-        "/providers"
-      ));
-
-      if (Conf.EnableChatPages) {
-        res.push(Setting.getItem(<Link to="/chats">{i18next.t("general:Chats")}</Link>,
-          "/chats"
-        ));
-
-        res.push(Setting.getItem(<Link to="/messages">{i18next.t("general:Messages")}</Link>,
-          "/messages"
-        ));
-      }
-
-      res.push(Setting.getItem(<Link to="/resources">{i18next.t("general:Resources")}</Link>,
-        "/resources"
-      ));
-
-      res.push(Setting.getItem(<Link to="/records">{i18next.t("general:Records")}</Link>,
-        "/records"
-      ));
-
-      res.push(Setting.getItem(<Link to="/plans">{i18next.t("general:Plans")}</Link>,
-        "/plans"
-      ));
-
-      res.push(Setting.getItem(<Link to="/pricings">{i18next.t("general:Pricings")}</Link>,
-        "/pricings"
-      ));
-
-      res.push(Setting.getItem(<Link to="/subscriptions">{i18next.t("general:Subscriptions")}</Link>,
-        "/subscriptions"
-      ));
-    }
-
-    if (Setting.isLocalAdminUser(this.state.account)) {
-      res.push(Setting.getItem(<Link to="/tokens">{i18next.t("general:Tokens")}</Link>,
-        "/tokens"
-      ));
-
-      res.push(Setting.getItem(<Link to="/sessions">{i18next.t("general:Sessions")}</Link>,
-        "/sessions"
-      ));
-
-      res.push(Setting.getItem(<Link to="/webhooks">{i18next.t("general:Webhooks")}</Link>,
-        "/webhooks"
-      ));
-
-      res.push(Setting.getItem(<Link to="/syncers">{i18next.t("general:Syncers")}</Link>,
-        "/syncers"
-      ));
-
-      res.push(Setting.getItem(<Link to="/certs">{i18next.t("general:Certs")}</Link>,
-        "/certs"
-      ));
-
-      if (Conf.EnableExtraPages) {
-        res.push(Setting.getItem(<Link to="/products">{i18next.t("general:Products")}</Link>,
-          "/products"
-        ));
-
-        res.push(Setting.getItem(<Link to="/payments">{i18next.t("general:Payments")}</Link>,
-          "/payments"
-        ));
-      }
-    }
-
-    if (Setting.isAdminUser(this.state.account)) {
-      res.push(Setting.getItem(<Link to="/sysinfo">{i18next.t("general:System Info")}</Link>,
-        "/sysinfo"
-      ));
-      res.push(Setting.getItem(<a target="_blank" rel="noreferrer"
-        href={Setting.isLocalhost() ? `${Setting.ServerUrl}/swagger` : "/swagger"}>{i18next.t("general:Swagger")}</a>,
-      "/swagger"
-      ));
+      res.push(Setting.getItem(<Link style={{color: "black"}} to="/sysinfo">{i18next.t("general:Admin")}</Link>, "/admin", <SettingTwoTone />, [
+        Setting.getItem(<Link to="/sysinfo">{i18next.t("general:System Info")}</Link>, "/sysinfo"),
+        Setting.getItem(<Link to="/syncers">{i18next.t("general:Syncers")}</Link>, "/syncers"),
+        Setting.getItem(<Link to="/webhooks">{i18next.t("general:Webhooks")}</Link>, "/webhooks"),
+        Setting.getItem(<a target="_blank" rel="noreferrer" href={Setting.isLocalhost() ? `${Setting.ServerUrl}/swagger` : "/swagger"}>{i18next.t("general:Swagger")}</a>, "/swagger")]));
     }
 
     return res;
@@ -596,6 +496,8 @@ class App extends Component {
         <Route exact path="/permissions/:organizationName/:permissionName" render={(props) => this.renderLoginIfNotLoggedIn(<PermissionEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/models" render={(props) => this.renderLoginIfNotLoggedIn(<ModelListPage account={this.state.account} {...props} />)} />
         <Route exact path="/models/:organizationName/:modelName" render={(props) => this.renderLoginIfNotLoggedIn(<ModelEditPage account={this.state.account} {...props} />)} />
+        <Route exact path="/enforcers" render={(props) => this.renderLoginIfNotLoggedIn(<EnforcerListPage account={this.state.account} {...props} />)} />
+        <Route exact path="/enforcers/:organizationName/:enforcerName" render={(props) => this.renderLoginIfNotLoggedIn(<EnforcerEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/adapters" render={(props) => this.renderLoginIfNotLoggedIn(<AdapterListPage account={this.state.account} {...props} />)} />
         <Route exact path="/adapters/:organizationName/:adapterName" render={(props) => this.renderLoginIfNotLoggedIn(<AdapterEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/providers" render={(props) => this.renderLoginIfNotLoggedIn(<ProviderListPage account={this.state.account} {...props} />)} />
@@ -615,11 +517,6 @@ class App extends Component {
         <Route exact path="/syncers/:syncerName" render={(props) => this.renderLoginIfNotLoggedIn(<SyncerEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/certs" render={(props) => this.renderLoginIfNotLoggedIn(<CertListPage account={this.state.account} {...props} />)} />
         <Route exact path="/certs/:organizationName/:certName" render={(props) => this.renderLoginIfNotLoggedIn(<CertEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/chats" render={(props) => this.renderLoginIfNotLoggedIn(<ChatListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/chats/:chatName" render={(props) => this.renderLoginIfNotLoggedIn(<ChatEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/chat" render={(props) => this.renderLoginIfNotLoggedIn(<ChatPage account={this.state.account} {...props} />)} />
-        <Route exact path="/messages" render={(props) => this.renderLoginIfNotLoggedIn(<MessageListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/messages/:messageName" render={(props) => this.renderLoginIfNotLoggedIn(<MessageEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/plans" render={(props) => this.renderLoginIfNotLoggedIn(<PlanListPage account={this.state.account} {...props} />)} />
         <Route exact path="/plans/:organizationName/:planName" render={(props) => this.renderLoginIfNotLoggedIn(<PlanEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/pricings" render={(props) => this.renderLoginIfNotLoggedIn(<PricingListPage account={this.state.account} {...props} />)} />
@@ -628,10 +525,10 @@ class App extends Component {
         <Route exact path="/subscriptions/:organizationName/:subscriptionName" render={(props) => this.renderLoginIfNotLoggedIn(<SubscriptionEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/products" render={(props) => this.renderLoginIfNotLoggedIn(<ProductListPage account={this.state.account} {...props} />)} />
         <Route exact path="/products/:organizationName/:productName" render={(props) => this.renderLoginIfNotLoggedIn(<ProductEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/products/:productName/buy" render={(props) => this.renderLoginIfNotLoggedIn(<ProductBuyPage account={this.state.account} {...props} />)} />
+        <Route exact path="/products/:organizationName/:productName/buy" render={(props) => this.renderLoginIfNotLoggedIn(<ProductBuyPage account={this.state.account} {...props} />)} />
         <Route exact path="/payments" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/payments/:paymentName" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/payments/:paymentName/result" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentResultPage account={this.state.account} {...props} />)} />
+        <Route exact path="/payments/:organizationName/:paymentName" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentEditPage account={this.state.account} {...props} />)} />
+        <Route exact path="/payments/:organizationName/:paymentName/result" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentResultPage account={this.state.account} {...props} />)} />
         <Route exact path="/records" render={(props) => this.renderLoginIfNotLoggedIn(<RecordListPage account={this.state.account} {...props} />)} />
         <Route exact path="/mfa/setup" render={(props) => this.renderLoginIfNotLoggedIn(<MfaSetupPage account={this.state.account} onfinish={() => this.setState({requiredEnableMfa: false})} {...props} />)} />
         <Route exact path="/.well-known/openid-configuration" render={(props) => <OdicDiscoveryPage />} />
@@ -655,8 +552,7 @@ class App extends Component {
   };
 
   isWithoutCard() {
-    return Setting.isMobile() || window.location.pathname === "/chat" ||
-      window.location.pathname.startsWith("/trees");
+    return Setting.isMobile() || window.location.pathname.startsWith("/trees");
   }
 
   renderContent() {

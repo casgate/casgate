@@ -30,7 +30,6 @@ const {Option} = Select;
 
 export const ServerUrl = "";
 
-// export const StaticBaseUrl = "https://cdn.jsdelivr.net/gh/casbin/static";
 export const StaticBaseUrl = "https://cdn.casbin.org";
 
 export const Countries = [{label: "English", key: "en", country: "US", alt: "English"},
@@ -44,6 +43,9 @@ export const Countries = [{label: "English", key: "en", country: "US", alt: "Eng
   {label: "Русский", key: "ru", country: "RU", alt: "Русский"},
   {label: "TiếngViệt", key: "vi", country: "VN", alt: "TiếngViệt"},
   {label: "Português", key: "pt", country: "BR", alt: "Português"},
+  {label: "Itariano", key: "it", country: "IT", alt: "Itariano"},
+  {label: "Marley", key: "ms", country: "MY", alt: "Marley"},
+  {label: "Tkiš", key: "tr", country: "TR", alt: "Tkiš"},
 ];
 
 export function getThemeData(organization, application) {
@@ -83,9 +85,25 @@ export const OtherProviderInfo = {
       logo: `${StaticBaseUrl}/img/social_aliyun.png`,
       url: "https://aliyun.com/product/sms",
     },
+    "Amazon SNS": {
+      logo: `${StaticBaseUrl}/img/social_aws.png`,
+      url: "https://aws.amazon.com/cn/sns/",
+    },
+    "Azure ACS": {
+      logo: `${StaticBaseUrl}/img/social_azure.png`,
+      url: "https://azure.microsoft.com/en-us/products/communication-services",
+    },
+    "Infobip SMS": {
+      logo: `${StaticBaseUrl}/img/social_infobip.png`,
+      url: "https://portal.infobip.com/homepage/",
+    },
     "Tencent Cloud SMS": {
       logo: `${StaticBaseUrl}/img/social_tencent_cloud.jpg`,
       url: "https://cloud.tencent.com/product/sms",
+    },
+    "Baidu Cloud SMS": {
+      logo: `${StaticBaseUrl}/img/social_baidu_cloud.png`,
+      url: "https://cloud.baidu.com/product/sms.html",
     },
     "Volc Engine SMS": {
       logo: `${StaticBaseUrl}/img/social_volc_engine.jpg`,
@@ -94,6 +112,10 @@ export const OtherProviderInfo = {
     "Huawei Cloud SMS": {
       logo: `${StaticBaseUrl}/img/social_huawei.png`,
       url: "https://www.huaweicloud.com/product/msgsms.html",
+    },
+    "UCloud SMS": {
+      logo: `${StaticBaseUrl}/img/social_ucloud.png`,
+      url: "https://www.ucloud.cn/site/product/usms.html",
     },
     "Twilio SMS": {
       logo: `${StaticBaseUrl}/img/social_twilio.svg`,
@@ -106,6 +128,10 @@ export const OtherProviderInfo = {
     "SUBMAIL SMS": {
       logo: `${StaticBaseUrl}/img/social_submail.svg`,
       url: "https://www.mysubmail.com",
+    },
+    "Msg91 SMS": {
+      logo: `${StaticBaseUrl}/img/social_msg91.ico`,
+      url: "https://control.msg91.com/app/",
     },
     "Mock SMS": {
       logo: `${StaticBaseUrl}/img/social_default.png`,
@@ -150,6 +176,14 @@ export const OtherProviderInfo = {
     "Azure Blob": {
       logo: `${StaticBaseUrl}/img/social_azure.png`,
       url: "https://azure.microsoft.com/en-us/services/storage/blobs/",
+    },
+    "Qiniu Cloud Kodo": {
+      logo: `${StaticBaseUrl}/img/social_qiniu_cloud.png`,
+      url: "https://www.qiniu.com/solutions/storage",
+    },
+    "Google Cloud Storage": {
+      logo: `${StaticBaseUrl}/img/social_google_cloud.png`,
+      url: "https://cloud.google.com/storage",
     },
   },
   SAML: {
@@ -214,6 +248,12 @@ export const OtherProviderInfo = {
     "OpenAI API - GPT": {
       logo: `${StaticBaseUrl}/img/social_openai.svg`,
       url: "https://platform.openai.com",
+    },
+  },
+  Web3: {
+    "MetaMask": {
+      logo: `${StaticBaseUrl}/img/social_metamask.svg`,
+      url: "https://metamask.io/",
     },
   },
 };
@@ -288,7 +328,7 @@ export function isProviderVisible(providerItem) {
     return false;
   }
 
-  if (providerItem.provider.category !== "OAuth" && providerItem.provider.category !== "SAML") {
+  if (!["OAuth", "SAML", "Web3"].includes(providerItem.provider.category)) {
     return false;
   }
 
@@ -731,7 +771,7 @@ export function getClickable(text) {
 
 export function getProviderLogoURL(provider) {
   if (provider.category === "OAuth") {
-    if (provider.type === "Custom") {
+    if (provider.type === "Custom" && provider.customLogo) {
       return provider.customLogo;
     }
     return `${StaticBaseUrl}/img/social_${provider.type.toLowerCase()}.png`;
@@ -770,7 +810,7 @@ export function getProviderTypeOptions(category) {
         {id: "WeCom", name: "WeCom"},
         {id: "Lark", name: "Lark"},
         {id: "GitLab", name: "GitLab"},
-        {id: "Adfs", name: "Adfs"},
+        {id: "ADFS", name: "ADFS"},
         {id: "Baidu", name: "Baidu"},
         {id: "Alipay", name: "Alipay"},
         {id: "Casdoor", name: "Casdoor"},
@@ -845,13 +885,19 @@ export function getProviderTypeOptions(category) {
   } else if (category === "SMS") {
     return (
       [
-        {id: "Aliyun SMS", name: "Aliyun SMS"},
+        {id: "Aliyun SMS", name: "Alibaba Cloud SMS"},
+        {id: "Amazon SNS", name: "Amazon SNS"},
+        {id: "Azure ACS", name: "Azure ACS"},
+        {id: "Infobip SMS", name: "Infobip SMS"},
         {id: "Tencent Cloud SMS", name: "Tencent Cloud SMS"},
+        {id: "Baidu Cloud SMS", name: "Baidu Cloud SMS"},
         {id: "Volc Engine SMS", name: "Volc Engine SMS"},
         {id: "Huawei Cloud SMS", name: "Huawei Cloud SMS"},
+        {id: "UCloud SMS", name: "UCloud SMS"},
         {id: "Twilio SMS", name: "Twilio SMS"},
         {id: "SmsBao SMS", name: "SmsBao SMS"},
         {id: "SUBMAIL SMS", name: "SUBMAIL SMS"},
+        {id: "Msg91 SMS", name: "Msg91 SMS"},
       ]
     );
   } else if (category === "Storage") {
@@ -863,6 +909,8 @@ export function getProviderTypeOptions(category) {
         {id: "Aliyun OSS", name: "Aliyun OSS"},
         {id: "Tencent Cloud COS", name: "Tencent Cloud COS"},
         {id: "Azure Blob", name: "Azure Blob"},
+        {id: "Qiniu Cloud Kodo", name: "Qiniu Cloud Kodo"},
+        {id: "Google Cloud Storage", name: "Google Cloud Storage"},
       ]
     );
   } else if (category === "SAML") {
@@ -887,9 +935,9 @@ export function getProviderTypeOptions(category) {
       {id: "GEETEST", name: "GEETEST"},
       {id: "Cloudflare Turnstile", name: "Cloudflare Turnstile"},
     ]);
-  } else if (category === "AI") {
+  } else if (category === "Web3") {
     return ([
-      {id: "OpenAI API - GPT", name: "OpenAI API - GPT"},
+      {id: "MetaMask", name: "MetaMask"},
     ]);
   } else {
     return [];
@@ -1035,13 +1083,7 @@ export function getLabel(text, tooltip) {
 }
 
 export function getItem(label, key, icon, children, type) {
-  return {
-    key,
-    icon,
-    children,
-    label,
-    type,
-  };
+  return {label: label, key: key, icon: icon, children: children, type: type};
 }
 
 export function getOption(label, value) {
@@ -1049,42 +1091,6 @@ export function getOption(label, value) {
     label,
     value,
   };
-}
-
-function repeat(str, len) {
-  while (str.length < len) {
-    str += str.substr(0, len - str.length);
-  }
-  return str;
-}
-
-function maskString(s) {
-  if (s.length <= 2) {
-    return s;
-  } else {
-    return `${s[0]}${repeat("*", s.length - 2)}${s[s.length - 1]}`;
-  }
-}
-
-export function getMaskedPhone(s) {
-  return s.replace(/(\d{3})\d*(\d{4})/, "$1****$2");
-}
-
-export function getMaskedEmail(email) {
-  if (email === "") {return;}
-  const tokens = email.split("@");
-  let username = tokens[0];
-  username = maskString(username);
-
-  const domain = tokens[1];
-  const domainTokens = domain.split(".");
-  domainTokens[domainTokens.length - 2] = maskString(domainTokens[domainTokens.length - 2]);
-
-  return `${username}@${domainTokens.join(".")}`;
-}
-
-export function IsEmail(s) {
-  return s.includes("@");
 }
 
 export function getArrayItem(array, key, value) {
@@ -1142,10 +1148,6 @@ export function getTag(color, text) {
       {text}
     </Tag>
   );
-}
-
-export function getApplicationOrgName(application) {
-  return `${application?.organizationObj.owner}/${application?.organizationObj.name}`;
 }
 
 export function getApplicationName(application) {
@@ -1207,4 +1209,20 @@ export function isDefaultOrganizationSelected(account) {
     return getOrganization() === "All";
   }
   return false;
+}
+
+const BuiltInObjects = [
+  "api-enforcer-built-in",
+  "user-enforcer-built-in",
+  "api-model-built-in",
+  "user-model-built-in",
+  "api-adapter-built-in",
+  "user-adapter-built-in",
+];
+
+export function builtInObject(obj) {
+  if (obj === undefined || obj === null) {
+    return false;
+  }
+  return obj.owner === "built-in" && BuiltInObjects.includes(obj.name);
 }

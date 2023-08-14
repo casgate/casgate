@@ -12,31 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !skipCi
-// +build !skipCi
-
-package ai
+package storage
 
 import (
-	"testing"
-
-	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/proxy"
-	"github.com/sashabaranov/go-openai"
+	"github.com/casdoor/oss"
+	"github.com/casdoor/oss/qiniu"
 )
 
-func TestRun(t *testing.T) {
-	object.InitConfig()
-	proxy.InitHttpClient()
+func NewQiniuCloudKodoStorageProvider(clientId string, clientSecret string, region string, bucket string, endpoint string) oss.StorageInterface {
+	sp := qiniu.New(&qiniu.Config{
+		AccessID:  clientId,
+		AccessKey: clientSecret,
+		Region:    region,
+		Bucket:    bucket,
+		Endpoint:  endpoint,
+	})
 
-	text, err := queryAnswer("", "hi", 5)
-	if err != nil {
-		panic(err)
-	}
-
-	println(text)
-}
-
-func TestToken(t *testing.T) {
-	println(getTokenSize(openai.GPT3TextDavinci003, ""))
+	return sp
 }

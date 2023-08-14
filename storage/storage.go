@@ -23,13 +23,17 @@ func GetStorageProvider(providerType string, clientId string, clientSecret strin
 	case "AWS S3":
 		return NewAwsS3StorageProvider(clientId, clientSecret, region, bucket, endpoint)
 	case "MinIO":
-		return NewMinIOS3StorageProvider(clientId, clientSecret, region, bucket, endpoint)
+		return NewMinIOS3StorageProvider(clientId, clientSecret, "_", bucket, endpoint)
 	case "Aliyun OSS":
 		return NewAliyunOssStorageProvider(clientId, clientSecret, region, bucket, endpoint)
 	case "Tencent Cloud COS":
 		return NewTencentCloudCosStorageProvider(clientId, clientSecret, region, bucket, endpoint)
 	case "Azure Blob":
 		return NewAzureBlobStorageProvider(clientId, clientSecret, region, bucket, endpoint)
+	case "Qiniu Cloud Kodo":
+		return NewQiniuCloudKodoStorageProvider(clientId, clientSecret, region, bucket, endpoint)
+	case "Google Cloud Storage":
+		return NewGoogleCloudStorageProvider(clientId, clientSecret, bucket, endpoint)
 	}
 
 	return nil

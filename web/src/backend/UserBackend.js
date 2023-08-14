@@ -106,14 +106,17 @@ export function getAffiliationOptions(url, code) {
 
 export function setPassword(userOwner, userName, oldPassword, newPassword, code = "") {
   const formData = new FormData();
-  formData.append("userOwner", userOwner);
-  formData.append("userName", userName);
+  if (userOwner) {
+    formData.append("userOwner", userOwner);
+  }
+  if (userName) {
+    formData.append("userName", userName);
+  }
   formData.append("oldPassword", oldPassword);
   formData.append("newPassword", newPassword);
   if (code) {
     formData.append("code", code);
   }
-
   return fetch(`${Setting.ServerUrl}/api/set-password`, {
     method: "POST",
     credentials: "include",

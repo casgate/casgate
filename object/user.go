@@ -27,6 +27,8 @@ import (
 const (
 	UserPropertiesWechatUnionId = "wechatUnionId"
 	UserPropertiesWechatOpenId  = "wechatOpenId"
+	NextChangePasswordForm      = "NextChangePasswordForm"
+	ChangePasswordSessionId     = "ChangePasswordSessionId"
 )
 
 type User struct {
@@ -35,49 +37,50 @@ type User struct {
 	CreatedTime string `xorm:"varchar(100) index" json:"createdTime"`
 	UpdatedTime string `xorm:"varchar(100)" json:"updatedTime"`
 
-	Id                string   `xorm:"varchar(100) index" json:"id"`
-	Type              string   `xorm:"varchar(100)" json:"type"`
-	Password          string   `xorm:"varchar(100)" json:"password"`
-	PasswordSalt      string   `xorm:"varchar(100)" json:"passwordSalt"`
-	PasswordType      string   `xorm:"varchar(100)" json:"passwordType"`
-	DisplayName       string   `xorm:"varchar(100)" json:"displayName"`
-	FirstName         string   `xorm:"varchar(100)" json:"firstName"`
-	LastName          string   `xorm:"varchar(100)" json:"lastName"`
-	Avatar            string   `xorm:"varchar(500)" json:"avatar"`
-	AvatarType        string   `xorm:"varchar(100)" json:"avatarType"`
-	PermanentAvatar   string   `xorm:"varchar(500)" json:"permanentAvatar"`
-	Email             string   `xorm:"varchar(100) index" json:"email"`
-	EmailVerified     bool     `json:"emailVerified"`
-	Phone             string   `xorm:"varchar(20) index" json:"phone"`
-	CountryCode       string   `xorm:"varchar(6)" json:"countryCode"`
-	Region            string   `xorm:"varchar(100)" json:"region"`
-	Location          string   `xorm:"varchar(100)" json:"location"`
-	Address           []string `json:"address"`
-	Affiliation       string   `xorm:"varchar(100)" json:"affiliation"`
-	Title             string   `xorm:"varchar(100)" json:"title"`
-	IdCardType        string   `xorm:"varchar(100)" json:"idCardType"`
-	IdCard            string   `xorm:"varchar(100) index" json:"idCard"`
-	Homepage          string   `xorm:"varchar(100)" json:"homepage"`
-	Bio               string   `xorm:"varchar(100)" json:"bio"`
-	Tag               string   `xorm:"varchar(100)" json:"tag"`
-	Language          string   `xorm:"varchar(100)" json:"language"`
-	Gender            string   `xorm:"varchar(100)" json:"gender"`
-	Birthday          string   `xorm:"varchar(100)" json:"birthday"`
-	Education         string   `xorm:"varchar(100)" json:"education"`
-	Score             int      `json:"score"`
-	Karma             int      `json:"karma"`
-	Ranking           int      `json:"ranking"`
-	IsDefaultAvatar   bool     `json:"isDefaultAvatar"`
-	IsOnline          bool     `json:"isOnline"`
-	IsAdmin           bool     `json:"isAdmin"`
-	IsGlobalAdmin     bool     `json:"isGlobalAdmin"`
-	IsForbidden       bool     `json:"isForbidden"`
-	IsDeleted         bool     `json:"isDeleted"`
-	SignupApplication string   `xorm:"varchar(100)" json:"signupApplication"`
-	Hash              string   `xorm:"varchar(100)" json:"hash"`
-	PreHash           string   `xorm:"varchar(100)" json:"preHash"`
-	AccessKey         string   `xorm:"varchar(100)" json:"accessKey"`
-	AccessSecret      string   `xorm:"varchar(100)" json:"accessSecret"`
+	Id                     string   `xorm:"varchar(100) index" json:"id"`
+	Type                   string   `xorm:"varchar(100)" json:"type"`
+	Password               string   `xorm:"varchar(100)" json:"password"`
+	PasswordChangeRequired bool     `xorm:"varchar(100)" json:"passwordChangeRequired"`
+	PasswordSalt           string   `xorm:"varchar(100)" json:"passwordSalt"`
+	PasswordType           string   `xorm:"varchar(100)" json:"passwordType"`
+	DisplayName            string   `xorm:"varchar(100)" json:"displayName"`
+	FirstName              string   `xorm:"varchar(100)" json:"firstName"`
+	LastName               string   `xorm:"varchar(100)" json:"lastName"`
+	Avatar                 string   `xorm:"varchar(500)" json:"avatar"`
+	AvatarType             string   `xorm:"varchar(100)" json:"avatarType"`
+	PermanentAvatar        string   `xorm:"varchar(500)" json:"permanentAvatar"`
+	Email                  string   `xorm:"varchar(100) index" json:"email"`
+	EmailVerified          bool     `json:"emailVerified"`
+	Phone                  string   `xorm:"varchar(20) index" json:"phone"`
+	CountryCode            string   `xorm:"varchar(6)" json:"countryCode"`
+	Region                 string   `xorm:"varchar(100)" json:"region"`
+	Location               string   `xorm:"varchar(100)" json:"location"`
+	Address                []string `json:"address"`
+	Affiliation            string   `xorm:"varchar(100)" json:"affiliation"`
+	Title                  string   `xorm:"varchar(100)" json:"title"`
+	IdCardType             string   `xorm:"varchar(100)" json:"idCardType"`
+	IdCard                 string   `xorm:"varchar(100) index" json:"idCard"`
+	Homepage               string   `xorm:"varchar(100)" json:"homepage"`
+	Bio                    string   `xorm:"varchar(100)" json:"bio"`
+	Tag                    string   `xorm:"varchar(100)" json:"tag"`
+	Language               string   `xorm:"varchar(100)" json:"language"`
+	Gender                 string   `xorm:"varchar(100)" json:"gender"`
+	Birthday               string   `xorm:"varchar(100)" json:"birthday"`
+	Education              string   `xorm:"varchar(100)" json:"education"`
+	Score                  int      `json:"score"`
+	Karma                  int      `json:"karma"`
+	Ranking                int      `json:"ranking"`
+	IsDefaultAvatar        bool     `json:"isDefaultAvatar"`
+	IsOnline               bool     `json:"isOnline"`
+	IsAdmin                bool     `json:"isAdmin"`
+	IsGlobalAdmin          bool     `json:"isGlobalAdmin"`
+	IsForbidden            bool     `json:"isForbidden"`
+	IsDeleted              bool     `json:"isDeleted"`
+	SignupApplication      string   `xorm:"varchar(100)" json:"signupApplication"`
+	Hash                   string   `xorm:"varchar(100)" json:"hash"`
+	PreHash                string   `xorm:"varchar(100)" json:"preHash"`
+	AccessKey              string   `xorm:"varchar(100)" json:"accessKey"`
+	AccessSecret           string   `xorm:"varchar(100)" json:"accessSecret"`
 
 	CreatedIp      string `xorm:"varchar(100)" json:"createdIp"`
 	LastSigninTime string `xorm:"varchar(100)" json:"lastSigninTime"`
@@ -156,6 +159,7 @@ type User struct {
 	Yammer          string `xorm:"yammer varchar(100)" json:"yammer"`
 	Yandex          string `xorm:"yandex varchar(100)" json:"yandex"`
 	Zoom            string `xorm:"zoom varchar(100)" json:"zoom"`
+	MetaMask        string `xorm:"metamask varchar(100)" json:"metamask"`
 	Custom          string `xorm:"custom varchar(100)" json:"custom"`
 
 	WebauthnCredentials []webauthn.Credential `xorm:"webauthnCredentials blob" json:"webauthnCredentials"`
@@ -199,6 +203,17 @@ type ManagedAccount struct {
 	SigninUrl   string `xorm:"varchar(200)" json:"signinUrl"`
 }
 
+func (u *User) checkPasswordChangeRequestAllowed() error {
+	if !u.isPasswordChangeRequestAllowed() && u.PasswordChangeRequired {
+		return fmt.Errorf("PasswordChangeRequired is not supported to be enabled for users from LDAP or Keycloak")
+	}
+	return nil
+}
+
+func (u *User) isPasswordChangeRequestAllowed() bool {
+	return u.Type != "" || u.Ldap == ""
+}
+
 func GetGlobalUserCount(field, value string) (int64, error) {
 	session := GetSession("", -1, -1, field, value, "", "")
 	return session.Count(&User{})
@@ -206,7 +221,7 @@ func GetGlobalUserCount(field, value string) (int64, error) {
 
 func GetGlobalUsers() ([]*User, error) {
 	users := []*User{}
-	err := adapter.Engine.Desc("created_time").Find(&users)
+	err := ormer.Engine.Desc("created_time").Find(&users)
 	if err != nil {
 		return nil, err
 	}
@@ -229,19 +244,19 @@ func GetUserCount(owner, field, value string, groupName string) (int64, error) {
 	session := GetSession(owner, -1, -1, field, value, "", "")
 
 	if groupName != "" {
-		return GetGroupUserCount(groupName, field, value)
+		return GetGroupUserCount(util.GetId(owner, groupName), field, value)
 	}
 
 	return session.Count(&User{})
 }
 
 func GetOnlineUserCount(owner string, isOnline int) (int64, error) {
-	return adapter.Engine.Where("is_online = ?", isOnline).Count(&User{Owner: owner})
+	return ormer.Engine.Where("is_online = ?", isOnline).Count(&User{Owner: owner})
 }
 
 func GetUsers(owner string) ([]*User, error) {
 	users := []*User{}
-	err := adapter.Engine.Desc("created_time").Find(&users, &User{Owner: owner})
+	err := ormer.Engine.Desc("created_time").Find(&users, &User{Owner: owner})
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +266,7 @@ func GetUsers(owner string) ([]*User, error) {
 
 func GetUsersByTag(owner string, tag string) ([]*User, error) {
 	users := []*User{}
-	err := adapter.Engine.Desc("created_time").Find(&users, &User{Owner: owner, Tag: tag})
+	err := ormer.Engine.Desc("created_time").Find(&users, &User{Owner: owner, Tag: tag})
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +276,7 @@ func GetUsersByTag(owner string, tag string) ([]*User, error) {
 
 func GetSortedUsers(owner string, sorter string, limit int) ([]*User, error) {
 	users := []*User{}
-	err := adapter.Engine.Desc(sorter).Limit(limit, 0).Find(&users, &User{Owner: owner})
+	err := ormer.Engine.Desc(sorter).Limit(limit, 0).Find(&users, &User{Owner: owner})
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +288,7 @@ func GetPaginationUsers(owner string, offset, limit int, field, value, sortField
 	users := []*User{}
 
 	if groupName != "" {
-		return GetPaginationGroupUsers(groupName, offset, limit, field, value, sortField, sortOrder)
+		return GetPaginationGroupUsers(util.GetId(owner, groupName), offset, limit, field, value, sortField, sortOrder)
 	}
 
 	session := GetSessionForUser(owner, offset, limit, field, value, sortField, sortOrder)
@@ -290,7 +305,7 @@ func getUser(owner string, name string) (*User, error) {
 	}
 
 	user := User{Owner: owner, Name: name}
-	existed, err := adapter.Engine.Get(&user)
+	existed, err := ormer.Engine.Get(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +323,7 @@ func getUserById(owner string, id string) (*User, error) {
 	}
 
 	user := User{Owner: owner, Id: id}
-	existed, err := adapter.Engine.Get(&user)
+	existed, err := ormer.Engine.Get(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +340,7 @@ func getUserByWechatId(owner string, wechatOpenId string, wechatUnionId string) 
 		wechatUnionId = wechatOpenId
 	}
 	user := &User{}
-	existed, err := adapter.Engine.Where("owner = ?", owner).Where("wechat = ? OR wechat = ?", wechatOpenId, wechatUnionId).Get(user)
+	existed, err := ormer.Engine.Where("owner = ?", owner).Where("wechat = ? OR wechat = ?", wechatOpenId, wechatUnionId).Get(user)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +358,7 @@ func GetUserByEmail(owner string, email string) (*User, error) {
 	}
 
 	user := User{Owner: owner, Email: email}
-	existed, err := adapter.Engine.Get(&user)
+	existed, err := ormer.Engine.Get(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +376,7 @@ func GetUserByPhone(owner string, phone string) (*User, error) {
 	}
 
 	user := User{Owner: owner, Phone: phone}
-	existed, err := adapter.Engine.Get(&user)
+	existed, err := ormer.Engine.Get(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -379,7 +394,7 @@ func GetUserByUserId(owner string, userId string) (*User, error) {
 	}
 
 	user := User{Owner: owner, Id: userId}
-	existed, err := adapter.Engine.Get(&user)
+	existed, err := ormer.Engine.Get(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +411,7 @@ func GetUserByAccessKey(accessKey string) (*User, error) {
 		return nil, nil
 	}
 	user := User{AccessKey: accessKey}
-	existed, err := adapter.Engine.Get(&user)
+	existed, err := ormer.Engine.Get(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -470,7 +485,7 @@ func GetMaskedUsers(users []*User, errs ...error) ([]*User, error) {
 
 func GetLastUser(owner string) (*User, error) {
 	user := User{Owner: owner}
-	existed, err := adapter.Engine.Desc("created_time", "id").Get(&user)
+	existed, err := ormer.Engine.Desc("created_time", "id").Get(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -515,7 +530,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 		columns = []string{
 			"owner", "display_name", "avatar",
 			"location", "address", "country_code", "region", "language", "affiliation", "title", "homepage", "bio", "tag", "language", "gender", "birthday", "education", "score", "karma", "ranking", "signup_application",
-			"is_admin", "is_global_admin", "is_forbidden", "is_deleted", "hash", "is_default_avatar", "properties", "webauthnCredentials", "managedAccounts",
+			"is_admin", "is_global_admin", "is_forbidden", "is_deleted", "password_change_required", "hash", "is_default_avatar", "properties", "webauthnCredentials", "managedAccounts",
 			"signin_wrong_times", "last_signin_wrong_time", "groups", "access_key", "access_secret",
 			"github", "google", "qq", "wechat", "facebook", "dingtalk", "weibo", "gitee", "linkedin", "wecom", "lark", "gitlab", "adfs",
 			"baidu", "alipay", "casdoor", "infoflow", "apple", "azuread", "slack", "steam", "bilibili", "okta", "douyin", "line", "amazon",
@@ -545,7 +560,12 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 		return 0, err
 	}
 
-	affected, err := adapter.Engine.ID(core.PK{owner, name}).Cols(columns...).Update(user)
+	err = user.checkPasswordChangeRequestAllowed()
+	if err != nil {
+		return 0, err
+	}
+
+	affected, err := ormer.Engine.ID(core.PK{owner, name}).Cols(columns...).Update(user)
 	if err != nil {
 		return 0, err
 	}
@@ -567,7 +587,7 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 	if name != user.Name {
 		err := userChangeTrigger(name, user.Name)
 		if err != nil {
-			return false, nil
+			return false, err
 		}
 	}
 
@@ -582,8 +602,12 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 			return false, err
 		}
 	}
+	err = user.checkPasswordChangeRequestAllowed()
+	if err != nil {
+		return false, err
+	}
 
-	affected, err := adapter.Engine.ID(core.PK{owner, name}).AllCols().Update(user)
+	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(user)
 	if err != nil {
 		return false, err
 	}
@@ -637,7 +661,7 @@ func AddUser(user *User) (bool, error) {
 	}
 	user.Ranking = int(count + 1)
 
-	affected, err := adapter.Engine.Insert(user)
+	affected, err := ormer.Engine.Insert(user)
 	if err != nil {
 		return false, err
 	}
@@ -669,7 +693,7 @@ func AddUsers(users []*User) (bool, error) {
 		}
 	}
 
-	affected, err := adapter.Engine.Insert(users)
+	affected, err := ormer.Engine.Insert(users)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Duplicate entry") {
 			return false, err
@@ -714,7 +738,7 @@ func DeleteUser(user *User) (bool, error) {
 		return false, err
 	}
 
-	affected, err := adapter.Engine.ID(core.PK{user.Owner, user.Name}).Delete(&User{})
+	affected, err := ormer.Engine.ID(core.PK{user.Owner, user.Name}).Delete(&User{})
 	if err != nil {
 		return false, err
 	}
@@ -778,7 +802,7 @@ func ExtendUserWithRolesAndPermissions(user *User) (err error) {
 }
 
 func userChangeTrigger(oldName string, newName string) error {
-	session := adapter.Engine.NewSession()
+	session := ormer.Engine.NewSession()
 	defer session.Close()
 
 	err := session.Begin()
@@ -787,7 +811,7 @@ func userChangeTrigger(oldName string, newName string) error {
 	}
 
 	var roles []*Role
-	err = adapter.Engine.Find(&roles)
+	err = ormer.Engine.Find(&roles)
 	if err != nil {
 		return err
 	}
@@ -807,7 +831,7 @@ func userChangeTrigger(oldName string, newName string) error {
 	}
 
 	var permissions []*Permission
-	err = adapter.Engine.Find(&permissions)
+	err = ormer.Engine.Find(&permissions)
 	if err != nil {
 		return err
 	}
@@ -858,4 +882,12 @@ func AddUserkeys(user *User, isAdmin bool) (bool, error) {
 	user.AccessSecret = util.GenerateId()
 
 	return UpdateUser(user.GetId(), user, []string{}, isAdmin)
+}
+
+func (user *User) IsApplicationAdmin(application *Application) bool {
+	if user == nil {
+		return false
+	}
+
+	return (user.Owner == application.Organization && user.IsAdmin) || user.IsGlobalAdmin
 }

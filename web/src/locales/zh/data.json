@@ -1,6 +1,5 @@
 {
   "account": {
-    "Chats & Messages": "聊天 & 消息",
     "Logout": "登出",
     "My Account": "我的账户",
     "Sign Up": "注册"
@@ -127,19 +126,6 @@
     "Scope - Tooltip": "公钥证书的使用场景",
     "Type - Tooltip": "公钥证书的类型"
   },
-  "chat": {
-    "AI": "AI",
-    "Edit Chat": "编辑聊天",
-    "Group": "群聊",
-    "Message count": "消息个数",
-    "New Chat": "添加聊天",
-    "Single": "单聊",
-    "User1": "用户1",
-    "User1 - Tooltip": "当聊天类型为单聊时，该值为聊天的发起者；当聊天类型为群聊时，该值为群主",
-    "User2": "用户2",
-    "User2 - Tooltip": "当聊天类型为单聊时，该值为聊天的对象；当聊天类型为群聊时，该值为管理员",
-    "Users - Tooltip": "能够接收到聊天消息的所有用户"
-  },
   "code": {
     "Code you received": "验证码",
     "Email code": "邮箱验证码",
@@ -152,9 +138,13 @@
     "Sending": "发送中",
     "Submit and complete": "完成提交"
   },
+  "enforcer": {
+    "Edit Enforcer": "Edit Enforcer",
+    "New Enforcer": "New Enforcer"
+  },
   "forget": {
     "Account": "账号",
-    "Change Password": "修改密码",
+    "Password change required": "修改密码",
     "Choose email or phone": "请选择邮箱或手机号验证",
     "Next Step": "下一步",
     "Please input your username!": "请输入您的用户名！",
@@ -190,13 +180,13 @@
     "Cert": "证书",
     "Cert - Tooltip": "该应用所对应的客户端SDK需要验证的公钥证书",
     "Certs": "证书",
-    "Chats": "聊天",
     "Click to Upload": "点击上传",
     "Client IP": "客户端IP",
     "Close": "关闭",
     "Confirm": "确认",
     "Created time": "创建时间",
     "Custom": "自定义",
+    "Default": "默认",
     "Default application": "默认应用",
     "Default application - Tooltip": "直接从组织页面注册的用户默认所属的应用",
     "Default avatar": "默认头像",
@@ -214,11 +204,11 @@
     "Enable": "启用",
     "Enabled": "已开启",
     "Enabled successfully": "启用成功",
+    "Enforcers": "Enforcers",
     "Failed to add": "添加失败",
     "Failed to connect to server": "连接服务器失败",
     "Failed to delete": "删除失败",
     "Failed to enable": "启用失败",
-    "Failed to get answer": "获取回答失败",
     "Failed to remove": "移除失败",
     "Failed to save": "保存失败",
     "Failed to verify": "验证失败",
@@ -251,7 +241,6 @@
     "Master password": "万能密码",
     "Master password - Tooltip": "可用来登录该组织下的所有用户，方便管理员以该用户身份登录，以解决技术问题",
     "Menu": "目录",
-    "Messages": "消息",
     "Method": "方法",
     "Model": "模型",
     "Model - Tooltip": "Casbin的访问控制模型",
@@ -399,9 +388,11 @@
     "Auto sign in": "下次自动登录",
     "Continue with": "使用以下账号继续",
     "Email or phone": "Email或手机号",
+    "Failed to obtain MetaMask authorization": "获取MetaMask授权失败",
     "Forgot password?": "忘记密码？",
     "Loading": "加载中",
     "Logging out...": "正在退出登录...",
+    "MetaMask plugin not detected": "未检测到MetaMask插件",
     "No account?": "没有账号？",
     "Or sign in with another account": "或者，登录其他账号",
     "Please input your Email or Phone!": "请输入您的Email或手机号!",
@@ -423,16 +414,6 @@
     "WebAuthn": "WebAuthn",
     "sign up now": "立即注册",
     "username, Email or phone": "用户名、Email或手机号"
-  },
-  "message": {
-    "Author": "作者",
-    "Author - Tooltip": "发出消息的用户",
-    "Chat": "聊天",
-    "Chat - Tooltip": "消息所属的聊天ID",
-    "Edit Message": "编辑消息",
-    "New Message": "添加消息",
-    "Text": "内容",
-    "Text - Tooltip": "消息的内容"
   },
   "mfa": {
     "Each time you sign in to your Account, you'll need your password and a authentication code": "每次登录帐户时，都需要密码和认证码",
@@ -905,6 +886,7 @@
     "Birthday - Tooltip": "Birthday - Tooltip",
     "Captcha Verify Failed": "验证码校验失败",
     "Captcha Verify Success": "验证码校验成功",
+    "Password change required - Tooltip": "系统将要求用户下次登录后更改密码",
     "Country code": "国家代码",
     "Country/Region": "国家/地区",
     "Country/Region - Tooltip": "国家或地区",

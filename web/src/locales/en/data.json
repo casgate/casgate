@@ -1,6 +1,5 @@
 {
   "account": {
-    "Chats & Messages": "Chats & Messages",
     "Logout": "Logout",
     "My Account": "My Account",
     "Sign Up": "Sign Up"
@@ -105,6 +104,16 @@
     "Token format - Tooltip": "The format of access token",
     "You are unexpected to see this prompt page": "You are unexpected to see this prompt page"
   },
+  "changePassword": {
+    "Current password": "Current password",
+    "New password": "New password",
+    "Re-enter new": "Re-enter new",
+    "Please input your old password": "Please input your old password",
+    "Please input your password, at least 6 characters!": "Please input your password, at least 6 characters!",
+    "Please confirm your password!": "Please confirm your password!",
+    "Your confirmed password is inconsistent with the password!": "Your confirmed password is inconsistent with the password!",
+    "Password successfully changed": "Password successfully changed"
+  },
   "cert": {
     "Bit size": "Bit size",
     "Bit size - Tooltip": "Secret key length",
@@ -127,19 +136,6 @@
     "Scope - Tooltip": "Usage scenarios of the certificate",
     "Type - Tooltip": "Type of certificate"
   },
-  "chat": {
-    "AI": "AI",
-    "Edit Chat": "Edit Chat",
-    "Group": "Group",
-    "Message count": "Message count",
-    "New Chat": "New Chat",
-    "Single": "Single",
-    "User1": "User1",
-    "User1 - Tooltip": "User1 - Tooltip",
-    "User2": "User2",
-    "User2 - Tooltip": "User2 - Tooltip",
-    "Users - Tooltip": "Users - Tooltip"
-  },
   "code": {
     "Code you received": "Code you received",
     "Email code": "Email code",
@@ -152,9 +148,13 @@
     "Sending": "Sending",
     "Submit and complete": "Submit and complete"
   },
+  "enforcer": {
+    "Edit Enforcer": "Edit Enforcer",
+    "New Enforcer": "New Enforcer"
+  },
   "forget": {
     "Account": "Account",
-    "Change Password": "Change Password",
+    "Password change required": "Password change required",
     "Choose email or phone": "Choose email or phone",
     "Next Step": "Next Step",
     "Please input your username!": "Please input your username!",
@@ -190,13 +190,13 @@
     "Cert": "Cert",
     "Cert - Tooltip": "The public key certificate that needs to be verified by the client SDK corresponding to this application",
     "Certs": "Certs",
-    "Chats": "Chats",
     "Click to Upload": "Click to Upload",
     "Client IP": "Client IP",
     "Close": "Close",
     "Confirm": "Confirm",
     "Created time": "Created time",
     "Custom": "Custom",
+    "Default": "Default",
     "Default application": "Default application",
     "Default application - Tooltip": "Default application for users registered directly from the organization page",
     "Default avatar": "Default avatar",
@@ -214,11 +214,11 @@
     "Enable": "Enable",
     "Enabled": "Enabled",
     "Enabled successfully": "Enabled successfully",
+    "Enforcers": "Enforcers",
     "Failed to add": "Failed to add",
     "Failed to connect to server": "Failed to connect to server",
     "Failed to delete": "Failed to delete",
     "Failed to enable": "Failed to enable",
-    "Failed to get answer": "Failed to get answer",
     "Failed to remove": "Failed to remove",
     "Failed to save": "Failed to save",
     "Failed to verify": "Failed to verify",
@@ -251,7 +251,6 @@
     "Master password": "Master password",
     "Master password - Tooltip": "Can be used to log in to all users under this organization, making it convenient for administrators to log in as this user to solve technical issues",
     "Menu": "Menu",
-    "Messages": "Messages",
     "Method": "Method",
     "Model": "Model",
     "Model - Tooltip": "Casbin access control model",
@@ -399,9 +398,11 @@
     "Auto sign in": "Auto sign in",
     "Continue with": "Continue with",
     "Email or phone": "Email or phone",
+    "Failed to obtain MetaMask authorization": "Failed to obtain MetaMask authorization",
     "Forgot password?": "Forgot password?",
     "Loading": "Loading",
     "Logging out...": "Logging out...",
+    "MetaMask plugin not detected": "MetaMask plugin not detected",
     "No account?": "No account?",
     "Or sign in with another account": "Or sign in with another account",
     "Please input your Email or Phone!": "Please input your Email or Phone!",
@@ -423,16 +424,6 @@
     "WebAuthn": "WebAuthn",
     "sign up now": "sign up now",
     "username, Email or phone": "username, Email or phone"
-  },
-  "message": {
-    "Author": "Author",
-    "Author - Tooltip": "Author - Tooltip",
-    "Chat": "Chat",
-    "Chat - Tooltip": "Chat - Tooltip",
-    "Edit Message": "Edit Message",
-    "New Message": "New Message",
-    "Text": "Text",
-    "Text - Tooltip": "Text - Tooltip"
   },
   "mfa": {
     "Each time you sign in to your Account, you'll need your password and a authentication code": "Each time you sign in to your Account, you'll need your password and a authentication code",
@@ -905,6 +896,7 @@
     "Birthday - Tooltip": "Birthday - Tooltip",
     "Captcha Verify Failed": "Captcha Verify Failed",
     "Captcha Verify Success": "Captcha Verify Success",
+    "Password change required - Tooltip": "The system will require the user to change the password after the next sign in",
     "Country code": "Country code",
     "Country/Region": "Country/Region",
     "Country/Region - Tooltip": "Country or region",

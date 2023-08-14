@@ -46,14 +46,14 @@ class ProductEditPage extends React.Component {
 
   getProduct() {
     ProductBackend.getProduct(this.state.organizationName, this.state.productName)
-      .then((product) => {
-        if (product === null) {
+      .then((res) => {
+        if (res.data === null) {
           this.props.history.push("/404");
           return;
         }
 
         this.setState({
-          product: product,
+          product: res.data,
         });
       });
   }
@@ -62,7 +62,7 @@ class ProductEditPage extends React.Component {
     OrganizationBackend.getOrganizations("admin")
       .then((res) => {
         this.setState({
-          organizations: (res.msg === undefined) ? res : [],
+          organizations: res.data || [],
         });
       });
   }
@@ -295,7 +295,7 @@ class ProductEditPage extends React.Component {
   }
 
   renderPreview() {
-    const buyUrl = `/products/${this.state.product.name}/buy`;
+    const buyUrl = `/products/${this.state.product.owner}/${this.state.product.name}/buy`;
     return (
       <Col span={22} style={{display: "flex", flexDirection: "column"}}>
         <a style={{marginBottom: "10px", display: "flex"}} target="_blank" rel="noreferrer" href={buyUrl}>

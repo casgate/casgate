@@ -41,6 +41,7 @@ type LdapUser struct {
 	GidNumber string `json:"gidNumber"`
 	// Gcn                   string
 	Uuid                  string `json:"uuid"`
+	UserPrincipalName     string `json:"userPrincipalName"`
 	DisplayName           string `json:"displayName"`
 	Mail                  string
 	Email                 string `json:"email"`
@@ -51,9 +52,10 @@ type LdapUser struct {
 	RegisteredAddress     string
 	PostalAddress         string
 
-	GroupId string `json:"groupId"`
-	Phone   string `json:"phone"`
-	Address string `json:"address"`
+	GroupId  string `json:"groupId"`
+	Phone    string `json:"phone"`
+	Address  string `json:"address"`
+	MemberOf string `json:"memberOf"`
 }
 
 func (ldap *Ldap) GetLdapConn() (c *LdapConn, err error) {
@@ -182,6 +184,8 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 				user.Uuid = attribute.Values[0]
 			case "objectGUID":
 				user.Uuid = attribute.Values[0]
+			case "userPrincipalName":
+				user.UserPrincipalName = attribute.Values[0]
 			case "displayName":
 				user.DisplayName = attribute.Values[0]
 			case "mail":
@@ -200,6 +204,8 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 				user.RegisteredAddress = attribute.Values[0]
 			case "postalAddress":
 				user.PostalAddress = attribute.Values[0]
+			case "memberOf":
+				user.MemberOf = attribute.Values[0]
 			}
 		}
 		ldapUsers = append(ldapUsers, user)
@@ -358,7 +364,7 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 func GetExistUuids(owner string, uuids []string) ([]string, error) {
 	var existUuids []string
 
-	err := adapter.Engine.Table("user").Where("owner = ?", owner).Cols("ldap").
+	err := ormer.Engine.Table("user").Where("owner = ?", owner).Cols("ldap").
 		In("ldap", uuids).Select("DISTINCT ldap").Find(&existUuids)
 	if err != nil {
 		return existUuids, err
@@ -370,7 +376,7 @@ func GetExistUuids(owner string, uuids []string) ([]string, error) {
 func (ldapUser *LdapUser) buildLdapUserName() (string, error) {
 	user := User{}
 	uidWithNumber := fmt.Sprintf("%s_%s", ldapUser.Uid, ldapUser.UidNumber)
-	has, err := adapter.Engine.Where("name = ? or name = ?", ldapUser.Uid, uidWithNumber).Get(&user)
+	has, err := ormer.Engine.Where("name = ? or name = ?", ldapUser.Uid, uidWithNumber).Get(&user)
 	if err != nil {
 		return "", err
 	}
