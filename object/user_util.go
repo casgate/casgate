@@ -30,7 +30,7 @@ func GetUserByField(organizationName string, field string, value string) (*User,
 	}
 
 	user := User{Owner: organizationName}
-	existed, err := adapter.Engine.Where(fmt.Sprintf("%s=?", strings.ToLower(field)), value).Get(&user)
+	existed, err := ormer.Engine.Where(fmt.Sprintf("%s=?", strings.ToLower(field)), value).Get(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -91,11 +91,12 @@ func SetUserField(user *User, field string, value string) (bool, error) {
 		user.UpdateUserPassword(organization)
 		bean[strings.ToLower(field)] = user.Password
 		bean["password_type"] = user.PasswordType
+		bean["password_change_required"] = false
 	} else {
 		bean[strings.ToLower(field)] = value
 	}
 
-	affected, err := adapter.Engine.Table(user).ID(core.PK{user.Owner, user.Name}).Update(bean)
+	affected, err := ormer.Engine.Table(user).ID(core.PK{user.Owner, user.Name}).Update(bean)
 	if err != nil {
 		return false, err
 	}
@@ -110,7 +111,7 @@ func SetUserField(user *User, field string, value string) (bool, error) {
 		return false, err
 	}
 
-	_, err = adapter.Engine.ID(core.PK{user.Owner, user.Name}).Cols("hash").Update(user)
+	_, err = ormer.Engine.ID(core.PK{user.Owner, user.Name}).Cols("hash").Update(user)
 	if err != nil {
 		return false, err
 	}
@@ -191,7 +192,7 @@ func ClearUserOAuthProperties(user *User, providerType string) (bool, error) {
 		}
 	}
 
-	affected, err := adapter.Engine.ID(core.PK{user.Owner, user.Name}).Cols("properties").Update(user)
+	affected, err := ormer.Engine.ID(core.PK{user.Owner, user.Name}).Cols("properties").Update(user)
 	if err != nil {
 		return false, err
 	}
@@ -320,6 +321,10 @@ func CheckPermissionForUpdateUser(oldUser, newUser *User, isAdmin bool, lang str
 	}
 	if oldUser.IsDeleted != newUser.IsDeleted {
 		item := GetAccountItemByName("Is deleted", organization)
+		itemsChanged = append(itemsChanged, item)
+	}
+	if oldUser.PasswordChangeRequired != newUser.PasswordChangeRequired {
+		item := GetAccountItemByName("Password change required", organization)
 		itemsChanged = append(itemsChanged, item)
 	}
 

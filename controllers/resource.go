@@ -52,7 +52,22 @@ func (c *ApiController) GetResources() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
-	if limit == "" || page == "" {
+	if sortField == "Direct" {
+		provider, err := c.GetProviderFromContext("Storage")
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+
+		prefix := sortOrder
+		resources, err := object.GetDirectResources(owner, user, provider, prefix, c.GetAcceptLanguage())
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+
+		c.ResponseOk(resources)
+	} else if limit == "" || page == "" {
 		resources, err := object.GetResources(owner, user)
 		if err != nil {
 			c.ResponseError(err.Error())
@@ -152,11 +167,16 @@ func (c *ApiController) DeleteResource() {
 		return
 	}
 
+	if resource.Provider != "" {
+		c.Input().Set("provider", resource.Provider)
+	}
+	c.Input().Set("fullFilePath", resource.Name)
 	provider, err := c.GetProviderFromContext("Storage")
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	_, resource.Name = refineFullFilePath(resource.Name)
 
 	err = object.DeleteFile(provider, resource.Name, c.GetAcceptLanguage())
 	if err != nil {
@@ -216,6 +236,7 @@ func (c *ApiController) UploadResource() {
 		c.ResponseError(err.Error())
 		return
 	}
+	_, fullFilePath = refineFullFilePath(fullFilePath)
 
 	fileType := "unknown"
 	contentType := header.Header.Get("Content-Type")

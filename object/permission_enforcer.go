@@ -69,7 +69,7 @@ func getPermissionEnforcer(p *Permission, permissionIDs ...string) *casbin.Enfor
 func (p *Permission) setEnforcerAdapter(enforcer *casbin.Enforcer) error {
 	tableName := "permission_rule"
 	if len(p.Adapter) != 0 {
-		adapterObj, err := getCasbinAdapter(p.Owner, p.Adapter)
+		adapterObj, err := getAdapter(p.Owner, p.Adapter)
 		if err != nil {
 			return err
 		}
@@ -81,12 +81,12 @@ func (p *Permission) setEnforcerAdapter(enforcer *casbin.Enforcer) error {
 	tableNamePrefix := conf.GetConfigString("tableNamePrefix")
 	driverName := conf.GetConfigString("driverName")
 	dataSourceName := conf.GetConfigRealDataSourceName(driverName)
-	casbinAdapter, err := xormadapter.NewAdapterWithTableName(driverName, dataSourceName, tableName, tableNamePrefix, true)
+	adapter, err := xormadapter.NewAdapterWithTableName(driverName, dataSourceName, tableName, tableNamePrefix, true)
 	if err != nil {
 		return err
 	}
 
-	enforcer.SetAdapter(casbinAdapter)
+	enforcer.SetAdapter(adapter)
 	return nil
 }
 
@@ -335,7 +335,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act`
 		policyDefinition := strings.Split(cfg.String("policy_definition::p"), ",")
 		fieldsNum := len(policyDefinition)
 		if fieldsNum > builtInAvailableField {
-			panic(fmt.Errorf("the maximum policy_definition field number cannot exceed %d", builtInAvailableField))
+			panic(fmt.Errorf("the maximum policy_definition field number cannot exceed %d, got %d", builtInAvailableField, fieldsNum))
 		}
 		// filled empty field with "" and V5 with "permissionId"
 		for i := builtInAvailableField - fieldsNum; i > 0; i-- {

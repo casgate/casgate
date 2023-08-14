@@ -1,6 +1,5 @@
 {
   "account": {
-    "Chats & Messages": "Chats & Messages",
     "Logout": "Cierre de sesión",
     "My Account": "Mi cuenta",
     "Sign Up": "Registrarse"
@@ -127,19 +126,6 @@
     "Scope - Tooltip": "Escenarios de uso del certificado",
     "Type - Tooltip": "Tipo de certificado"
   },
-  "chat": {
-    "AI": "AI",
-    "Edit Chat": "Edit Chat",
-    "Group": "Group",
-    "Message count": "Message count",
-    "New Chat": "New Chat",
-    "Single": "Single",
-    "User1": "User1",
-    "User1 - Tooltip": "User1 - Tooltip",
-    "User2": "User2",
-    "User2 - Tooltip": "User2 - Tooltip",
-    "Users - Tooltip": "Users - Tooltip"
-  },
   "code": {
     "Code you received": "Código que recibió",
     "Email code": "Código de correo electrónico",
@@ -152,9 +138,13 @@
     "Sending": "Envío",
     "Submit and complete": "Enviar y completar"
   },
+  "enforcer": {
+    "Edit Enforcer": "Edit Enforcer",
+    "New Enforcer": "New Enforcer"
+  },
   "forget": {
     "Account": "Cuenta",
-    "Change Password": "Cambiar contraseña",
+    "Password change required": "Cambiar contraseña",
     "Choose email or phone": "Elige correo electrónico o teléfono",
     "Next Step": "Siguiente paso",
     "Please input your username!": "¡Por favor, ingrese su nombre de usuario!",
@@ -190,7 +180,6 @@
     "Cert": "ificado",
     "Cert - Tooltip": "El certificado de clave pública que necesita ser verificado por el SDK del cliente correspondiente a esta aplicación",
     "Certs": "Certificaciones",
-    "Chats": "Chats",
     "Click to Upload": "Haz clic para cargar",
     "Client IP": "Dirección IP del cliente",
     "Close": "Cerca",
@@ -215,11 +204,11 @@
     "Enable": "Enable",
     "Enabled": "Enabled",
     "Enabled successfully": "Enabled successfully",
+    "Enforcers": "Enforcers",
     "Failed to add": "No se pudo agregar",
     "Failed to connect to server": "No se pudo conectar al servidor",
     "Failed to delete": "No se pudo eliminar",
     "Failed to enable": "Failed to enable",
-    "Failed to get answer": "Failed to get answer",
     "Failed to remove": "Failed to remove",
     "Failed to save": "No se pudo guardar",
     "Failed to verify": "Failed to verify",
@@ -252,7 +241,6 @@
     "Master password": "Contraseña maestra",
     "Master password - Tooltip": "Se puede usar para iniciar sesión en todos los usuarios de esta organización, lo que hace conveniente que los administradores inicien sesión como este usuario para resolver problemas técnicos",
     "Menu": "Menú",
-    "Messages": "Messages",
     "Method": "Método",
     "Model": "Modelo",
     "Model - Tooltip": "Modelo de control de acceso Casbin",
@@ -427,16 +415,6 @@
     "WebAuthn": "WebAuthn",
     "sign up now": "Regístrate ahora",
     "username, Email or phone": "Nombre de usuario, correo electrónico o teléfono"
-  },
-  "message": {
-    "Author": "Author",
-    "Author - Tooltip": "Author - Tooltip",
-    "Chat": "Chat",
-    "Chat - Tooltip": "Chat - Tooltip",
-    "Edit Message": "Edit Message",
-    "New Message": "New Message",
-    "Text": "Text",
-    "Text - Tooltip": "Text - Tooltip"
   },
   "mfa": {
     "Each time you sign in to your Account, you'll need your password and a authentication code": "Each time you sign in to your Account, you'll need your password and a authentication code",
@@ -909,6 +887,7 @@
     "Birthday - Tooltip": "Birthday - Tooltip",
     "Captcha Verify Failed": "Validación de Captcha fallida",
     "Captcha Verify Success": "Verificación de Captcha Exitosa",
+    "Password change required - Tooltip": "The system will require the user to change the password after the next sign in",
     "Country code": "Código de país",
     "Country/Region": "País/Región",
     "Country/Region - Tooltip": "País o región",

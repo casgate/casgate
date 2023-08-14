@@ -423,6 +423,13 @@ func (c *ApiController) SetPassword() {
 	userId := util.GetId(userOwner, userName)
 
 	requestUserId := c.GetSessionUsername()
+
+	fromChangePasswordRequiredForm := requestUserId == "" && c.getChangePasswordUserSession() != ""
+
+	if fromChangePasswordRequiredForm {
+		requestUserId = c.getChangePasswordUserSession()
+	}
+
 	if requestUserId == "" && code == "" {
 		c.ResponseError(c.T("general:Please login first"), "Please login first")
 		return
@@ -567,6 +574,6 @@ func (c *ApiController) RemoveUserFromGroup() {
 	name := c.Ctx.Request.Form.Get("name")
 	groupName := c.Ctx.Request.Form.Get("groupName")
 
-	c.Data["json"] = wrapActionResponse(object.RemoveUserFromGroup(owner, name, groupName))
+	c.Data["json"] = wrapActionResponse(object.RemoveUserFromGroup(owner, name, util.GetId(owner, groupName)))
 	c.ServeJSON()
 }

@@ -12,17 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ai
+package storage
 
 import (
-	"github.com/casdoor/casdoor/proxy"
-	"github.com/sashabaranov/go-openai"
+	"github.com/casdoor/oss"
+	"github.com/casdoor/oss/googlecloud"
 )
 
-func getProxyClientFromToken(authToken string) *openai.Client {
-	config := openai.DefaultConfig(authToken)
-	config.HTTPClient = proxy.ProxyHttpClient
+func NewGoogleCloudStorageProvider(clientId string, clientSecret string, bucket string, endpoint string) oss.StorageInterface {
+	sp, _ := googlecloud.New(&googlecloud.Config{
+		AccessID:  clientId,
+		AccessKey: clientSecret,
+		Bucket:    bucket,
+		Endpoint:  endpoint,
+	})
 
-	c := openai.NewClientWithConfig(config)
-	return c
+	return sp
 }

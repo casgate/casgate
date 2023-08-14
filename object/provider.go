@@ -119,7 +119,7 @@ func GetGlobalProviderCount(field, value string) (int64, error) {
 
 func GetProviders(owner string) ([]*Provider, error) {
 	providers := []*Provider{}
-	err := adapter.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&providers, &Provider{})
+	err := ormer.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&providers, &Provider{})
 	if err != nil {
 		return providers, err
 	}
@@ -129,7 +129,7 @@ func GetProviders(owner string) ([]*Provider, error) {
 
 func GetGlobalProviders() ([]*Provider, error) {
 	providers := []*Provider{}
-	err := adapter.Engine.Desc("created_time").Find(&providers)
+	err := ormer.Engine.Desc("created_time").Find(&providers)
 	if err != nil {
 		return providers, err
 	}
@@ -165,7 +165,7 @@ func getProvider(owner string, name string) (*Provider, error) {
 	}
 
 	provider := Provider{Name: name}
-	existed, err := adapter.Engine.Get(&provider)
+	existed, err := ormer.Engine.Get(&provider)
 	if err != nil {
 		return &provider, err
 	}
@@ -180,20 +180,6 @@ func getProvider(owner string, name string) (*Provider, error) {
 func GetProvider(id string) (*Provider, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
 	return getProvider(owner, name)
-}
-
-func getDefaultAiProvider() (*Provider, error) {
-	provider := Provider{Owner: "admin", Category: "AI"}
-	existed, err := adapter.Engine.Get(&provider)
-	if err != nil {
-		return &provider, err
-	}
-
-	if !existed {
-		return nil, nil
-	}
-
-	return &provider, nil
 }
 
 func GetWechatMiniProgramProvider(application *Application) *Provider {
@@ -217,11 +203,11 @@ func UpdateProvider(id string, provider *Provider) (bool, error) {
 	if name != provider.Name {
 		err := providerChangeTrigger(name, provider.Name)
 		if err != nil {
-			return false, nil
+			return false, err
 		}
 	}
 
-	session := adapter.Engine.ID(core.PK{owner, name}).AllCols()
+	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
 	if provider.ClientSecret == "***" {
 		session = session.Omit("client_secret")
 	}
@@ -248,7 +234,7 @@ func AddProvider(provider *Provider) (bool, error) {
 		provider.IntranetEndpoint = util.GetEndPoint(provider.IntranetEndpoint)
 	}
 
-	affected, err := adapter.Engine.Insert(provider)
+	affected, err := ormer.Engine.Insert(provider)
 	if err != nil {
 		return false, err
 	}
@@ -257,7 +243,7 @@ func AddProvider(provider *Provider) (bool, error) {
 }
 
 func DeleteProvider(provider *Provider) (bool, error) {
-	affected, err := adapter.Engine.ID(core.PK{provider.Owner, provider.Name}).Delete(&Provider{})
+	affected, err := ormer.Engine.ID(core.PK{provider.Owner, provider.Name}).Delete(&Provider{})
 	if err != nil {
 		return false, err
 	}
@@ -268,7 +254,8 @@ func DeleteProvider(provider *Provider) (bool, error) {
 func (p *Provider) getPaymentProvider() (pp.PaymentProvider, *Cert, error) {
 	cert := &Cert{}
 	if p.Cert != "" {
-		cert, err := getCert(p.Owner, p.Cert)
+		var err error
+		cert, err = getCert(p.Owner, p.Cert)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -297,7 +284,7 @@ func (p *Provider) GetId() string {
 func GetCaptchaProviderByOwnerName(applicationId, lang string) (*Provider, error) {
 	owner, name := util.GetOwnerAndNameFromId(applicationId)
 	provider := Provider{Owner: owner, Name: name, Category: "Captcha"}
-	existed, err := adapter.Engine.Get(&provider)
+	existed, err := ormer.Engine.Get(&provider)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +320,7 @@ func GetCaptchaProviderByApplication(applicationId, isCurrentProvider, lang stri
 }
 
 func providerChangeTrigger(oldName string, newName string) error {
-	session := adapter.Engine.NewSession()
+	session := ormer.Engine.NewSession()
 	defer session.Close()
 
 	err := session.Begin()
@@ -342,7 +329,7 @@ func providerChangeTrigger(oldName string, newName string) error {
 	}
 
 	var applications []*Application
-	err = adapter.Engine.Find(&applications)
+	err = ormer.Engine.Find(&applications)
 	if err != nil {
 		return err
 	}

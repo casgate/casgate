@@ -32,10 +32,11 @@ import i18next from "i18next";
 import CustomGithubCorner from "../common/CustomGithubCorner";
 import {SendCodeInput} from "../common/SendCodeInput";
 import LanguageSelect from "../common/select/LanguageSelect";
-import {CaptchaModal} from "../common/modal/CaptchaModal";
-import {CaptchaRule} from "../common/modal/CaptchaModal";
+import {CaptchaModal, CaptchaRule} from "../common/modal/CaptchaModal";
 import RedirectForm from "../common/RedirectForm";
 import {MfaAuthVerifyForm, NextMfa, RequiredMfa} from "./mfa/MfaAuthVerifyForm";
+import {ChangePasswordForm, NextChangePasswordForm} from "./ChangePasswordForm";
+
 import {GoogleOneTapLoginVirtualButton} from "./GoogleLoginButton";
 class LoginPage extends React.Component {
   constructor(props) {
@@ -388,6 +389,29 @@ class LoginPage extends React.Component {
             }
           };
 
+          const changePasswordForm = () => {
+            return (
+              <ChangePasswordForm
+                application={this.getApplicationObj()}
+                userOwner={values.organization}
+                userName={this.state.username}
+                onSuccess={(newValues) => {
+                  values.password = newValues.newPassword;
+                  AuthBackend.login(values, oAuthParams).then((res) => {
+                    if (res.status === "ok") {
+                      return callback(res);
+                    } else {
+                      Setting.showMessage("error", `${i18next.t("application:Failed to sign in")}: ${res.msg}`);
+                    }
+                  });
+                }}
+                onFail={(res) => {
+                  Setting.showMessage("error", i18next.t(`signup:${res.msg}`));
+                }}
+              />
+            );
+          };
+
           if (res.status === "ok") {
             if (res.data === NextMfa) {
               this.setState({
@@ -401,9 +425,23 @@ class LoginPage extends React.Component {
                       onFail={() => {
                         Setting.showMessage("error", i18next.t("mfa:Verification failed"));
                       }}
-                      onSuccess={(res) => callback(res)}
+                      onSuccess={(res) => {
+                        if (res.data === NextChangePasswordForm) {
+                          this.setState({
+                            getVerifyTotp: undefined,
+                            getChangePasswordForm: changePasswordForm,
+                          });
+                        } else {
+                          return callback(res);
+                        }
+                      }}
                     />);
                 },
+              });
+            } else if (res.data === NextChangePasswordForm) {
+              this.setState({
+                values: values,
+                getChangePasswordForm: changePasswordForm,
               });
             } else {
               callback(res);
@@ -472,7 +510,6 @@ class LoginPage extends React.Component {
         <Form
           name="normal_login"
           initialValues={{
-
             organization: application.organization,
             application: application.name,
             autoSignin: true,
@@ -606,7 +643,7 @@ class LoginPage extends React.Component {
                 {application.displayName}
               </span>
             </a>
-              :
+            :
           </div>
           <br />
           {
@@ -862,6 +899,8 @@ class LoginPage extends React.Component {
 
     if (this.state.getVerifyTotp !== undefined) {
       return this.state.getVerifyTotp();
+    } else if (this.state.getChangePasswordForm !== undefined) {
+      return this.state.getChangePasswordForm();
     } else {
       return (
         <React.Fragment>

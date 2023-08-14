@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/i18n"
@@ -143,8 +144,30 @@ func (c *ApiController) IsMaskedEnabled() (bool, bool) {
 	return true, isMaskEnabled
 }
 
+func refineFullFilePath(fullFilePath string) (string, string) {
+	tokens := strings.Split(fullFilePath, "/")
+	if len(tokens) >= 2 && tokens[0] == "Direct" && tokens[1] != "" {
+		providerName := tokens[1]
+		res := strings.Join(tokens[2:], "/")
+		return providerName, "/" + res
+	} else {
+		return "", fullFilePath
+	}
+}
+
 func (c *ApiController) GetProviderFromContext(category string) (*object.Provider, error) {
 	providerName := c.Input().Get("provider")
+	if providerName == "" {
+		field := c.Input().Get("field")
+		value := c.Input().Get("value")
+		if field == "provider" && value != "" {
+			providerName = value
+		} else {
+			fullFilePath := c.Input().Get("fullFilePath")
+			providerName, _ = refineFullFilePath(fullFilePath)
+		}
+	}
+
 	if providerName != "" {
 		provider, err := object.GetProvider(util.GetId("admin", providerName))
 		if err != nil {
