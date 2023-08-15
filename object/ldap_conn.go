@@ -265,6 +265,7 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 			Mobile:            util.ReturnAnyNotEmpty(user.Mobile, user.MobileTelephoneNumber, user.TelephoneNumber),
 			Phone:             user.Phone,
 			RegisteredAddress: util.ReturnAnyNotEmpty(user.PostalAddress, user.RegisteredAddress),
+			Address:           user.Address,
 		}
 	}
 	return res
