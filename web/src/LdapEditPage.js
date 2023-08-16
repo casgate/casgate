@@ -20,6 +20,7 @@ import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as CertBackend from "./backend/CertBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
+import LdapAttributeMappingTable from "./table/LdapAttributeMappingTable";
 
 const {Option} = Select;
 
@@ -104,10 +105,10 @@ class LdapEditPage extends React.Component {
         </div>
       } style={{marginLeft: "5px"}} type="inner">
         <Row style={{marginTop: "10px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("general:Organization"), i18next.t("general:Organization - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <Select virtual={false} style={{width: "100%"}} disabled={!Setting.isAdminUser(this.props.account)}
               value={this.state.ldap.owner} onChange={(value => {
                 this.updateLdapField("owner", value);
@@ -120,38 +121,38 @@ class LdapEditPage extends React.Component {
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("general:ID"), i18next.t("general:ID - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <Input value={this.state.ldap.id} disabled={true} />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Server name"), i18next.t("ldap:Server name - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <Input value={this.state.ldap.serverName} onChange={e => {
               this.updateLdapField("serverName", e.target.value);
             }} />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Server host"), i18next.t("ldap:Server host - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <Input value={this.state.ldap.host} onChange={e => {
               this.updateLdapField("host", e.target.value);
             }} />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Server port"), i18next.t("ldap:Server port - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <InputNumber min={0} max={65535} formatter={value => value.replace(/\$\s?|(,*)/g, "")}
               value={this.state.ldap.port} onChange={value => {
                 this.updateLdapField("port", value);
@@ -159,10 +160,10 @@ class LdapEditPage extends React.Component {
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Enable SSL"), i18next.t("ldap:Enable SSL - Tooltip"))} :
           </Col>
-          <Col span={21} >
+          <Col span={20} >
             <Switch checked={this.state.ldap.enableSsl} onChange={checked => {
               this.updateLdapField("enableSsl", checked);
             }} />
@@ -185,30 +186,30 @@ class LdapEditPage extends React.Component {
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Base DN"), i18next.t("ldap:Base DN - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <Input value={this.state.ldap.baseDn} onChange={e => {
               this.updateLdapField("baseDn", e.target.value);
             }} />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Search Filter"), i18next.t("ldap:Search Filter - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <Input value={this.state.ldap.filter} onChange={e => {
               this.updateLdapField("filter", e.target.value);
             }} />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Filter fields"), i18next.t("ldap:Filter fields - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <Select value={this.state.ldap.filterFields ?? []} style={{width: "100%"}} mode={"multiple"} options={[
               {value: "uid", label: "uid"},
               {value: "mail", label: "Email"},
@@ -220,20 +221,20 @@ class LdapEditPage extends React.Component {
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Admin"), i18next.t("ldap:Admin - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <Input value={this.state.ldap.username} onChange={e => {
               this.updateLdapField("username", e.target.value);
             }} />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Admin Password"), i18next.t("ldap:Admin Password - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <Input.Password
               iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} value={this.state.ldap.password}
               onChange={e => {
@@ -243,10 +244,10 @@ class LdapEditPage extends React.Component {
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Auto Sync"), i18next.t("ldap:Auto Sync - Tooltip"))} :
           </Col>
-          <Col span={21}>
+          <Col span={20}>
             <InputNumber min={0} formatter={value => value.replace(/\$\s?|(,*)/g, "")} disabled={false}
               value={this.state.ldap.autoSync} onChange={value => {
                 this.updateLdapField("autoSync", value);
@@ -254,6 +255,30 @@ class LdapEditPage extends React.Component {
             {this.renderAutoSyncWarn()}
           </Col>
         </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+            {Setting.getLabel(i18next.t("ldap:Enable Attribute Mapping"), i18next.t("ldap:Enable Attribute Mapping - Tooltip"))} :
+          </Col>
+          <Col span={20} >
+            <Switch checked={this.state.ldap.enableAttributeMapping} onChange={checked => {
+              this.updateLdapField("enableAttributeMapping", checked);
+            }} />
+          </Col>
+        </Row>
+        {this.state.ldap?.enableAttributeMapping &&
+          <Row style={{marginTop: "20px"}}>
+            <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+              {Setting.getLabel(i18next.t("ldap:Attribute mapping"), i18next.t("ldap:Attribute mapping - Tooltip"))} :
+            </Col>
+            <Col span={20}>
+              <LdapAttributeMappingTable
+                title={i18next.t("ldap:Attribute mapping rules")}
+                table={this.state.ldap.attributeMappingItems}
+                onUpdateTable={(value) => {this.updateLdapField("attributeMappingItems", value);}}
+              />
+            </Col>
+          </Row>
+        }
       </Card>
     );
   }
