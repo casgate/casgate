@@ -171,10 +171,10 @@ class LdapEditPage extends React.Component {
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:CA Certificate"), i18next.t("ldap:CA Certificate - Tooltip"))} :
           </Col>
-          <Col span={20} >
+          <Col span={19} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.ldap.cert} onChange={(value => {this.updateLdapField("cert", value);})}>
               {
                 this.state.certs.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
@@ -281,10 +281,10 @@ class LdapEditPage extends React.Component {
           </Row>
         }
         <Row style={{marginTop: "20px"}} >
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Enable Role Mapping"), i18next.t("ldap:Enable Role Mapping - Tooltip"))} :
           </Col>
-          <Col span={21} >
+          <Col span={20} >
             <Switch checked={this.state.ldap.enableRoleMapping} onChange={checked => {
               this.updateLdapField("enableRoleMapping", checked);
             }} />
@@ -292,10 +292,10 @@ class LdapEditPage extends React.Component {
         </Row>
         {this.state.ldap?.enableRoleMapping &&
           <Row style={{marginTop: "20px"}}>
-            <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+            <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
               {Setting.getLabel(i18next.t("ldap:Role mapping"), i18next.t("ldap:Role mapping - Tooltip"))} :
             </Col>
-            <Col span={21}>
+            <Col span={20}>
               <LdapRoleMappingTable
                 title={i18next.t("ldap:Role mapping rules")}
                 table={this.state.ldap.roleMappingItems}
