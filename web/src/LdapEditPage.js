@@ -15,12 +15,13 @@
 import React from "react";
 import {Button, Card, Col, Input, InputNumber, Row, Select, Switch} from "antd";
 import {ClearOutlined, EyeInvisibleOutlined, EyeTwoTone} from "@ant-design/icons";
-import * as LddpBackend from "./backend/LdapBackend";
+import * as LdapBackend from "./backend/LdapBackend";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as CertBackend from "./backend/CertBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 import LdapAttributeMappingTable from "./table/LdapAttributeMappingTable";
+import LdapRoleMappingTable from "./table/LdapRoleMappingTable";
 
 const {Option} = Select;
 
@@ -51,7 +52,7 @@ class LdapEditPage extends React.Component {
   }
 
   getLdap() {
-    LddpBackend.getLdap(this.state.organizationName, this.state.ldapId)
+    LdapBackend.getLdap(this.state.organizationName, this.state.ldapId)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({
@@ -170,10 +171,10 @@ class LdapEditPage extends React.Component {
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={3}>
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:CA Certificate"), i18next.t("ldap:CA Certificate - Tooltip"))} :
           </Col>
-          <Col span={20} >
+          <Col span={19} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.ldap.cert} onChange={(value => {this.updateLdapField("cert", value);})}>
               {
                 this.state.certs.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
@@ -279,12 +280,37 @@ class LdapEditPage extends React.Component {
             </Col>
           </Row>
         }
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+            {Setting.getLabel(i18next.t("ldap:Enable Role Mapping"), i18next.t("ldap:Enable Role Mapping - Tooltip"))} :
+          </Col>
+          <Col span={20} >
+            <Switch checked={this.state.ldap.enableRoleMapping} onChange={checked => {
+              this.updateLdapField("enableRoleMapping", checked);
+            }} />
+          </Col>
+        </Row>
+        {this.state.ldap?.enableRoleMapping &&
+          <Row style={{marginTop: "20px"}}>
+            <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+              {Setting.getLabel(i18next.t("ldap:Role mapping"), i18next.t("ldap:Role mapping - Tooltip"))} :
+            </Col>
+            <Col span={20}>
+              <LdapRoleMappingTable
+                title={i18next.t("ldap:Role mapping rules")}
+                table={this.state.ldap.roleMappingItems}
+                owner={this.state.ldap.owner}
+                onUpdateTable={(value) => {this.updateLdapField("roleMappingItems", value);}}
+              />
+            </Col>
+          </Row>
+        }
       </Card>
     );
   }
 
   submitLdapEdit(willExist) {
-    LddpBackend.updateLdap(this.state.ldap)
+    LdapBackend.updateLdap(this.state.ldap)
       .then((res) => {
         if (res.status === "ok") {
           Setting.showMessage("success", "Update LDAP server success");

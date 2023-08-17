@@ -52,6 +52,8 @@ class LdapTable extends React.Component {
       lastSync: "",
       enableAttributeMapping: false,
       attributeMappingItems: [],
+      roleMappingItems: [],
+      enableRoleMapping: false,
     };
   }
 

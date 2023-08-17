@@ -18,6 +18,12 @@ import (
 	"github.com/casdoor/casdoor/util"
 )
 
+type RoleMappingItem struct {
+	Attribute string   `json:"attribute"`
+	Values    []string `json:"values"`
+	Role      string   `json:"role"`
+}
+
 type AttributeMappingItem struct {
 	UserField string `json:"userField"`
 	Attribute string `json:"attribute"`
@@ -37,6 +43,9 @@ type Ldap struct {
 	BaseDn       string   `xorm:"varchar(100)" json:"baseDn"`
 	Filter       string   `xorm:"varchar(200)" json:"filter"`
 	FilterFields []string `xorm:"varchar(100)" json:"filterFields"`
+
+	EnableRoleMapping bool               `xorm:"bool" json:"enableRoleMapping"`
+	RoleMappingItems  []*RoleMappingItem `xorm:"text" json:"roleMappingItems"`
 
 	AutoSync int    `json:"autoSync"`
 	LastSync string `xorm:"varchar(100)" json:"lastSync"`
@@ -159,7 +168,7 @@ func UpdateLdap(ldap *Ldap) (bool, error) {
 
 	affected, err := ormer.Engine.ID(ldap.Id).Cols("owner", "server_name", "host",
 		"port", "enable_ssl", "username", "password", "base_dn", "filter", "filter_fields", "auto_sync",
-		"attribute_mapping_items", "enable_attribute_mapping").Update(ldap)
+		"role_mapping_items", "enable_role_mapping", "attribute_mapping_items", "enable_attribute_mapping").Update(ldap)
 	if err != nil {
 		return false, nil
 	}

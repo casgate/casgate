@@ -203,6 +203,19 @@ class LdapSyncPage extends React.Component {
       },
     ];
 
+    if (this.state.ldap?.enableRoleMapping) {
+      columns.push({
+        title: i18next.t("general:Roles"),
+        dataIndex: "roles",
+        key: "roles",
+        width: "420px",
+        sorter: (a, b) => (a.roles?.length || 0) - (b.roles?.length || 0),
+        render: (text, record, index) => {
+          return text?.join(",");
+        },
+      });
+    }
+
     const rowSelection = {
       onChange: (selectedRowKeys, selectedRows) => {
         this.setState({

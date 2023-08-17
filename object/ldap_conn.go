@@ -59,6 +59,8 @@ type LdapUser struct {
 	Phone    string `json:"phone"`
 	Address  string `json:"address"`
 	MemberOf string `json:"memberOf"`
+
+	Roles []string `json:"roles"`
 }
 
 var ErrX509CertsPEMParse = errors.New("x509: malformed CA certificate")
@@ -165,6 +167,10 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 		SearchAttributes = append(SearchAttributes, "uid")
 	}
 
+	for _, roleMappingItem := range ldapServer.RoleMappingItems {
+		SearchAttributes = append(SearchAttributes, roleMappingItem.Attribute)
+	}
+
 	var attributeMappingMap AttributeMappingMap
 	if ldapServer.EnableAttributeMapping {
 		attributeMappingMap = buildAttributeMappingMap(ldapServer.AttributeMappingItems)
@@ -182,6 +188,8 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 	if len(searchResult.Entries) == 0 {
 		return nil, errors.New("no result")
 	}
+
+	roleMappingMap := buildRoleMappingMap(ldapServer.RoleMappingItems)
 
 	var ldapUsers []LdapUser
 	for _, entry := range searchResult.Entries {
@@ -233,7 +241,17 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 			case "memberOf":
 				user.MemberOf = attribute.Values[0]
 			}
+
+			// check attribute value with role mapping rules
+			if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attribute.Name)]; ok {
+				for _, value := range attribute.Values {
+					if roleMappingMapRoles, ok := roleMappingMapItem[RoleMappingItemValue(value)]; ok {
+						user.Roles = append(user.Roles, roleMappingMapRoles.StrRoles()...)
+					}
+				}
+			}
 		}
+
 		ldapUsers = append(ldapUsers, user)
 	}
 
@@ -292,6 +310,7 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 			Phone:             user.Phone,
 			RegisteredAddress: util.ReturnAnyNotEmpty(user.PostalAddress, user.RegisteredAddress),
 			Address:           user.Address,
+			Roles:             user.Roles,
 		}
 	}
 	return res
@@ -342,13 +361,13 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 			}
 		}
 
+		name, err := syncUser.buildLdapUserName()
+		if err != nil {
+			return nil, nil, err
+		}
+
 		if !found {
 			score, err := organization.GetInitScore()
-			if err != nil {
-				return nil, nil, err
-			}
-
-			name, err := syncUser.buildLdapUserName()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -383,6 +402,19 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				continue
 			}
 		}
+
+		ldap, err := GetLdap(ldapId)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if ldap.EnableRoleMapping {
+			err = SyncRoles(syncUser, name, owner)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+
 	}
 
 	return existUsers, failedUsers, err
@@ -409,6 +441,9 @@ func (ldapUser *LdapUser) buildLdapUserName() (string, error) {
 	}
 
 	if has {
+		if user.Ldap == ldapUser.Uuid {
+			return user.Name, nil
+		}
 		if user.Name == ldapUser.Uid {
 			return uidWithNumber, nil
 		}
