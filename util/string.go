@@ -304,3 +304,10 @@ func ParseIdToString(input interface{}) (string, error) {
 		return "", fmt.Errorf("unsupported id type: %T", input)
 	}
 }
+
+func TruncateIfTooLong(s string, maxLen int) string {
+	if len(s) > maxLen {
+		return s[:maxLen]
+	}
+	return s
+}
