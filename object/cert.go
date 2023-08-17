@@ -17,8 +17,14 @@ package object
 import (
 	"fmt"
 
-	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
+)
+
+const (
+	scopeCertJWT    = "JWT"
+	scopeCertCACert = "CA Certificate"
 )
 
 type Cert struct {

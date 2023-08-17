@@ -1226,3 +1226,6 @@ export function builtInObject(obj) {
   }
   return obj.owner === "built-in" && BuiltInObjects.includes(obj.name);
 }
+
+export const CertScopeJWT = "JWT";
+export const CertScopeCACert = "CA Certificate";
