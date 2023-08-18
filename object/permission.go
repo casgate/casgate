@@ -15,6 +15,7 @@
 package object
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
@@ -115,26 +116,9 @@ func GetPermission(id string) (*Permission, error) {
 
 // checkPermissionValid verifies if the permission is valid
 func checkPermissionValid(permission *Permission) error {
-	enforcer := getPermissionEnforcer(permission)
-	enforcer.EnableAutoSave(false)
-
-	policies := getPolicies(permission)
-	_, err := enforcer.AddPolicies(policies)
+	err := createPermissionPolicy(permission, false)
 	if err != nil {
 		return err
-	}
-
-	if !HasRoleDefinition(enforcer.GetModel()) {
-		permission.Roles = []string{}
-		return nil
-	}
-
-	groupingPolicies := getGroupingPolicies(permission)
-	if len(groupingPolicies) > 0 {
-		_, err := enforcer.AddGroupingPolicies(groupingPolicies)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -152,25 +136,19 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 		return false, nil
 	}
 
+	err = removePermissionPolicy(oldPermission)
+	if err != nil {
+		return false, err
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(permission)
 	if err != nil {
 		return false, err
 	}
 
-	if affected != 0 {
-		removeGroupingPolicies(oldPermission)
-		removePolicies(oldPermission)
-		if oldPermission.Adapter != "" && oldPermission.Adapter != permission.Adapter {
-			isEmpty, _ := ormer.Engine.IsTableEmpty(oldPermission.Adapter)
-			if isEmpty {
-				err = ormer.Engine.DropTables(oldPermission.Adapter)
-				if err != nil {
-					return false, err
-				}
-			}
-		}
-		addGroupingPolicies(permission)
-		addPolicies(permission)
+	err = createPermissionPolicy(permission, true)
+	if err != nil {
+		return false, err
 	}
 
 	return affected != 0, nil
@@ -180,11 +158,6 @@ func AddPermission(permission *Permission) (bool, error) {
 	affected, err := ormer.Engine.Insert(permission)
 	if err != nil {
 		return false, err
-	}
-
-	if affected != 0 {
-		addGroupingPolicies(permission)
-		addPolicies(permission)
 	}
 
 	return affected != 0, nil
@@ -205,8 +178,10 @@ func AddPermissions(permissions []*Permission) bool {
 	for _, permission := range permissions {
 		// add using for loop
 		if affected != 0 {
-			addGroupingPolicies(permission)
-			addPolicies(permission)
+			err = createPermissionPolicy(permission, true)
+			if err != nil {
+				return false
+			}
 		}
 	}
 	return affected != 0
@@ -228,8 +203,6 @@ func AddPermissionsInBatch(permissions []*Permission) bool {
 		}
 
 		tmp := permissions[start:end]
-		// TODO: save to log instead of standard output
-		// fmt.Printf("Add Permissions: [%d - %d].\n", start, end)
 		if AddPermissions(tmp) {
 			affected = true
 		}
@@ -245,16 +218,9 @@ func DeletePermission(permission *Permission) (bool, error) {
 	}
 
 	if affected != 0 {
-		removeGroupingPolicies(permission)
-		removePolicies(permission)
-		if permission.Adapter != "" && permission.Adapter != "permission_rule" {
-			isEmpty, _ := ormer.Engine.IsTableEmpty(permission.Adapter)
-			if isEmpty {
-				err = ormer.Engine.DropTables(permission.Adapter)
-				if err != nil {
-					return false, err
-				}
-			}
+		err = removePermissionPolicy(permission)
+		if err != nil {
+			return false, err
 		}
 	}
 
@@ -387,4 +353,32 @@ func GroupPermissionsByModelAdapter(permissions []*Permission) map[string][]stri
 	}
 
 	return m
+}
+
+func createPermissionPolicy(permission *Permission, withSave bool) error {
+	policies, oldPermissionMap, err := getPolicyPermissions(permission)
+	if err != nil {
+		return fmt.Errorf("getPolicyPermissions(permission): %w", err)
+	}
+
+	err = createPolicy(policies, oldPermissionMap, withSave)
+	if err != nil {
+		return fmt.Errorf("createPolicy: %w", err)
+	}
+
+	return nil
+}
+
+func removePermissionPolicy(oldPermission *Permission) error {
+	oldPolicies, oldPermissionMap, err := getPolicyPermissions(oldPermission)
+	if err != nil {
+		return fmt.Errorf("getPolicyPermissions(oldPermission): %w", err)
+	}
+
+	err = removePolicy(oldPolicies, oldPermissionMap)
+	if err != nil {
+		return fmt.Errorf("createPolicy: %w", err)
+	}
+
+	return nil
 }

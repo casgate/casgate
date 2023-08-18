@@ -97,39 +97,6 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, nil
 	}
 
-	visited := map[string]struct{}{}
-
-	permissions, err := GetPermissionsByRole(id)
-	if err != nil {
-		return false, err
-	}
-
-	for _, permission := range permissions {
-		removeGroupingPolicies(permission)
-		removePolicies(permission)
-		visited[permission.GetId()] = struct{}{}
-	}
-
-	ancestorRoles, err := GetAncestorRoles(id)
-	if err != nil {
-		return false, err
-	}
-
-	for _, r := range ancestorRoles {
-		permissions, err := GetPermissionsByRole(r.GetId())
-		if err != nil {
-			return false, err
-		}
-
-		for _, permission := range permissions {
-			permissionId := permission.GetId()
-			if _, ok := visited[permissionId]; !ok {
-				removeGroupingPolicies(permission)
-				visited[permissionId] = struct{}{}
-			}
-		}
-	}
-
 	if name != role.Name {
 		err := roleChangeTrigger(name, role.Name)
 		if err != nil {
@@ -137,41 +104,19 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		}
 	}
 
+	err = removeRolePolicy(oldRole)
+	if err != nil {
+		return false, err
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(role)
 	if err != nil {
 		return false, err
 	}
 
-	visited = map[string]struct{}{}
-	newRoleID := role.GetId()
-	permissions, err = GetPermissionsByRole(newRoleID)
+	err = createRolePolicy(role)
 	if err != nil {
 		return false, err
-	}
-
-	for _, permission := range permissions {
-		addGroupingPolicies(permission)
-		addPolicies(permission)
-		visited[permission.GetId()] = struct{}{}
-	}
-
-	ancestorRoles, err = GetAncestorRoles(newRoleID)
-	if err != nil {
-		return false, err
-	}
-
-	for _, r := range ancestorRoles {
-		permissions, err := GetPermissionsByRole(r.GetId())
-		if err != nil {
-			return false, err
-		}
-		for _, permission := range permissions {
-			permissionId := permission.GetId()
-			if _, ok := visited[permissionId]; !ok {
-				addGroupingPolicies(permission)
-				visited[permissionId] = struct{}{}
-			}
-		}
 	}
 
 	return affected != 0, nil
@@ -410,4 +355,33 @@ func containsRole(role *Role, roleMap map[string]*Role, visited map[string]bool,
 	}
 
 	return false
+}
+
+func createRolePolicy(role *Role) error {
+	newPolicies, newPermissionMap, err := getPolicyPermissionsByRole(role)
+	if err != nil {
+		return fmt.Errorf("getPolicyPermissionsByRole(newRole): %w", err)
+	}
+
+	err = createPolicy(newPolicies, newPermissionMap, true)
+	if err != nil {
+		return fmt.Errorf("createPolicy: %w", err)
+	}
+
+	return nil
+}
+
+func removeRolePolicy(oldRole *Role) error {
+	oldPolicies, oldPermissionMap, err := getPolicyPermissionsByRole(oldRole)
+	if err != nil {
+		return fmt.Errorf("getPolicyPermissionsByRole(oldRole): %w", err)
+	}
+
+	err = removePolicy(oldPolicies, oldPermissionMap)
+	if err != nil {
+		return fmt.Errorf("createPolicy: %w", err)
+	}
+
+	return nil
+
 }
