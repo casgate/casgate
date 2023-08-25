@@ -44,23 +44,18 @@ func (*Migrator_1_336_0_PR_1970) DoMigration() *migrate.Migration {
 				return err
 			}
 
-			users := []*User{}
-			err = tx.Table("user").Where("password_type=? and password_salt=?", "salt", "").Find(&users)
+			userOwners := []string{}
+			err = tx.Table(new(User)).Where("password_type=? and password_salt=?", "salt", "").Distinct("owner").Iterate(new(User), func(i int, bean interface{}) error {
+				userOwners = append(userOwners, bean.(*User).Owner)
+				return nil
+			})
+
 			if err != nil {
 				return err
 			}
 
-			keys := make(map[string]struct{})
-			userOwners := []string{}
-			for _, user := range users {
-				if _, value := keys[user.Owner]; !value {
-					keys[user.Owner] = struct{}{}
-					userOwners = append(userOwners, user.Owner)
-				}
-			}
-
 			organizations := []*Organization{}
-			err = tx.Where("owner = ?", "admin").In("name", userOwners).Find(&organizations)
+			err = tx.Table(new(Organization)).Where("owner = ?", "admin").In("name", userOwners).Find(&organizations)
 			if err != nil {
 				return err
 			}
