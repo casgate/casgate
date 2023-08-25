@@ -60,7 +60,7 @@ func (*Migrator_1_336_0_PR_1970) DoMigration() *migrate.Migration {
 				return err
 			}
 			for _, organization := range organizations {
-				_, err = tx.Table(new(User)).Where("owner = ?", organization.Name).Cols("password_salt").Update(map[string]interface{}{"password_salt": organization.PasswordSalt})
+				_, err = tx.Table(new(User)).Where("owner=? and password_salt=?", organization.Name, "").Cols("password_salt").Update(map[string]interface{}{"password_salt": organization.PasswordSalt})
 				if err != nil {
 					return err
 				}
