@@ -23,39 +23,43 @@ type policyPermission struct {
 	effect   string
 }
 
-func getValueByItem(policyPermissionItem policyPermission, policyItem string) string {
+func getValueByItem(policyPermissionItem policyPermission, policyItem string) (string, bool) {
 	if policyItem == "" {
-		return policyItem
+		return policyItem, true
 	}
 
 	if policyItem[:5] == "const" {
-		return policyItem[6:]
+		return policyItem[6:], true
 	}
+
+	var value string
 
 	switch policyItem {
 	case "role.name":
-		return policyPermissionItem.role.name
+		value = policyPermissionItem.role.name
 	case "role.subrole":
-		return policyPermissionItem.role.subRole
+		value = policyPermissionItem.role.subRole
 	case "role.domain":
-		return policyPermissionItem.role.domain
+		value = policyPermissionItem.role.domain
 	case "role.user":
-		return policyPermissionItem.role.user
-	case "permission.name":
-		return policyPermissionItem.name
+		value = policyPermissionItem.role.user
 	case "permission.action":
-		return policyPermissionItem.action
+		value = policyPermissionItem.action
 	case "permission.resource":
-		return policyPermissionItem.resource
+		value = policyPermissionItem.resource
 	case "permission.user":
-		return policyPermissionItem.user
+		value = policyPermissionItem.user
 	case "permission.effect":
-		return policyPermissionItem.effect
+		value = policyPermissionItem.effect
 	case "permission.domain":
-		return policyPermissionItem.domain
+		value = policyPermissionItem.domain
 	}
 
-	return ""
+	if value == "" {
+		return value, false
+	}
+
+	return value, true
 }
 
 func refillWithEmptyStrings(row []string) []string {
@@ -87,8 +91,8 @@ func generatePolicies(policyPermissions []policyPermission, permissionsMap map[s
 			policyRow := make([]string, 0, len(policyRule)-1)
 			policyRow = append(policyRow, policyType)
 			for _, policyItem := range policyRule[1:] {
-				policyRowItem := getValueByItem(policyPermissionItem, policyItem)
-				if policyRowItem == "" {
+				policyRowItem, found := getValueByItem(policyPermissionItem, policyItem)
+				if !found {
 					continue PolicyLoop
 				}
 				policyRow = append(policyRow, policyRowItem)

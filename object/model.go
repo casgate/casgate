@@ -206,13 +206,5 @@ func (m *Model) policyMappingRules(domainExist bool) [][]string {
 		return m.CustomPolicyMappingRules
 	}
 
-	if m.Name == "test_org_model" { //todo remove after test
-		return [][]string{
-			{"g2", "role.name", "role.subrole", "const:*"},
-			{"g", "role.name", "permission.resource", "permission.action"},
-			{"p", "role.user", "role.name", "role.domain"},
-		}
-	}
-
 	return defaultRules
 }

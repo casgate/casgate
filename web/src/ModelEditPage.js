@@ -18,6 +18,7 @@ import * as ModelBackend from "./backend/ModelBackend";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
+import CustomPolicyMappingRulesTable from "./table/CustomPolicyMappingRulesTable";
 
 import {Controlled as CodeMirror} from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
@@ -161,6 +162,29 @@ class ModelEditPage extends React.Component {
             </div>
           </Col>
         </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("model:Custom Policy Mapping"), i18next.t("model:Custom Policy Mapping - Tooltip"))} :
+          </Col>
+          <Col span={1} >
+            <Switch disabled={Setting.builtInObject({owner: this.state.model.owner, name: this.state.model.name})} checked={this.state.model.customPolicyMapping} onChange={checked => {
+              this.updateModelField("customPolicyMapping", checked);
+            }} />
+          </Col>
+        </Row>
+        {this.state.model?.customPolicyMapping &&
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("model:Custom Policy Mapping Rules"), i18next.t("model:Custom Policy Mapping Rules - Tooltip"))} :
+          </Col>
+          <Col span={22}>
+            <CustomPolicyMappingRulesTable
+              table={this.state.model.customPolicyMappingRules}
+              owner={this.state.model.owner}
+              onUpdateTable={(value) => {this.updateModelField("customPolicyMappingRules", value);}} />
+          </Col>
+        </Row>
+        }
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
             {Setting.getLabel(i18next.t("general:Is enabled"), i18next.t("general:Is enabled - Tooltip"))} :
