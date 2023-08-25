@@ -104,9 +104,9 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		}
 	}
 
-	err = removeRolePolicy(oldRole)
+	oldRoleLinkedPermissions, err := subRolePermissions(oldRole)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("subRolePermissions: %w", err)
 	}
 
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(role)
@@ -114,9 +114,16 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, err
 	}
 
-	err = createRolePolicy(role)
-	if err != nil {
-		return false, err
+	if affected != 0 {
+		roleLinkedPermissions, err := subRolePermissions(role)
+		if err != nil {
+			return false, fmt.Errorf("subRolePermissions: %w", err)
+		}
+		roleLinkedPermissions = append(roleLinkedPermissions, oldRoleLinkedPermissions...)
+		err = processPolicyDifference(roleLinkedPermissions)
+		if err != nil {
+			return false, fmt.Errorf("processPolicyDifference: %w", err)
+		}
 	}
 
 	return affected != 0, nil
@@ -172,22 +179,49 @@ func AddRolesInBatch(roles []*Role) bool {
 
 func DeleteRole(role *Role) (bool, error) {
 	roleId := role.GetId()
-	permissions, err := GetPermissionsByRole(roleId)
+	oldRoleLinkedPermissions, err := subRolePermissions(role)
+	if err != nil {
+		return false, fmt.Errorf("subRolePermissions: %w", err)
+	}
+
+	ancestorRoles, err := GetAncestorRoles(roleId)
 	if err != nil {
 		return false, err
 	}
 
-	for _, permission := range permissions {
-		permission.Roles = util.DeleteVal(permission.Roles, roleId)
-		_, err := UpdatePermission(permission.GetId(), permission)
-		if err != nil {
-			return false, err
+	for _, permission := range oldRoleLinkedPermissions {
+		if Contains(permission.Roles, roleId) {
+			permission.Roles = util.DeleteVal(permission.Roles, roleId)
+			_, err := UpdatePermission(permission.GetId(), permission)
+			if err != nil {
+				return false, err
+			}
+		}
+	}
+
+	for _, ancestorRole := range ancestorRoles {
+		if ancestorRole.GetId() == roleId {
+			continue
+		}
+		if Contains(ancestorRole.Roles, roleId) {
+			ancestorRole.Roles = util.DeleteVal(ancestorRole.Roles, roleId)
+			affected, err := UpdateRole(ancestorRole.GetId(), ancestorRole)
+			if err != nil || !affected {
+				return false, err
+			}
 		}
 	}
 
 	affected, err := ormer.Engine.ID(core.PK{role.Owner, role.Name}).Delete(&Role{})
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		err = processPolicyDifference(oldRoleLinkedPermissions)
+		if err != nil {
+			return false, fmt.Errorf("processPolicyDifference: %w", err)
+		}
 	}
 
 	return affected != 0, nil
@@ -324,7 +358,11 @@ func GetAncestorRoles(roleIds ...string) ([]*Role, error) {
 			result = append(result, r)
 		} else if !ok {
 			rId := r.GetId()
-			visited[rId] = containsRole(r, roleMap, visited, roleIds...)
+			visitedC := make(map[string]bool)
+			for _, roleId := range roleIds {
+				visitedC[roleId] = true
+			}
+			visited[rId] = containsRole(r, roleMap, visitedC, roleIds...)
 			if visited[rId] {
 				result = append(result, r)
 			}
@@ -355,33 +393,4 @@ func containsRole(role *Role, roleMap map[string]*Role, visited map[string]bool,
 	}
 
 	return false
-}
-
-func createRolePolicy(role *Role) error {
-	newPolicies, newPermissionMap, err := getPolicyPermissionsByRole(role)
-	if err != nil {
-		return fmt.Errorf("getPolicyPermissionsByRole(newRole): %w", err)
-	}
-
-	err = createPolicy(newPolicies, newPermissionMap, true)
-	if err != nil {
-		return fmt.Errorf("createPolicy: %w", err)
-	}
-
-	return nil
-}
-
-func removeRolePolicy(oldRole *Role) error {
-	oldPolicies, oldPermissionMap, err := getPolicyPermissionsByRole(oldRole)
-	if err != nil {
-		return fmt.Errorf("getPolicyPermissionsByRole(oldRole): %w", err)
-	}
-
-	err = removePolicy(oldPolicies, oldPermissionMap)
-	if err != nil {
-		return fmt.Errorf("createPolicy: %w", err)
-	}
-
-	return nil
-
 }

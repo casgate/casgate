@@ -169,6 +169,9 @@ class ModelEditPage extends React.Component {
           <Col span={1} >
             <Switch disabled={Setting.builtInObject({owner: this.state.model.owner, name: this.state.model.name})} checked={this.state.model.customPolicyMapping} onChange={checked => {
               this.updateModelField("customPolicyMapping", checked);
+              if (!checked) {
+                this.updateModelField("customPolicyMappingRules", []);
+              }
             }} />
           </Col>
         </Row>

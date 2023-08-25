@@ -49,7 +49,7 @@ class ModelListPage extends BaseListPage {
       modelText: rbacModel,
       isEnabled: true,
       customPolicyMapping: false,
-      customPolicyMappingRules: null,
+      customPolicyMappingRules: [],
     };
   }
 

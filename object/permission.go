@@ -116,7 +116,15 @@ func GetPermission(id string) (*Permission, error) {
 
 // checkPermissionValid verifies if the permission is valid
 func checkPermissionValid(permission *Permission) error {
-	err := createPermissionPolicy(permission, false)
+	newPolicies, err := calcPermissionPolicies(permission)
+	if err != nil {
+		return fmt.Errorf("calcPermissionPolicies: %w", err)
+	}
+
+	permissionMap := make(map[string]*Permission, 1)
+	permissionMap[permission.GetId()] = permission
+
+	err = createPolicies(newPolicies, permissionMap, false)
 	if err != nil {
 		return err
 	}
@@ -136,19 +144,16 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 		return false, nil
 	}
 
-	err = removePermissionPolicy(oldPermission)
-	if err != nil {
-		return false, err
-	}
-
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(permission)
 	if err != nil {
 		return false, err
 	}
 
-	err = createPermissionPolicy(permission, true)
-	if err != nil {
-		return false, err
+	if affected != 0 {
+		err = processPolicyDifference([]*Permission{permission})
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return affected != 0, nil
@@ -158,6 +163,13 @@ func AddPermission(permission *Permission) (bool, error) {
 	affected, err := ormer.Engine.Insert(permission)
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		err = processPolicyDifference([]*Permission{permission})
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return affected != 0, nil
@@ -175,13 +187,10 @@ func AddPermissions(permissions []*Permission) bool {
 		}
 	}
 
-	for _, permission := range permissions {
-		// add using for loop
-		if affected != 0 {
-			err = createPermissionPolicy(permission, true)
-			if err != nil {
-				return false
-			}
+	if affected != 0 {
+		err = processPolicyDifference(permissions)
+		if err != nil {
+			panic(err)
 		}
 	}
 	return affected != 0
@@ -218,7 +227,7 @@ func DeletePermission(permission *Permission) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = removePermissionPolicy(permission)
+		err = processPolicyDifference([]*Permission{permission})
 		if err != nil {
 			return false, err
 		}
@@ -353,32 +362,4 @@ func GroupPermissionsByModelAdapter(permissions []*Permission) map[string][]stri
 	}
 
 	return m
-}
-
-func createPermissionPolicy(permission *Permission, withSave bool) error {
-	policies, oldPermissionMap, err := getPolicyPermissions(permission)
-	if err != nil {
-		return fmt.Errorf("getPolicyPermissions(permission): %w", err)
-	}
-
-	err = createPolicy(policies, oldPermissionMap, withSave)
-	if err != nil {
-		return fmt.Errorf("createPolicy: %w", err)
-	}
-
-	return nil
-}
-
-func removePermissionPolicy(oldPermission *Permission) error {
-	oldPolicies, oldPermissionMap, err := getPolicyPermissions(oldPermission)
-	if err != nil {
-		return fmt.Errorf("getPolicyPermissions(oldPermission): %w", err)
-	}
-
-	err = removePolicy(oldPolicies, oldPermissionMap)
-	if err != nil {
-		return fmt.Errorf("createPolicy: %w", err)
-	}
-
-	return nil
 }

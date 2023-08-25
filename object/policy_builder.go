@@ -99,87 +99,87 @@ func spawnPolicyRoleByField(roles []policyRole, field string, values []string) [
 	return policyRoles
 }
 
-func getPolicyPermissions(permission *Permission) ([][]string, map[string]*Permission, error) {
-	permissionMap := make(map[string]*Permission, 1)
-	policyPermissions := spawnPolicyPermissions(*permission)
-	permissionMap[permission.GetId()] = permission
+// getPermissionPolicies get policies from db by permissions with same model
+func getPermissionPolicies(permissions []*Permission) ([][]string, error) {
+	if len(permissions) == 0 {
+		return nil, nil
+	}
 
-	policyRoles := make([]policyRole, 0)
-	for _, roleID := range permission.Roles {
-		role, err := GetRole(roleID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("GetRole: %w", err)
+	permissionIds := make([]string, len(permissions))
+	for _, permission := range permissions {
+		permissionIds = append(permissionIds, permission.GetId())
+	}
+	enforcer := getPermissionEnforcer(permissions[0], permissionIds...)
+	enforcer.GetPolicy()
+
+	result := make([][]string, 0)
+	for _, policy := range enforcer.GetNamedPolicy("p") {
+		result = append(result, append([]string{"p"}, policy...))
+	}
+
+	model := enforcer.GetModel()
+	for gType := range model["g"] {
+		for _, policy := range enforcer.GetNamedGroupingPolicy(gType) {
+			result = append(result, append([]string{gType}, policy...))
 		}
+	}
 
+	return result, nil
+}
+
+func calcPermissionPolicies(permission *Permission) ([][]string, error) {
+	policyRoles := make([]policyRole, 0)
+
+	roleIds := make([]string, 0, len(permission.Roles))
+	for _, roleID := range permission.Roles {
+		roleIds = append(roleIds, roleID)
+	}
+	permissionRoles, err := GetAncestorRoles(roleIds...)
+	if err != nil {
+		return nil, fmt.Errorf("GetAncestorRoles: %w", err)
+	}
+
+	for _, role := range permissionRoles {
 		newPolicyRoles := spawnPolicyRoles(role)
 		policyRoles = append(policyRoles, newPolicyRoles...)
 	}
 
-	policyPermissions = joinPolicyPermissionsWithRoles(policyPermissions, policyRoles)
+	policyPermissions := joinEntitiesWithPermission(permission, policyRoles)
 
-	strPolicies, err := generatePolicies(policyPermissions, permissionMap)
+	strPolicies, err := generatePolicies(policyPermissions, permission)
 	if err != nil {
-		return nil, nil, fmt.Errorf("generatePolicies: %w", err)
+		return nil, fmt.Errorf("generatePolicies: %w", err)
 	}
 
-	return strPolicies, permissionMap, nil
+	return strPolicies, nil
 }
 
-func joinPolicyPermissionsWithRoles(permissions []policyPermission, roles []policyRole) []policyPermission {
-	for _, permission := range permissions {
+func joinEntitiesWithPermission(permission *Permission, roles []policyRole) []policyPermission {
+	policyPermissions := spawnPolicyPermissions(*permission)
+	for _, policyPermissionItem := range policyPermissions {
 		for _, role := range roles {
-			newPermission := permission
-			newPermission.role = role
-			permissions = append(permissions, newPermission)
-		}
-	}
-	return permissions
-}
-
-func getPolicyPermissionsByRole(role *Role) ([][]string, map[string]*Permission, error) {
-	policyRoles := spawnPolicyRoles(role)
-
-	permissions, err := GetPermissionsByRole(role.GetId())
-	if err != nil {
-		return nil, nil, err
-	}
-
-	policyPermissions := make([]policyPermission, 0, len(permissions))
-	permissionMap := make(map[string]*Permission, len(permissions))
-
-	if len(permissions) == 0 {
-		permissions, err = subRolePermissions(role)
-		if err != nil {
-			return nil, nil, fmt.Errorf("subRolePermissions: %w", err)
-		}
-	}
-
-	for _, permission := range permissions {
-		for _, policyRoleItem := range policyRoles {
-			newPolicyPermissions := make([]policyPermission, 0)
-			newPolicyPermissions = append(newPolicyPermissions, policyPermission{
+			newPermission := policyPermission{
 				name: permission.GetId(),
-			})
-			if Contains(permission.Roles, policyRoleItem.name) {
-				newPolicyPermissions = spawnPolicyPermissions(*permission)
 			}
-			newPolicyPermissions = joinPolicyPermissionsWithRoles(newPolicyPermissions, []policyRole{policyRoleItem})
-			permissionMap[permission.GetId()] = permission
-
-			policyPermissions = append(policyPermissions, newPolicyPermissions...)
+			if Contains(permission.Roles, role.name) {
+				newPermission = policyPermissionItem
+			}
+			newPermission.role = role
+			policyPermissions = append(policyPermissions, newPermission)
 		}
 	}
 
-	strPolicies, err := generatePolicies(policyPermissions, permissionMap)
-	if err != nil {
-		return nil, nil, fmt.Errorf("generatePolicies: %w", err)
-	}
-
-	return strPolicies, permissionMap, nil
+	return policyPermissions
 }
 
 func subRolePermissions(role *Role) ([]*Permission, error) {
 	result := make([]*Permission, 0)
+
+	rolePermissions, err := GetPermissionsByRole(role.GetId())
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, rolePermissions...)
 
 	visited := map[string]struct{}{}
 	subRoles, err := getRolesInRole(role.GetId(), visited)
