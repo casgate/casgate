@@ -31,6 +31,7 @@ type Role struct {
 	DisplayName string `xorm:"varchar(100)" json:"displayName"`
 	Description string `xorm:"varchar(100)" json:"description"`
 
+	Groups    []string `xorm:"mediumtext" json:"groups"`
 	Users     []string `xorm:"mediumtext" json:"users"`
 	Roles     []string `xorm:"mediumtext" json:"roles"`
 	Domains   []string `xorm:"mediumtext" json:"domains"`

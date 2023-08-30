@@ -30,6 +30,7 @@ type Permission struct {
 	DisplayName string `xorm:"varchar(100)" json:"displayName"`
 	Description string `xorm:"varchar(100)" json:"description"`
 
+	Groups  []string `xorm:"mediumtext" json:"groups"`
 	Users   []string `xorm:"mediumtext" json:"users"`
 	Roles   []string `xorm:"mediumtext" json:"roles"`
 	Domains []string `xorm:"mediumtext" json:"domains"`
@@ -278,6 +279,16 @@ func GetPermissionsAndRolesByUser(userId string) ([]*Permission, []*Role, error)
 	}
 
 	return permissions, roles, nil
+}
+
+func GetPermissionsByGroup(groupId string) ([]*Permission, error) {
+	permissions := []*Permission{}
+	err := ormer.Engine.Where("groups like ?", "%"+groupId+"\"%").Find(&permissions)
+	if err != nil {
+		return permissions, err
+	}
+
+	return permissions, nil
 }
 
 func GetPermissionsByRole(roleId string) ([]*Permission, error) {

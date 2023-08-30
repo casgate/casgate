@@ -32,6 +32,7 @@ class RoleListPage extends BaseListPage {
       name: `role_${randomName}`,
       createdTime: moment().format(),
       displayName: `New Role - ${randomName}`,
+      groups: [],
       users: [],
       roles: [],
       domains: [],

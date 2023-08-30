@@ -82,15 +82,19 @@ class CustomPolicyMappingRulesTable extends React.Component {
   getOptions() {
     return [
       {value: "", label: ""},
-      {value: "role.name", label: i18next.t("ldap:role.name")},
-      {value: "role.subrole", label: i18next.t("ldap:role.subrole")},
-      {value: "role.domain", label: i18next.t("ldap:role.domain")},
-      {value: "role.user", label: i18next.t("ldap:role.user")},
-      {value: "permission.action", label: i18next.t("ldap:permission.action")},
-      {value: "permission.resource", label: i18next.t("ldap:permission.resource")},
-      {value: "permission.user", label: i18next.t("ldap:permission.user")},
-      {value: "permission.effect", label: i18next.t("ldap:permission.effect")},
-      {value: "permission.domain", label: i18next.t("ldap:permission.domain")},
+      {value: "permission.action", label: i18next.t("model:permission.action")},
+      {value: "permission.resource", label: i18next.t("model:permission.resource")},
+      {value: "permission.user", label: i18next.t("model:permission.user")},
+      {value: "permission.effect", label: i18next.t("model:permission.effect")},
+      {value: "permission.domain", label: i18next.t("model:permission.domain")},
+      {value: "permission.group.name", label: i18next.t("model:permission.group.name")},
+      {value: "permission.group.parentgroup", label: i18next.t("model:permission.group.parentgroup")},
+      {value: "role.name", label: i18next.t("model:role.name")},
+      {value: "role.subrole", label: i18next.t("model:role.subrole")},
+      {value: "role.domain", label: i18next.t("model:role.domain")},
+      {value: "role.user", label: i18next.t("model:role.user")},
+      {value: "role.group.name", label: i18next.t("model:role.group.name")},
+      {value: "role.group.parentgroup", label: i18next.t("model:role.group.parentgroup")},
     ];
   }
 

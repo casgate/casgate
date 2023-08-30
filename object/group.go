@@ -113,15 +113,32 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 	}
 
 	if name != group.Name {
-		err := GroupChangeTrigger(name, group.Name)
+		err := GroupChangeTrigger(util.GetId(owner, name), util.GetId(group.Owner, group.Name))
 		if err != nil {
 			return false, err
 		}
 	}
 
+	oldGroupLinkedPermissions, err := subGroupPermissions(oldGroup)
+	if err != nil {
+		return false, fmt.Errorf("subGroupPermissions: %w", err)
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(group)
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		groupLinkedPermissions, err := subGroupPermissions(group)
+		if err != nil {
+			return false, fmt.Errorf("subRolePermissions: %w", err)
+		}
+		groupLinkedPermissions = append(groupLinkedPermissions, oldGroupLinkedPermissions...)
+		err = processPolicyDifference(groupLinkedPermissions)
+		if err != nil {
+			return false, fmt.Errorf("processPolicyDifference: %w", err)
+		}
 	}
 
 	return affected != 0, nil
@@ -170,9 +187,33 @@ func DeleteGroup(group *Group) (bool, error) {
 		return false, errors.New("group has users")
 	}
 
+	if count, err := GetRoleCount(group.Owner, "groups", group.GetId()); err != nil {
+		return false, err
+	} else if count > 0 {
+		return false, errors.New("group has linked roles")
+	}
+
+	if count, err := GetPermissionCount(group.Owner, "groups", group.GetId()); err != nil {
+		return false, err
+	} else if count > 0 {
+		return false, errors.New("group has linked permissions")
+	}
+
+	groupLinkedPermissions, err := subGroupPermissions(group)
+	if err != nil {
+		return false, fmt.Errorf("subGroupPermissions: %w", err)
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{group.Owner, group.Name}).Delete(&Group{})
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		err = processPolicyDifference(groupLinkedPermissions)
+		if err != nil {
+			return false, fmt.Errorf("processPolicyDifference: %w", err)
+		}
 	}
 
 	return affected != 0, nil
@@ -212,6 +253,32 @@ func ConvertToTreeData(groups []*Group, parentId string) []*Group {
 		}
 	}
 	return treeData
+}
+
+// GetAncestorGroups returns a list of groups that contain the given groupIds
+func GetAncestorGroups(groupIds ...string) ([]*Group, error) {
+	result := make([]*Group, 0, len(groupIds))
+	for _, groupId := range groupIds {
+		group, err := getGroup(util.GetOwnerAndNameFromId(groupId))
+		if err != nil {
+			return nil, fmt.Errorf("getGroup: %w", err)
+		}
+		if group == nil {
+			return nil, nil
+		}
+
+		result = append(result, group)
+		if group.ParentId != group.Owner {
+			ancestorGroups, err := GetAncestorGroups(util.GetId(group.Owner, group.ParentId))
+			if err != nil {
+				return nil, fmt.Errorf("GetAncestorGroups: %w", err)
+			}
+			result = append(result, ancestorGroups...)
+		}
+
+	}
+
+	return result, nil
 }
 
 func RemoveUserFromGroup(owner, name, groupId string) (bool, error) {
@@ -317,9 +384,77 @@ func GroupChangeTrigger(oldName, newName string) error {
 		}
 	}
 
+	permissions := []*Permission{}
+	err = session.Where(builder.Like{"`groups`", oldName}).Find(&permissions)
+	if err != nil {
+		return err
+	}
+
+	for _, permission := range permissions {
+		permission.Groups = util.ReplaceVal(permission.Groups, oldName, newName)
+		_, err := session.ID(core.PK{permission.Owner, permission.Name}).Cols("groups").Update(permission)
+		if err != nil {
+			return err
+		}
+	}
+
+	roles := []*Role{}
+	err = session.Where(builder.Like{"`groups`", oldName}).Find(&roles)
+	if err != nil {
+		return err
+	}
+
+	for _, role := range roles {
+		role.Groups = util.ReplaceVal(role.Groups, oldName, newName)
+		_, err := session.ID(core.PK{role.Owner, role.Name}).Cols("groups").Update(role)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = session.Commit()
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func getGroupsInGroup(groupId string) ([]*Group, error) {
+	group, err := GetGroup(groupId)
+	if err != nil {
+		return []*Group{}, err
+	}
+
+	if group == nil {
+		return []*Group{}, nil
+	}
+
+	subGroups, err := getGroupsByParentGroup(groupId)
+	groups := []*Group{group}
+
+	for _, subGroup := range subGroups {
+		r, err := getGroupsInGroup(subGroup.GetId())
+		if err != nil {
+			return []*Group{}, err
+		}
+
+		groups = append(groups, r...)
+	}
+
+	return groups, nil
+}
+
+func getGroupsByParentGroup(groupId string) ([]*Group, error) {
+	owner, parentName := util.GetOwnerAndNameFromId(groupId)
+
+	session := ormer.Engine.NewSession()
+	defer session.Close()
+
+	groups := []*Group{}
+	err := session.Where("owner=? and parent_id = ?", owner, parentName).Find(&groups)
+	if err != nil {
+		return nil, err
+	}
+
+	return groups, nil
 }

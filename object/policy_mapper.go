@@ -1,3 +1,17 @@
+// Copyright 2023 The Casgate Authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package object
 
 import (
@@ -6,20 +20,29 @@ import (
 	"github.com/casdoor/casdoor/util"
 )
 
+type policyGroup struct {
+	id          string
+	name        string
+	parentGroup string
+}
+
 type policyRole struct {
+	id      string
 	name    string
 	domain  string
 	user    string
+	group   policyGroup
 	subRole string
 }
 
 type policyPermission struct {
-	name     string
+	id       string
 	domain   string
 	resource string
 	action   string
 	role     policyRole
 	user     string
+	group    policyGroup
 	effect   string
 }
 
@@ -43,6 +66,10 @@ func getValueByItem(policyPermissionItem policyPermission, policyItem string) (s
 		value = policyPermissionItem.role.domain
 	case "role.user":
 		value = policyPermissionItem.role.user
+	case "role.group.name":
+		value = policyPermissionItem.role.group.name
+	case "role.group.parentgroup":
+		value = policyPermissionItem.role.group.parentGroup
 	case "permission.action":
 		value = policyPermissionItem.action
 	case "permission.resource":
@@ -53,6 +80,10 @@ func getValueByItem(policyPermissionItem policyPermission, policyItem string) (s
 		value = policyPermissionItem.effect
 	case "permission.domain":
 		value = policyPermissionItem.domain
+	case "permission.group.name":
+		value = policyPermissionItem.group.name
+	case "permission.group.parentgroup":
+		value = policyPermissionItem.group.parentGroup
 	}
 
 	if value == "" {
@@ -92,7 +123,7 @@ func generatePolicies(policyPermissions []policyPermission, permission *Permissi
 				policyRow = append(policyRow, policyRowItem)
 			}
 			policyRow = refillWithEmptyStrings(policyRow)
-			policyRow[6] = policyPermissionItem.name
+			policyRow[6] = policyPermissionItem.id
 
 			policies = append(policies, policyRow)
 		}

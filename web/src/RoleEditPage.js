@@ -19,6 +19,7 @@ import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 import * as UserBackend from "./backend/UserBackend";
+import * as GroupBackend from "./backend/GroupBackend";
 
 class RoleEditPage extends React.Component {
   constructor(props) {
@@ -29,6 +30,7 @@ class RoleEditPage extends React.Component {
       roleName: decodeURIComponent(props.match.params.roleName),
       role: null,
       organizations: [],
+      groups: [],
       users: [],
       roles: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
@@ -52,10 +54,15 @@ class RoleEditPage extends React.Component {
           return;
         }
 
+        if (!res.data.groups) {
+          res.data.groups = [];
+        }
+
         this.setState({
           role: res.data,
         });
 
+        this.getGroups(this.state.organizationName);
         this.getUsers(this.state.organizationName);
         this.getRoles(this.state.organizationName);
       });
@@ -66,6 +73,20 @@ class RoleEditPage extends React.Component {
       .then((res) => {
         this.setState({
           organizations: res.data || [],
+        });
+      });
+  }
+
+  getGroups(organizationName) {
+    GroupBackend.getGroups(organizationName)
+      .then((res) => {
+        if (res.status === "error") {
+          Setting.showMessage("error", res.msg);
+          return;
+        }
+
+        this.setState({
+          groups: res.data,
         });
       });
   }
@@ -173,6 +194,17 @@ class RoleEditPage extends React.Component {
             <Select virtual={false} mode="multiple" style={{width: "100%"}} value={this.state.role.users}
               onChange={(value => {this.updateRoleField("users", value);})}
               options={this.state.users.map((user) => Setting.getOption(`${user.owner}/${user.name}`, `${user.owner}/${user.name}`))}
+            />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("role:Sub groups"), i18next.t("role:Sub groups - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} mode="multiple" style={{width: "100%"}} value={this.state.role.groups}
+              onChange={(value => {this.updateRoleField("groups", value);})}
+              options={this.state.groups.map((group) => Setting.getOption(`${group.owner}/${group.name}`, `${group.owner}/${group.name}`))}
             />
           </Col>
         </Row>
