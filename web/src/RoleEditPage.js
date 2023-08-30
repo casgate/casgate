@@ -20,6 +20,7 @@ import * as Setting from "./Setting";
 import i18next from "i18next";
 import * as UserBackend from "./backend/UserBackend";
 import * as GroupBackend from "./backend/GroupBackend";
+import * as DomainBackend from "./backend/DomainBackend";
 
 class RoleEditPage extends React.Component {
   constructor(props) {
@@ -33,6 +34,7 @@ class RoleEditPage extends React.Component {
       groups: [],
       users: [],
       roles: [],
+      domains: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
     };
   }
@@ -65,6 +67,7 @@ class RoleEditPage extends React.Component {
         this.getGroups(this.state.organizationName);
         this.getUsers(this.state.organizationName);
         this.getRoles(this.state.organizationName);
+        this.getDomains(this.state.organizationName);
       });
   }
 
@@ -115,6 +118,20 @@ class RoleEditPage extends React.Component {
 
         this.setState({
           roles: res.data,
+        });
+      });
+  }
+
+  getDomains(organizationName) {
+    DomainBackend.getDomains(organizationName)
+      .then((res) => {
+        if (res.status === "error") {
+          Setting.showMessage("error", res.msg);
+          return;
+        }
+
+        this.setState({
+          domains: res.data,
         });
       });
   }
@@ -223,11 +240,9 @@ class RoleEditPage extends React.Component {
             {Setting.getLabel(i18next.t("role:Sub domains"), i18next.t("role:Sub domains - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Select virtual={false} mode="tags" style={{width: "100%"}} value={this.state.role.domains} onChange={(value => {
-              this.updateRoleField("domains", value);
-            })}
-            options={this.state.role.domains?.map((domain) => Setting.getOption(domain, domain))
-            } />
+            <Select virtual={false} mode="multiple" style={{width: "100%"}} value={this.state.role.domains} onChange={(value => {this.updateRoleField("domains", value);})}
+              options={this.state.domains.map((domain) => Setting.getOption(`${domain.owner}/${domain.name}`, `${domain.owner}/${domain.name}`))
+              } />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >

@@ -42,9 +42,6 @@ func spawnPolicyPermissions(permission *Permission) []policyPermission {
 		effect: permission.Effect,
 	})
 
-	if len(permission.Domains) > 0 {
-		policyPermissions = spawnPolicyPermissionsByField(policyPermissions, "domain", permission.Domains)
-	}
 	if len(permission.Resources) > 0 {
 		policyPermissions = spawnPolicyPermissionsByField(policyPermissions, "resource", permission.Resources)
 	}
@@ -63,8 +60,6 @@ func spawnPolicyPermissionsByField(permissions []policyPermission, field string,
 		for _, permission := range permissions {
 			newPolicyPermission := permission
 			switch field {
-			case "domain":
-				newPolicyPermission.domain = value
 			case "user":
 				newPolicyPermission.user = value
 			case "resource":
@@ -97,23 +92,56 @@ func calcRolePolicies(role *Role) ([]policyRole, error) {
 		})
 	}
 
-	policyRoles := joinEntitiesWithRole(role, policyGroups)
+	roleDomains, err := GetAncestorDomains(role.Domains...)
+	if err != nil {
+		return nil, fmt.Errorf("GetAncestorDomains: %w", err)
+	}
+
+	policyDomains := make([]policyDomain, 0, len(roleDomains))
+	for _, domain := range roleDomains {
+		policyDomains = append(policyDomains, policyDomain{
+			id:   domain.GetId(),
+			name: domain.GetId(),
+		})
+		for _, subdomainId := range domain.Domains {
+			policyDomains = append(policyDomains, policyDomain{
+				id:        domain.GetId(),
+				name:      domain.GetId(),
+				subDomain: subdomainId,
+			})
+		}
+	}
+
+	policyRoles := joinEntitiesWithRole(role, policyGroups, policyDomains)
 
 	return policyRoles, nil
 }
 
-func joinEntitiesWithRole(role *Role, groups []policyGroup) []policyRole {
+func joinEntitiesWithRole(role *Role, groups []policyGroup, domains []policyDomain) []policyRole {
 	policyRoles := spawnPolicyRoles(role)
 
 	for _, policyPermissionItem := range policyRoles {
 		for _, group := range groups {
 			newRole := policyRole{
-				id: role.GetId(),
+				id: policyPermissionItem.id,
 			}
 			if Contains(role.Groups, group.id) {
 				newRole = policyPermissionItem
 			}
 			newRole.group = group
+			policyRoles = append(policyRoles, newRole)
+		}
+	}
+
+	for _, policyPermissionItem := range policyRoles {
+		for _, domain := range domains {
+			newRole := policyRole{
+				id: policyPermissionItem.id,
+			}
+			if Contains(role.Domains, domain.id) {
+				newRole = policyPermissionItem
+			}
+			newRole.domain = domain
 			policyRoles = append(policyRoles, newRole)
 		}
 	}
@@ -128,9 +156,6 @@ func spawnPolicyRoles(role *Role) []policyRole {
 		name: role.GetId(),
 	})
 
-	if len(role.Domains) > 0 {
-		policyRoles = spawnPolicyRoleByField(policyRoles, "domain", role.Domains)
-	}
 	if len(role.Users) > 0 {
 		policyRoles = spawnPolicyRoleByField(policyRoles, "user", role.Users)
 	}
@@ -146,8 +171,6 @@ func spawnPolicyRoleByField(roles []policyRole, field string, values []string) [
 		for _, role := range roles {
 			newPolicyRole := role
 			switch field {
-			case "domain":
-				newPolicyRole.domain = value
 			case "user":
 				newPolicyRole.user = value
 			case "subrole":
@@ -221,7 +244,27 @@ func calcPermissionPolicies(permission *Permission) ([][]string, error) {
 		})
 	}
 
-	policyPermissions := joinEntitiesWithPermission(permission, policyRoles, policyGroups)
+	permissionDomains, err := GetAncestorDomains(permission.Domains...)
+	if err != nil {
+		return nil, fmt.Errorf("GetAncestorDomains: %w", err)
+	}
+
+	policyDomains := make([]policyDomain, 0, len(permissionDomains))
+	for _, domain := range permissionDomains {
+		policyDomains = append(policyDomains, policyDomain{
+			id:   domain.GetId(),
+			name: domain.GetId(),
+		})
+		for _, subdomainId := range domain.Domains {
+			policyDomains = append(policyDomains, policyDomain{
+				id:        domain.GetId(),
+				name:      domain.GetId(),
+				subDomain: subdomainId,
+			})
+		}
+	}
+
+	policyPermissions := joinEntitiesWithPermission(permission, policyRoles, policyGroups, policyDomains)
 
 	strPolicies, err := generatePolicies(policyPermissions, permission)
 	if err != nil {
@@ -231,12 +274,12 @@ func calcPermissionPolicies(permission *Permission) ([][]string, error) {
 	return strPolicies, nil
 }
 
-func joinEntitiesWithPermission(permission *Permission, roles []policyRole, groups []policyGroup) []policyPermission {
+func joinEntitiesWithPermission(permission *Permission, roles []policyRole, groups []policyGroup, domains []policyDomain) []policyPermission {
 	policyPermissions := spawnPolicyPermissions(permission)
 	for _, policyPermissionItem := range policyPermissions {
 		for _, role := range roles {
 			newPermission := policyPermission{
-				id: permission.GetId(),
+				id: policyPermissionItem.id,
 			}
 			if Contains(permission.Roles, role.id) {
 				newPermission = policyPermissionItem
@@ -245,10 +288,11 @@ func joinEntitiesWithPermission(permission *Permission, roles []policyRole, grou
 			policyPermissions = append(policyPermissions, newPermission)
 		}
 	}
+
 	for _, policyPermissionItem := range policyPermissions {
 		for _, group := range groups {
 			newPermission := policyPermission{
-				id: permission.GetId(),
+				id: policyPermissionItem.id,
 			}
 			if Contains(permission.Groups, group.id) {
 				newPermission = policyPermissionItem
@@ -258,63 +302,18 @@ func joinEntitiesWithPermission(permission *Permission, roles []policyRole, grou
 		}
 	}
 
+	for _, policyPermissionItem := range policyPermissions {
+		for _, domain := range domains {
+			newPermission := policyPermission{
+				id: policyPermissionItem.id,
+			}
+			if Contains(permission.Domains, domain.id) {
+				newPermission = policyPermissionItem
+			}
+			newPermission.domain = domain
+			policyPermissions = append(policyPermissions, newPermission)
+		}
+	}
+
 	return policyPermissions
-}
-
-func subRolePermissions(role *Role) ([]*Permission, error) {
-	result := make([]*Permission, 0)
-
-	visited := map[string]struct{}{}
-	subRoles, err := getRolesInRole(role.GetId(), visited)
-	if err != nil {
-		return nil, fmt.Errorf("getRolesInRole: %w", err)
-	}
-
-	for _, subRole := range subRoles {
-		permissions, err := GetPermissionsByRole(subRole.GetId())
-		if err != nil {
-			return nil, fmt.Errorf("GetPermissionsByRole: %w", err)
-		}
-		if len(permissions) > 0 {
-			result = append(result, permissions...)
-		}
-	}
-
-	return result, nil
-}
-
-func subGroupPermissions(group *Group) ([]*Permission, error) {
-	result := make([]*Permission, 0)
-
-	subGroups, err := getGroupsInGroup(group.GetId())
-	if err != nil {
-		return nil, fmt.Errorf("getGroupsInGroup: %w", err)
-	}
-	for _, subGroup := range subGroups {
-		permissions, err := GetPermissionsByGroup(subGroup.GetId())
-		if err != nil {
-			return nil, fmt.Errorf("GetPermissionsByGroup: %w", err)
-		}
-		if len(permissions) > 0 {
-			result = append(result, permissions...)
-		}
-
-		groupRoles, err := GetPaginationRoles(group.Owner, -1, -1, "groups", group.GetId(), "", "")
-		if err != nil {
-			return nil, fmt.Errorf("GetPaginationRoles: %w", err)
-		}
-
-		for _, role := range groupRoles {
-			rolePermissions, err := subRolePermissions(role)
-			if err != nil {
-				return nil, fmt.Errorf("subRolePermissions: %w", err)
-			}
-			if len(rolePermissions) > 0 {
-				result = append(result, rolePermissions...)
-			}
-		}
-
-	}
-
-	return result, nil
 }

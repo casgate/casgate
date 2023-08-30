@@ -141,6 +141,12 @@
     "Sending": "Envío",
     "Submit and complete": "Enviar y completar"
   },
+  "domain": {
+    "Edit Domain": "Edit Domain",
+    "New Domain": "New Domain",
+    "Sub domains": "Sub domains",
+    "Sub domains - Tooltip": "Sub domains - Tooltip"
+  },
   "enforcer": {
     "Edit Enforcer": "Edit Enforcer",
     "New Enforcer": "New Enforcer"
@@ -204,6 +210,7 @@
     "Disable": "Disable",
     "Display name": "Nombre de pantalla",
     "Display name - Tooltip": "Un nombre fácil de usar y leer que se muestra públicamente en la interfaz de usuario",
+    "Domains": "Domains",
     "Down": "Abajo",
     "Edit": "Editar",
     "Email": "Correo electrónico",
@@ -481,13 +488,15 @@
     "Model text - Tooltip": "Modelo de control de acceso Casbin, incluyendo modelos integrados como ACL, RBAC, ABAC, RESTful, etc. También puede crear modelos personalizados. Para obtener más información, visite el sitio web de Casbin",
     "New Model": "Nuevo modelo",
     "permission.action": "permission.action",
-    "permission.domain": "permission.domain",
+    "permission.domain.name": "permission.domain.name",
+    "permission.domain.subdomain": "permission.domain.subdomain",
     "permission.effect": "permission.effect",
     "permission.group.name": "permission.group.name",
     "permission.group.parentgroup": "permission.group.parentgroup",
     "permission.resource": "permission.resource",
     "permission.user": "permission.user",
-    "role.domain": "role.domain",
+    "role.domain.name": "role.domain.name",
+    "role.domain.subdomain": "role.domain.subdomain",
     "role.group.name": "role.group.name",
     "role.group.parentgroup": "role.group.parentgroup",
     "role.name": "role.name",

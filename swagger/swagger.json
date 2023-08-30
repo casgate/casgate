@@ -131,21 +131,21 @@
                 }
             }
         },
-        "/api/add-chat": {
+        "/api/add-domain": {
             "post": {
                 "tags": [
-                    "Chat API"
+                    "Domain API"
                 ],
-                "description": "add chat",
-                "operationId": "ApiController.AddChat",
+                "description": "add domain",
+                "operationId": "ApiController.AddDomain",
                 "parameters": [
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "The details of the chat",
+                        "description": "The details of the domain",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/object.Chat"
+                            "$ref": "#/definitions/object.Domain"
                         }
                     }
                 ],
@@ -230,34 +230,6 @@
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/object.Ldap"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/add-message": {
-            "post": {
-                "tags": [
-                    "Message API"
-                ],
-                "description": "add message",
-                "operationId": "ApiController.AddMessage",
-                "parameters": [
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "The details of the message",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/object.Message"
                         }
                     }
                 ],
@@ -1077,21 +1049,21 @@
                 }
             }
         },
-        "/api/delete-chat": {
+        "/api/delete-domain": {
             "post": {
                 "tags": [
-                    "Chat API"
+                    "Domain API"
                 ],
-                "description": "delete chat",
-                "operationId": "ApiController.DeleteChat",
+                "description": "delete domain",
+                "operationId": "ApiController.DeleteDomain",
                 "parameters": [
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "The details of the chat",
+                        "description": "The details of the domain",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/object.Chat"
+                            "$ref": "#/definitions/object.Domain"
                         }
                     }
                 ],
@@ -1176,34 +1148,6 @@
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/object.Ldap"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/delete-message": {
-            "post": {
-                "tags": [
-                    "Message API"
-                ],
-                "description": "delete message",
-                "operationId": "ApiController.DeleteMessage",
-                "parameters": [
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "The details of the message",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/object.Message"
                         }
                     }
                 ],
@@ -1964,61 +1908,6 @@
                 }
             }
         },
-        "/api/get-chat": {
-            "get": {
-                "tags": [
-                    "Chat API"
-                ],
-                "description": "get chat",
-                "operationId": "ApiController.GetChat",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "id",
-                        "description": "The id ( owner/name ) of the chat",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/object.Chat"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/get-chats": {
-            "get": {
-                "tags": [
-                    "Chat API"
-                ],
-                "description": "get chats",
-                "operationId": "ApiController.GetChats",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "owner",
-                        "description": "The owner of chats",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/object.Chat"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/get-default-application": {
             "get": {
                 "tags": [
@@ -2040,6 +1929,61 @@
                         "description": "The Response object",
                         "schema": {
                             "$ref": "#/definitions/Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/get-domain": {
+            "get": {
+                "tags": [
+                    "Domain API"
+                ],
+                "description": "get domain",
+                "operationId": "ApiController.GetDomain",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "description": "The id ( owner/name ) of the domains",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/object.Domain"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/get-domains": {
+            "get": {
+                "tags": [
+                    "Domain API"
+                ],
+                "description": "get domains",
+                "operationId": "ApiController.GetDomains",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "owner",
+                        "description": "The owner of domains",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/object.Domain"
+                            }
                         }
                     }
                 }
@@ -2313,87 +2257,6 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/object.Ldap"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/get-message": {
-            "get": {
-                "tags": [
-                    "Message API"
-                ],
-                "description": "get message",
-                "operationId": "ApiController.GetMessage",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "id",
-                        "description": "The id ( owner/name ) of the message",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/object.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/get-message-answer": {
-            "get": {
-                "tags": [
-                    "Message API"
-                ],
-                "description": "get message answer",
-                "operationId": "ApiController.GetMessageAnswer",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "id",
-                        "description": "The id ( owner/name ) of the message",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/object.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/get-messages": {
-            "get": {
-                "tags": [
-                    "Message API"
-                ],
-                "description": "get messages",
-                "operationId": "ApiController.GetMessages",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "owner",
-                        "description": "The owner of messages",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/object.Message"
                             }
                         }
                     }
@@ -4481,28 +4344,28 @@
                 }
             }
         },
-        "/api/update-chat": {
+        "/api/update-domain": {
             "post": {
                 "tags": [
-                    "Chat API"
+                    "Domain API"
                 ],
-                "description": "update chat",
-                "operationId": "ApiController.UpdateChat",
+                "description": "update domain",
+                "operationId": "ApiController.UpdateDomain",
                 "parameters": [
                     {
                         "in": "query",
                         "name": "id",
-                        "description": "The id ( owner/name ) of the chat",
+                        "description": "The id ( owner/name ) of the domain",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "body",
                         "name": "body",
-                        "description": "The details of the chat",
+                        "description": "The details of the domain",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/object.Chat"
+                            "$ref": "#/definitions/object.Domain"
                         }
                     }
                 ],
@@ -4601,41 +4464,6 @@
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/object.Ldap"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/update-message": {
-            "post": {
-                "tags": [
-                    "Message API"
-                ],
-                "description": "update message",
-                "operationId": "ApiController.UpdateMessage",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "id",
-                        "description": "The id ( owner/name ) of the message",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "The details of the message",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/object.Message"
                         }
                     }
                 ],
@@ -5431,6 +5259,10 @@
         }
     },
     "definitions": {
+        "149401.\u003cnil\u003e.string": {
+            "title": "string",
+            "type": "object"
+        },
         "LaravelResponse": {
             "title": "LaravelResponse",
             "type": "object"
@@ -5531,6 +5363,10 @@
             "title": "JSONWebKey",
             "type": "object"
         },
+        "model.Model": {
+            "title": "Model",
+            "type": "object"
+        },
         "object": {
             "title": "object",
             "type": "object"
@@ -5557,16 +5393,44 @@
             "title": "Adapter",
             "type": "object",
             "properties": {
-                "Engine": {
-                    "$ref": "#/definitions/xorm.Engine"
-                },
-                "dataSourceName": {
+                "createdTime": {
                     "type": "string"
                 },
-                "dbName": {
+                "database": {
                     "type": "string"
                 },
-                "driverName": {
+                "databaseType": {
+                    "type": "string"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "isEnabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "table": {
+                    "type": "string"
+                },
+                "tableNamePrefix": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user": {
                     "type": "string"
                 }
             }
@@ -5724,6 +5588,18 @@
                 }
             }
         },
+        "object.AttributeMappingItem": {
+            "title": "AttributeMappingItem",
+            "type": "object",
+            "properties": {
+                "attribute": {
+                    "type": "string"
+                },
+                "userField": {
+                    "type": "string"
+                }
+            }
+        },
         "object.CasbinRequest": {
             "title": "CasbinRequest",
             "type": "array",
@@ -5778,49 +5654,33 @@
                 }
             }
         },
-        "object.Chat": {
-            "title": "Chat",
+        "object.Domain": {
+            "title": "Domain",
             "type": "object",
             "properties": {
-                "category": {
+                "createdTime": {
                     "type": "string"
                 },
-                "createdTime": {
+                "description": {
                     "type": "string"
                 },
                 "displayName": {
                     "type": "string"
                 },
-                "messageCount": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "organization": {
-                    "type": "string"
-                },
-                "owner": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "updatedTime": {
-                    "type": "string"
-                },
-                "user1": {
-                    "type": "string"
-                },
-                "user2": {
-                    "type": "string"
-                },
-                "users": {
+                "domains": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "isEnabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "string"
                 }
             }
         },
@@ -6017,6 +5877,12 @@
             "title": "Ldap",
             "type": "object",
             "properties": {
+                "attributeMappingItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/object.AttributeMappingItem"
+                    }
+                },
                 "autoSync": {
                     "type": "integer",
                     "format": "int64"
@@ -6024,8 +5890,17 @@
                 "baseDn": {
                     "type": "string"
                 },
+                "cert": {
+                    "type": "string"
+                },
                 "createdTime": {
                     "type": "string"
+                },
+                "enableAttributeMapping": {
+                    "type": "boolean"
+                },
+                "enableRoleMapping": {
+                    "type": "boolean"
                 },
                 "enableSsl": {
                     "type": "boolean"
@@ -6058,6 +5933,12 @@
                     "type": "integer",
                     "format": "int64"
                 },
+                "roleMappingItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/object.RoleMappingItem"
+                    }
+                },
                 "serverName": {
                     "type": "string"
                 },
@@ -6080,36 +5961,6 @@
                     "type": "string"
                 },
                 "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "object.Message": {
-            "title": "Message",
-            "type": "object",
-            "properties": {
-                "author": {
-                    "type": "string"
-                },
-                "chat": {
-                    "type": "string"
-                },
-                "createdTime": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "organization": {
-                    "type": "string"
-                },
-                "owner": {
-                    "type": "string"
-                },
-                "replyTo": {
-                    "type": "string"
-                },
-                "text": {
                     "type": "string"
                 }
             }
@@ -6162,6 +6013,15 @@
             "properties": {
                 "createdTime": {
                     "type": "string"
+                },
+                "customPolicyMapping": {
+                    "type": "boolean"
+                },
+                "customPolicyMappingRules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/149401.\u003cnil\u003e.string"
+                    }
                 },
                 "description": {
                     "type": "string"
@@ -6349,6 +6209,24 @@
                 }
             }
         },
+        "object.Ormer": {
+            "title": "Ormer",
+            "type": "object",
+            "properties": {
+                "Engine": {
+                    "$ref": "#/definitions/xorm.Engine"
+                },
+                "dataSourceName": {
+                    "type": "string"
+                },
+                "dbName": {
+                    "type": "string"
+                },
+                "driverName": {
+                    "type": "string"
+                }
+            }
+        },
         "object.Payment": {
             "title": "Payment",
             "type": "object",
@@ -6386,7 +6264,7 @@
                 "name": {
                     "type": "string"
                 },
-                "organization": {
+                "outOrderId": {
                     "type": "string"
                 },
                 "owner": {
@@ -6424,7 +6302,7 @@
                     "type": "string"
                 },
                 "state": {
-                    "type": "string"
+                    "$ref": "#/definitions/pp.PaymentState"
                 },
                 "tag": {
                     "type": "string"
@@ -6473,6 +6351,12 @@
                 },
                 "effect": {
                     "type": "string"
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "isEnabled": {
                     "type": "boolean"
@@ -6966,6 +6850,12 @@
                         "type": "string"
                     }
                 },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "isEnabled": {
                     "type": "boolean"
                 },
@@ -6982,6 +6872,24 @@
                     }
                 },
                 "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "object.RoleMappingItem": {
+            "title": "RoleMappingItem",
+            "type": "object",
+            "properties": {
+                "attribute": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "values": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -7564,6 +7472,9 @@
                 "password": {
                     "type": "string"
                 },
+                "passwordChangeRequired": {
+                    "type": "boolean"
+                },
                 "passwordSalt": {
                     "type": "string"
                 },
@@ -7811,6 +7722,17 @@
                 }
             }
         },
+        "pp.PaymentState": {
+            "title": "PaymentState",
+            "type": "string",
+            "enum": [
+                "PaymentStatePaid = \"Paid\"",
+                "PaymentStateCreated = \"Created\"",
+                "PaymentStateCanceled = \"Canceled\"",
+                "PaymentStateError = \"Error\""
+            ],
+            "example": "Paid"
+        },
         "protocol.CredentialAssertion": {
             "title": "CredentialAssertion",
             "type": "object"
@@ -7871,6 +7793,10 @@
         "xorm.Engine": {
             "title": "Engine",
             "type": "object"
+        },
+        "xormadapter.Adapter": {
+            "title": "Adapter",
+            "type": "object"
         }
     },
     "securityDefinitions": {
@@ -7879,9 +7805,5 @@
             "name": "Authorization",
             "in": "header"
         }
-    },
-    "externalDocs": {
-        "description": "Find out more about Casdoor",
-        "url": "https://casdoor.org/"
     }
 }

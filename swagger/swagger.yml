@@ -85,19 +85,19 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
-  /api/add-chat:
+  /api/add-domain:
     post:
       tags:
-      - Chat API
-      description: add chat
-      operationId: ApiController.AddChat
+      - Domain API
+      description: add domain
+      operationId: ApiController.AddDomain
       parameters:
       - in: body
         name: body
-        description: The details of the chat
+        description: The details of the domain
         required: true
         schema:
-          $ref: '#/definitions/object.Chat'
+          $ref: '#/definitions/object.Domain'
       responses:
         "200":
           description: The Response object
@@ -152,24 +152,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/object.Ldap'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/add-message:
-    post:
-      tags:
-      - Message API
-      description: add message
-      operationId: ApiController.AddMessage
-      parameters:
-      - in: body
-        name: body
-        description: The details of the message
-        required: true
-        schema:
-          $ref: '#/definitions/object.Message'
       responses:
         "200":
           description: The Response object
@@ -696,19 +678,19 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
-  /api/delete-chat:
+  /api/delete-domain:
     post:
       tags:
-      - Chat API
-      description: delete chat
-      operationId: ApiController.DeleteChat
+      - Domain API
+      description: delete domain
+      operationId: ApiController.DeleteDomain
       parameters:
       - in: body
         name: body
-        description: The details of the chat
+        description: The details of the domain
         required: true
         schema:
-          $ref: '#/definitions/object.Chat'
+          $ref: '#/definitions/object.Domain'
       responses:
         "200":
           description: The Response object
@@ -763,24 +745,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/object.Ldap'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/delete-message:
-    post:
-      tags:
-      - Message API
-      description: delete message
-      operationId: ApiController.DeleteMessage
-      parameters:
-      - in: body
-        name: body
-        description: The details of the message
-        required: true
-        schema:
-          $ref: '#/definitions/object.Message'
       responses:
         "200":
           description: The Response object
@@ -1271,42 +1235,6 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Cert'
-  /api/get-chat:
-    get:
-      tags:
-      - Chat API
-      description: get chat
-      operationId: ApiController.GetChat
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the chat
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Chat'
-  /api/get-chats:
-    get:
-      tags:
-      - Chat API
-      description: get chats
-      operationId: ApiController.GetChats
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of chats
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Chat'
   /api/get-default-application:
     get:
       tags:
@@ -1324,6 +1252,42 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/Response'
+  /api/get-domain:
+    get:
+      tags:
+      - Domain API
+      description: get domain
+      operationId: ApiController.GetDomain
+      parameters:
+      - in: query
+        name: id
+        description: The id ( owner/name ) of the domains
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.Domain'
+  /api/get-domains:
+    get:
+      tags:
+      - Domain API
+      description: get domains
+      operationId: ApiController.GetDomains
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of domains
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/object.Domain'
   /api/get-email-and-phone:
     get:
       tags:
@@ -1503,59 +1467,6 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Ldap'
-  /api/get-message:
-    get:
-      tags:
-      - Message API
-      description: get message
-      operationId: ApiController.GetMessage
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the message
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Message'
-  /api/get-message-answer:
-    get:
-      tags:
-      - Message API
-      description: get message answer
-      operationId: ApiController.GetMessageAnswer
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the message
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Message'
-  /api/get-messages:
-    get:
-      tags:
-      - Message API
-      description: get messages
-      operationId: ApiController.GetMessages
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of messages
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Message'
   /api/get-model:
     get:
       tags:
@@ -2925,24 +2836,24 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
-  /api/update-chat:
+  /api/update-domain:
     post:
       tags:
-      - Chat API
-      description: update chat
-      operationId: ApiController.UpdateChat
+      - Domain API
+      description: update domain
+      operationId: ApiController.UpdateDomain
       parameters:
       - in: query
         name: id
-        description: The id ( owner/name ) of the chat
+        description: The id ( owner/name ) of the domain
         required: true
         type: string
       - in: body
         name: body
-        description: The details of the chat
+        description: The details of the domain
         required: true
         schema:
-          $ref: '#/definitions/object.Chat'
+          $ref: '#/definitions/object.Domain'
       responses:
         "200":
           description: The Response object
@@ -3007,29 +2918,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/object.Ldap'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/update-message:
-    post:
-      tags:
-      - Message API
-      description: update message
-      operationId: ApiController.UpdateMessage
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the message
-        required: true
-        type: string
-      - in: body
-        name: body
-        description: The details of the message
-        required: true
-        schema:
-          $ref: '#/definitions/object.Message'
       responses:
         "200":
           description: The Response object
@@ -3549,6 +3437,9 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
+  149401.<nil>.string:
+    title: string
+    type: object
   LaravelResponse:
     title: LaravelResponse
     type: object
@@ -3618,6 +3509,9 @@ definitions:
   jose.JSONWebKey:
     title: JSONWebKey
     type: object
+  model.Model:
+    title: Model
+    type: object
   object:
     title: object
     type: object
@@ -3637,13 +3531,32 @@ definitions:
     title: Adapter
     type: object
     properties:
-      Engine:
-        $ref: '#/definitions/xorm.Engine'
-      dataSourceName:
+      createdTime:
         type: string
-      dbName:
+      database:
         type: string
-      driverName:
+      databaseType:
+        type: string
+      host:
+        type: string
+      isEnabled:
+        type: boolean
+      name:
+        type: string
+      owner:
+        type: string
+      password:
+        type: string
+      port:
+        type: integer
+        format: int64
+      table:
+        type: string
+      tableNamePrefix:
+        type: string
+      type:
+        type: string
+      user:
         type: string
   object.Application:
     title: Application
@@ -3748,6 +3661,14 @@ definitions:
         $ref: '#/definitions/object.ThemeData'
       tokenFormat:
         type: string
+  object.AttributeMappingItem:
+    title: AttributeMappingItem
+    type: object
+    properties:
+      attribute:
+        type: string
+      userField:
+        type: string
   object.CasbinRequest:
     title: CasbinRequest
     type: array
@@ -3785,37 +3706,26 @@ definitions:
         type: string
       type:
         type: string
-  object.Chat:
-    title: Chat
+  object.Domain:
+    title: Domain
     type: object
     properties:
-      category:
-        type: string
       createdTime:
+        type: string
+      description:
         type: string
       displayName:
         type: string
-      messageCount:
-        type: integer
-        format: int64
-      name:
-        type: string
-      organization:
-        type: string
-      owner:
-        type: string
-      type:
-        type: string
-      updatedTime:
-        type: string
-      user1:
-        type: string
-      user2:
-        type: string
-      users:
+      domains:
         type: array
         items:
           type: string
+      isEnabled:
+        type: boolean
+      name:
+        type: string
+      owner:
+        type: string
   object.Enforce:
     title: Enforce
     type: object
@@ -3948,13 +3858,23 @@ definitions:
     title: Ldap
     type: object
     properties:
+      attributeMappingItems:
+        type: array
+        items:
+          $ref: '#/definitions/object.AttributeMappingItem'
       autoSync:
         type: integer
         format: int64
       baseDn:
         type: string
+      cert:
+        type: string
       createdTime:
         type: string
+      enableAttributeMapping:
+        type: boolean
+      enableRoleMapping:
+        type: boolean
       enableSsl:
         type: boolean
       filter:
@@ -3976,6 +3896,10 @@ definitions:
       port:
         type: integer
         format: int64
+      roleMappingItems:
+        type: array
+        items:
+          $ref: '#/definitions/object.RoleMappingItem'
       serverName:
         type: string
       username:
@@ -3991,26 +3915,6 @@ definitions:
       signinUrl:
         type: string
       username:
-        type: string
-  object.Message:
-    title: Message
-    type: object
-    properties:
-      author:
-        type: string
-      chat:
-        type: string
-      createdTime:
-        type: string
-      name:
-        type: string
-      organization:
-        type: string
-      owner:
-        type: string
-      replyTo:
-        type: string
-      text:
         type: string
   object.MfaItem:
     title: MfaItem
@@ -4046,6 +3950,12 @@ definitions:
     properties:
       createdTime:
         type: string
+      customPolicyMapping:
+        type: boolean
+      customPolicyMappingRules:
+        type: array
+        items:
+          $ref: '#/definitions/149401.<nil>.string'
       description:
         type: string
       displayName:
@@ -4169,6 +4079,18 @@ definitions:
         $ref: '#/definitions/object.ThemeData'
       websiteUrl:
         type: string
+  object.Ormer:
+    title: Ormer
+    type: object
+    properties:
+      Engine:
+        $ref: '#/definitions/xorm.Engine'
+      dataSourceName:
+        type: string
+      dbName:
+        type: string
+      driverName:
+        type: string
   object.Payment:
     title: Payment
     type: object
@@ -4195,7 +4117,7 @@ definitions:
         type: string
       name:
         type: string
-      organization:
+      outOrderId:
         type: string
       owner:
         type: string
@@ -4221,7 +4143,7 @@ definitions:
       returnUrl:
         type: string
       state:
-        type: string
+        $ref: '#/definitions/pp.PaymentState'
       tag:
         type: string
       type:
@@ -4254,6 +4176,10 @@ definitions:
           type: string
       effect:
         type: string
+      groups:
+        type: array
+        items:
+          type: string
       isEnabled:
         type: boolean
       model:
@@ -4585,6 +4511,10 @@ definitions:
         type: array
         items:
           type: string
+      groups:
+        type: array
+        items:
+          type: string
       isEnabled:
         type: boolean
       name:
@@ -4596,6 +4526,18 @@ definitions:
         items:
           type: string
       users:
+        type: array
+        items:
+          type: string
+  object.RoleMappingItem:
+    title: RoleMappingItem
+    type: object
+    properties:
+      attribute:
+        type: string
+      role:
+        type: string
+      values:
         type: array
         items:
           type: string
@@ -4987,6 +4929,8 @@ definitions:
         type: string
       password:
         type: string
+      passwordChangeRequired:
+        type: boolean
       passwordSalt:
         type: string
       passwordType:
@@ -5151,6 +5095,15 @@ definitions:
         type: string
       url:
         type: string
+  pp.PaymentState:
+    title: PaymentState
+    type: string
+    enum:
+    - PaymentStatePaid = "Paid"
+    - PaymentStateCreated = "Created"
+    - PaymentStateCanceled = "Canceled"
+    - PaymentStateError = "Error"
+    example: Paid
   protocol.CredentialAssertion:
     title: CredentialAssertion
     type: object
@@ -5195,11 +5148,11 @@ definitions:
   xorm.Engine:
     title: Engine
     type: object
+  xormadapter.Adapter:
+    title: Adapter
+    type: object
 securityDefinitions:
   AccessToken:
     type: apiKey
     name: Authorization
     in: header
-externalDocs:
-  description: Find out more about Casdoor
-  url: https://casdoor.org/

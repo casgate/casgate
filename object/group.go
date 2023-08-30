@@ -458,3 +458,39 @@ func getGroupsByParentGroup(groupId string) ([]*Group, error) {
 
 	return groups, nil
 }
+
+func subGroupPermissions(group *Group) ([]*Permission, error) {
+	result := make([]*Permission, 0)
+
+	subGroups, err := getGroupsInGroup(group.GetId())
+	if err != nil {
+		return nil, fmt.Errorf("getGroupsInGroup: %w", err)
+	}
+	for _, subGroup := range subGroups {
+		permissions, err := GetPermissionsByGroup(subGroup.GetId())
+		if err != nil {
+			return nil, fmt.Errorf("GetPermissionsByGroup: %w", err)
+		}
+		if len(permissions) > 0 {
+			result = append(result, permissions...)
+		}
+
+		groupRoles, err := GetPaginationRoles(group.Owner, -1, -1, "groups", subGroup.GetId(), "", "")
+		if err != nil {
+			return nil, fmt.Errorf("GetPaginationRoles: %w", err)
+		}
+
+		for _, role := range groupRoles {
+			rolePermissions, err := subRolePermissions(role)
+			if err != nil {
+				return nil, fmt.Errorf("subRolePermissions: %w", err)
+			}
+			if len(rolePermissions) > 0 {
+				result = append(result, rolePermissions...)
+			}
+		}
+
+	}
+
+	return result, nil
+}

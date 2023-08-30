@@ -20,6 +20,12 @@ import (
 	"github.com/casdoor/casdoor/util"
 )
 
+type policyDomain struct {
+	id        string
+	name      string
+	subDomain string
+}
+
 type policyGroup struct {
 	id          string
 	name        string
@@ -29,7 +35,7 @@ type policyGroup struct {
 type policyRole struct {
 	id      string
 	name    string
-	domain  string
+	domain  policyDomain
 	user    string
 	group   policyGroup
 	subRole string
@@ -37,7 +43,7 @@ type policyRole struct {
 
 type policyPermission struct {
 	id       string
-	domain   string
+	domain   policyDomain
 	resource string
 	action   string
 	role     policyRole
@@ -62,8 +68,10 @@ func getValueByItem(policyPermissionItem policyPermission, policyItem string) (s
 		value = policyPermissionItem.role.name
 	case "role.subrole":
 		value = policyPermissionItem.role.subRole
-	case "role.domain":
-		value = policyPermissionItem.role.domain
+	case "role.domain.name":
+		value = policyPermissionItem.role.domain.name
+	case "role.domain.subdomain":
+		value = policyPermissionItem.role.domain.subDomain
 	case "role.user":
 		value = policyPermissionItem.role.user
 	case "role.group.name":
@@ -78,8 +86,10 @@ func getValueByItem(policyPermissionItem policyPermission, policyItem string) (s
 		value = policyPermissionItem.user
 	case "permission.effect":
 		value = policyPermissionItem.effect
-	case "permission.domain":
-		value = policyPermissionItem.domain
+	case "permission.domain.name":
+		value = policyPermissionItem.domain.name
+	case "permission.domain.subdomain":
+		value = policyPermissionItem.domain.subDomain
 	case "permission.group.name":
 		value = policyPermissionItem.group.name
 	case "permission.group.parentgroup":

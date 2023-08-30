@@ -92,6 +92,8 @@ import AccountAvatar from "./account/AccountAvatar";
 const {Header, Footer, Content} = Layout;
 
 import {setTwoToneColor} from "@ant-design/icons";
+import DomainListPage from "./DomainListPage";
+import DomainEditPage from "./DomainEditPage";
 
 setTwoToneColor("rgb(87,52,211)");
 
@@ -153,7 +155,7 @@ class App extends Component {
       this.setState({selectedMenuKey: "/"});
     } else if (uri.includes("/organizations") || uri.includes("/trees") || uri.includes("/users") || uri.includes("/groups")) {
       this.setState({selectedMenuKey: "/orgs"});
-    } else if (uri.includes("/roles") || uri.includes("/permissions") || uri.includes("/models") || uri.includes("/adapters") || uri.includes("/enforcers")) {
+    } else if (uri.includes("/roles") || uri.includes("/domains") || uri.includes("/permissions") || uri.includes("/models") || uri.includes("/adapters") || uri.includes("/enforcers")) {
       this.setState({selectedMenuKey: "/auth"});
     } else if (uri.includes("/applications") || uri.includes("/providers") || uri.includes("/resources") || uri.includes("/certs")) {
       this.setState({selectedMenuKey: "/identity"});
@@ -420,6 +422,7 @@ class App extends Component {
 
       res.push(Setting.getItem(<Link style={{color: "black"}} to="/roles">{i18next.t("general:Authorization")}</Link>, "/auth", <SafetyCertificateTwoTone />, [
         Setting.getItem(<Link to="/roles">{i18next.t("general:Roles")}</Link>, "/roles"),
+        Setting.getItem(<Link to="/domains">{i18next.t("general:Domains")}</Link>, "/domains"),
         Setting.getItem(<Link to="/permissions">{i18next.t("general:Permissions")}</Link>, "/permissions"),
         Setting.getItem(<Link to="/models">{i18next.t("general:Models")}</Link>, "/models"),
         Setting.getItem(<Link to="/adapters">{i18next.t("general:Adapters")}</Link>, "/adapters"),
@@ -492,6 +495,8 @@ class App extends Component {
         <Route exact path="/users/:organizationName/:userName" render={(props) => <UserEditPage account={this.state.account} {...props} />} />
         <Route exact path="/roles" render={(props) => this.renderLoginIfNotLoggedIn(<RoleListPage account={this.state.account} {...props} />)} />
         <Route exact path="/roles/:organizationName/:roleName" render={(props) => this.renderLoginIfNotLoggedIn(<RoleEditPage account={this.state.account} {...props} />)} />
+        <Route exact path="/domains" render={(props) => this.renderLoginIfNotLoggedIn(<DomainListPage account={this.state.account} {...props} />)} />
+        <Route exact path="/domains/:organizationName/:domainName" render={(props) => this.renderLoginIfNotLoggedIn(<DomainEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/permissions" render={(props) => this.renderLoginIfNotLoggedIn(<PermissionListPage account={this.state.account} {...props} />)} />
         <Route exact path="/permissions/:organizationName/:permissionName" render={(props) => this.renderLoginIfNotLoggedIn(<PermissionEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/models" render={(props) => this.renderLoginIfNotLoggedIn(<ModelListPage account={this.state.account} {...props} />)} />

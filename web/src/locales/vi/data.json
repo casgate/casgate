@@ -141,6 +141,12 @@
     "Sending": "Gửi",
     "Submit and complete": "Nộp và hoàn thành"
   },
+  "domain": {
+    "Edit Domain": "Edit Domain",
+    "New Domain": "New Domain",
+    "Sub domains": "Sub domains",
+    "Sub domains - Tooltip": "Sub domains - Tooltip"
+  },
   "enforcer": {
     "Edit Enforcer": "Edit Enforcer",
     "New Enforcer": "New Enforcer"
@@ -204,6 +210,7 @@
     "Disable": "Disable",
     "Display name": "Tên hiển thị",
     "Display name - Tooltip": "Một tên dễ sử dụng, dễ đọc được hiển thị công khai trên giao diện người dùng",
+    "Domains": "Domains",
     "Down": "Xuống",
     "Edit": "Chỉnh sửa",
     "Email": "Email: Thư điện tử",
@@ -481,13 +488,15 @@
     "Model text - Tooltip": "Mô hình kiểm soát truy cập Casbin, bao gồm các mô hình tích hợp như ACL, RBAC, ABAC, RESTful, v.v. Bạn cũng có thể tạo các mô hình tùy chỉnh. Để biết thêm thông tin, vui lòng truy cập trang web Casbin",
     "New Model": "Mô hình mới",
     "permission.action": "permission.action",
-    "permission.domain": "permission.domain",
+    "permission.domain.name": "permission.domain.name",
+    "permission.domain.subdomain": "permission.domain.subdomain",
     "permission.effect": "permission.effect",
     "permission.group.name": "permission.group.name",
     "permission.group.parentgroup": "permission.group.parentgroup",
     "permission.resource": "permission.resource",
     "permission.user": "permission.user",
-    "role.domain": "role.domain",
+    "role.domain.name": "role.domain.name",
+    "role.domain.subdomain": "role.domain.subdomain",
     "role.group.name": "role.group.name",
     "role.group.parentgroup": "role.group.parentgroup",
     "role.name": "role.name",

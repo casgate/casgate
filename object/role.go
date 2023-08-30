@@ -232,6 +232,16 @@ func (role *Role) GetId() string {
 	return fmt.Sprintf("%s/%s", role.Owner, role.Name)
 }
 
+func GetRolesByDomain(domainId string) ([]*Role, error) {
+	roles := []*Role{}
+	err := ormer.Engine.Where("domains like ?", "%"+domainId+"\"%").Find(&roles)
+	if err != nil {
+		return roles, err
+	}
+
+	return roles, nil
+}
+
 func GetRolesByUser(userId string) ([]*Role, error) {
 	roles := []*Role{}
 	err := ormer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&roles)
@@ -394,4 +404,26 @@ func containsRole(role *Role, roleMap map[string]*Role, visited map[string]bool,
 	}
 
 	return false
+}
+
+func subRolePermissions(role *Role) ([]*Permission, error) {
+	result := make([]*Permission, 0)
+
+	visited := map[string]struct{}{}
+	subRoles, err := getRolesInRole(role.GetId(), visited)
+	if err != nil {
+		return nil, fmt.Errorf("getRolesInRole: %w", err)
+	}
+
+	for _, subRole := range subRoles {
+		permissions, err := GetPermissionsByRole(subRole.GetId())
+		if err != nil {
+			return nil, fmt.Errorf("GetPermissionsByRole: %w", err)
+		}
+		if len(permissions) > 0 {
+			result = append(result, permissions...)
+		}
+	}
+
+	return result, nil
 }
