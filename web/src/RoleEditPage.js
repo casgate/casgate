@@ -22,6 +22,8 @@ import * as UserBackend from "./backend/UserBackend";
 import * as GroupBackend from "./backend/GroupBackend";
 import * as DomainBackend from "./backend/DomainBackend";
 
+const {Option} = Select;
+
 class RoleEditPage extends React.Component {
   constructor(props) {
     super(props);
@@ -58,6 +60,10 @@ class RoleEditPage extends React.Component {
 
         if (!res.data.groups) {
           res.data.groups = [];
+        }
+
+        if (!res.data.tags) {
+          res.data.tags = [];
         }
 
         this.setState({
@@ -243,6 +249,18 @@ class RoleEditPage extends React.Component {
             <Select virtual={false} mode="multiple" style={{width: "100%"}} value={this.state.role.domains} onChange={(value => {this.updateRoleField("domains", value);})}
               options={this.state.domains.map((domain) => Setting.getOption(`${domain.owner}/${domain.name}`, `${domain.owner}/${domain.name}`))
               } />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("organization:Tags"), i18next.t("organization:Tags - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} mode="tags" style={{width: "100%"}} value={this.state.role.tags} onChange={(value => {this.updateRoleField("tags", value);})}>
+              {
+                this.state.role.tags?.map((item, index) => <Option key={index} value={item}>{item}</Option>)
+              }
+            </Select>
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >

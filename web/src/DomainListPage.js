@@ -32,6 +32,7 @@ class DomainListPage extends BaseListPage {
       createdTime: moment().format(),
       displayName: `New Domain - ${randomName}`,
       domains: [],
+      tags: [],
       isEnabled: true,
     };
   }

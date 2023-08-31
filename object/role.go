@@ -35,6 +35,7 @@ type Role struct {
 	Users     []string `xorm:"mediumtext" json:"users"`
 	Roles     []string `xorm:"mediumtext" json:"roles"`
 	Domains   []string `xorm:"mediumtext" json:"domains"`
+	Tags      []string `xorm:"mediumtext" json:"tags"`
 	IsEnabled bool     `json:"isEnabled"`
 }
 

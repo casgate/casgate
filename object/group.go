@@ -29,13 +29,14 @@ type Group struct {
 	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
 	UpdatedTime string `xorm:"varchar(100)" json:"updatedTime"`
 
-	DisplayName  string  `xorm:"varchar(100)" json:"displayName"`
-	Manager      string  `xorm:"varchar(100)" json:"manager"`
-	ContactEmail string  `xorm:"varchar(100)" json:"contactEmail"`
-	Type         string  `xorm:"varchar(100)" json:"type"`
-	ParentId     string  `xorm:"varchar(100)" json:"parentId"`
-	IsTopGroup   bool    `xorm:"bool" json:"isTopGroup"`
-	Users        []*User `xorm:"-" json:"users"`
+	DisplayName  string   `xorm:"varchar(100)" json:"displayName"`
+	Manager      string   `xorm:"varchar(100)" json:"manager"`
+	ContactEmail string   `xorm:"varchar(100)" json:"contactEmail"`
+	Type         string   `xorm:"varchar(100)" json:"type"`
+	ParentId     string   `xorm:"varchar(100)" json:"parentId"`
+	IsTopGroup   bool     `xorm:"bool" json:"isTopGroup"`
+	Tags         []string `xorm:"mediumtext" json:"tags"`
+	Users        []*User  `xorm:"-" json:"users"`
 
 	Title    string   `json:"title,omitempty"`
 	Key      string   `json:"key,omitempty"`

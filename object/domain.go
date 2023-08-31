@@ -22,11 +22,12 @@ import (
 )
 
 type Domain struct {
-	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
-	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
-	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
-	DisplayName string `xorm:"varchar(100)" json:"displayName"`
-	Description string `xorm:"varchar(100)" json:"description"`
+	Owner       string   `xorm:"varchar(100) notnull pk" json:"owner"`
+	Name        string   `xorm:"varchar(100) notnull pk" json:"name"`
+	CreatedTime string   `xorm:"varchar(100)" json:"createdTime"`
+	DisplayName string   `xorm:"varchar(100)" json:"displayName"`
+	Description string   `xorm:"varchar(100)" json:"description"`
+	Tags        []string `xorm:"mediumtext" json:"tags"`
 
 	Domains   []string `xorm:"mediumtext" json:"domains"`
 	IsEnabled bool     `json:"isEnabled"`

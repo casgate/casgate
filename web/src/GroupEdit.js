@@ -19,6 +19,8 @@ import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 
+const {Option} = Select;
+
 class GroupEditPage extends React.Component {
   constructor(props) {
     super(props);
@@ -44,6 +46,11 @@ class GroupEditPage extends React.Component {
     GroupBackend.getGroup(this.state.organizationName, this.state.groupName)
       .then((res) => {
         if (res.status === "ok") {
+
+          if (!res.data.tags) {
+            res.data.tags = [];
+          }
+
           this.setState({
             group: res.data,
           });
@@ -175,6 +182,18 @@ class GroupEditPage extends React.Component {
                 this.updateGroupField("parentId", value);
               }
               )} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("organization:Tags"), i18next.t("organization:Tags - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} mode="tags" style={{width: "100%"}} value={this.state.group.tags} onChange={(value => {this.updateGroupField("tags", value);})}>
+              {
+                this.state.group.tags?.map((item, index) => <Option key={index} value={item}>{item}</Option>)
+              }
+            </Select>
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >

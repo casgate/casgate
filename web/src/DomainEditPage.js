@@ -19,6 +19,8 @@ import * as Setting from "./Setting";
 import i18next from "i18next";
 import * as DomainBackend from "./backend/DomainBackend";
 
+const {Option} = Select;
+
 class DomainEditPage extends React.Component {
   constructor(props) {
     super(props);
@@ -48,6 +50,10 @@ class DomainEditPage extends React.Component {
         if (res.status === "error") {
           Setting.showMessage("error", res.msg);
           return;
+        }
+
+        if (!res.data.tags) {
+          res.data.tags = [];
         }
 
         this.setState({
@@ -156,6 +162,18 @@ class DomainEditPage extends React.Component {
             <Select virtual={false} mode="multiple" style={{width: "100%"}} value={this.state.domain.domains} onChange={(value => {this.updateDomainField("domains", value);})}
               options={this.state.domains.filter(domain => (domain.owner !== this.state.domain.owner || domain.name !== this.state.domain.name)).map((domain) => Setting.getOption(`${domain.owner}/${domain.name}`, `${domain.owner}/${domain.name}`))
               } />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("organization:Tags"), i18next.t("organization:Tags - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} mode="tags" style={{width: "100%"}} value={this.state.domain.tags} onChange={(value => {this.updateDomainField("tags", value);})}>
+              {
+                this.state.domain.tags?.map((item, index) => <Option key={index} value={item}>{item}</Option>)
+              }
+            </Select>
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >

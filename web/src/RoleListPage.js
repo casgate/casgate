@@ -36,6 +36,7 @@ class RoleListPage extends BaseListPage {
       users: [],
       roles: [],
       domains: [],
+      tags: [],
       isEnabled: true,
     };
   }
