@@ -137,6 +137,18 @@ func AddRole(role *Role) (bool, error) {
 		return false, err
 	}
 
+	if affected != 0 {
+		roleLinkedPermissions, err := subRolePermissions(role)
+		if err != nil {
+			return false, fmt.Errorf("subRolePermissions: %w", err)
+		}
+
+		err = processPolicyDifference(roleLinkedPermissions)
+		if err != nil {
+			return false, err
+		}
+	}
+
 	return affected != 0, nil
 }
 
@@ -150,6 +162,23 @@ func AddRoles(roles []*Role) bool {
 			panic(err)
 		}
 	}
+
+	if affected != 0 {
+		rolesLinkedPermissions := make([]*Permission, 0)
+		for _, role := range roles {
+			roleLinkedPermissions, err := subRolePermissions(role)
+			if err != nil {
+				panic(err)
+			}
+			rolesLinkedPermissions = append(rolesLinkedPermissions, roleLinkedPermissions...)
+		}
+
+		err = processPolicyDifference(rolesLinkedPermissions)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	return affected != 0
 }
 

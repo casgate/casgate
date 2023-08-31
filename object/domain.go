@@ -113,7 +113,7 @@ func UpdateDomain(id string, domain *Domain) (bool, error) {
 	if affected != 0 {
 		domainLinkedPermissions, err := subDomainPermissions(domain)
 		if err != nil {
-			return false, fmt.Errorf("subRolePermissions: %w", err)
+			return false, fmt.Errorf("subDomainPermissions: %w", err)
 		}
 		domainLinkedPermissions = append(domainLinkedPermissions, oldDomainLinkedPermissions...)
 		err = processPolicyDifference(domainLinkedPermissions)
@@ -131,6 +131,18 @@ func AddDomain(domain *Domain) (bool, error) {
 		return false, err
 	}
 
+	if affected != 0 {
+		domainLinkedPermissions, err := subDomainPermissions(domain)
+		if err != nil {
+			return false, fmt.Errorf("subDomainPermissions: %w", err)
+		}
+
+		err = processPolicyDifference(domainLinkedPermissions)
+		if err != nil {
+			return false, fmt.Errorf("processPolicyDifference: %w", err)
+		}
+	}
+
 	return affected != 0, nil
 }
 
@@ -139,12 +151,12 @@ func DeleteDomain(domain *Domain) (bool, error) {
 
 	domainLinkedPermissions, err := subDomainPermissions(domain)
 	if err != nil {
-		return false, fmt.Errorf("subRolePermissions: %w", err)
+		return false, fmt.Errorf("subDomainPermissions: %w", err)
 	}
 
 	roles, err := GetRolesByDomain(domainId)
 	if err != nil {
-		return false, fmt.Errorf("GetPermissionsByDomain: %w", err)
+		return false, fmt.Errorf("GetRolesByDomain: %w", err)
 	}
 
 	for _, role := range roles {

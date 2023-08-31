@@ -179,6 +179,10 @@ func groupPolicies(policies [][]string) (map[string]groupedPolicy, error) {
 }
 
 func removePolicies(policies [][]string, permissionMap map[string]*Permission) error {
+	if len(policies) == 0 {
+		return nil
+	}
+
 	groupedPolicies, err := groupPolicies(policies)
 	if err != nil {
 		return fmt.Errorf("groupPolicies: %w", err)
@@ -204,6 +208,10 @@ func removePolicies(policies [][]string, permissionMap map[string]*Permission) e
 }
 
 func createPolicies(policies [][]string, permissionMap map[string]*Permission, withSave bool) error {
+	if len(policies) == 0 {
+		return nil
+	}
+
 	groupedPolicies, err := groupPolicies(policies)
 	if err != nil {
 		return fmt.Errorf("groupPolicies: %w", err)
@@ -235,6 +243,10 @@ func createPolicies(policies [][]string, permissionMap map[string]*Permission, w
 }
 
 func processPolicyDifference(sourcePermissions []*Permission) error {
+	if len(sourcePermissions) == 0 {
+		return nil
+	}
+
 	modelProcessed := make(map[string]bool)
 	permissions := make([]*Permission, 0, len(sourcePermissions))
 	oldPolicies := make([][]string, 0)

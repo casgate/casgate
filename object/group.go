@@ -133,7 +133,7 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 	if affected != 0 {
 		groupLinkedPermissions, err := subGroupPermissions(group)
 		if err != nil {
-			return false, fmt.Errorf("subRolePermissions: %w", err)
+			return false, fmt.Errorf("subGroupPermissions: %w", err)
 		}
 		groupLinkedPermissions = append(groupLinkedPermissions, oldGroupLinkedPermissions...)
 		err = processPolicyDifference(groupLinkedPermissions)
@@ -154,6 +154,18 @@ func AddGroup(group *Group) (bool, error) {
 	affected, err := ormer.Engine.Insert(group)
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		domainLinkedPermissions, err := subGroupPermissions(group)
+		if err != nil {
+			return false, fmt.Errorf("subGroupPermissions: %w", err)
+		}
+
+		err = processPolicyDifference(domainLinkedPermissions)
+		if err != nil {
+			return false, fmt.Errorf("processPolicyDifference: %w", err)
+		}
 	}
 
 	return affected != 0, nil
