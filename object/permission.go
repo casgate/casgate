@@ -222,13 +222,18 @@ func AddPermissionsInBatch(permissions []*Permission) bool {
 }
 
 func DeletePermission(permission *Permission) (bool, error) {
+	oldPermission, err := getPermission(permission.Owner, permission.Name)
+	if oldPermission == nil {
+		return false, nil
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{permission.Owner, permission.Name}).Delete(&Permission{})
 	if err != nil {
 		return false, err
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference([]*Permission{permission})
+		err = processPolicyDifference([]*Permission{oldPermission})
 		if err != nil {
 			return false, err
 		}

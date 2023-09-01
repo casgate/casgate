@@ -81,15 +81,11 @@ func calcRolePolicies(role *Role) ([]policyRole, error) {
 
 	policyGroups := make([]policyGroup, 0, len(roleGroups))
 	for _, group := range roleGroups {
-		var parentId string
-		if group.Owner != group.ParentId {
-			parentId = util.GetId(group.Owner, group.ParentId)
+		newPolicyGroups, err := calcGroupPolicies(group)
+		if err != nil {
+			return nil, fmt.Errorf("calcRolePolicies: %w", err)
 		}
-		policyGroups = append(policyGroups, policyGroup{
-			id:          group.GetId(),
-			name:        group.GetId(),
-			parentGroup: parentId,
-		})
+		policyGroups = append(policyGroups, newPolicyGroups...)
 	}
 
 	roleDomains, err := GetAncestorDomains(role.Domains...)
@@ -123,7 +119,8 @@ func joinEntitiesWithRole(role *Role, groups []policyGroup, domains []policyDoma
 	for _, policyPermissionItem := range policyRoles {
 		for _, group := range groups {
 			newRole := policyRole{
-				id: policyPermissionItem.id,
+				id:    policyPermissionItem.id,
+				empty: true,
 			}
 			if Contains(role.Groups, group.id) {
 				newRole = policyPermissionItem
@@ -134,9 +131,14 @@ func joinEntitiesWithRole(role *Role, groups []policyGroup, domains []policyDoma
 	}
 
 	for _, policyPermissionItem := range policyRoles {
+		if policyPermissionItem.empty {
+			continue
+		}
+
 		for _, domain := range domains {
 			newRole := policyRole{
-				id: policyPermissionItem.id,
+				id:    policyPermissionItem.id,
+				empty: true,
 			}
 			if Contains(role.Domains, domain.id) {
 				newRole = policyPermissionItem
@@ -233,15 +235,11 @@ func calcPermissionPolicies(permission *Permission) ([][]string, error) {
 
 	policyGroups := make([]policyGroup, 0, len(permissionGroups))
 	for _, group := range permissionGroups {
-		var parentId string
-		if group.Owner != group.ParentId {
-			parentId = util.GetId(group.Owner, group.ParentId)
+		newPolicyGroups, err := calcGroupPolicies(group)
+		if err != nil {
+			return nil, fmt.Errorf("calcRolePolicies: %w", err)
 		}
-		policyGroups = append(policyGroups, policyGroup{
-			id:          group.GetId(),
-			name:        group.GetId(),
-			parentGroup: parentId,
-		})
+		policyGroups = append(policyGroups, newPolicyGroups...)
 	}
 
 	permissionDomains, err := GetAncestorDomains(permission.Domains...)
@@ -279,7 +277,8 @@ func joinEntitiesWithPermission(permission *Permission, roles []policyRole, grou
 	for _, policyPermissionItem := range policyPermissions {
 		for _, role := range roles {
 			newPermission := policyPermission{
-				id: policyPermissionItem.id,
+				id:    policyPermissionItem.id,
+				empty: true,
 			}
 			if Contains(permission.Roles, role.id) {
 				newPermission = policyPermissionItem
@@ -290,9 +289,14 @@ func joinEntitiesWithPermission(permission *Permission, roles []policyRole, grou
 	}
 
 	for _, policyPermissionItem := range policyPermissions {
+		if policyPermissionItem.empty {
+			continue
+		}
+
 		for _, group := range groups {
 			newPermission := policyPermission{
-				id: policyPermissionItem.id,
+				id:    policyPermissionItem.id,
+				empty: true,
 			}
 			if Contains(permission.Groups, group.id) {
 				newPermission = policyPermissionItem
@@ -303,9 +307,14 @@ func joinEntitiesWithPermission(permission *Permission, roles []policyRole, grou
 	}
 
 	for _, policyPermissionItem := range policyPermissions {
+		if policyPermissionItem.empty {
+			continue
+		}
+
 		for _, domain := range domains {
 			newPermission := policyPermission{
-				id: policyPermissionItem.id,
+				id:    policyPermissionItem.id,
+				empty: true,
 			}
 			if Contains(permission.Domains, domain.id) {
 				newPermission = policyPermissionItem
@@ -316,4 +325,34 @@ func joinEntitiesWithPermission(permission *Permission, roles []policyRole, grou
 	}
 
 	return policyPermissions
+}
+
+func calcGroupPolicies(group *Group) ([]policyGroup, error) {
+	policyGroups := make([]policyGroup, 1)
+
+	var parentId string
+	if group.Owner != group.ParentId {
+		parentId = util.GetId(group.Owner, group.ParentId)
+	}
+	policyGroups = append(policyGroups, policyGroup{
+		id:          group.GetId(),
+		name:        group.GetId(),
+		parentGroup: parentId,
+	})
+
+	users, err := GetGroupUsers(group.GetId())
+	if err != nil {
+		return nil, fmt.Errorf("GetGroupUsers: %w", err)
+	}
+
+	for _, user := range users {
+		policyGroups = append(policyGroups, policyGroup{
+			id:          group.GetId(),
+			name:        group.GetId(),
+			parentGroup: parentId,
+			user:        user.GetId(),
+		})
+	}
+
+	return policyGroups, nil
 }

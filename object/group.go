@@ -120,7 +120,7 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 		}
 	}
 
-	oldGroupLinkedPermissions, err := subGroupPermissions(oldGroup)
+	oldGroupReachablePermissions, err := subGroupPermissions(oldGroup)
 	if err != nil {
 		return false, fmt.Errorf("subGroupPermissions: %w", err)
 	}
@@ -131,12 +131,12 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 	}
 
 	if affected != 0 {
-		groupLinkedPermissions, err := subGroupPermissions(group)
+		groupReachablePermissions, err := subGroupPermissions(group)
 		if err != nil {
 			return false, fmt.Errorf("subGroupPermissions: %w", err)
 		}
-		groupLinkedPermissions = append(groupLinkedPermissions, oldGroupLinkedPermissions...)
-		err = processPolicyDifference(groupLinkedPermissions)
+		groupReachablePermissions = append(groupReachablePermissions, oldGroupReachablePermissions...)
+		err = processPolicyDifference(groupReachablePermissions)
 		if err != nil {
 			return false, fmt.Errorf("processPolicyDifference: %w", err)
 		}
@@ -157,12 +157,12 @@ func AddGroup(group *Group) (bool, error) {
 	}
 
 	if affected != 0 {
-		domainLinkedPermissions, err := subGroupPermissions(group)
+		domainReachablePermissions, err := subGroupPermissions(group)
 		if err != nil {
 			return false, fmt.Errorf("subGroupPermissions: %w", err)
 		}
 
-		err = processPolicyDifference(domainLinkedPermissions)
+		err = processPolicyDifference(domainReachablePermissions)
 		if err != nil {
 			return false, fmt.Errorf("processPolicyDifference: %w", err)
 		}
@@ -212,7 +212,7 @@ func DeleteGroup(group *Group) (bool, error) {
 		return false, errors.New("group has linked permissions")
 	}
 
-	groupLinkedPermissions, err := subGroupPermissions(group)
+	groupReachablePermissions, err := subGroupPermissions(group)
 	if err != nil {
 		return false, fmt.Errorf("subGroupPermissions: %w", err)
 	}
@@ -223,7 +223,7 @@ func DeleteGroup(group *Group) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference(groupLinkedPermissions)
+		err = processPolicyDifference(groupReachablePermissions)
 		if err != nil {
 			return false, fmt.Errorf("processPolicyDifference: %w", err)
 		}

@@ -90,6 +90,7 @@ class CustomPolicyMappingRulesTable extends React.Component {
       {value: "permission.domain.subdomain", label: i18next.t("model:permission.domain.subdomain")},
       {value: "permission.group.name", label: i18next.t("model:permission.group.name")},
       {value: "permission.group.parentgroup", label: i18next.t("model:permission.group.parentgroup")},
+      {value: "permission.group.user", label: i18next.t("model:permission.group.user")},
       {value: "role.name", label: i18next.t("model:role.name")},
       {value: "role.subrole", label: i18next.t("model:role.subrole")},
       {value: "role.domain.name", label: i18next.t("model:role.domain.name")},
@@ -97,6 +98,7 @@ class CustomPolicyMappingRulesTable extends React.Component {
       {value: "role.user", label: i18next.t("model:role.user")},
       {value: "role.group.name", label: i18next.t("model:role.group.name")},
       {value: "role.group.parentgroup", label: i18next.t("model:role.group.parentgroup")},
+      {value: "role.group.user", label: i18next.t("model:role.group.user")},
     ];
   }
 

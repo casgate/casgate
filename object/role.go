@@ -106,7 +106,7 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		}
 	}
 
-	oldRoleLinkedPermissions, err := subRolePermissions(oldRole)
+	oldRoleReachablePermissions, err := subRolePermissions(oldRole)
 	if err != nil {
 		return false, fmt.Errorf("subRolePermissions: %w", err)
 	}
@@ -117,12 +117,12 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	}
 
 	if affected != 0 {
-		roleLinkedPermissions, err := subRolePermissions(role)
+		roleReachablePermissions, err := subRolePermissions(role)
 		if err != nil {
 			return false, fmt.Errorf("subRolePermissions: %w", err)
 		}
-		roleLinkedPermissions = append(roleLinkedPermissions, oldRoleLinkedPermissions...)
-		err = processPolicyDifference(roleLinkedPermissions)
+		roleReachablePermissions = append(roleReachablePermissions, oldRoleReachablePermissions...)
+		err = processPolicyDifference(roleReachablePermissions)
 		if err != nil {
 			return false, fmt.Errorf("processPolicyDifference: %w", err)
 		}
@@ -138,12 +138,12 @@ func AddRole(role *Role) (bool, error) {
 	}
 
 	if affected != 0 {
-		roleLinkedPermissions, err := subRolePermissions(role)
+		roleReachablePermissions, err := subRolePermissions(role)
 		if err != nil {
 			return false, fmt.Errorf("subRolePermissions: %w", err)
 		}
 
-		err = processPolicyDifference(roleLinkedPermissions)
+		err = processPolicyDifference(roleReachablePermissions)
 		if err != nil {
 			return false, err
 		}
@@ -164,16 +164,16 @@ func AddRoles(roles []*Role) bool {
 	}
 
 	if affected != 0 {
-		rolesLinkedPermissions := make([]*Permission, 0)
+		rolesReachablePermissions := make([]*Permission, 0)
 		for _, role := range roles {
-			roleLinkedPermissions, err := subRolePermissions(role)
+			roleReachablePermissions, err := subRolePermissions(role)
 			if err != nil {
 				panic(err)
 			}
-			rolesLinkedPermissions = append(rolesLinkedPermissions, roleLinkedPermissions...)
+			rolesReachablePermissions = append(rolesReachablePermissions, roleReachablePermissions...)
 		}
 
-		err = processPolicyDifference(rolesLinkedPermissions)
+		err = processPolicyDifference(rolesReachablePermissions)
 		if err != nil {
 			panic(err)
 		}
@@ -210,7 +210,7 @@ func AddRolesInBatch(roles []*Role) bool {
 
 func DeleteRole(role *Role) (bool, error) {
 	roleId := role.GetId()
-	oldRoleLinkedPermissions, err := subRolePermissions(role)
+	oldRoleReachablePermissions, err := subRolePermissions(role)
 	if err != nil {
 		return false, fmt.Errorf("subRolePermissions: %w", err)
 	}
@@ -220,7 +220,7 @@ func DeleteRole(role *Role) (bool, error) {
 		return false, err
 	}
 
-	for _, permission := range oldRoleLinkedPermissions {
+	for _, permission := range oldRoleReachablePermissions {
 		if Contains(permission.Roles, roleId) {
 			permission.Roles = util.DeleteVal(permission.Roles, roleId)
 			_, err := UpdatePermission(permission.GetId(), permission)
@@ -249,7 +249,7 @@ func DeleteRole(role *Role) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference(oldRoleLinkedPermissions)
+		err = processPolicyDifference(oldRoleReachablePermissions)
 		if err != nil {
 			return false, fmt.Errorf("processPolicyDifference: %w", err)
 		}

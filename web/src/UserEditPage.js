@@ -138,7 +138,7 @@ class UserEditPage extends React.Component {
   }
 
   getUserOrganization() {
-    return this.state.organizations.filter(organization => organization.name === this.state.user.owner)[0];
+    return this.state.organizations.filter(organization => organization.name === this.state.user?.owner)[0];
   }
 
   isGroupsVisible() {

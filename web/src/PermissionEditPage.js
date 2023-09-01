@@ -462,8 +462,8 @@ class PermissionEditPage extends React.Component {
   }
 
   submitPermissionEdit(willExist) {
-    if (this.state.permission.users.length === 0 && this.state.permission.roles.length === 0) {
-      Setting.showMessage("error", "The users and roles cannot be empty at the same time");
+    if (this.state.permission.users.length === 0 && this.state.permission.roles.length === 0 && this.state.permission.groups.length === 0) {
+      Setting.showMessage("error", "The users and roles and groups cannot be empty at the same time");
       return;
     }
     // if (this.state.permission.domains.length === 0) {

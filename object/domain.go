@@ -100,7 +100,7 @@ func UpdateDomain(id string, domain *Domain) (bool, error) {
 		}
 	}
 
-	oldDomainLinkedPermissions, err := subDomainPermissions(oldDomain)
+	oldDomainReachablePermissions, err := subDomainPermissions(oldDomain)
 	if err != nil {
 		return false, fmt.Errorf("subRolePermissions: %w", err)
 	}
@@ -111,12 +111,12 @@ func UpdateDomain(id string, domain *Domain) (bool, error) {
 	}
 
 	if affected != 0 {
-		domainLinkedPermissions, err := subDomainPermissions(domain)
+		domainReachablePermissions, err := subDomainPermissions(domain)
 		if err != nil {
 			return false, fmt.Errorf("subDomainPermissions: %w", err)
 		}
-		domainLinkedPermissions = append(domainLinkedPermissions, oldDomainLinkedPermissions...)
-		err = processPolicyDifference(domainLinkedPermissions)
+		domainReachablePermissions = append(domainReachablePermissions, oldDomainReachablePermissions...)
+		err = processPolicyDifference(domainReachablePermissions)
 		if err != nil {
 			return false, fmt.Errorf("processPolicyDifference: %w", err)
 		}
@@ -132,12 +132,12 @@ func AddDomain(domain *Domain) (bool, error) {
 	}
 
 	if affected != 0 {
-		domainLinkedPermissions, err := subDomainPermissions(domain)
+		domainReachablePermissions, err := subDomainPermissions(domain)
 		if err != nil {
 			return false, fmt.Errorf("subDomainPermissions: %w", err)
 		}
 
-		err = processPolicyDifference(domainLinkedPermissions)
+		err = processPolicyDifference(domainReachablePermissions)
 		if err != nil {
 			return false, fmt.Errorf("processPolicyDifference: %w", err)
 		}
@@ -149,7 +149,7 @@ func AddDomain(domain *Domain) (bool, error) {
 func DeleteDomain(domain *Domain) (bool, error) {
 	domainId := domain.GetId()
 
-	domainLinkedPermissions, err := subDomainPermissions(domain)
+	domainReachablePermissions, err := subDomainPermissions(domain)
 	if err != nil {
 		return false, fmt.Errorf("subDomainPermissions: %w", err)
 	}
@@ -190,7 +190,7 @@ func DeleteDomain(domain *Domain) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference(domainLinkedPermissions)
+		err = processPolicyDifference(domainReachablePermissions)
 		if err != nil {
 			return false, fmt.Errorf("processPolicyDifference: %w", err)
 		}

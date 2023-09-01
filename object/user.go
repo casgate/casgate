@@ -565,10 +565,35 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 		return 0, err
 	}
 
+	oldUser, err := getUser(owner, name)
+	if err != nil {
+		return 0, err
+	}
+
+	oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
+	if err != nil {
+		return 0, fmt.Errorf("reachablePermissionsByUser: %w", err)
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).Cols(columns...).Update(user)
 	if err != nil {
 		return 0, err
 	}
+
+	if affected != 0 {
+		reachablePermissions, err := reachablePermissionsByUser(user)
+		if err != nil {
+			return 0, fmt.Errorf("reachablePermissionsByUser: %w", err)
+		}
+
+		reachablePermissions = append(reachablePermissions, oldReachablePermissions...)
+
+		err = processPolicyDifference(reachablePermissions)
+		if err != nil {
+			return 0, fmt.Errorf("processPolicyDifference: %w", err)
+		}
+	}
+
 	return affected, nil
 }
 
@@ -607,9 +632,27 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 		return false, err
 	}
 
+	oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
+	if err != nil {
+		return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(user)
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		reachablePermissions, err := reachablePermissionsByUser(user)
+		if err != nil {
+			return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
+		}
+		reachablePermissions = append(reachablePermissions, oldReachablePermissions...)
+
+		err = processPolicyDifference(reachablePermissions)
+		if err != nil {
+			return false, fmt.Errorf("processPolicyDifference: %w", err)
+		}
 	}
 
 	return affected != 0, nil
@@ -666,6 +709,18 @@ func AddUser(user *User) (bool, error) {
 		return false, err
 	}
 
+	if affected != 0 {
+		reachablePermissions, err := reachablePermissionsByUser(user)
+		if err != nil {
+			return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
+		}
+
+		err = processPolicyDifference(reachablePermissions)
+		if err != nil {
+			return false, fmt.Errorf("processPolicyDifference: %w", err)
+		}
+	}
+
 	return affected != 0, nil
 }
 
@@ -697,6 +752,22 @@ func AddUsers(users []*User) (bool, error) {
 	if err != nil {
 		if !strings.Contains(err.Error(), "Duplicate entry") {
 			return false, err
+		}
+	}
+
+	if affected != 0 {
+		reachablePermissions := make([]*Permission, 0)
+		for _, user := range users {
+			reachablePermissionsByUser, err := reachablePermissionsByUser(user)
+			if err != nil {
+				return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
+			}
+			reachablePermissions = append(reachablePermissions, reachablePermissionsByUser...)
+		}
+
+		err = processPolicyDifference(reachablePermissions)
+		if err != nil {
+			return false, fmt.Errorf("processPolicyDifference: %w", err)
 		}
 	}
 
@@ -738,9 +809,21 @@ func DeleteUser(user *User) (bool, error) {
 		return false, err
 	}
 
+	oldReachablePermissions, err := reachablePermissionsByUser(user)
+	if err != nil {
+		return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{user.Owner, user.Name}).Delete(&User{})
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		err = processPolicyDifference(oldReachablePermissions)
+		if err != nil {
+			return false, fmt.Errorf("processPolicyDifference: %w", err)
+		}
 	}
 
 	return affected != 0, nil
@@ -890,4 +973,43 @@ func (user *User) IsApplicationAdmin(application *Application) bool {
 	}
 
 	return (user.Owner == application.Organization && user.IsAdmin) || user.IsGlobalAdmin
+}
+
+func reachablePermissionsByUser(user *User) ([]*Permission, error) {
+	result := make([]*Permission, 0)
+
+	userPermissions, userRoles, err := GetPermissionsAndRolesByUser(user.GetId())
+	if err != nil {
+		return nil, fmt.Errorf("GetPermissionsAndRolesByUser: %w", err)
+	}
+
+	result = append(result, userPermissions...)
+
+	for _, role := range userRoles {
+		rolePermissions, err := subRolePermissions(role)
+		if err != nil {
+			return nil, fmt.Errorf("subRolePermissions: %w", err)
+		}
+		if len(rolePermissions) > 0 {
+			result = append(result, rolePermissions...)
+		}
+	}
+
+	for _, groupId := range user.Groups {
+		subGroup, err := GetGroup(groupId)
+		if err != nil {
+			return nil, fmt.Errorf("GetGroup: %w", err)
+		}
+
+		permissions, err := subGroupPermissions(subGroup)
+		if err != nil {
+			return nil, fmt.Errorf("GetPermissionsByGroup: %w", err)
+		}
+		if len(permissions) > 0 {
+			result = append(result, permissions...)
+		}
+
+	}
+
+	return result, nil
 }

@@ -30,6 +30,7 @@ type policyGroup struct {
 	id          string
 	name        string
 	parentGroup string
+	user        string
 }
 
 type policyRole struct {
@@ -39,6 +40,8 @@ type policyRole struct {
 	user    string
 	group   policyGroup
 	subRole string
+
+	empty bool
 }
 
 type policyPermission struct {
@@ -50,6 +53,8 @@ type policyPermission struct {
 	user     string
 	group    policyGroup
 	effect   string
+
+	empty bool
 }
 
 func getValueByItem(policyPermissionItem policyPermission, policyItem string) (string, bool) {
@@ -78,6 +83,8 @@ func getValueByItem(policyPermissionItem policyPermission, policyItem string) (s
 		value = policyPermissionItem.role.group.name
 	case "role.group.parentgroup":
 		value = policyPermissionItem.role.group.parentGroup
+	case "role.group.user":
+		value = policyPermissionItem.role.group.user
 	case "permission.action":
 		value = policyPermissionItem.action
 	case "permission.resource":
@@ -94,6 +101,8 @@ func getValueByItem(policyPermissionItem policyPermission, policyItem string) (s
 		value = policyPermissionItem.group.name
 	case "permission.group.parentgroup":
 		value = policyPermissionItem.group.parentGroup
+	case "permission.group.user":
+		value = policyPermissionItem.group.user
 	}
 
 	if value == "" {
