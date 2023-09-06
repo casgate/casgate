@@ -190,7 +190,7 @@ func getPermissionPolicies(permissions []*Permission) ([][]string, error) {
 		return nil, nil
 	}
 
-	permissionIds := make([]string, len(permissions))
+	permissionIds := make([]string, 0, len(permissions))
 	for _, permission := range permissions {
 		permissionIds = append(permissionIds, permission.GetId())
 	}

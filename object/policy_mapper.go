@@ -257,71 +257,72 @@ func processPolicyDifference(sourcePermissions []*Permission) error {
 	}
 
 	modelProcessed := make(map[string]bool)
-	permissions := make([]*Permission, 0, len(sourcePermissions))
-	oldPolicies := make([][]string, 0)
+
 	for _, permission := range sourcePermissions {
-		if !modelProcessed[util.GetId(permission.Owner, permission.Model)] {
-			modelPermissions, err := GetPermissionsByModel(permission.Owner, permission.Model)
+		modelAdapterKey := util.GetId(permission.Owner, permission.Model) + permission.Adapter
+		if !modelProcessed[modelAdapterKey] {
+			permissions, err := GetPermissionsByModel(permission.Owner, permission.Model)
 			if err != nil {
 				return fmt.Errorf("GetPermissionsByModel: %w", err)
 			}
 
-			modelPolicies, err := getPermissionPolicies(modelPermissions)
+			oldPolicies := make([][]string, 0)
+
+			modelPolicies, err := getPermissionPolicies(permissions)
 			if err != nil {
 				return fmt.Errorf("getPermissionPolicies: %w", err)
 			}
 			oldPolicies = append(oldPolicies, modelPolicies...)
 
-			permissions = append(permissions, modelPermissions...)
-			modelProcessed[util.GetId(permission.Owner, permission.Model)] = true
+			permissionMap := make(map[string]*Permission, len(permissions))
+			newPolicies := make([][]string, 0)
+			for _, permission := range permissions {
+				policies, err := calcPermissionPolicies(permission)
+				if err != nil {
+					return fmt.Errorf("calcPermissionPolicies: %w", err)
+				}
+				newPolicies = append(newPolicies, policies...)
+
+				permissionMap[permission.GetId()] = permission
+			}
+
+			newPoliciesHash := make(map[string]bool, len(newPolicies))
+			for _, policy := range newPolicies {
+				key := getPolicyKeyWithPermissionID(policy)
+				newPoliciesHash[key] = true
+			}
+
+			oldPoliciesHash := make(map[string]bool, len(oldPolicies))
+			oldPoliciesToRemove := make([][]string, 0, len(oldPolicies))
+			for _, policy := range oldPolicies {
+				key := getPolicyKeyWithPermissionID(policy)
+				if newPoliciesHash[key] {
+					oldPoliciesHash[getPolicyKey(policy)] = true
+				} else {
+					oldPoliciesToRemove = append(oldPoliciesToRemove, policy)
+				}
+			}
+
+			newPoliciesToCreate := make([][]string, 0, len(oldPolicies))
+			for _, policy := range newPolicies {
+				key := getPolicyKey(policy)
+				if !oldPoliciesHash[key] {
+					newPoliciesToCreate = append(newPoliciesToCreate, policy)
+				}
+			}
+
+			err = removePolicies(oldPoliciesToRemove, permissionMap)
+			if err != nil {
+				return fmt.Errorf("removePolicy: %w", err)
+			}
+
+			err = createPolicies(newPoliciesToCreate, permissionMap, true)
+			if err != nil {
+				return fmt.Errorf("createPolicy: %w", err)
+			}
+
+			modelProcessed[modelAdapterKey] = true
 		}
-	}
-
-	permissionMap := make(map[string]*Permission, len(permissions))
-	newPolicies := make([][]string, 0)
-	for _, permission := range permissions {
-		policies, err := calcPermissionPolicies(permission)
-		if err != nil {
-			return fmt.Errorf("calcPermissionPolicies: %w", err)
-		}
-		newPolicies = append(newPolicies, policies...)
-
-		permissionMap[permission.GetId()] = permission
-	}
-
-	newPoliciesHash := make(map[string]bool, len(newPolicies))
-	for _, policy := range newPolicies {
-		key := getPolicyKeyWithPermissionID(policy)
-		newPoliciesHash[key] = true
-	}
-
-	oldPoliciesHash := make(map[string]bool, len(oldPolicies))
-	oldPoliciesToRemove := make([][]string, 0, len(oldPolicies))
-	for _, policy := range oldPolicies {
-		key := getPolicyKeyWithPermissionID(policy)
-		if newPoliciesHash[key] {
-			oldPoliciesHash[getPolicyKey(policy)] = true
-		} else {
-			oldPoliciesToRemove = append(oldPoliciesToRemove, policy)
-		}
-	}
-
-	newPoliciesToCreate := make([][]string, 0, len(oldPolicies))
-	for _, policy := range newPolicies {
-		key := getPolicyKey(policy)
-		if !oldPoliciesHash[key] {
-			newPoliciesToCreate = append(newPoliciesToCreate, policy)
-		}
-	}
-
-	err := removePolicies(oldPoliciesToRemove, permissionMap)
-	if err != nil {
-		return fmt.Errorf("removePolicy: %w", err)
-	}
-
-	err = createPolicies(newPoliciesToCreate, permissionMap, true)
-	if err != nil {
-		return fmt.Errorf("createPolicy: %w", err)
 	}
 
 	return nil
