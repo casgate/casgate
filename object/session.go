@@ -156,7 +156,7 @@ func DeleteSession(id string) (bool, error) {
 		}
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name, application}).Delete(&Session{})
+	affected, err := ormer.Engine.ID(core.PK{owner, name, application.Name}).Delete(&Session{})
 	if err != nil {
 		return false, err
 	}
