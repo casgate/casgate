@@ -76,6 +76,11 @@ func (l *LdapAutoSynchronizer) StopAutoSync(ldapId string) {
 
 // autosync goroutine
 func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, stopChan chan struct{}) error {
+	err := syncUsers(ldap)
+	if err != nil {
+		return err
+	}
+
 	ticker := time.NewTicker(time.Duration(ldap.AutoSync) * time.Minute)
 	defer ticker.Stop()
 	for {
@@ -84,34 +89,42 @@ func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, stopChan chan struct{}) e
 			logs.Info(fmt.Sprintf("autoSync goroutine for %s stopped", ldap.Id))
 			return nil
 		case <-ticker.C:
-		}
-
-		err := UpdateLdapSyncTime(ldap.Id)
-		if err != nil {
-			return err
-		}
-
-		// fetch all users
-		conn, err := ldap.GetLdapConn()
-		if err != nil {
-			logs.Warning(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
-			continue
-		}
-
-		users, err := conn.GetLdapUsers(ldap)
-		if err != nil {
-			logs.Warning(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
-			continue
-		}
-
-		existed, failed, err := SyncLdapUsers(ldap.Owner, AutoAdjustLdapUser(users), ldap.Id)
-		if len(failed) != 0 {
-			logs.Warning(fmt.Sprintf("ldap autosync,%d new users,but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)), failed)
-			logs.Warning(err.Error())
-		} else {
-			logs.Info(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)))
+			err = syncUsers(ldap)
+			if err != nil {
+				return err
+			}
 		}
 	}
+}
+
+func syncUsers(ldap *Ldap) error {
+	// fetch all users
+	conn, err := ldap.GetLdapConn()
+	if err != nil {
+		logs.Warning(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
+		return nil
+	}
+
+	users, err := conn.GetLdapUsers(ldap)
+	if err != nil {
+		logs.Warning(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
+		return nil
+	}
+
+	existed, failed, err := SyncLdapUsers(ldap.Owner, AutoAdjustLdapUser(users), ldap.Id)
+	if len(failed) != 0 {
+		logs.Warning(fmt.Sprintf("ldap autosync,%d new users,but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)), failed)
+		logs.Warning(err.Error())
+	} else {
+		logs.Info(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)))
+	}
+
+	err = UpdateLdapSyncTime(ldap.Id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // LdapAutoSynchronizerStartUpAll
