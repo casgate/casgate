@@ -1013,3 +1013,14 @@ func reachablePermissionsByUser(user *User) ([]*Permission, error) {
 
 	return result, nil
 }
+
+func groupUsersByGroups(users []*User) map[string][]*User {
+	result := make(map[string][]*User, 0)
+	for _, user := range users {
+		for _, group := range user.Groups {
+			result[group] = append(result[group], user)
+		}
+	}
+
+	return result
+}

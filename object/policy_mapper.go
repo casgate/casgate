@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/casdoor/casdoor/util"
 )
@@ -119,13 +120,9 @@ func refillWithEmptyStrings(row []string) []string {
 	return row
 }
 
-func generatePolicies(policyPermissions []policyPermission, permission *Permission) ([][]string, error) {
+func generatePolicies(policyPermissions []policyPermission, permission *Permission, permissionModel *Model) ([][]string, error) {
 	policies := make([][]string, 0)
 
-	permissionModel, err := getModel(permission.Owner, permission.Model)
-	if err != nil {
-		return nil, fmt.Errorf("getModel: %w", err)
-	}
 	policyRules := permissionModel.policyMappingRules(len(permission.Domains) > 0)
 
 	for _, policyPermissionItem := range policyPermissions {
@@ -161,25 +158,28 @@ func Contains(s []string, e string) bool {
 }
 
 type groupedPolicy struct {
-	g [][]string
-	p [][]string
+	g            [][]string
+	p            [][]string
+	permissionID string
 }
 
-func groupPolicies(policies [][]string) (map[string]groupedPolicy, error) {
+func groupPolicies(policies [][]string, permissionMap map[string]*Permission) (map[string]groupedPolicy, error) {
 	groupedPolicies := make(map[string]groupedPolicy, len(policies))
 	for _, policy := range policies {
-		if _, ok := groupedPolicies[policy[6]]; !ok {
-			groupedPolicies[policy[6]] = groupedPolicy{g: make([][]string, 0), p: make([][]string, 0)}
+		permission := permissionMap[policy[6]]
+		modelAdapterKey := util.GetId(permission.Owner, permission.Model) + permission.Adapter
+		if _, ok := groupedPolicies[modelAdapterKey]; !ok {
+			groupedPolicies[modelAdapterKey] = groupedPolicy{g: make([][]string, 0), p: make([][]string, 0), permissionID: permission.GetId()}
 		}
 		switch policy[0][0] {
 		case 'p':
-			temp := groupedPolicies[policy[6]]
-			temp.p = append(groupedPolicies[policy[6]].p, policy)
-			groupedPolicies[policy[6]] = temp
+			temp := groupedPolicies[modelAdapterKey]
+			temp.p = append(groupedPolicies[modelAdapterKey].p, policy)
+			groupedPolicies[modelAdapterKey] = temp
 		case 'g':
-			temp := groupedPolicies[policy[6]]
-			temp.g = append(groupedPolicies[policy[6]].g, policy)
-			groupedPolicies[policy[6]] = temp
+			temp := groupedPolicies[modelAdapterKey]
+			temp.g = append(groupedPolicies[modelAdapterKey].g, policy)
+			groupedPolicies[modelAdapterKey] = temp
 		default:
 			return nil, fmt.Errorf("wrong policy type")
 		}
@@ -192,13 +192,13 @@ func removePolicies(policies [][]string, permissionMap map[string]*Permission) e
 		return nil
 	}
 
-	groupedPolicies, err := groupPolicies(policies)
+	groupedPolicies, err := groupPolicies(policies, permissionMap)
 	if err != nil {
 		return fmt.Errorf("groupPolicies: %w", err)
 	}
 
-	for permissionID, groupedPolicy := range groupedPolicies {
-		enforcer := getPermissionEnforcer(permissionMap[permissionID])
+	for _, groupedPolicy := range groupedPolicies {
+		enforcer := getPermissionEnforcer(permissionMap[groupedPolicy.permissionID])
 
 		for _, policy := range groupedPolicy.p {
 			if _, ok := enforcer.GetModel()["p"][policy[0]]; ok {
@@ -216,20 +216,19 @@ func removePolicies(policies [][]string, permissionMap map[string]*Permission) e
 	return nil
 }
 
-func createPolicies(policies [][]string, permissionMap map[string]*Permission, withSave bool) error {
+func createPolicies(policies [][]string, permissionMap map[string]*Permission) error {
 	if len(policies) == 0 {
 		return nil
 	}
 
-	groupedPolicies, err := groupPolicies(policies)
+	groupedPolicies, err := groupPolicies(policies, permissionMap)
 	if err != nil {
 		return fmt.Errorf("groupPolicies: %w", err)
 	}
 
 	created := make(map[string]bool, len(policies))
-	for permissionID, groupedPolicy := range groupedPolicies {
-		enforcer := getPermissionEnforcer(permissionMap[permissionID])
-		enforcer.EnableAutoSave(withSave)
+	for _, groupedPolicy := range groupedPolicies {
+		enforcer := getPermissionEnforcer(permissionMap[groupedPolicy.permissionID])
 
 		for _, policy := range groupedPolicy.p {
 			key := getPolicyKey(policy)
@@ -249,6 +248,14 @@ func createPolicies(policies [][]string, permissionMap map[string]*Permission, w
 	}
 
 	return nil
+}
+
+type Entities struct {
+	DomainsTree  map[string]*DomainTreeNode
+	RolesTree    map[string]*RoleTreeNode
+	GroupsTree   map[string]*GroupTreeNode
+	UsersByGroup map[string][]*User
+	Model        *Model
 }
 
 func processPolicyDifference(sourcePermissions []*Permission) error {
@@ -276,8 +283,37 @@ func processPolicyDifference(sourcePermissions []*Permission) error {
 
 			permissionMap := make(map[string]*Permission, len(permissions))
 			newPolicies := make([][]string, 0)
+
+			owner := permission.Owner
+			var ownerEntities Entities
+			ownerDomains, err := GetDomains(owner)
+			if err != nil {
+				return fmt.Errorf("GetDomains: %w", err)
+			}
+			ownerRoles, err := GetRoles(owner)
+			if err != nil {
+				return fmt.Errorf("GetRoles: %w", err)
+			}
+			ownerGroups, err := GetGroups(owner)
+			if err != nil {
+				return fmt.Errorf("GetGroups: %w", err)
+			}
+			ownerUsers, err := GetUsers(owner)
+			if err != nil {
+				return fmt.Errorf("GetUsers: %w", err)
+			}
+			permissionModel, err := getModel(permission.Owner, permission.Model)
+			if err != nil {
+				return fmt.Errorf("getModel: %w", err)
+			}
+			ownerEntities.DomainsTree = makeAncestorDomainsTreeMap(ownerDomains)
+			ownerEntities.RolesTree = makeAncestorRolesTreeMap(ownerRoles)
+			ownerEntities.GroupsTree = makeAncestorGroupsTreeMap(ownerGroups)
+			ownerEntities.UsersByGroup = groupUsersByGroups(ownerUsers)
+			ownerEntities.Model = permissionModel
+
 			for _, permission := range permissions {
-				policies, err := calcPermissionPolicies(permission)
+				policies, err := calcPermissionPolicies(permission, ownerEntities)
 				if err != nil {
 					return fmt.Errorf("calcPermissionPolicies: %w", err)
 				}
@@ -316,7 +352,7 @@ func processPolicyDifference(sourcePermissions []*Permission) error {
 				return fmt.Errorf("removePolicy: %w", err)
 			}
 
-			err = createPolicies(newPoliciesToCreate, permissionMap, true)
+			err = createPolicies(newPoliciesToCreate, permissionMap)
 			if err != nil {
 				return fmt.Errorf("createPolicy: %w", err)
 			}
@@ -329,9 +365,9 @@ func processPolicyDifference(sourcePermissions []*Permission) error {
 }
 
 func getPolicyKey(policy []string) string {
-	return fmt.Sprintf("%s_%s_%s_%s_%s_%s", policy[0], policy[1], policy[2], policy[3], policy[4], policy[5])
+	return strings.Join(policy[:6], "_")
 }
 
 func getPolicyKeyWithPermissionID(policy []string) string {
-	return fmt.Sprintf("%s_%s_%s_%s_%s_%s_%s", policy[0], policy[1], policy[2], policy[3], policy[4], policy[5], policy[6])
+	return strings.Join(policy[:7], "_")
 }

@@ -259,7 +259,7 @@ func DeleteRole(role *Role) (bool, error) {
 }
 
 func (role *Role) GetId() string {
-	return fmt.Sprintf("%s/%s", role.Owner, role.Name)
+	return role.Owner + "/" + role.Name //string concatenation 10x faster than fmt.Sprintf
 }
 
 func GetRolesByDomain(domainId string) ([]*Role, error) {
@@ -368,17 +368,8 @@ func GetRolesByNamePrefix(owner string, prefix string) ([]*Role, error) {
 
 // GetAncestorRoles returns a list of roles that contain the given roleIds
 func GetAncestorRoles(roleIds ...string) ([]*Role, error) {
-	var (
-		result  = []*Role{}
-		roleMap = make(map[string]*Role)
-		visited = make(map[string]bool)
-	)
 	if len(roleIds) == 0 {
-		return result, nil
-	}
-
-	for _, roleId := range roleIds {
-		visited[roleId] = true
+		return nil, nil
 	}
 
 	owner, _ := util.GetOwnerAndNameFromIdNoCheck(roleIds[0])
@@ -388,29 +379,59 @@ func GetAncestorRoles(roleIds ...string) ([]*Role, error) {
 		return nil, err
 	}
 
-	for _, r := range allRoles {
-		roleMap[r.GetId()] = r
-	}
+	allRolesTree := makeAncestorRolesTreeMap(allRoles)
 
-	// Second, find all the roles that contain father roles
-	for _, r := range allRoles {
-		isContain, ok := visited[r.GetId()]
-		if isContain {
-			result = append(result, r)
-		} else if !ok {
-			rId := r.GetId()
-			visitedC := make(map[string]bool)
-			for _, roleId := range roleIds {
-				visitedC[roleId] = true
-			}
-			visited[rId] = containsRole(r, roleMap, visitedC, roleIds...)
-			if visited[rId] {
-				result = append(result, r)
-			}
-		}
+	return getAncestorRoles(allRolesTree, roleIds...)
+}
+
+func getAncestorRoles(allRolesTree map[string]*RoleTreeNode, roleIds ...string) ([]*Role, error) {
+	result := make([]*Role, 0)
+
+	for _, roleId := range roleIds {
+		result = append(result, getAncestorRolesById(roleId, allRolesTree)...)
 	}
 
 	return result, nil
+}
+
+type RoleTreeNode struct {
+	ancestors []*RoleTreeNode
+	value     *Role
+	children  []*RoleTreeNode
+}
+
+func getAncestorRolesById(roleId string, allRolesTree map[string]*RoleTreeNode) []*Role {
+	result := make([]*Role, 0)
+	curnode := allRolesTree[roleId]
+	result = append(result, curnode.value)
+	if len(curnode.ancestors) > 0 {
+		for _, ancestor := range curnode.ancestors {
+			result = append(result, getAncestorRolesById(ancestor.value.GetId(), allRolesTree)...)
+		}
+	}
+
+	return result
+}
+
+func makeAncestorRolesTreeMap(roles []*Role) map[string]*RoleTreeNode {
+	var roleMap = make(map[string]*RoleTreeNode, 0)
+
+	for _, role := range roles {
+		roleMap[role.GetId()] = &RoleTreeNode{
+			ancestors: nil,
+			value:     role,
+			children:  nil,
+		}
+	}
+
+	for _, role := range roles {
+		for _, subrole := range role.Roles {
+			roleMap[subrole].ancestors = append(roleMap[subrole].ancestors, roleMap[role.GetId()])
+			roleMap[role.GetId()].children = append(roleMap[role.GetId()].children, roleMap[subrole])
+		}
+	}
+
+	return roleMap
 }
 
 // containsRole is a helper function to check if a roles is related to any role in the given list roles

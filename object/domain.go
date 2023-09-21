@@ -200,7 +200,7 @@ func DeleteDomain(domain *Domain) (bool, error) {
 }
 
 func (domain *Domain) GetId() string {
-	return fmt.Sprintf("%s/%s", domain.Owner, domain.Name)
+	return domain.Owner + "/" + domain.Name //string concatenation 10x faster than fmt.Sprintf
 }
 
 func domainChangeTrigger(oldName string, newName string) error {
@@ -293,19 +293,6 @@ func subDomainPermissions(domain *Domain) ([]*Permission, error) {
 
 // GetAncestorDomains returns a list of domains that contain the given domainIds
 func GetAncestorDomains(domainIds ...string) ([]*Domain, error) {
-	var (
-		result    = []*Domain{}
-		domainMap = make(map[string]*Domain)
-		visited   = make(map[string]bool)
-	)
-	if len(domainIds) == 0 {
-		return result, nil
-	}
-
-	for _, domainId := range domainIds {
-		visited[domainId] = true
-	}
-
 	owner, _ := util.GetOwnerAndNameFromIdNoCheck(domainIds[0])
 
 	allDomains, err := GetDomains(owner)
@@ -313,51 +300,61 @@ func GetAncestorDomains(domainIds ...string) ([]*Domain, error) {
 		return nil, err
 	}
 
-	for _, r := range allDomains {
-		domainMap[r.GetId()] = r
-	}
+	allDomainsTree := makeAncestorDomainsTreeMap(allDomains)
 
-	for _, r := range allDomains {
-		isContain, ok := visited[r.GetId()]
-		if isContain {
-			result = append(result, r)
-		} else if !ok {
-			dId := r.GetId()
-			visitedC := make(map[string]bool)
-			for _, domainId := range domainIds {
-				visitedC[domainId] = true
-			}
-			visited[dId] = containsDomain(r, domainMap, visitedC, domainIds...)
-			if visited[dId] {
-				result = append(result, r)
-			}
-		}
+	return getAncestorDomains(allDomainsTree, domainIds...)
+}
+
+func getAncestorDomains(allDomainsTree map[string]*DomainTreeNode, domainIds ...string) ([]*Domain, error) {
+	result := make([]*Domain, 0)
+
+	for _, domainId := range domainIds {
+		result = append(result, getAncestorDomainsById(domainId, allDomainsTree)...)
 	}
 
 	return result, nil
 }
 
-// containsDomain is a helper function to check if a domain is related to any domain in the given list domains
-func containsDomain(domain *Domain, domainMap map[string]*Domain, visited map[string]bool, domainIds ...string) bool {
-	domainId := domain.GetId()
-	if isContain, ok := visited[domainId]; ok {
-		return isContain
-	}
+type DomainTreeNode struct {
+	ancestors []*DomainTreeNode
+	value     *Domain
+	children  []*DomainTreeNode
+}
 
-	visited[domain.GetId()] = false
-
-	for _, subDomain := range domain.Domains {
-		if util.HasString(domainIds, subDomain) {
-			return true
-		}
-
-		r, ok := domainMap[subDomain]
-		if ok && containsDomain(r, domainMap, visited, domainIds...) {
-			return true
+func getAncestorDomainsById(domainId string, allDomainsTree map[string]*DomainTreeNode) []*Domain {
+	result := make([]*Domain, 0)
+	curnode := allDomainsTree[domainId]
+	result = append(result, curnode.value)
+	if len(curnode.ancestors) > 0 {
+		for _, ancestor := range curnode.ancestors {
+			result = append(result, getAncestorDomainsById(ancestor.value.GetId(), allDomainsTree)...)
 		}
 	}
 
-	return false
+	return result
+}
+
+func makeAncestorDomainsTreeMap(domains []*Domain) map[string]*DomainTreeNode {
+	var (
+		domainMap = make(map[string]*DomainTreeNode, 0)
+	)
+
+	for _, domain := range domains {
+		domainMap[domain.GetId()] = &DomainTreeNode{
+			ancestors: nil,
+			value:     domain,
+			children:  nil,
+		}
+	}
+
+	for _, domain := range domains {
+		for _, subdomain := range domain.Domains {
+			domainMap[subdomain].ancestors = append(domainMap[subdomain].ancestors, domainMap[domain.GetId()])
+			domainMap[domain.GetId()].children = append(domainMap[domain.GetId()].children, domainMap[subdomain])
+		}
+	}
+
+	return domainMap
 }
 
 func getDomainsInDomain(domainId string, visited map[string]struct{}) ([]*Domain, error) {

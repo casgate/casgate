@@ -270,28 +270,71 @@ func ConvertToTreeData(groups []*Group, parentId string) []*Group {
 
 // GetAncestorGroups returns a list of groups that contain the given groupIds
 func GetAncestorGroups(groupIds ...string) ([]*Group, error) {
-	result := make([]*Group, 0, len(groupIds))
+	if len(groupIds) == 0 {
+		return nil, nil
+	}
+
+	owner, _ := util.GetOwnerAndNameFromIdNoCheck(groupIds[0])
+
+	allGroups, err := GetGroups(owner)
+	if err != nil {
+		return nil, err
+	}
+
+	allGroupsTree := makeAncestorGroupsTreeMap(allGroups)
+
+	return getAncestorGroups(allGroupsTree, groupIds...)
+}
+
+func getAncestorGroups(allGroupsTreeMap map[string]*GroupTreeNode, groupIds ...string) ([]*Group, error) {
+	result := make([]*Group, 0)
+
 	for _, groupId := range groupIds {
-		group, err := getGroup(util.GetOwnerAndNameFromId(groupId))
-		if err != nil {
-			return nil, fmt.Errorf("getGroup: %w", err)
-		}
-		if group == nil {
-			return nil, nil
-		}
-
-		result = append(result, group)
-		if group.ParentId != group.Owner {
-			ancestorGroups, err := GetAncestorGroups(util.GetId(group.Owner, group.ParentId))
-			if err != nil {
-				return nil, fmt.Errorf("GetAncestorGroups: %w", err)
-			}
-			result = append(result, ancestorGroups...)
-		}
-
+		result = append(result, getAncestorGroupsById(groupId, allGroupsTreeMap)...)
 	}
 
 	return result, nil
+}
+
+type GroupTreeNode struct {
+	ancestors []*GroupTreeNode
+	value     *Group
+	children  []*GroupTreeNode
+}
+
+func getAncestorGroupsById(groupId string, allGroupsTree map[string]*GroupTreeNode) []*Group {
+	result := make([]*Group, 0)
+	curnode := allGroupsTree[groupId]
+	result = append(result, curnode.value)
+	if len(curnode.ancestors) > 0 {
+		for _, ancestor := range curnode.ancestors {
+			result = append(result, getAncestorGroupsById(ancestor.value.GetId(), allGroupsTree)...)
+		}
+	}
+
+	return result
+}
+
+func makeAncestorGroupsTreeMap(groups []*Group) map[string]*GroupTreeNode {
+	var groupMap = make(map[string]*GroupTreeNode, 0)
+
+	for _, group := range groups {
+		groupMap[group.GetId()] = &GroupTreeNode{
+			ancestors: nil,
+			value:     group,
+			children:  nil,
+		}
+	}
+
+	for _, group := range groups {
+		if group.Owner != group.ParentId {
+			parentId := util.GetId(group.Owner, group.ParentId)
+			groupMap[parentId].children = append(groupMap[parentId].children, groupMap[group.GetId()])
+			groupMap[group.GetId()].ancestors = append(groupMap[group.GetId()].children, groupMap[parentId])
+		}
+	}
+
+	return groupMap
 }
 
 func RemoveUserFromGroup(owner, name, groupId string) (bool, error) {

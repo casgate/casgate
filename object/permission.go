@@ -15,7 +15,6 @@
 package object
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
@@ -115,30 +114,7 @@ func GetPermission(id string) (*Permission, error) {
 	return getPermission(owner, name)
 }
 
-// checkPermissionValid verifies if the permission is valid
-func checkPermissionValid(permission *Permission) error {
-	newPolicies, err := calcPermissionPolicies(permission)
-	if err != nil {
-		return fmt.Errorf("calcPermissionPolicies: %w", err)
-	}
-
-	permissionMap := make(map[string]*Permission, 1)
-	permissionMap[permission.GetId()] = permission
-
-	err = createPolicies(newPolicies, permissionMap, false)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func UpdatePermission(id string, permission *Permission) (bool, error) {
-	err := checkPermissionValid(permission)
-	if err != nil {
-		return false, err
-	}
-
 	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
 	oldPermission, err := getPermission(owner, name)
 	if oldPermission == nil {

@@ -73,25 +73,27 @@ func spawnPolicyPermissionsByField(permissions []policyPermission, field string,
 	return policyPermissions
 }
 
-func calcRolePolicies(role *Role) ([]policyRole, error) {
-	roleGroups, err := GetAncestorGroups(role.Groups...)
+func calcRolePolicies(role *Role, entities Entities) ([]policyRole, error) {
+	roleGroups, err := getAncestorGroups(entities.GroupsTree, role.Groups...)
 	if err != nil {
 		return nil, fmt.Errorf("GetAncestorGroups: %w", err)
 	}
 
 	policyGroups := make([]policyGroup, 0, len(roleGroups))
 	for _, group := range roleGroups {
-		newPolicyGroups, err := calcGroupPolicies(group)
+		newPolicyGroups, err := calcGroupPolicies(entities.UsersByGroup[group.GetId()], group)
 		if err != nil {
 			return nil, fmt.Errorf("calcRolePolicies: %w", err)
 		}
 		policyGroups = append(policyGroups, newPolicyGroups...)
 	}
 
-	roleDomains, err := GetAncestorDomains(role.Domains...)
+	//logs.Error("GetAncestorDomains start ", role.GetId(), time.Now())
+	roleDomains, err := getAncestorDomains(entities.DomainsTree, role.Domains...)
 	if err != nil {
 		return nil, fmt.Errorf("GetAncestorDomains: %w", err)
 	}
+	//logs.Error("GetAncestorDomains stop ", role.GetId(), time.Now())
 
 	policyDomains := make([]policyDomain, 0, len(roleDomains))
 	for _, domain := range roleDomains {
@@ -212,37 +214,37 @@ func getPermissionPolicies(permissions []*Permission) ([][]string, error) {
 	return result, nil
 }
 
-func calcPermissionPolicies(permission *Permission) ([][]string, error) {
+func calcPermissionPolicies(permission *Permission, entities Entities) ([][]string, error) {
 	policyRoles := make([]policyRole, 0)
 
-	permissionRoles, err := GetAncestorRoles(permission.Roles...)
+	permissionRoles, err := getAncestorRoles(entities.RolesTree, permission.Roles...)
 	if err != nil {
 		return nil, fmt.Errorf("GetAncestorRoles: %w", err)
 	}
 
 	for _, role := range permissionRoles {
-		newPolicyRoles, err := calcRolePolicies(role)
+		newPolicyRoles, err := calcRolePolicies(role, entities)
 		if err != nil {
 			return nil, fmt.Errorf("calcRolePolicies: %w", err)
 		}
 		policyRoles = append(policyRoles, newPolicyRoles...)
 	}
 
-	permissionGroups, err := GetAncestorGroups(permission.Groups...)
+	permissionGroups, err := getAncestorGroups(entities.GroupsTree, permission.Groups...)
 	if err != nil {
 		return nil, fmt.Errorf("GetAncestorGroups: %w", err)
 	}
 
 	policyGroups := make([]policyGroup, 0, len(permissionGroups))
 	for _, group := range permissionGroups {
-		newPolicyGroups, err := calcGroupPolicies(group)
+		newPolicyGroups, err := calcGroupPolicies(entities.UsersByGroup[group.GetId()], group)
 		if err != nil {
 			return nil, fmt.Errorf("calcRolePolicies: %w", err)
 		}
 		policyGroups = append(policyGroups, newPolicyGroups...)
 	}
 
-	permissionDomains, err := GetAncestorDomains(permission.Domains...)
+	permissionDomains, err := getAncestorDomains(entities.DomainsTree, permission.Domains...)
 	if err != nil {
 		return nil, fmt.Errorf("GetAncestorDomains: %w", err)
 	}
@@ -264,7 +266,7 @@ func calcPermissionPolicies(permission *Permission) ([][]string, error) {
 
 	policyPermissions := joinEntitiesWithPermission(permission, policyRoles, policyGroups, policyDomains)
 
-	strPolicies, err := generatePolicies(policyPermissions, permission)
+	strPolicies, err := generatePolicies(policyPermissions, permission, entities.Model)
 	if err != nil {
 		return nil, fmt.Errorf("generatePolicies: %w", err)
 	}
@@ -327,7 +329,7 @@ func joinEntitiesWithPermission(permission *Permission, roles []policyRole, grou
 	return policyPermissions
 }
 
-func calcGroupPolicies(group *Group) ([]policyGroup, error) {
+func calcGroupPolicies(users []*User, group *Group) ([]policyGroup, error) {
 	policyGroups := make([]policyGroup, 1)
 
 	var parentId string
@@ -339,11 +341,6 @@ func calcGroupPolicies(group *Group) ([]policyGroup, error) {
 		name:        group.GetId(),
 		parentGroup: parentId,
 	})
-
-	users, err := GetGroupUsers(group.GetId())
-	if err != nil {
-		return nil, fmt.Errorf("GetGroupUsers: %w", err)
-	}
 
 	for _, user := range users {
 		policyGroups = append(policyGroups, policyGroup{
