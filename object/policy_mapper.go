@@ -325,6 +325,7 @@ func processPolicyDifference(sourcePermissions []*Permission) error {
 			memlimit := debug.SetMemoryLimit(math.MaxInt64)
 
 			for i, permission := range permissions {
+				i, permission := i, permission
 				g.Go(func() error {
 					policies, err := calcPermissionPolicies(permission, ownerEntities)
 					if err != nil {
