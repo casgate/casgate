@@ -36,7 +36,7 @@ var defaultPolicyDomainMappingRules = [][]string{
 }
 
 func spawnPolicyPermissions(permission *Permission) []policyPermission {
-	policyPermissions := make([]policyPermission, 0, 1)
+	policyPermissions := make([]policyPermission, 0, multiplyLenEntities(len(permission.Resources), len(permission.Users), len(permission.Actions)))
 	policyPermissions = append(policyPermissions, policyPermission{
 		id:     permission.GetId(),
 		effect: permission.Effect,
@@ -88,12 +88,10 @@ func calcRolePolicies(role *Role, entities Entities) ([]policyRole, error) {
 		policyGroups = append(policyGroups, newPolicyGroups...)
 	}
 
-	//logs.Error("GetAncestorDomains start ", role.GetId(), time.Now())
 	roleDomains, err := getAncestorDomains(entities.DomainsTree, role.Domains...)
 	if err != nil {
 		return nil, fmt.Errorf("GetAncestorDomains: %w", err)
 	}
-	//logs.Error("GetAncestorDomains stop ", role.GetId(), time.Now())
 
 	policyDomains := make([]policyDomain, 0, len(roleDomains))
 	for _, domain := range roleDomains {
@@ -116,7 +114,9 @@ func calcRolePolicies(role *Role, entities Entities) ([]policyRole, error) {
 }
 
 func joinEntitiesWithRole(role *Role, groups []policyGroup, domains []policyDomain) []policyRole {
-	policyRoles := spawnPolicyRoles(role)
+	spawnedPolicyRoles := spawnPolicyRoles(role)
+	policyRoles := make([]policyRole, 0, multiplyLenEntities(len(spawnedPolicyRoles), len(groups), len(domains)))
+	policyRoles = append(policyRoles, spawnedPolicyRoles...)
 
 	for _, policyPermissionItem := range policyRoles {
 		for _, group := range groups {
@@ -154,7 +154,7 @@ func joinEntitiesWithRole(role *Role, groups []policyGroup, domains []policyDoma
 }
 
 func spawnPolicyRoles(role *Role) []policyRole {
-	policyRoles := make([]policyRole, 0)
+	policyRoles := make([]policyRole, 0, multiplyLenEntities(len(role.Users), len(role.Roles)))
 	policyRoles = append(policyRoles, policyRole{
 		id:   role.GetId(),
 		name: role.GetId(),
@@ -215,13 +215,12 @@ func getPermissionPolicies(permissions []*Permission) ([][]string, error) {
 }
 
 func calcPermissionPolicies(permission *Permission, entities Entities) ([][]string, error) {
-	policyRoles := make([]policyRole, 0)
-
 	permissionRoles, err := getAncestorRoles(entities.RolesTree, permission.Roles...)
 	if err != nil {
 		return nil, fmt.Errorf("GetAncestorRoles: %w", err)
 	}
 
+	policyRoles := make([]policyRole, 0, len(permissionRoles))
 	for _, role := range permissionRoles {
 		newPolicyRoles, err := calcRolePolicies(role, entities)
 		if err != nil {
@@ -275,7 +274,9 @@ func calcPermissionPolicies(permission *Permission, entities Entities) ([][]stri
 }
 
 func joinEntitiesWithPermission(permission *Permission, roles []policyRole, groups []policyGroup, domains []policyDomain) []policyPermission {
-	policyPermissions := spawnPolicyPermissions(permission)
+	spawnedPolicyPermissions := spawnPolicyPermissions(permission)
+	policyPermissions := make([]policyPermission, 0, multiplyLenEntities(len(spawnedPolicyPermissions), len(roles), len(groups), len(domains)))
+	policyPermissions = append(policyPermissions, spawnedPolicyPermissions...)
 	for _, policyPermissionItem := range policyPermissions {
 		for _, role := range roles {
 			newPermission := policyPermission{
@@ -352,4 +353,12 @@ func calcGroupPolicies(users []*User, group *Group) ([]policyGroup, error) {
 	}
 
 	return policyGroups, nil
+}
+
+func multiplyLenEntities(sizes ...int) int {
+	result := 1
+	for _, size := range sizes {
+		result = result * (size + 1)
+	}
+	return result + 1
 }

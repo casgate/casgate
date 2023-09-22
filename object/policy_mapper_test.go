@@ -67,7 +67,7 @@ func benchmarkUpdateRole(N int64, b *testing.B) {
 		b.StartTimer()
 		res, err := UpdateRole(roles[0].GetId(), roles[0])
 		if err != nil {
-			b.Errorf("processPolicyDifference error: %s", err)
+			b.Errorf("UpdateRole error: %s", err)
 		}
 		if res != true {
 			b.Errorf("update role result is false!")
@@ -91,6 +91,67 @@ func BenchmarkUpdateRole(b *testing.B) {
 	})
 	b.Run("UpdateRole2000", func(b *testing.B) {
 		benchmarkUpdateRole(2000, b)
+	})
+}
+
+func benchmarkDeleteRoleFromPermission(N int64, b *testing.B) {
+	testOrgName := fmt.Sprintf("%s-%d", testOrgNameDefault, N)
+	testModelName := fmt.Sprintf("%s-%d", testModelNameDefault, N)
+	InitConfig()
+	clearDB(testOrgName, testModelName)
+	err := generateInitialData(N, testOrgName, testModelName)
+	if err != nil {
+		b.Errorf("generateInitialData error: %s", err)
+	}
+
+	defer ormer.Engine.Close()
+	defer clearDB(testOrgName, testModelName)
+
+	permissions, err := GetPermissions(testOrgName)
+	if err != nil {
+		b.Errorf("GetRoles error: %s", err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		new_user := &User{
+			Owner: testOrgName,
+			Name:  fmt.Sprintf("user_test-%d", i),
+		}
+		_, err = AddUser(new_user)
+		if err != nil {
+			b.Errorf("AddUser: %s", err)
+		}
+		permissions[5].Users = append(permissions[5].Users, new_user.GetId())
+		permissions[5].Roles = []string{}
+		b.StartTimer()
+		res, err := UpdatePermission(permissions[5].GetId(), permissions[5])
+		if err != nil {
+			b.Errorf("UpdatePermission error: %s", err)
+		}
+		if res != true {
+			b.Errorf("update permission result is false!")
+		}
+	}
+	b.StopTimer()
+}
+
+func BenchmarkDeleteRoleFromPermission(b *testing.B) {
+	b.Run("DeleteRoleFromPermission50", func(b *testing.B) {
+		benchmarkDeleteRoleFromPermission(50, b)
+	})
+	b.Run("DeleteRoleFromPermission100", func(b *testing.B) {
+		benchmarkDeleteRoleFromPermission(100, b)
+	})
+	b.Run("DeleteRoleFromPermission200", func(b *testing.B) {
+		benchmarkDeleteRoleFromPermission(200, b)
+	})
+	b.Run("DeleteRoleFromPermission1000", func(b *testing.B) {
+		benchmarkDeleteRoleFromPermission(1000, b)
+	})
+	b.Run("DeleteRoleFromPermission2000", func(b *testing.B) {
+		benchmarkDeleteRoleFromPermission(2000, b)
 	})
 }
 

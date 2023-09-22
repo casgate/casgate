@@ -15,10 +15,14 @@
 package object
 
 import (
+	"context"
 	"fmt"
+	"math"
+	"runtime/debug"
 	"strings"
 
 	"github.com/casdoor/casdoor/util"
+	"golang.org/x/sync/errgroup"
 )
 
 type policyDomain struct {
@@ -312,15 +316,37 @@ func processPolicyDifference(sourcePermissions []*Permission) error {
 			ownerEntities.UsersByGroup = groupUsersByGroups(ownerUsers)
 			ownerEntities.Model = permissionModel
 
-			for _, permission := range permissions {
-				policies, err := calcPermissionPolicies(permission, ownerEntities)
-				if err != nil {
-					return fmt.Errorf("calcPermissionPolicies: %w", err)
-				}
-				newPolicies = append(newPolicies, policies...)
+			ctx := context.Background()
+			g, ctx := errgroup.WithContext(ctx)
+			resultPolicies := make([][][]string, len(permissions))
+
+			// disable gc for calcPolicies time and enable back after for optimization. (up to 10x faster)
+			gcpercent := debug.SetGCPercent(-1)
+			memlimit := debug.SetMemoryLimit(math.MaxInt64)
+
+			for i, permission := range permissions {
+				g.Go(func() error {
+					policies, err := calcPermissionPolicies(permission, ownerEntities)
+					if err != nil {
+						return fmt.Errorf("calcPermissionPolicies: %w", err)
+					}
+					resultPolicies[i] = policies
+					return nil
+				})
 
 				permissionMap[permission.GetId()] = permission
 			}
+
+			if err := g.Wait(); err != nil {
+				return fmt.Errorf("g.Wait: %w", err)
+			}
+
+			for _, policies := range resultPolicies {
+				newPolicies = append(newPolicies, policies...)
+			}
+
+			debug.SetGCPercent(gcpercent)
+			debug.SetMemoryLimit(memlimit)
 
 			newPoliciesHash := make(map[string]bool, len(newPolicies))
 			for _, policy := range newPolicies {
