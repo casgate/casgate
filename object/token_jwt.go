@@ -34,6 +34,8 @@ type Claims struct {
 type UserShort struct {
 	Owner string `xorm:"varchar(100) notnull pk" json:"owner"`
 	Name  string `xorm:"varchar(100) notnull pk" json:"name"`
+
+	Properties map[string]string `json:"properties,omitempty"`
 }
 
 type UserWithoutThirdIdp struct {
@@ -189,6 +191,19 @@ func getShortClaims(claims Claims) ClaimsShort {
 	return res
 }
 
+func getShortClaimsWithProperties(claims Claims) ClaimsShort {
+	res := ClaimsShort{
+		UserShort:        getShortUser(claims.User),
+		TokenType:        claims.TokenType,
+		Nonce:            claims.Nonce,
+		Scope:            claims.Scope,
+		RegisteredClaims: claims.RegisteredClaims,
+	}
+
+	res.UserShort.Properties = claims.User.Properties
+	return res
+}
+
 func getClaimsWithoutThirdIdp(claims Claims) ClaimsWithoutThirdIdp {
 	res := ClaimsWithoutThirdIdp{
 		UserWithoutThirdIdp: getUserWithoutThirdIdp(claims.User),
@@ -259,15 +274,24 @@ func generateJwtToken(application *Application, user *User, nonce string, scope 
 	var token *jwt.Token
 	var refreshToken *jwt.Token
 
-	// the JWT token length in "JWT-Empty" mode will be very short, as User object only has two properties: owner and name
-	if application.TokenFormat == "JWT-Empty" {
+	switch application.TokenFormat {
+	case "JWT-Empty":
+		// the JWT token length in "JWT-Empty" mode will be very short, as User object only has two properties: owner and name
 		claimsShort := getShortClaims(claims)
 
 		token = jwt.NewWithClaims(jwt.SigningMethodRS256, claimsShort)
 		claimsShort.ExpiresAt = jwt.NewNumericDate(refreshExpireTime)
 		claimsShort.TokenType = "refresh-token"
 		refreshToken = jwt.NewWithClaims(jwt.SigningMethodRS256, claimsShort)
-	} else {
+	case "JWT-Empty-With-Properties":
+		// the JWT token length in "JWT-Empty-With-Properties" mode will be short, as User object only has two properties: owner and name and user properties
+		claimsShort := getShortClaimsWithProperties(claims)
+
+		token = jwt.NewWithClaims(jwt.SigningMethodRS256, claimsShort)
+		claimsShort.ExpiresAt = jwt.NewNumericDate(refreshExpireTime)
+		claimsShort.TokenType = "refresh-token"
+		refreshToken = jwt.NewWithClaims(jwt.SigningMethodRS256, claimsShort)
+	default:
 		claimsWithoutThirdIdp := getClaimsWithoutThirdIdp(claims)
 
 		token = jwt.NewWithClaims(jwt.SigningMethodRS256, claimsWithoutThirdIdp)
