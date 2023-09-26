@@ -380,7 +380,7 @@ class ApplicationEditPage extends React.Component {
           </Col>
           <Col span={22} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.application.tokenFormat} onChange={(value => {this.updateApplicationField("tokenFormat", value);})}
-              options={["JWT", "JWT-Empty"].map((item) => Setting.getOption(item, item))}
+              options={["JWT", "JWT-Empty", "JWT-Empty-With-Properties"].map((item) => Setting.getOption(item, item))}
             />
           </Col>
         </Row>
