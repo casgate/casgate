@@ -136,9 +136,9 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 			return false, fmt.Errorf("subGroupPermissions: %w", err)
 		}
 		groupReachablePermissions = append(groupReachablePermissions, oldGroupReachablePermissions...)
-		err = processPolicyDifference(groupReachablePermissions)
+		err = ProcessPolicyDifference(groupReachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 
@@ -162,9 +162,9 @@ func AddGroup(group *Group) (bool, error) {
 			return false, fmt.Errorf("subGroupPermissions: %w", err)
 		}
 
-		err = processPolicyDifference(domainReachablePermissions)
+		err = ProcessPolicyDifference(domainReachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 
@@ -223,9 +223,9 @@ func DeleteGroup(group *Group) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference(groupReachablePermissions)
+		err = ProcessPolicyDifference(groupReachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 

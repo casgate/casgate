@@ -116,9 +116,9 @@ func UpdateDomain(id string, domain *Domain) (bool, error) {
 			return false, fmt.Errorf("subDomainPermissions: %w", err)
 		}
 		domainReachablePermissions = append(domainReachablePermissions, oldDomainReachablePermissions...)
-		err = processPolicyDifference(domainReachablePermissions)
+		err = ProcessPolicyDifference(domainReachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 
@@ -137,9 +137,9 @@ func AddDomain(domain *Domain) (bool, error) {
 			return false, fmt.Errorf("subDomainPermissions: %w", err)
 		}
 
-		err = processPolicyDifference(domainReachablePermissions)
+		err = ProcessPolicyDifference(domainReachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 
@@ -160,7 +160,7 @@ func DeleteDomain(domain *Domain) (bool, error) {
 	}
 
 	for _, role := range roles {
-		if Contains(role.Domains, domainId) {
+		if util.InSlice(role.Domains, domainId) {
 			role.Domains = util.DeleteVal(role.Domains, domainId)
 			_, err := UpdateRole(role.GetId(), role)
 			if err != nil {
@@ -175,7 +175,7 @@ func DeleteDomain(domain *Domain) (bool, error) {
 	}
 
 	for _, permission := range permissions {
-		if Contains(permission.Domains, domainId) {
+		if util.InSlice(permission.Domains, domainId) {
 			permission.Domains = util.DeleteVal(permission.Domains, domainId)
 			_, err := UpdatePermission(permission.GetId(), permission)
 			if err != nil {
@@ -190,9 +190,9 @@ func DeleteDomain(domain *Domain) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference(domainReachablePermissions)
+		err = ProcessPolicyDifference(domainReachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 

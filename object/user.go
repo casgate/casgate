@@ -588,9 +588,9 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 
 		reachablePermissions = append(reachablePermissions, oldReachablePermissions...)
 
-		err = processPolicyDifference(reachablePermissions)
+		err = ProcessPolicyDifference(reachablePermissions)
 		if err != nil {
-			return 0, fmt.Errorf("processPolicyDifference: %w", err)
+			return 0, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 
@@ -649,9 +649,9 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 		}
 		reachablePermissions = append(reachablePermissions, oldReachablePermissions...)
 
-		err = processPolicyDifference(reachablePermissions)
+		err = ProcessPolicyDifference(reachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 
@@ -715,9 +715,9 @@ func AddUser(user *User) (bool, error) {
 			return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
 		}
 
-		err = processPolicyDifference(reachablePermissions)
+		err = ProcessPolicyDifference(reachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 
@@ -765,9 +765,9 @@ func AddUsers(users []*User) (bool, error) {
 			reachablePermissions = append(reachablePermissions, reachablePermissionsByUser...)
 		}
 
-		err = processPolicyDifference(reachablePermissions)
+		err = ProcessPolicyDifference(reachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 
@@ -820,9 +820,9 @@ func DeleteUser(user *User) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference(oldReachablePermissions)
+		err = ProcessPolicyDifference(oldReachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 

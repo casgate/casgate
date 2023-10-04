@@ -122,9 +122,9 @@ func UpdateRole(id string, role *Role) (bool, error) {
 			return false, fmt.Errorf("subRolePermissions: %w", err)
 		}
 		roleReachablePermissions = append(roleReachablePermissions, oldRoleReachablePermissions...)
-		err = processPolicyDifference(roleReachablePermissions)
+		err = ProcessPolicyDifference(roleReachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 
@@ -143,7 +143,7 @@ func AddRole(role *Role) (bool, error) {
 			return false, fmt.Errorf("subRolePermissions: %w", err)
 		}
 
-		err = processPolicyDifference(roleReachablePermissions)
+		err = ProcessPolicyDifference(roleReachablePermissions)
 		if err != nil {
 			return false, err
 		}
@@ -173,7 +173,7 @@ func AddRoles(roles []*Role) bool {
 			rolesReachablePermissions = append(rolesReachablePermissions, roleReachablePermissions...)
 		}
 
-		err = processPolicyDifference(rolesReachablePermissions)
+		err = ProcessPolicyDifference(rolesReachablePermissions)
 		if err != nil {
 			panic(err)
 		}
@@ -221,7 +221,7 @@ func DeleteRole(role *Role) (bool, error) {
 	}
 
 	for _, permission := range oldRoleReachablePermissions {
-		if Contains(permission.Roles, roleId) {
+		if util.InSlice(permission.Roles, roleId) {
 			permission.Roles = util.DeleteVal(permission.Roles, roleId)
 			_, err := UpdatePermission(permission.GetId(), permission)
 			if err != nil {
@@ -234,7 +234,7 @@ func DeleteRole(role *Role) (bool, error) {
 		if ancestorRole.GetId() == roleId {
 			continue
 		}
-		if Contains(ancestorRole.Roles, roleId) {
+		if util.InSlice(ancestorRole.Roles, roleId) {
 			ancestorRole.Roles = util.DeleteVal(ancestorRole.Roles, roleId)
 			affected, err := UpdateRole(ancestorRole.GetId(), ancestorRole)
 			if err != nil || !affected {
@@ -249,9 +249,9 @@ func DeleteRole(role *Role) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference(oldRoleReachablePermissions)
+		err = ProcessPolicyDifference(oldRoleReachablePermissions)
 		if err != nil {
-			return false, fmt.Errorf("processPolicyDifference: %w", err)
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 

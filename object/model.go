@@ -130,9 +130,9 @@ func UpdateModel(id string, modelObj *Model) (bool, error) {
 				return false, err
 			}
 
-			err = processPolicyDifference(permissions)
+			err = ProcessPolicyDifference(permissions)
 			if err != nil {
-				return false, fmt.Errorf("processPolicyDifference: %w", err)
+				return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 			}
 		}
 	}
@@ -207,23 +207,6 @@ func (m *Model) initModel() error {
 	}
 
 	return nil
-}
-
-func (m *Model) policyMappingRules(domainExist bool) [][]string {
-	defaultRules := defaultPolicyMappingRules
-	if domainExist {
-		defaultRules = defaultPolicyDomainMappingRules
-	}
-
-	if m == nil {
-		return defaultRules
-	}
-
-	if m.CustomPolicyMapping {
-		return m.CustomPolicyMappingRules
-	}
-
-	return defaultRules
 }
 
 func equalRules(first, second [][]string) bool {

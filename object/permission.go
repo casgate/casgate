@@ -127,7 +127,7 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference([]*Permission{permission})
+		err = ProcessPolicyDifference([]*Permission{permission})
 		if err != nil {
 			return false, err
 		}
@@ -143,7 +143,7 @@ func AddPermission(permission *Permission) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference([]*Permission{permission})
+		err = ProcessPolicyDifference([]*Permission{permission})
 		if err != nil {
 			return false, err
 		}
@@ -165,7 +165,7 @@ func AddPermissions(permissions []*Permission) bool {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference(permissions)
+		err = ProcessPolicyDifference(permissions)
 		if err != nil {
 			panic(err)
 		}
@@ -209,7 +209,7 @@ func DeletePermission(permission *Permission) (bool, error) {
 	}
 
 	if affected != 0 {
-		err = processPolicyDifference([]*Permission{oldPermission})
+		err = ProcessPolicyDifference([]*Permission{oldPermission})
 		if err != nil {
 			return false, err
 		}
