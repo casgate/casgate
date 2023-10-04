@@ -773,7 +773,7 @@ class UserEditPage extends React.Component {
           </Col>
           <Col span={22} >
             {
-              Setting.getTags(this.state.user.roles.map(role => role.name))
+              Setting.getTags(this.state.user.roles?.map(role => role.name))
             }
           </Col>
         </Row>
