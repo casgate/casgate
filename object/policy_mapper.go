@@ -185,18 +185,17 @@ func groupPolicies(policies casbinPolicies, permissionMap map[string]*Permission
 		if _, ok := groupedPolicies[modelAdapterKey]; !ok {
 			groupedPolicies[modelAdapterKey] = groupedPolicy{g: make(casbinPolicies, 0), p: make(casbinPolicies, 0), permissionID: permission.GetId()}
 		}
+
+		temp := groupedPolicies[modelAdapterKey]
 		switch policy[0][0] {
 		case 'p':
-			temp := groupedPolicies[modelAdapterKey]
 			temp.p = append(groupedPolicies[modelAdapterKey].p, policy)
-			groupedPolicies[modelAdapterKey] = temp
 		case 'g':
-			temp := groupedPolicies[modelAdapterKey]
 			temp.g = append(groupedPolicies[modelAdapterKey].g, policy)
-			groupedPolicies[modelAdapterKey] = temp
 		default:
 			return nil, fmt.Errorf("wrong policy type")
 		}
+		groupedPolicies[modelAdapterKey] = temp
 	}
 	return groupedPolicies, nil
 }
