@@ -154,7 +154,7 @@ func GetRandomName() string {
 }
 
 func GetId(owner, name string) string {
-	return fmt.Sprintf("%s/%s", owner, name)
+	return owner + "/" + name //string concatenation 10x faster than fmt.Sprintf
 }
 
 func GetSessionId(owner, name, application string) string {

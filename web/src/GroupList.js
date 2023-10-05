@@ -57,7 +57,8 @@ class GroupListPage extends BaseListPage {
       updatedTime: moment().format(),
       displayName: `New Group - ${randomName}`,
       type: "Virtual",
-      parentId: this.props.account.owner,
+      tags: [],
+      parentId: owner,
       isTopGroup: true,
       isEnabled: true,
     };

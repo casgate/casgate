@@ -31,9 +31,11 @@ type Role struct {
 	DisplayName string `xorm:"varchar(100)" json:"displayName"`
 	Description string `xorm:"varchar(100)" json:"description"`
 
+	Groups    []string `xorm:"mediumtext" json:"groups"`
 	Users     []string `xorm:"mediumtext" json:"users"`
 	Roles     []string `xorm:"mediumtext" json:"roles"`
 	Domains   []string `xorm:"mediumtext" json:"domains"`
+	Tags      []string `xorm:"mediumtext" json:"tags"`
 	IsEnabled bool     `json:"isEnabled"`
 }
 
@@ -97,39 +99,6 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, nil
 	}
 
-	visited := map[string]struct{}{}
-
-	permissions, err := GetPermissionsByRole(id)
-	if err != nil {
-		return false, err
-	}
-
-	for _, permission := range permissions {
-		removeGroupingPolicies(permission)
-		removePolicies(permission)
-		visited[permission.GetId()] = struct{}{}
-	}
-
-	ancestorRoles, err := GetAncestorRoles(id)
-	if err != nil {
-		return false, err
-	}
-
-	for _, r := range ancestorRoles {
-		permissions, err := GetPermissionsByRole(r.GetId())
-		if err != nil {
-			return false, err
-		}
-
-		for _, permission := range permissions {
-			permissionId := permission.GetId()
-			if _, ok := visited[permissionId]; !ok {
-				removeGroupingPolicies(permission)
-				visited[permissionId] = struct{}{}
-			}
-		}
-	}
-
 	if name != role.Name {
 		err := roleChangeTrigger(name, role.Name)
 		if err != nil {
@@ -137,40 +106,25 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		}
 	}
 
+	oldRoleReachablePermissions, err := subRolePermissions(oldRole)
+	if err != nil {
+		return false, fmt.Errorf("subRolePermissions: %w", err)
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(role)
 	if err != nil {
 		return false, err
 	}
 
-	visited = map[string]struct{}{}
-	newRoleID := role.GetId()
-	permissions, err = GetPermissionsByRole(newRoleID)
-	if err != nil {
-		return false, err
-	}
-
-	for _, permission := range permissions {
-		addGroupingPolicies(permission)
-		addPolicies(permission)
-		visited[permission.GetId()] = struct{}{}
-	}
-
-	ancestorRoles, err = GetAncestorRoles(newRoleID)
-	if err != nil {
-		return false, err
-	}
-
-	for _, r := range ancestorRoles {
-		permissions, err := GetPermissionsByRole(r.GetId())
+	if affected != 0 {
+		roleReachablePermissions, err := subRolePermissions(role)
 		if err != nil {
-			return false, err
+			return false, fmt.Errorf("subRolePermissions: %w", err)
 		}
-		for _, permission := range permissions {
-			permissionId := permission.GetId()
-			if _, ok := visited[permissionId]; !ok {
-				addGroupingPolicies(permission)
-				visited[permissionId] = struct{}{}
-			}
+		roleReachablePermissions = append(roleReachablePermissions, oldRoleReachablePermissions...)
+		err = ProcessPolicyDifference(roleReachablePermissions)
+		if err != nil {
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
 		}
 	}
 
@@ -181,6 +135,18 @@ func AddRole(role *Role) (bool, error) {
 	affected, err := ormer.Engine.Insert(role)
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		roleReachablePermissions, err := subRolePermissions(role)
+		if err != nil {
+			return false, fmt.Errorf("subRolePermissions: %w", err)
+		}
+
+		err = ProcessPolicyDifference(roleReachablePermissions)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return affected != 0, nil
@@ -196,6 +162,23 @@ func AddRoles(roles []*Role) bool {
 			panic(err)
 		}
 	}
+
+	if affected != 0 {
+		rolesReachablePermissions := make([]*Permission, 0)
+		for _, role := range roles {
+			roleReachablePermissions, err := subRolePermissions(role)
+			if err != nil {
+				panic(err)
+			}
+			rolesReachablePermissions = append(rolesReachablePermissions, roleReachablePermissions...)
+		}
+
+		err = ProcessPolicyDifference(rolesReachablePermissions)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	return affected != 0
 }
 
@@ -227,16 +210,36 @@ func AddRolesInBatch(roles []*Role) bool {
 
 func DeleteRole(role *Role) (bool, error) {
 	roleId := role.GetId()
-	permissions, err := GetPermissionsByRole(roleId)
+	oldRoleReachablePermissions, err := subRolePermissions(role)
+	if err != nil {
+		return false, fmt.Errorf("subRolePermissions: %w", err)
+	}
+
+	ancestorRoles, err := GetAncestorRoles(roleId)
 	if err != nil {
 		return false, err
 	}
 
-	for _, permission := range permissions {
-		permission.Roles = util.DeleteVal(permission.Roles, roleId)
-		_, err := UpdatePermission(permission.GetId(), permission)
-		if err != nil {
-			return false, err
+	for _, permission := range oldRoleReachablePermissions {
+		if util.InSlice(permission.Roles, roleId) {
+			permission.Roles = util.DeleteVal(permission.Roles, roleId)
+			_, err := UpdatePermission(permission.GetId(), permission)
+			if err != nil {
+				return false, err
+			}
+		}
+	}
+
+	for _, ancestorRole := range ancestorRoles {
+		if ancestorRole.GetId() == roleId {
+			continue
+		}
+		if util.InSlice(ancestorRole.Roles, roleId) {
+			ancestorRole.Roles = util.DeleteVal(ancestorRole.Roles, roleId)
+			affected, err := UpdateRole(ancestorRole.GetId(), ancestorRole)
+			if err != nil || !affected {
+				return false, err
+			}
 		}
 	}
 
@@ -245,11 +248,28 @@ func DeleteRole(role *Role) (bool, error) {
 		return false, err
 	}
 
+	if affected != 0 {
+		err = ProcessPolicyDifference(oldRoleReachablePermissions)
+		if err != nil {
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
+		}
+	}
+
 	return affected != 0, nil
 }
 
 func (role *Role) GetId() string {
-	return fmt.Sprintf("%s/%s", role.Owner, role.Name)
+	return role.Owner + "/" + role.Name //string concatenation 10x faster than fmt.Sprintf
+}
+
+func GetRolesByDomain(domainId string) ([]*Role, error) {
+	roles := []*Role{}
+	err := ormer.Engine.Where("domains like ?", "%"+domainId+"\"%").Find(&roles)
+	if err != nil {
+		return roles, err
+	}
+
+	return roles, nil
 }
 
 func GetRolesByUser(userId string) ([]*Role, error) {
@@ -348,17 +368,8 @@ func GetRolesByNamePrefix(owner string, prefix string) ([]*Role, error) {
 
 // GetAncestorRoles returns a list of roles that contain the given roleIds
 func GetAncestorRoles(roleIds ...string) ([]*Role, error) {
-	var (
-		result  = []*Role{}
-		roleMap = make(map[string]*Role)
-		visited = make(map[string]bool)
-	)
 	if len(roleIds) == 0 {
-		return result, nil
-	}
-
-	for _, roleId := range roleIds {
-		visited[roleId] = true
+		return nil, nil
 	}
 
 	owner, _ := util.GetOwnerAndNameFromIdNoCheck(roleIds[0])
@@ -368,25 +379,30 @@ func GetAncestorRoles(roleIds ...string) ([]*Role, error) {
 		return nil, err
 	}
 
-	for _, r := range allRoles {
-		roleMap[r.GetId()] = r
-	}
+	allRolesTree := makeAncestorRolesTreeMap(allRoles)
 
-	// Second, find all the roles that contain father roles
-	for _, r := range allRoles {
-		isContain, ok := visited[r.GetId()]
-		if isContain {
-			result = append(result, r)
-		} else if !ok {
-			rId := r.GetId()
-			visited[rId] = containsRole(r, roleMap, visited, roleIds...)
-			if visited[rId] {
-				result = append(result, r)
-			}
+	return getAncestorEntities(allRolesTree, roleIds...)
+}
+
+func makeAncestorRolesTreeMap(roles []*Role) map[string]*TreeNode[*Role] {
+	var roleMap = make(map[string]*TreeNode[*Role], 0)
+
+	for _, role := range roles {
+		roleMap[role.GetId()] = &TreeNode[*Role]{
+			ancestors: nil,
+			value:     role,
+			children:  nil,
 		}
 	}
 
-	return result, nil
+	for _, role := range roles {
+		for _, subrole := range role.Roles {
+			roleMap[subrole].ancestors = append(roleMap[subrole].ancestors, roleMap[role.GetId()])
+			roleMap[role.GetId()].children = append(roleMap[role.GetId()].children, roleMap[subrole])
+		}
+	}
+
+	return roleMap
 }
 
 // containsRole is a helper function to check if a roles is related to any role in the given list roles
@@ -410,4 +426,26 @@ func containsRole(role *Role, roleMap map[string]*Role, visited map[string]bool,
 	}
 
 	return false
+}
+
+func subRolePermissions(role *Role) ([]*Permission, error) {
+	result := make([]*Permission, 0)
+
+	visited := map[string]struct{}{}
+	subRoles, err := getRolesInRole(role.GetId(), visited)
+	if err != nil {
+		return nil, fmt.Errorf("getRolesInRole: %w", err)
+	}
+
+	for _, subRole := range subRoles {
+		permissions, err := GetPermissionsByRole(subRole.GetId())
+		if err != nil {
+			return nil, fmt.Errorf("GetPermissionsByRole: %w", err)
+		}
+		if len(permissions) > 0 {
+			result = append(result, permissions...)
+		}
+	}
+
+	return result, nil
 }

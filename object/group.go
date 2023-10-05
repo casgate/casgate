@@ -29,13 +29,14 @@ type Group struct {
 	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
 	UpdatedTime string `xorm:"varchar(100)" json:"updatedTime"`
 
-	DisplayName  string  `xorm:"varchar(100)" json:"displayName"`
-	Manager      string  `xorm:"varchar(100)" json:"manager"`
-	ContactEmail string  `xorm:"varchar(100)" json:"contactEmail"`
-	Type         string  `xorm:"varchar(100)" json:"type"`
-	ParentId     string  `xorm:"varchar(100)" json:"parentId"`
-	IsTopGroup   bool    `xorm:"bool" json:"isTopGroup"`
-	Users        []*User `xorm:"-" json:"users"`
+	DisplayName  string   `xorm:"varchar(100)" json:"displayName"`
+	Manager      string   `xorm:"varchar(100)" json:"manager"`
+	ContactEmail string   `xorm:"varchar(100)" json:"contactEmail"`
+	Type         string   `xorm:"varchar(100)" json:"type"`
+	ParentId     string   `xorm:"varchar(100)" json:"parentId"`
+	IsTopGroup   bool     `xorm:"bool" json:"isTopGroup"`
+	Tags         []string `xorm:"mediumtext" json:"tags"`
+	Users        []*User  `xorm:"-" json:"users"`
 
 	Title    string   `json:"title,omitempty"`
 	Key      string   `json:"key,omitempty"`
@@ -113,15 +114,32 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 	}
 
 	if name != group.Name {
-		err := GroupChangeTrigger(name, group.Name)
+		err := GroupChangeTrigger(util.GetId(owner, name), util.GetId(group.Owner, group.Name))
 		if err != nil {
 			return false, err
 		}
 	}
 
+	oldGroupReachablePermissions, err := subGroupPermissions(oldGroup)
+	if err != nil {
+		return false, fmt.Errorf("subGroupPermissions: %w", err)
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(group)
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		groupReachablePermissions, err := subGroupPermissions(group)
+		if err != nil {
+			return false, fmt.Errorf("subGroupPermissions: %w", err)
+		}
+		groupReachablePermissions = append(groupReachablePermissions, oldGroupReachablePermissions...)
+		err = ProcessPolicyDifference(groupReachablePermissions)
+		if err != nil {
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
+		}
 	}
 
 	return affected != 0, nil
@@ -136,6 +154,18 @@ func AddGroup(group *Group) (bool, error) {
 	affected, err := ormer.Engine.Insert(group)
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		domainReachablePermissions, err := subGroupPermissions(group)
+		if err != nil {
+			return false, fmt.Errorf("subGroupPermissions: %w", err)
+		}
+
+		err = ProcessPolicyDifference(domainReachablePermissions)
+		if err != nil {
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
+		}
 	}
 
 	return affected != 0, nil
@@ -170,9 +200,33 @@ func DeleteGroup(group *Group) (bool, error) {
 		return false, errors.New("group has users")
 	}
 
+	if count, err := GetRoleCount(group.Owner, "`groups`", group.GetId()); err != nil {
+		return false, err
+	} else if count > 0 {
+		return false, errors.New("group has linked roles")
+	}
+
+	if count, err := GetPermissionCount(group.Owner, "`groups`", group.GetId()); err != nil {
+		return false, err
+	} else if count > 0 {
+		return false, errors.New("group has linked permissions")
+	}
+
+	groupReachablePermissions, err := subGroupPermissions(group)
+	if err != nil {
+		return false, fmt.Errorf("subGroupPermissions: %w", err)
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{group.Owner, group.Name}).Delete(&Group{})
 	if err != nil {
 		return false, err
+	}
+
+	if affected != 0 {
+		err = ProcessPolicyDifference(groupReachablePermissions)
+		if err != nil {
+			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
+		}
 	}
 
 	return affected != 0, nil
@@ -212,6 +266,46 @@ func ConvertToTreeData(groups []*Group, parentId string) []*Group {
 		}
 	}
 	return treeData
+}
+
+// GetAncestorGroups returns a list of groups that contain the given groupIds
+func GetAncestorGroups(groupIds ...string) ([]*Group, error) {
+	if len(groupIds) == 0 {
+		return nil, nil
+	}
+
+	owner, _ := util.GetOwnerAndNameFromIdNoCheck(groupIds[0])
+
+	allGroups, err := GetGroups(owner)
+	if err != nil {
+		return nil, err
+	}
+
+	allGroupsTree := makeAncestorGroupsTreeMap(allGroups)
+
+	return getAncestorEntities(allGroupsTree, groupIds...)
+}
+
+func makeAncestorGroupsTreeMap(groups []*Group) map[string]*TreeNode[*Group] {
+	var groupMap = make(map[string]*TreeNode[*Group], 0)
+
+	for _, group := range groups {
+		groupMap[group.GetId()] = &TreeNode[*Group]{
+			ancestors: nil,
+			value:     group,
+			children:  nil,
+		}
+	}
+
+	for _, group := range groups {
+		if group.Owner != group.ParentId {
+			parentId := util.GetId(group.Owner, group.ParentId)
+			groupMap[parentId].children = append(groupMap[parentId].children, groupMap[group.GetId()])
+			groupMap[group.GetId()].ancestors = append(groupMap[group.GetId()].children, groupMap[parentId])
+		}
+	}
+
+	return groupMap
 }
 
 func RemoveUserFromGroup(owner, name, groupId string) (bool, error) {
@@ -317,9 +411,113 @@ func GroupChangeTrigger(oldName, newName string) error {
 		}
 	}
 
+	permissions := []*Permission{}
+	err = session.Where(builder.Like{"`groups`", oldName}).Find(&permissions)
+	if err != nil {
+		return err
+	}
+
+	for _, permission := range permissions {
+		permission.Groups = util.ReplaceVal(permission.Groups, oldName, newName)
+		_, err := session.ID(core.PK{permission.Owner, permission.Name}).Cols("groups").Update(permission)
+		if err != nil {
+			return err
+		}
+	}
+
+	roles := []*Role{}
+	err = session.Where(builder.Like{"`groups`", oldName}).Find(&roles)
+	if err != nil {
+		return err
+	}
+
+	for _, role := range roles {
+		role.Groups = util.ReplaceVal(role.Groups, oldName, newName)
+		_, err := session.ID(core.PK{role.Owner, role.Name}).Cols("groups").Update(role)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = session.Commit()
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func getGroupsInGroup(groupId string) ([]*Group, error) {
+	group, err := GetGroup(groupId)
+	if err != nil {
+		return []*Group{}, err
+	}
+
+	if group == nil {
+		return []*Group{}, nil
+	}
+
+	subGroups, err := getGroupsByParentGroup(groupId)
+	groups := []*Group{group}
+
+	for _, subGroup := range subGroups {
+		r, err := getGroupsInGroup(subGroup.GetId())
+		if err != nil {
+			return []*Group{}, err
+		}
+
+		groups = append(groups, r...)
+	}
+
+	return groups, nil
+}
+
+func getGroupsByParentGroup(groupId string) ([]*Group, error) {
+	owner, parentName := util.GetOwnerAndNameFromId(groupId)
+
+	session := ormer.Engine.NewSession()
+	defer session.Close()
+
+	groups := []*Group{}
+	err := session.Where("owner=? and parent_id = ?", owner, parentName).Find(&groups)
+	if err != nil {
+		return nil, err
+	}
+
+	return groups, nil
+}
+
+func subGroupPermissions(group *Group) ([]*Permission, error) {
+	result := make([]*Permission, 0)
+
+	subGroups, err := getGroupsInGroup(group.GetId())
+	if err != nil {
+		return nil, fmt.Errorf("getGroupsInGroup: %w", err)
+	}
+	for _, subGroup := range subGroups {
+		permissions, err := GetPermissionsByGroup(subGroup.GetId())
+		if err != nil {
+			return nil, fmt.Errorf("GetPermissionsByGroup: %w", err)
+		}
+		if len(permissions) > 0 {
+			result = append(result, permissions...)
+		}
+
+		groupRoles, err := GetPaginationRoles(group.Owner, -1, -1, "`groups`", subGroup.GetId(), "", "")
+		if err != nil {
+			return nil, fmt.Errorf("GetPaginationRoles: %w", err)
+		}
+
+		for _, role := range groupRoles {
+			rolePermissions, err := subRolePermissions(role)
+			if err != nil {
+				return nil, fmt.Errorf("subRolePermissions: %w", err)
+			}
+			if len(rolePermissions) > 0 {
+				result = append(result, rolePermissions...)
+			}
+		}
+
+	}
+
+	return result, nil
 }

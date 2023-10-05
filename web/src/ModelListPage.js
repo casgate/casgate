@@ -48,6 +48,8 @@ class ModelListPage extends BaseListPage {
       displayName: `New Model - ${randomName}`,
       modelText: rbacModel,
       isEnabled: true,
+      customPolicyMapping: false,
+      customPolicyMappingRules: [],
     };
   }
 

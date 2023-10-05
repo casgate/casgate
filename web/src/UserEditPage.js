@@ -138,7 +138,7 @@ class UserEditPage extends React.Component {
   }
 
   getUserOrganization() {
-    return this.state.organizations.filter(organization => organization.name === this.state.user.owner)[0];
+    return this.state.organizations.filter(organization => organization.name === this.state.user?.owner)[0];
   }
 
   isGroupsVisible() {
@@ -773,7 +773,7 @@ class UserEditPage extends React.Component {
           </Col>
           <Col span={22} >
             {
-              Setting.getTags(this.state.user.roles.map(role => role.name))
+              Setting.getTags(this.state.user.roles?.map(role => role.name))
             }
           </Col>
         </Row>

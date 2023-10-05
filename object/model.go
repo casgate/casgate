@@ -15,6 +15,7 @@
 package object
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/casbin/casbin/v2/model"
@@ -29,8 +30,10 @@ type Model struct {
 	DisplayName string `xorm:"varchar(100)" json:"displayName"`
 	Description string `xorm:"varchar(100)" json:"description"`
 
-	ModelText string `xorm:"mediumtext" json:"modelText"`
-	IsEnabled bool   `json:"isEnabled"`
+	ModelText                string     `xorm:"mediumtext" json:"modelText"`
+	IsEnabled                bool       `json:"isEnabled"`
+	CustomPolicyMapping      bool       `json:"customPolicyMapping"`
+	CustomPolicyMappingRules [][]string `xorm:"mediumtext" json:"customPolicyMappingRules"`
 
 	model.Model `xorm:"-" json:"-"`
 }
@@ -100,7 +103,8 @@ func UpdateModelWithCheck(id string, modelObj *Model) error {
 
 func UpdateModel(id string, modelObj *Model) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if m, err := getModel(owner, name); err != nil {
+	m, err := getModel(owner, name)
+	if err != nil {
 		return false, err
 	} else if m == nil {
 		return false, nil
@@ -116,6 +120,21 @@ func UpdateModel(id string, modelObj *Model) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(modelObj)
 	if err != nil {
 		return false, err
+	}
+
+	if affected > 0 {
+		if !equalRules(m.CustomPolicyMappingRules, modelObj.CustomPolicyMappingRules) ||
+			m.CustomPolicyMapping != modelObj.CustomPolicyMapping {
+			permissions, err := GetPermissionsByModel(modelObj.Owner, modelObj.Name)
+			if err != nil {
+				return false, err
+			}
+
+			err = ProcessPolicyDifference(permissions)
+			if err != nil {
+				return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
 	}
 
 	return affected != 0, err
@@ -188,4 +207,22 @@ func (m *Model) initModel() error {
 	}
 
 	return nil
+}
+
+func equalRules(first, second [][]string) bool {
+	var firstBytes []byte
+	for _, rule := range first {
+		for _, item := range rule {
+			firstBytes = append(firstBytes, []byte(item)...)
+		}
+	}
+
+	var secondBytes []byte
+	for _, rule := range second {
+		for _, item := range rule {
+			secondBytes = append(secondBytes, []byte(item)...)
+		}
+	}
+
+	return bytes.Equal(firstBytes, secondBytes)
 }

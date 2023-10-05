@@ -184,6 +184,11 @@ func (a *Ormer) createTable() {
 		panic(err)
 	}
 
+	err = a.Engine.Sync2(new(Domain))
+	if err != nil {
+		panic(err)
+	}
+
 	err = a.Engine.Sync2(new(Permission))
 	if err != nil {
 		panic(err)

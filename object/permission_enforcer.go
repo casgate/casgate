@@ -114,30 +114,6 @@ func (p *Permission) setEnforcerModel(enforcer *casbin.Enforcer) error {
 	return nil
 }
 
-func getPolicies(permission *Permission) [][]string {
-	var policies [][]string
-
-	permissionId := permission.GetId()
-	domainExist := len(permission.Domains) > 0
-
-	usersAndRoles := append(permission.Users, permission.Roles...)
-	for _, userOrRole := range usersAndRoles {
-		for _, resource := range permission.Resources {
-			for _, action := range permission.Actions {
-				if domainExist {
-					for _, domain := range permission.Domains {
-						policies = append(policies, []string{userOrRole, domain, resource, strings.ToLower(action), strings.ToLower(permission.Effect), permissionId})
-					}
-				} else {
-					policies = append(policies, []string{userOrRole, resource, strings.ToLower(action), strings.ToLower(permission.Effect), "", permissionId})
-				}
-			}
-		}
-	}
-
-	return policies
-}
-
 func getRolesInRole(roleId string, visited map[string]struct{}) ([]*Role, error) {
 	role, err := GetRole(roleId)
 	if err != nil {
@@ -162,89 +138,6 @@ func getRolesInRole(roleId string, visited map[string]struct{}) ([]*Role, error)
 	}
 
 	return roles, nil
-}
-
-func getGroupingPolicies(permission *Permission) [][]string {
-	var groupingPolicies [][]string
-
-	domainExist := len(permission.Domains) > 0
-	permissionId := permission.GetId()
-
-	for _, roleId := range permission.Roles {
-		visited := map[string]struct{}{}
-		rolesInRole, err := getRolesInRole(roleId, visited)
-		if err != nil {
-			panic(err)
-		}
-		for _, role := range rolesInRole {
-			roleId := role.GetId()
-			for _, subUser := range role.Users {
-				if domainExist {
-					for _, domain := range permission.Domains {
-						groupingPolicies = append(groupingPolicies, []string{subUser, roleId, domain, "", "", permissionId})
-					}
-				} else {
-					groupingPolicies = append(groupingPolicies, []string{subUser, roleId, "", "", "", permissionId})
-				}
-			}
-
-			for _, subRole := range role.Roles {
-				if domainExist {
-					for _, domain := range permission.Domains {
-						groupingPolicies = append(groupingPolicies, []string{subRole, roleId, domain, "", "", permissionId})
-					}
-				} else {
-					groupingPolicies = append(groupingPolicies, []string{subRole, roleId, "", "", "", permissionId})
-				}
-			}
-		}
-	}
-
-	return groupingPolicies
-}
-
-func addPolicies(permission *Permission) {
-	enforcer := getPermissionEnforcer(permission)
-	policies := getPolicies(permission)
-
-	_, err := enforcer.AddPolicies(policies)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func addGroupingPolicies(permission *Permission) {
-	enforcer := getPermissionEnforcer(permission)
-	groupingPolicies := getGroupingPolicies(permission)
-
-	if len(groupingPolicies) > 0 {
-		_, err := enforcer.AddGroupingPolicies(groupingPolicies)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func removeGroupingPolicies(permission *Permission) {
-	enforcer := getPermissionEnforcer(permission)
-	groupingPolicies := getGroupingPolicies(permission)
-
-	if len(groupingPolicies) > 0 {
-		_, err := enforcer.RemoveGroupingPolicies(groupingPolicies)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func removePolicies(permission *Permission) {
-	enforcer := getPermissionEnforcer(permission)
-	policies := getPolicies(permission)
-
-	_, err := enforcer.RemovePolicies(policies)
-	if err != nil {
-		panic(err)
-	}
 }
 
 type CasbinRequest = []interface{}

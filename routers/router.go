@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package routers
-// @APIVersion 1.376.1
+// @APIVersion 1.376.2
 // @Title Casdoor RESTful API
 // @Description Swagger Docs of Casdoor Backend API
 // @Contact casbin@googlegroups.com
@@ -95,6 +95,12 @@ func initAPI() {
 	beego.Router("/api/add-role", &controllers.ApiController{}, "POST:AddRole")
 	beego.Router("/api/delete-role", &controllers.ApiController{}, "POST:DeleteRole")
 	beego.Router("/api/upload-roles", &controllers.ApiController{}, "POST:UploadRoles")
+
+	beego.Router("/api/get-domains", &controllers.ApiController{}, "GET:GetDomains")
+	beego.Router("/api/get-domain", &controllers.ApiController{}, "GET:GetDomain")
+	beego.Router("/api/update-domain", &controllers.ApiController{}, "POST:UpdateDomain")
+	beego.Router("/api/add-domain", &controllers.ApiController{}, "POST:AddDomain")
+	beego.Router("/api/delete-domain", &controllers.ApiController{}, "POST:DeleteDomain")
 
 	beego.Router("/api/get-permissions", &controllers.ApiController{}, "GET:GetPermissions")
 	beego.Router("/api/get-permissions-by-submitter", &controllers.ApiController{}, "GET:GetPermissionsBySubmitter")

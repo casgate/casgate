@@ -23,6 +23,8 @@ import * as RoleBackend from "./backend/RoleBackend";
 import * as ModelBackend from "./backend/ModelBackend";
 import * as ApplicationBackend from "./backend/ApplicationBackend";
 import moment from "moment/moment";
+import * as GroupBackend from "./backend/GroupBackend";
+import * as DomainBackend from "./backend/DomainBackend";
 
 class PermissionEditPage extends React.Component {
   constructor(props) {
@@ -35,7 +37,9 @@ class PermissionEditPage extends React.Component {
       organizations: [],
       model: null,
       users: [],
+      groups: [],
       roles: [],
+      domains: [],
       models: [],
       resources: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
@@ -62,12 +66,18 @@ class PermissionEditPage extends React.Component {
           return;
         }
 
+        if (!res.data.groups) {
+          res.data.groups = [];
+        }
+
         this.setState({
           permission: permission,
         });
 
         this.getUsers(permission.owner);
+        this.getGroups(this.state.organizationName);
         this.getRoles(permission.owner);
+        this.getDomains(permission.owner);
         this.getModels(permission.owner);
         this.getResources(permission.owner);
         this.getModel(permission.owner, permission.model);
@@ -97,6 +107,20 @@ class PermissionEditPage extends React.Component {
       });
   }
 
+  getGroups(organizationName) {
+    GroupBackend.getGroups(organizationName)
+      .then((res) => {
+        if (res.status === "error") {
+          Setting.showMessage("error", res.msg);
+          return;
+        }
+
+        this.setState({
+          groups: res.data,
+        });
+      });
+  }
+
   getRoles(organizationName) {
     RoleBackend.getRoles(organizationName)
       .then((res) => {
@@ -107,6 +131,20 @@ class PermissionEditPage extends React.Component {
 
         this.setState({
           roles: res.data,
+        });
+      });
+  }
+
+  getDomains(organizationName) {
+    DomainBackend.getDomains(organizationName)
+      .then((res) => {
+        if (res.status === "error") {
+          Setting.showMessage("error", res.msg);
+          return;
+        }
+
+        this.setState({
+          domains: res.data,
         });
       });
   }
@@ -265,6 +303,17 @@ class PermissionEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("role:Sub groups"), i18next.t("role:Sub groups - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} mode="multiple" style={{width: "100%"}} value={this.state.permission.groups}
+              onChange={(value => {this.updatePermissionField("groups", value);})}
+              options={this.state.groups.map((group) => Setting.getOption(`${group.owner}/${group.name}`, `${group.owner}/${group.name}`))}
+            />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("role:Sub roles"), i18next.t("role:Sub roles - Tooltip"))} :
           </Col>
           <Col span={22} >
@@ -276,14 +325,11 @@ class PermissionEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("role:Sub domains"), i18next.t("role:Sub domains - Tooltip"))} :
+            {Setting.getLabel(i18next.t("domain:Sub domains"), i18next.t("domain:Sub domains - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <Select virtual={false} mode="tags" style={{width: "100%"}} value={this.state.permission.domains}
-              onChange={(value => {
-                this.updatePermissionField("domains", value);
-              })}
-              options={this.state.permission.domains.map((domain) => Setting.getOption(domain, domain))
+            <Select virtual={false} mode="multiple" style={{width: "100%"}} value={this.state.permission.domains} onChange={(value => {this.updatePermissionField("domains", value);})}
+              options={this.state.domains.map((domain) => Setting.getOption(`${domain.owner}/${domain.name}`, `${domain.owner}/${domain.name}`))
               } />
           </Col>
         </Row>
@@ -416,8 +462,8 @@ class PermissionEditPage extends React.Component {
   }
 
   submitPermissionEdit(willExist) {
-    if (this.state.permission.users.length === 0 && this.state.permission.roles.length === 0) {
-      Setting.showMessage("error", "The users and roles cannot be empty at the same time");
+    if (this.state.permission.users.length === 0 && this.state.permission.roles.length === 0 && this.state.permission.groups.length === 0) {
+      Setting.showMessage("error", "The users and roles and groups cannot be empty at the same time");
       return;
     }
     // if (this.state.permission.domains.length === 0) {
