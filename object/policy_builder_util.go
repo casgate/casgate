@@ -280,3 +280,66 @@ func multiplyLenEntities(sizes ...int) int {
 	}
 	return result + 1
 }
+
+func getAncestorEntities[T NodeValueType](treeMap map[string]*TreeNode[T], entityIds ...string) ([]T, error) {
+	result := make([]T, 0)
+
+	for _, entityId := range entityIds {
+		result = append(result, getAncestorEntitiesById[T](entityId, treeMap)...)
+	}
+
+	return result, nil
+}
+
+func getAncestorEntitiesById[T NodeValueType](entityId string, treeMap map[string]*TreeNode[T]) []T {
+	result := make([]T, 0)
+	curnode := treeMap[entityId]
+	result = append(result, curnode.value)
+	if len(curnode.ancestors) > 0 {
+		for _, ancestor := range curnode.ancestors {
+			result = append(result, getAncestorEntitiesById(ancestor.value.GetId(), treeMap)...)
+		}
+	}
+
+	return result
+}
+
+func calcEntityPolicies[T NodeValueType, PolicyT policyType](pb *PolicyBuilder, treeMap map[string]*TreeNode[T], entityIds ...string) ([]PolicyT, error) {
+	permissionEntities, err := getAncestorEntities(treeMap, entityIds...)
+	if err != nil {
+		return nil, fmt.Errorf("getAncestorEntities: %w", err)
+	}
+
+	policyEntities := make([]PolicyT, 0, len(permissionEntities))
+	for _, entity := range permissionEntities {
+		var newPolicyEntities any
+		switch v := NodeValueType(entity).(type) {
+		case *Role:
+			newPolicyEntities, err = pb.calcRolePolicies(v)
+			if err != nil {
+				return nil, fmt.Errorf("calcRolePolicies: %w", err)
+			}
+
+		case *Group:
+			newPolicyEntities, err = pb.calcGroupPolicies(v)
+			if err != nil {
+				return nil, fmt.Errorf("calcGroupPolicies: %w", err)
+			}
+
+		case *Domain:
+			newPolicyEntities, err = pb.calcDomainPolicies(v)
+			if err != nil {
+				return nil, fmt.Errorf("calcDomainPolicies: %w", err)
+			}
+
+		default:
+			return nil, fmt.Errorf("wrong type for NodeValueType: %T", v)
+		}
+
+		for _, item := range newPolicyEntities.([]PolicyT) {
+			policyEntities = append(policyEntities, any(item).(PolicyT))
+		}
+	}
+
+	return policyEntities, nil
+}

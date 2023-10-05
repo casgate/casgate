@@ -51,13 +51,27 @@ type policyPermission struct {
 	empty bool
 }
 
+type policyType interface {
+	policyRole | policyGroup | policyDomain
+}
+
 type casbinPolicy [7]string
 type casbinPolicies []casbinPolicy
 
 type Entities struct {
-	DomainsTree  map[string]*DomainTreeNode
-	RolesTree    map[string]*RoleTreeNode
-	GroupsTree   map[string]*GroupTreeNode
+	DomainsTree  map[string]*TreeNode[*Domain]
+	RolesTree    map[string]*TreeNode[*Role]
+	GroupsTree   map[string]*TreeNode[*Group]
 	UsersByGroup map[string][]*User
 	Model        *Model
+}
+
+type NodeValueType interface {
+	GetId() string
+}
+
+type TreeNode[T NodeValueType] struct {
+	ancestors []*TreeNode[T]
+	value     T
+	children  []*TreeNode[T]
 }

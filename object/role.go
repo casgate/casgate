@@ -381,43 +381,14 @@ func GetAncestorRoles(roleIds ...string) ([]*Role, error) {
 
 	allRolesTree := makeAncestorRolesTreeMap(allRoles)
 
-	return getAncestorRoles(allRolesTree, roleIds...)
+	return getAncestorEntities(allRolesTree, roleIds...)
 }
 
-func getAncestorRoles(allRolesTree map[string]*RoleTreeNode, roleIds ...string) ([]*Role, error) {
-	result := make([]*Role, 0)
-
-	for _, roleId := range roleIds {
-		result = append(result, getAncestorRolesById(roleId, allRolesTree)...)
-	}
-
-	return result, nil
-}
-
-type RoleTreeNode struct {
-	ancestors []*RoleTreeNode
-	value     *Role
-	children  []*RoleTreeNode
-}
-
-func getAncestorRolesById(roleId string, allRolesTree map[string]*RoleTreeNode) []*Role {
-	result := make([]*Role, 0)
-	curnode := allRolesTree[roleId]
-	result = append(result, curnode.value)
-	if len(curnode.ancestors) > 0 {
-		for _, ancestor := range curnode.ancestors {
-			result = append(result, getAncestorRolesById(ancestor.value.GetId(), allRolesTree)...)
-		}
-	}
-
-	return result
-}
-
-func makeAncestorRolesTreeMap(roles []*Role) map[string]*RoleTreeNode {
-	var roleMap = make(map[string]*RoleTreeNode, 0)
+func makeAncestorRolesTreeMap(roles []*Role) map[string]*TreeNode[*Role] {
+	var roleMap = make(map[string]*TreeNode[*Role], 0)
 
 	for _, role := range roles {
-		roleMap[role.GetId()] = &RoleTreeNode{
+		roleMap[role.GetId()] = &TreeNode[*Role]{
 			ancestors: nil,
 			value:     role,
 			children:  nil,

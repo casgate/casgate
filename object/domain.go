@@ -302,45 +302,16 @@ func GetAncestorDomains(domainIds ...string) ([]*Domain, error) {
 
 	allDomainsTree := makeAncestorDomainsTreeMap(allDomains)
 
-	return getAncestorDomains(allDomainsTree, domainIds...)
+	return getAncestorEntities(allDomainsTree, domainIds...)
 }
 
-func getAncestorDomains(allDomainsTree map[string]*DomainTreeNode, domainIds ...string) ([]*Domain, error) {
-	result := make([]*Domain, 0)
-
-	for _, domainId := range domainIds {
-		result = append(result, getAncestorDomainsById(domainId, allDomainsTree)...)
-	}
-
-	return result, nil
-}
-
-type DomainTreeNode struct {
-	ancestors []*DomainTreeNode
-	value     *Domain
-	children  []*DomainTreeNode
-}
-
-func getAncestorDomainsById(domainId string, allDomainsTree map[string]*DomainTreeNode) []*Domain {
-	result := make([]*Domain, 0)
-	curnode := allDomainsTree[domainId]
-	result = append(result, curnode.value)
-	if len(curnode.ancestors) > 0 {
-		for _, ancestor := range curnode.ancestors {
-			result = append(result, getAncestorDomainsById(ancestor.value.GetId(), allDomainsTree)...)
-		}
-	}
-
-	return result
-}
-
-func makeAncestorDomainsTreeMap(domains []*Domain) map[string]*DomainTreeNode {
+func makeAncestorDomainsTreeMap(domains []*Domain) map[string]*TreeNode[*Domain] {
 	var (
-		domainMap = make(map[string]*DomainTreeNode, 0)
+		domainMap = make(map[string]*TreeNode[*Domain], 0)
 	)
 
 	for _, domain := range domains {
-		domainMap[domain.GetId()] = &DomainTreeNode{
+		domainMap[domain.GetId()] = &TreeNode[*Domain]{
 			ancestors: nil,
 			value:     domain,
 			children:  nil,

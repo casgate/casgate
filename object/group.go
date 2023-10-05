@@ -283,43 +283,14 @@ func GetAncestorGroups(groupIds ...string) ([]*Group, error) {
 
 	allGroupsTree := makeAncestorGroupsTreeMap(allGroups)
 
-	return getAncestorGroups(allGroupsTree, groupIds...)
+	return getAncestorEntities(allGroupsTree, groupIds...)
 }
 
-func getAncestorGroups(allGroupsTreeMap map[string]*GroupTreeNode, groupIds ...string) ([]*Group, error) {
-	result := make([]*Group, 0)
-
-	for _, groupId := range groupIds {
-		result = append(result, getAncestorGroupsById(groupId, allGroupsTreeMap)...)
-	}
-
-	return result, nil
-}
-
-type GroupTreeNode struct {
-	ancestors []*GroupTreeNode
-	value     *Group
-	children  []*GroupTreeNode
-}
-
-func getAncestorGroupsById(groupId string, allGroupsTree map[string]*GroupTreeNode) []*Group {
-	result := make([]*Group, 0)
-	curnode := allGroupsTree[groupId]
-	result = append(result, curnode.value)
-	if len(curnode.ancestors) > 0 {
-		for _, ancestor := range curnode.ancestors {
-			result = append(result, getAncestorGroupsById(ancestor.value.GetId(), allGroupsTree)...)
-		}
-	}
-
-	return result
-}
-
-func makeAncestorGroupsTreeMap(groups []*Group) map[string]*GroupTreeNode {
-	var groupMap = make(map[string]*GroupTreeNode, 0)
+func makeAncestorGroupsTreeMap(groups []*Group) map[string]*TreeNode[*Group] {
+	var groupMap = make(map[string]*TreeNode[*Group], 0)
 
 	for _, group := range groups {
-		groupMap[group.GetId()] = &GroupTreeNode{
+		groupMap[group.GetId()] = &TreeNode[*Group]{
 			ancestors: nil,
 			value:     group,
 			children:  nil,

@@ -36,55 +36,7 @@ func NewPolicyBuilder(owner, model string) (*PolicyBuilder, error) {
 }
 
 func (pb *PolicyBuilder) CalcPermissionPolicies(permission *Permission) ([]casbinPolicy, error) {
-	permissionRoles, err := getAncestorRoles(pb.entities.RolesTree, permission.Roles...)
-	if err != nil {
-		return nil, fmt.Errorf("GetAncestorRoles: %w", err)
-	}
-
-	policyRoles := make([]policyRole, 0, len(permissionRoles))
-	for _, role := range permissionRoles {
-		newPolicyRoles, err := pb.calcRolePolicies(role)
-		if err != nil {
-			return nil, fmt.Errorf("calcRolePolicies: %w", err)
-		}
-		policyRoles = append(policyRoles, newPolicyRoles...)
-	}
-
-	permissionGroups, err := getAncestorGroups(pb.entities.GroupsTree, permission.Groups...)
-	if err != nil {
-		return nil, fmt.Errorf("GetAncestorGroups: %w", err)
-	}
-
-	policyGroups := make([]policyGroup, 0, len(permissionGroups))
-	for _, group := range permissionGroups {
-		newPolicyGroups, err := pb.calcGroupPolicies(group)
-		if err != nil {
-			return nil, fmt.Errorf("calcRolePolicies: %w", err)
-		}
-		policyGroups = append(policyGroups, newPolicyGroups...)
-	}
-
-	permissionDomains, err := getAncestorDomains(pb.entities.DomainsTree, permission.Domains...)
-	if err != nil {
-		return nil, fmt.Errorf("GetAncestorDomains: %w", err)
-	}
-
-	policyDomains := make([]policyDomain, 0, len(permissionDomains))
-	for _, domain := range permissionDomains {
-		policyDomains = append(policyDomains, policyDomain{
-			id:   domain.GetId(),
-			name: domain.GetId(),
-		})
-		for _, subdomainId := range domain.Domains {
-			policyDomains = append(policyDomains, policyDomain{
-				id:        domain.GetId(),
-				name:      domain.GetId(),
-				subDomain: subdomainId,
-			})
-		}
-	}
-
-	policyPermissions := joinEntitiesWithPermission(permission, policyRoles, policyGroups, policyDomains)
+	policyPermissions, err := pb.calcPermissionPolicies(permission)
 
 	strPolicies, err := pb.generatePolicies(policyPermissions, permission)
 	if err != nil {
@@ -94,39 +46,35 @@ func (pb *PolicyBuilder) CalcPermissionPolicies(permission *Permission) ([]casbi
 	return strPolicies, nil
 }
 
+func (pb *PolicyBuilder) calcPermissionPolicies(permission *Permission) ([]policyPermission, error) {
+	policyRoles, err := calcEntityPolicies[*Role, policyRole](pb, pb.entities.RolesTree, permission.Roles...)
+	if err != nil {
+		return nil, fmt.Errorf("calcEntityPolicies[Roles]: %w", err)
+	}
+
+	policyGroups, err := calcEntityPolicies[*Group, policyGroup](pb, pb.entities.GroupsTree, permission.Groups...)
+	if err != nil {
+		return nil, fmt.Errorf("calcEntityPolicies[Groups]: %w", err)
+	}
+
+	policyDomains, err := calcEntityPolicies[*Domain, policyDomain](pb, pb.entities.DomainsTree, permission.Domains...)
+	if err != nil {
+		return nil, fmt.Errorf("calcEntityPolicies[Domains]: %w", err)
+	}
+
+	policyPermissions := joinEntitiesWithPermission(permission, policyRoles, policyGroups, policyDomains)
+
+	return policyPermissions, nil
+}
+
 func (pb *PolicyBuilder) calcRolePolicies(role *Role) ([]policyRole, error) {
-	roleGroups, err := getAncestorGroups(pb.entities.GroupsTree, role.Groups...)
+	policyGroups, err := calcEntityPolicies[*Group, policyGroup](pb, pb.entities.GroupsTree, role.Groups...)
 	if err != nil {
-		return nil, fmt.Errorf("GetAncestorGroups: %w", err)
+		return nil, fmt.Errorf("calcEntityPolicies[Groups]: %w", err)
 	}
-
-	policyGroups := make([]policyGroup, 0, len(roleGroups))
-	for _, group := range roleGroups {
-		newPolicyGroups, err := pb.calcGroupPolicies(group)
-		if err != nil {
-			return nil, fmt.Errorf("calcRolePolicies: %w", err)
-		}
-		policyGroups = append(policyGroups, newPolicyGroups...)
-	}
-
-	roleDomains, err := getAncestorDomains(pb.entities.DomainsTree, role.Domains...)
+	policyDomains, err := calcEntityPolicies[*Domain, policyDomain](pb, pb.entities.DomainsTree, role.Domains...)
 	if err != nil {
-		return nil, fmt.Errorf("GetAncestorDomains: %w", err)
-	}
-
-	policyDomains := make([]policyDomain, 0, len(roleDomains))
-	for _, domain := range roleDomains {
-		policyDomains = append(policyDomains, policyDomain{
-			id:   domain.GetId(),
-			name: domain.GetId(),
-		})
-		for _, subdomainId := range domain.Domains {
-			policyDomains = append(policyDomains, policyDomain{
-				id:        domain.GetId(),
-				name:      domain.GetId(),
-				subDomain: subdomainId,
-			})
-		}
+		return nil, fmt.Errorf("calcEntityPolicies[Domains]: %w", err)
 	}
 
 	policyRoles := joinEntitiesWithRole(role, policyGroups, policyDomains)
@@ -134,8 +82,25 @@ func (pb *PolicyBuilder) calcRolePolicies(role *Role) ([]policyRole, error) {
 	return policyRoles, nil
 }
 
+func (pb *PolicyBuilder) calcDomainPolicies(domain *Domain) ([]policyDomain, error) {
+	policyDomains := make([]policyDomain, 0, 1)
+	policyDomains = append(policyDomains, policyDomain{
+		id:   domain.GetId(),
+		name: domain.GetId(),
+	})
+	for _, subdomainId := range domain.Domains {
+		policyDomains = append(policyDomains, policyDomain{
+			id:        domain.GetId(),
+			name:      domain.GetId(),
+			subDomain: subdomainId,
+		})
+	}
+
+	return policyDomains, nil
+}
+
 func (pb *PolicyBuilder) calcGroupPolicies(group *Group) ([]policyGroup, error) {
-	policyGroups := make([]policyGroup, 1)
+	policyGroups := make([]policyGroup, 0, 1)
 	users := pb.entities.UsersByGroup[group.GetId()]
 
 	var parentId string
