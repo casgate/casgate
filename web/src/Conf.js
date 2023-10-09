@@ -14,8 +14,6 @@
 
 export const DefaultApplication = "app-built-in";
 
-export const CasvisorUrl = "https://github.com/casbin/casvisor";
-
 export const ShowGithubCorner = false;
 export const IsDemoMode = false;
 

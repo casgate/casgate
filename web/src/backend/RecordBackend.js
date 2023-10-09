@@ -12,31 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package object
+import * as Setting from "../Setting";
 
-import (
-	"net/http"
-	"strings"
-
-	"github.com/casdoor/casdoor/util"
-)
-
-func sendWebhook(webhook *Webhook, record *Record) error {
-	client := &http.Client{}
-
-	body := strings.NewReader(util.StructToJson(record))
-
-	req, err := http.NewRequest(webhook.Method, webhook.Url, body)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Content-Type", webhook.ContentType)
-
-	for _, header := range webhook.Headers {
-		req.Header.Set(header.Name, header.Value)
-	}
-
-	_, err = client.Do(req)
-	return err
+export function getRecords(organizationName, page, pageSize, field = "", value = "", sortField = "", sortOrder = "") {
+  return fetch(`${Setting.ServerUrl}/api/get-records?organizationName=${organizationName}&pageSize=${pageSize}&p=${page}&field=${field}&value=${value}&sortField=${sortField}&sortOrder=${sortOrder}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Accept-Language": Setting.getAcceptLanguage(),
+    },
+  }).then(res => res.json());
 }

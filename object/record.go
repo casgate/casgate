@@ -21,7 +21,6 @@ import (
 	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
-	"github.com/casvisor/casvisor-go-sdk/casvisorsdk"
 )
 
 var logPostOnly bool
@@ -31,10 +30,26 @@ func init() {
 }
 
 type Record struct {
-	casvisorsdk.Record
+	Id int `xorm:"int notnull pk autoincr" json:"id"`
+
+	Owner       string `xorm:"varchar(100) index" json:"owner"`
+	Name        string `xorm:"varchar(100) index" json:"name"`
+	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
+
+	Organization string `xorm:"varchar(100)" json:"organization"`
+	ClientIp     string `xorm:"varchar(100)" json:"clientIp"`
+	User         string `xorm:"varchar(100)" json:"user"`
+	Method       string `xorm:"varchar(100)" json:"method"`
+	RequestUri   string `xorm:"varchar(1000)" json:"requestUri"`
+	Action       string `xorm:"varchar(1000)" json:"action"`
+
+	Object       string `xorm:"-" json:"object"`
+	ExtendedUser *User  `xorm:"-" json:"extendedUser"`
+
+	IsTriggered bool `json:"isTriggered"`
 }
 
-func NewRecord(ctx *context.Context) *casvisorsdk.Record {
+func NewRecord(ctx *context.Context) *Record {
 	ip := strings.Replace(util.GetIPFromRequest(ctx.Request), ": ", "", -1)
 	action := strings.Replace(ctx.Request.URL.Path, "/api/", "", -1)
 	requestUri := util.FilterQuery(ctx.Request.RequestURI, []string{"accessToken"})
@@ -47,7 +62,7 @@ func NewRecord(ctx *context.Context) *casvisorsdk.Record {
 		object = string(ctx.Input.RequestBody)
 	}
 
-	record := casvisorsdk.Record{
+	record := Record{
 		Name:        util.GenerateId(),
 		CreatedTime: util.GetCurrentTime(),
 		ClientIp:    ip,
@@ -61,7 +76,7 @@ func NewRecord(ctx *context.Context) *casvisorsdk.Record {
 	return &record
 }
 
-func AddRecord(record *casvisorsdk.Record) bool {
+func AddRecord(record *Record) bool {
 	if logPostOnly {
 		if record.Method == "GET" {
 			return false
@@ -81,19 +96,51 @@ func AddRecord(record *casvisorsdk.Record) bool {
 		fmt.Println(errWebhook)
 	}
 
-	if casvisorsdk.GetClient() == nil {
-		return false
-	}
-
-	affected, err := casvisorsdk.AddRecord(record)
+	affected, err := ormer.Engine.Insert(record)
 	if err != nil {
-		fmt.Printf("AddRecord() error: %s", err.Error())
+		panic(err)
 	}
 
-	return affected
+	return affected != 0
 }
 
-func SendWebhooks(record *casvisorsdk.Record) error {
+func GetRecordCount(field, value string, filterRecord *Record) (int64, error) {
+	session := GetSession("", -1, -1, field, value, "", "")
+	return session.Count(filterRecord)
+}
+
+func GetRecords() ([]*Record, error) {
+	records := []*Record{}
+	err := ormer.Engine.Desc("id").Find(&records)
+	if err != nil {
+		return records, err
+	}
+
+	return records, nil
+}
+
+func GetPaginationRecords(offset, limit int, field, value, sortField, sortOrder string, filterRecord *Record) ([]*Record, error) {
+	records := []*Record{}
+	session := GetSession("", offset, limit, field, value, sortField, sortOrder)
+	err := session.Find(&records, filterRecord)
+	if err != nil {
+		return records, err
+	}
+
+	return records, nil
+}
+
+func GetRecordsByField(record *Record) ([]*Record, error) {
+	records := []*Record{}
+	err := ormer.Engine.Find(&records, record)
+	if err != nil {
+		return records, err
+	}
+
+	return records, nil
+}
+
+func SendWebhooks(record *Record) error {
 	webhooks, err := getWebhooksByOrganization(record.Organization)
 	if err != nil {
 		return err
@@ -113,16 +160,17 @@ func SendWebhooks(record *casvisorsdk.Record) error {
 		}
 
 		if matched {
-			var user *User
 			if webhook.IsUserExtended {
-				user, err = getUser(record.Organization, record.User)
+				user, err := getUser(record.Organization, record.User)
 				user, err = GetMaskedUser(user, false, err)
 				if err != nil {
 					return err
 				}
+
+				record.ExtendedUser = user
 			}
 
-			err = sendWebhook(webhook, record, user)
+			err := sendWebhook(webhook, record)
 			if err != nil {
 				return err
 			}
