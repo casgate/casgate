@@ -79,9 +79,7 @@ func (p *Permission) setEnforcerAdapter(enforcer *casbin.Enforcer) error {
 		}
 	}
 	tableNamePrefix := conf.GetConfigString("tableNamePrefix")
-	driverName := conf.GetConfigString("driverName")
-	dataSourceName := conf.GetConfigRealDataSourceName(driverName)
-	adapter, err := xormadapter.NewAdapterWithTableName(driverName, dataSourceName, tableName, tableNamePrefix, true)
+	adapter, err := xormadapter.NewAdapterByEngineWithTableName(ormer.Engine, tableName, tableNamePrefix)
 	if err != nil {
 		return err
 	}
@@ -153,7 +151,7 @@ func BatchEnforce(permission *Permission, requests *[]CasbinRequest, permissionI
 }
 
 func getAllValues(userId string, fn func(enforcer *casbin.Enforcer) []string) []string {
-	permissions, _, err := GetPermissionsAndRolesByUser(userId)
+	permissions, _, err := getPermissionsAndRolesByUser(userId)
 	if err != nil {
 		panic(err)
 	}
@@ -188,7 +186,7 @@ func GetAllActions(userId string) []string {
 }
 
 func GetAllRoles(userId string) []string {
-	roles, err := GetRolesByUser(userId)
+	roles, err := getRolesByUser(userId)
 	if err != nil {
 		panic(err)
 	}
@@ -202,8 +200,7 @@ func GetAllRoles(userId string) []string {
 
 func GetBuiltInModel(modelText string) (model.Model, error) {
 	if modelText == "" {
-		modelText = `
-[request_definition]
+		modelText = `[request_definition]
 r = sub, obj, act
 
 [policy_definition]

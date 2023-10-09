@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from "react";
-import {Card, Col, Row} from "antd";
+import {Card, Col, Radio, Row} from "antd";
 import * as PricingBackend from "../backend/PricingBackend";
 import * as PlanBackend from "../backend/PlanBackend";
 import CustomGithubCorner from "../common/CustomGithubCorner";
@@ -24,13 +24,17 @@ import i18next from "i18next";
 class PricingPage extends React.Component {
   constructor(props) {
     super(props);
+    const params = new URLSearchParams(window.location.search);
     this.state = {
       classes: props,
       applications: null,
       owner: props.owner ?? (props.match?.params?.owner ?? null),
       pricingName: (props.pricingName ?? props.match?.params?.pricingName) ?? null,
+      userName: params.get("user"),
       pricing: props.pricing,
       plans: null,
+      periods: null,
+      selectedPeriod: null,
       loading: false,
     };
   }
@@ -39,7 +43,9 @@ class PricingPage extends React.Component {
     this.setState({
       applications: [],
     });
-
+    if (this.state.userName) {
+      Setting.showMessage("info", `${i18next.t("pricing:paid-user do not have active subscription or pending subscription, please select a plan to buy")}`);
+    }
     if (this.state.pricing) {
       this.loadPlans();
     } else {
@@ -60,7 +66,7 @@ class PricingPage extends React.Component {
 
   loadPlans() {
     const plans = this.state.pricing.plans.map((plan) =>
-      PlanBackend.getPlanById(plan, true));
+      PlanBackend.getPlan(this.state.owner, plan, true));
 
     Promise.all(plans)
       .then(results => {
@@ -69,8 +75,12 @@ class PricingPage extends React.Component {
           Setting.showMessage("error", i18next.t("pricing:Failed to get plans"));
           return;
         }
+        const plans = results.map(result => result.data);
+        const periods = [... new Set(plans.map(plan => plan.period).filter(period => period !== ""))];
         this.setState({
-          plans: results,
+          plans: plans,
+          periods: periods,
+          selectedPeriod: periods?.[0],
           loading: false,
         });
       })
@@ -80,17 +90,15 @@ class PricingPage extends React.Component {
   }
 
   loadPricing(pricingName) {
-    if (pricingName === undefined) {
+    if (!pricingName) {
       return;
     }
-
     PricingBackend.getPricing(this.state.owner, pricingName)
       .then((res) => {
         if (res.status === "error") {
           Setting.showMessage("error", res.msg);
           return;
         }
-
         this.setState({
           loading: false,
           pricing: res.data,
@@ -103,11 +111,37 @@ class PricingPage extends React.Component {
     this.props.onUpdatePricing(pricing);
   }
 
-  renderCards() {
+  renderSelectPeriod() {
+    if (!this.state.periods || this.state.periods.length <= 1) {
+      return null;
+    }
+    return (
+      <Radio.Group
+        value={this.state.selectedPeriod}
+        size="large"
+        buttonStyle="solid"
+        onChange={e => {
+          this.setState({selectedPeriod: e.target.value});
+        }}
+      >
+        {
+          this.state.periods.map(period => {
+            return (
+              <Radio.Button key={period} value={period}>{period}</Radio.Button>
+            );
+          })
+        }
+      </Radio.Group>
+    );
+  }
 
-    const getUrlByPlan = (plan) => {
+  renderCards() {
+    const getUrlByPlan = (planName) => {
       const pricing = this.state.pricing;
-      const signUpUrl = `/signup/${pricing.application}?plan=${plan}&pricing=${pricing.name}`;
+      let signUpUrl = `/signup/${pricing.application}?plan=${planName}&pricing=${pricing.name}`;
+      if (this.state.userName) {
+        signUpUrl = `/buy-plan/${pricing.owner}/${pricing.name}?plan=${planName}&user=${this.state.userName}`;
+      }
       return `${window.location.origin}${signUpUrl}`;
     };
 
@@ -116,9 +150,9 @@ class PricingPage extends React.Component {
         <Card style={{border: "none"}} bodyStyle={{padding: 0}}>
           {
             this.state.plans.map(item => {
-              return (
+              return item.period === this.state.selectedPeriod ? (
                 <SingleCard link={getUrlByPlan(item.name)} key={item.name} plan={item} isSingle={this.state.plans.length === 1} />
-              );
+              ) : null;
             })
           }
         </Card>
@@ -129,9 +163,9 @@ class PricingPage extends React.Component {
           <Row style={{justifyContent: "center"}} gutter={24}>
             {
               this.state.plans.map(item => {
-                return (
+                return item.period === this.state.selectedPeriod ? (
                   <SingleCard style={{marginRight: "5px", marginLeft: "5px"}} link={getUrlByPlan(item.name)} key={item.name} plan={item} isSingle={this.state.plans.length === 1} />
-                );
+                ) : null;
               })
             }
           </Row>
@@ -155,6 +189,13 @@ class PricingPage extends React.Component {
             <div className="login-form">
               <h1 style={{fontSize: "48px", marginTop: "0px", marginBottom: "15px"}}>{pricing.displayName}</h1>
               <span style={{fontSize: "20px"}}>{pricing.description}</span>
+              <Row style={{width: "100%", marginTop: "40px"}}>
+                <Col span={24} style={{display: "flex", justifyContent: "center"}} >
+                  {
+                    this.renderSelectPeriod()
+                  }
+                </Col>
+              </Row>
               <Row style={{width: "100%", marginTop: "40px"}}>
                 <Col span={24} style={{display: "flex", justifyContent: "center"}} >
                   {

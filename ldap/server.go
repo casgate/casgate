@@ -34,7 +34,7 @@ func StartLdapServer() {
 	server.Handle(routes)
 	err := server.ListenAndServe("0.0.0.0:" + conf.GetConfigString("ldapServerPort"))
 	if err != nil {
-		log.Printf("StartLdapServer() failed, ErrMsg = %s", err.Error())
+		log.Printf("StartLdapServer() failed, err = %s", err.Error())
 	}
 }
 
@@ -62,7 +62,7 @@ func handleBind(w ldap.ResponseWriter, m *ldap.Message) {
 			return
 		}
 
-		if bindOrg == "built-in" || bindUser.IsGlobalAdmin {
+		if bindOrg == "built-in" || bindUser.IsGlobalAdmin() {
 			m.Client.IsGlobalAdmin, m.Client.IsOrgAdmin = true, true
 		} else if bindUser.IsAdmin {
 			m.Client.IsOrgAdmin = true

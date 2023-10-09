@@ -62,13 +62,13 @@ func (c *ApiController) GetApplications() {
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		app, err := object.GetPaginationApplications(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
+		application, err := object.GetPaginationApplications(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
-		applications := object.GetMaskedApplications(app, userId)
+		applications := object.GetMaskedApplications(application, userId)
 		c.ResponseOk(applications, paginator.Nums())
 	}
 }
@@ -84,13 +84,33 @@ func (c *ApiController) GetApplication() {
 	userId := c.GetSessionUsername()
 	id := c.Input().Get("id")
 
-	app, err := object.GetApplication(id)
+	application, err := object.GetApplication(id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
 
-	c.ResponseOk(object.GetMaskedApplication(app, userId))
+	if c.Input().Get("withKey") != "" && application != nil && application.Cert != "" {
+		cert, err := object.GetCert(util.GetId(application.Owner, application.Cert))
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+
+		if cert == nil {
+			cert, err = object.GetCert(util.GetId(application.Organization, application.Cert))
+			if err != nil {
+				c.ResponseError(err.Error())
+				return
+			}
+		}
+
+		if cert != nil {
+			application.CertPublicKey = cert.Certificate
+		}
+	}
+
+	c.ResponseOk(object.GetMaskedApplication(application, userId))
 }
 
 // GetUserApplication
@@ -164,13 +184,13 @@ func (c *ApiController) GetOrganizationApplications() {
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		app, err := object.GetPaginationOrganizationApplications(owner, organization, paginator.Offset(), limit, field, value, sortField, sortOrder)
+		application, err := object.GetPaginationOrganizationApplications(owner, organization, paginator.Offset(), limit, field, value, sortField, sortOrder)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
-		applications := object.GetMaskedApplications(app, userId)
+		applications := object.GetMaskedApplications(application, userId)
 		c.ResponseOk(applications, paginator.Nums())
 	}
 }

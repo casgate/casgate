@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import React from "react";
+import {Controlled as CodeMirror} from "react-codemirror2";
 import {Link} from "react-router-dom";
-import {Button, Switch, Table} from "antd";
+import {Button, Popover, Table} from "antd";
 import moment from "moment";
 import * as Setting from "./Setting";
 import * as ModelBackend from "./backend/ModelBackend";
@@ -93,7 +94,7 @@ class ModelListPage extends BaseListPage {
         title: i18next.t("general:Name"),
         dataIndex: "name",
         key: "name",
-        width: "150px",
+        width: "180px",
         fixed: "left",
         sorter: true,
         ...this.getColumnSearchProps("name"),
@@ -109,7 +110,7 @@ class ModelListPage extends BaseListPage {
         title: i18next.t("general:Organization"),
         dataIndex: "owner",
         key: "owner",
-        width: "120px",
+        width: "180px",
         sorter: true,
         ...this.getColumnSearchProps("owner"),
         render: (text, record, index) => {
@@ -124,7 +125,7 @@ class ModelListPage extends BaseListPage {
         title: i18next.t("general:Created time"),
         dataIndex: "createdTime",
         key: "createdTime",
-        width: "160px",
+        width: "180px",
         sorter: true,
         render: (text, record, index) => {
           return Setting.getFormattedDate(text);
@@ -139,14 +140,26 @@ class ModelListPage extends BaseListPage {
         ...this.getColumnSearchProps("displayName"),
       },
       {
-        title: i18next.t("general:Is enabled"),
-        dataIndex: "isEnabled",
-        key: "isEnabled",
-        width: "120px",
+        title: i18next.t("model:Model text"),
+        dataIndex: "modelText",
+        key: "modelText",
+        // width: "180px",
         sorter: true,
         render: (text, record, index) => {
           return (
-            <Switch disabled checkedChildren="ON" unCheckedChildren="OFF" checked={text} />
+            <Popover placement="topRight" content={() => {
+              return (
+                <CodeMirror
+                  value={text}
+                  options={{mode: "properties", theme: "default"}}
+                  onBeforeChange={(editor, data, value) => {}}
+                />
+              );
+            }} title="" trigger="hover">
+              {
+                Setting.getShortText(text, 100)
+              }
+            </Popover>
           );
         },
       },
@@ -154,7 +167,7 @@ class ModelListPage extends BaseListPage {
         title: i18next.t("general:Action"),
         dataIndex: "",
         key: "op",
-        width: "170px",
+        width: "180px",
         fixed: (Setting.isMobile()) ? "false" : "right",
         render: (text, record, index) => {
           return (

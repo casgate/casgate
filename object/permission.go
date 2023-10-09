@@ -29,8 +29,8 @@ type Permission struct {
 	DisplayName string `xorm:"varchar(100)" json:"displayName"`
 	Description string `xorm:"varchar(100)" json:"description"`
 
-	Groups  []string `xorm:"mediumtext" json:"groups"`
 	Users   []string `xorm:"mediumtext" json:"users"`
+	Groups  []string `xorm:"mediumtext" json:"groups"`
 	Roles   []string `xorm:"mediumtext" json:"roles"`
 	Domains []string `xorm:"mediumtext" json:"domains"`
 
@@ -59,11 +59,7 @@ type PermissionRule struct {
 	Id    string `xorm:"varchar(100) index not null default ''" json:"id"`
 }
 
-const builtInAvailableField = 5
-
-func (p *Permission) GetId() string {
-	return util.GetId(p.Owner, p.Name)
-}
+const builtInAvailableField = 5 // Casdoor built-in adapter, use V5 to filter permission, so has 5 available field
 
 func GetPermissionCount(owner, field, value string) (int64, error) {
 	session := GetSession(owner, -1, -1, field, value, "", "")
@@ -181,9 +177,9 @@ func AddPermissionsInBatch(permissions []*Permission) bool {
 	}
 
 	affected := false
-	for i := 0; i < (len(permissions)-1)/batchSize+1; i++ {
-		start := i * batchSize
-		end := (i + 1) * batchSize
+	for i := 0; i < len(permissions); i += batchSize {
+		start := i
+		end := i + batchSize
 		if end > len(permissions) {
 			end = len(permissions)
 		}
@@ -218,9 +214,59 @@ func DeletePermission(permission *Permission) (bool, error) {
 	return affected != 0, nil
 }
 
-func GetPermissionsAndRolesByUser(userId string) ([]*Permission, []*Role, error) {
+func getPermissionsByUser(userId string) ([]*Permission, error) {
 	permissions := []*Permission{}
 	err := ormer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&permissions)
+	if err != nil {
+		return permissions, err
+	}
+
+	res := []*Permission{}
+	for _, permission := range permissions {
+		if util.InSlice(permission.Users, userId) {
+			res = append(res, permission)
+		}
+	}
+
+	return res, nil
+}
+
+func GetPermissionsByRole(roleId string) ([]*Permission, error) {
+	permissions := []*Permission{}
+	err := ormer.Engine.Where("roles like ?", "%"+roleId+"\"%").Find(&permissions)
+	if err != nil {
+		return permissions, err
+	}
+
+	res := []*Permission{}
+	for _, permission := range permissions {
+		if util.InSlice(permission.Roles, roleId) {
+			res = append(res, permission)
+		}
+	}
+
+	return res, nil
+}
+
+func GetPermissionsByResource(resourceId string) ([]*Permission, error) {
+	permissions := []*Permission{}
+	err := ormer.Engine.Where("resources like ?", "%"+resourceId+"\"%").Find(&permissions)
+	if err != nil {
+		return permissions, err
+	}
+
+	res := []*Permission{}
+	for _, permission := range permissions {
+		if util.InSlice(permission.Resources, resourceId) {
+			res = append(res, permission)
+		}
+	}
+
+	return res, nil
+}
+
+func getPermissionsAndRolesByUser(userId string) ([]*Permission, []*Role, error) {
+	permissions, err := getPermissionsByUser(userId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -237,14 +283,13 @@ func GetPermissionsAndRolesByUser(userId string) ([]*Permission, []*Role, error)
 
 	permFromRoles := []*Permission{}
 
-	roles, err := GetRolesByUser(userId)
+	roles, err := getRolesByUser(userId)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	for _, role := range roles {
-		perms := []*Permission{}
-		err := ormer.Engine.Where("roles like ?", "%"+role.GetId()+"\"%").Find(&perms)
+		perms, err := GetPermissionsByRole(role.GetId())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -282,26 +327,6 @@ func GetPermissionsByDomain(domainId string) ([]*Permission, error) {
 	return permissions, nil
 }
 
-func GetPermissionsByRole(roleId string) ([]*Permission, error) {
-	permissions := []*Permission{}
-	err := ormer.Engine.Where("roles like ?", "%"+roleId+"\"%").Find(&permissions)
-	if err != nil {
-		return permissions, err
-	}
-
-	return permissions, nil
-}
-
-func GetPermissionsByResource(resourceId string) ([]*Permission, error) {
-	permissions := []*Permission{}
-	err := ormer.Engine.Where("resources like ?", "%"+resourceId+"\"%").Find(&permissions)
-	if err != nil {
-		return permissions, err
-	}
-
-	return permissions, nil
-}
-
 func GetPermissionsBySubmitter(owner string, submitter string) ([]*Permission, error) {
 	permissions := []*Permission{}
 	err := ormer.Engine.Desc("created_time").Find(&permissions, &Permission{Owner: owner, Submitter: submitter})
@@ -320,20 +345,6 @@ func GetPermissionsByModel(owner string, model string) ([]*Permission, error) {
 	}
 
 	return permissions, nil
-}
-
-func ContainsAsterisk(userId string, users []string) bool {
-	containsAsterisk := false
-	group, _ := util.GetOwnerAndNameFromId(userId)
-	for _, user := range users {
-		permissionGroup, permissionUserName := util.GetOwnerAndNameFromId(user)
-		if permissionGroup == group && permissionUserName == "*" {
-			containsAsterisk = true
-			break
-		}
-	}
-
-	return containsAsterisk
 }
 
 func GetMaskedPermissions(permissions []*Permission) []*Permission {
@@ -364,4 +375,28 @@ func GroupPermissionsByModelAdapter(permissions []*Permission) map[string][]stri
 	}
 
 	return m
+}
+
+func (p *Permission) GetId() string {
+	return util.GetId(p.Owner, p.Name)
+}
+
+func (p *Permission) isUserHit(name string) bool {
+	targetOrg, _ := util.GetOwnerAndNameFromId(name)
+	for _, user := range p.Users {
+		userOrg, userName := util.GetOwnerAndNameFromId(user)
+		if userOrg == targetOrg && userName == "*" {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *Permission) isResourceHit(name string) bool {
+	for _, resource := range p.Resources {
+		if name == resource {
+			return true
+		}
+	}
+	return false
 }

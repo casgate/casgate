@@ -174,6 +174,17 @@ class RoleListPage extends BaseListPage {
         },
       },
       {
+        title: i18next.t("role:Sub groups"),
+        dataIndex: "groups",
+        key: "groups",
+        // width: '100px',
+        sorter: true,
+        ...this.getColumnSearchProps("groups"),
+        render: (text, record, index) => {
+          return Setting.getTags(text, "groups");
+        },
+      },
+      {
         title: i18next.t("role:Sub roles"),
         dataIndex: "roles",
         key: "roles",

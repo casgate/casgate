@@ -14,7 +14,7 @@
 
 import React from "react";
 import {Link} from "react-router-dom";
-import {Button, Switch, Table} from "antd";
+import {Button, Table} from "antd";
 import moment from "moment";
 import * as Setting from "./Setting";
 import * as EnforcerBackend from "./backend/EnforcerBackend";
@@ -31,7 +31,6 @@ class EnforcerListPage extends BaseListPage {
       name: `enforcer_${randomName}`,
       createdTime: moment().format(),
       displayName: `New Enforcer - ${randomName}`,
-      isEnabled: true,
     };
   }
 
@@ -75,7 +74,7 @@ class EnforcerListPage extends BaseListPage {
         title: i18next.t("general:Name"),
         dataIndex: "name",
         key: "name",
-        width: "150px",
+        width: "200px",
         fixed: "left",
         sorter: true,
         ...this.getColumnSearchProps("name"),
@@ -116,19 +115,39 @@ class EnforcerListPage extends BaseListPage {
         title: i18next.t("general:Display name"),
         dataIndex: "displayName",
         key: "displayName",
-        width: "200px",
+        // width: "200px",
         sorter: true,
         ...this.getColumnSearchProps("displayName"),
       },
       {
-        title: i18next.t("general:Is enabled"),
-        dataIndex: "isEnabled",
-        key: "isEnabled",
-        width: "120px",
+        title: i18next.t("general:Model"),
+        dataIndex: "model",
+        key: "model",
+        width: "250px",
+        fixed: "left",
         sorter: true,
+        ...this.getColumnSearchProps("name"),
         render: (text, record, index) => {
           return (
-            <Switch disabled checkedChildren="ON" unCheckedChildren="OFF" checked={text} />
+            <Link to={`/models/${text}`}>
+              {text}
+            </Link>
+          );
+        },
+      },
+      {
+        title: i18next.t("general:Adapter"),
+        dataIndex: "adapter",
+        key: "adapter",
+        width: "250px",
+        fixed: "left",
+        sorter: true,
+        ...this.getColumnSearchProps("name"),
+        render: (text, record, index) => {
+          return (
+            <Link to={`/adapters/${text}`}>
+              {text}
+            </Link>
           );
         },
       },
@@ -136,7 +155,7 @@ class EnforcerListPage extends BaseListPage {
         title: i18next.t("general:Action"),
         dataIndex: "",
         key: "op",
-        width: "170px",
+        width: "180px",
         fixed: (Setting.isMobile()) ? "false" : "right",
         render: (text, record, index) => {
           return (

@@ -66,8 +66,11 @@ func CheckUserSignup(application *Application, organization *Organization, form 
 		}
 	}
 
-	if len(form.Password) <= 5 {
-		return i18n.Translate(lang, "check:Password must have at least 6 characters")
+	if application.IsSignupItemVisible("Password") {
+		msg := CheckPasswordComplexityByOrg(organization, form.Password)
+		if msg != "" {
+			return msg
+		}
 	}
 
 	if application.IsSignupItemVisible("Email") {
@@ -124,6 +127,18 @@ func CheckUserSignup(application *Application, organization *Organization, form 
 		}
 	}
 
+	if len(application.InvitationCodes) > 0 {
+		if form.InvitationCode == "" {
+			if application.IsSignupItemRequired("Invitation code") {
+				return i18n.Translate(lang, "check:Invitation code cannot be blank")
+			}
+		} else {
+			if !util.InSlice(application.InvitationCodes, form.InvitationCode) {
+				return i18n.Translate(lang, "check:Invitation code is invalid")
+			}
+		}
+	}
+
 	return ""
 }
 
@@ -141,7 +156,7 @@ func checkSigninErrorTimes(user *User, lang string) string {
 		// reset the error times
 		user.SigninWrongTimes = 0
 
-		UpdateUser(user.GetId(), user, []string{"signin_wrong_times"}, user.IsGlobalAdmin)
+		UpdateUser(user.GetId(), user, []string{"signin_wrong_times"}, false)
 	}
 
 	return ""
@@ -319,7 +334,7 @@ func CheckUserPermission(requestUserId, userId string, strict bool, lang string)
 		if requestUser == nil {
 			return false, fmt.Errorf(i18n.Translate(lang, "check:Session outdated, please login again"))
 		}
-		if requestUser.IsGlobalAdmin {
+		if requestUser.IsGlobalAdmin() {
 			hasPermission = true
 		} else if requestUserId == userId {
 			hasPermission = true
@@ -335,7 +350,7 @@ func CheckUserPermission(requestUserId, userId string, strict bool, lang string)
 	return hasPermission, fmt.Errorf(i18n.Translate(lang, "auth:Unauthorized operation"))
 }
 
-func CheckAccessPermission(userId string, application *Application) (bool, error) {
+func CheckLoginPermission(userId string, application *Application) (bool, error) {
 	var err error
 	if userId == "built-in/admin" {
 		return true, nil
@@ -346,32 +361,40 @@ func CheckAccessPermission(userId string, application *Application) (bool, error
 		return false, err
 	}
 
-	allowed := true
+	allowCount := 0
+	denyCount := 0
 	for _, permission := range permissions {
-		if !permission.IsEnabled {
+		if !permission.IsEnabled || permission.ResourceType != "Application" || !permission.isResourceHit(application.Name) {
 			continue
 		}
 
-		isHit := false
-		for _, resource := range permission.Resources {
-			if application.Name == resource {
-				isHit = true
-				break
-			}
+		if permission.isUserHit(userId) {
+			allowCount += 1
 		}
 
-		if isHit {
-			containsAsterisk := ContainsAsterisk(userId, permission.Users)
-			if containsAsterisk {
-				return true, err
+		enforcer := getPermissionEnforcer(permission)
+
+		var isAllowed bool
+		isAllowed, err = enforcer.Enforce(userId, application.Name, "Read")
+		if err != nil {
+			return false, err
+		}
+
+		if isAllowed {
+			if permission.Effect == "Allow" {
+				allowCount += 1
 			}
-			enforcer := getPermissionEnforcer(permission)
-			if allowed, err = enforcer.Enforce(userId, application.Name, "read"); allowed {
-				return allowed, err
+		} else {
+			if permission.Effect == "Deny" {
+				denyCount += 1
 			}
 		}
 	}
-	return allowed, err
+
+	if denyCount > 0 {
+		return false, nil
+	}
+	return true, nil
 }
 
 func CheckUsername(username string, lang string) string {
@@ -391,10 +414,6 @@ func CheckUsername(username string, lang string) string {
 }
 
 func CheckUpdateUser(oldUser, user *User, lang string) string {
-	if user.DisplayName == "" {
-		return i18n.Translate(lang, "user:Display name cannot be empty")
-	}
-
 	if oldUser.Name != user.Name {
 		if msg := CheckUsername(user.Name, lang); msg != "" {
 			return msg
@@ -404,7 +423,7 @@ func CheckUpdateUser(oldUser, user *User, lang string) string {
 		}
 	}
 	if oldUser.Email != user.Email {
-		if HasUserByField(user.Name, "email", user.Email) {
+		if HasUserByField(user.Owner, "email", user.Email) {
 			return i18n.Translate(lang, "check:Email already exists")
 		}
 	}

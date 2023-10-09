@@ -102,6 +102,21 @@ class PaymentListPage extends BaseListPage {
         },
       },
       {
+        title: i18next.t("general:Organization"),
+        dataIndex: "owner",
+        key: "owner",
+        width: "120px",
+        sorter: true,
+        ...this.getColumnSearchProps("owner"),
+        render: (text, record, index) => {
+          return (
+            <Link to={`/organizations/${text}`}>
+              {text}
+            </Link>
+          );
+        },
+      },
+      {
         title: i18next.t("general:Provider"),
         dataIndex: "provider",
         key: "provider",
@@ -112,21 +127,6 @@ class PaymentListPage extends BaseListPage {
         render: (text, record, index) => {
           return (
             <Link to={`/providers/${record.owner}/${text}`}>
-              {text}
-            </Link>
-          );
-        },
-      },
-      {
-        title: i18next.t("general:Organization"),
-        dataIndex: "owner",
-        key: "owner",
-        width: "120px",
-        sorter: true,
-        ...this.getColumnSearchProps("owner"),
-        render: (text, record, index) => {
-          return (
-            <Link to={`/organizations/${text}`}>
               {text}
             </Link>
           );
@@ -158,14 +158,6 @@ class PaymentListPage extends BaseListPage {
           return Setting.getFormattedDate(text);
         },
       },
-      // {
-      //   title: i18next.t("general:Display name"),
-      //   dataIndex: 'displayName',
-      //   key: 'displayName',
-      //   width: '160px',
-      //   sorter: true,
-      //   ...this.getColumnSearchProps('displayName'),
-      // },
       {
         title: i18next.t("provider:Type"),
         dataIndex: "type",
@@ -187,6 +179,13 @@ class PaymentListPage extends BaseListPage {
         // width: '160px',
         sorter: true,
         ...this.getColumnSearchProps("productDisplayName"),
+        render: (text, record, index) => {
+          return (
+            <Link to={`/products/${record.owner}/${record.productName}`}>
+              {text}
+            </Link>
+          );
+        },
       },
       {
         title: i18next.t("product:Price"),
@@ -265,7 +264,7 @@ class PaymentListPage extends BaseListPage {
       value = params.type;
     }
     this.setState({loading: true});
-    PaymentBackend.getPayments(Setting.getRequestOrganization(this.props.account), Setting.isDefaultOrganizationSelected(this.props.account) ? "" : Setting.getRequestOrganization(this.props.account), params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
+    PaymentBackend.getPayments(Setting.isDefaultOrganizationSelected(this.props.account) ? "" : Setting.getRequestOrganization(this.props.account), params.pagination.current, params.pagination.pageSize, field, value, sortField, sortOrder)
       .then((res) => {
         this.setState({
           loading: false,

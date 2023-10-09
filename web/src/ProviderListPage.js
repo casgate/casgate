@@ -142,13 +142,15 @@ class ProviderListPage extends BaseListPage {
         key: "category",
         filterMultiple: false,
         filters: [
-          {text: "OAuth", value: "OAuth"},
+          {text: "Captcha", value: "Captcha"},
           {text: "Email", value: "Email"},
+          {text: "Notification", value: "Notification"},
+          {text: "OAuth", value: "OAuth"},
+          {text: "Payment", value: "Payment"},
+          {text: "SAML", value: "SAML"},
           {text: "SMS", value: "SMS"},
           {text: "Storage", value: "Storage"},
-          {text: "SAML", value: "SAML"},
-          {text: "Captcha", value: "Captcha"},
-          {text: "Payment", value: "Payment"},
+          {text: "Web3", value: "Web3"},
         ],
         width: "110px",
         sorter: true,
@@ -161,13 +163,15 @@ class ProviderListPage extends BaseListPage {
         align: "center",
         filterMultiple: false,
         filters: [
-          {text: "OAuth", value: "OAuth", children: Setting.getProviderTypeOptions("OAuth").map((o) => {return {text: o.id, value: o.name};})},
+          {text: "Captcha", value: "Captcha", children: Setting.getProviderTypeOptions("Captcha").map((o) => {return {text: o.id, value: o.name};})},
           {text: "Email", value: "Email", children: Setting.getProviderTypeOptions("Email").map((o) => {return {text: o.id, value: o.name};})},
+          {text: "Notification", value: "Notification", children: Setting.getProviderTypeOptions("Notification").map((o) => {return {text: o.id, value: o.name};})},
+          {text: "OAuth", value: "OAuth", children: Setting.getProviderTypeOptions("OAuth").map((o) => {return {text: o.id, value: o.name};})},
+          {text: "Payment", value: "Payment", children: Setting.getProviderTypeOptions("Payment").map((o) => {return {text: o.id, value: o.name};})},
+          {text: "SAML", value: "SAML", children: Setting.getProviderTypeOptions("SAML").map((o) => {return {text: o.id, value: o.name};})},
           {text: "SMS", value: "SMS", children: Setting.getProviderTypeOptions("SMS").map((o) => {return {text: o.id, value: o.name};})},
           {text: "Storage", value: "Storage", children: Setting.getProviderTypeOptions("Storage").map((o) => {return {text: o.id, value: o.name};})},
-          {text: "SAML", value: "SAML", children: Setting.getProviderTypeOptions("SAML").map((o) => {return {text: o.id, value: o.name};})},
-          {text: "Captcha", value: "Captcha", children: Setting.getProviderTypeOptions("Captcha").map((o) => {return {text: o.id, value: o.name};})},
-          {text: "Payment", value: "Payment", children: Setting.getProviderTypeOptions("Payment").map((o) => {return {text: o.id, value: o.name};})},
+          {text: "Web3", value: "Web3", children: Setting.getProviderTypeOptions("Web3").map((o) => {return {text: o.id, value: o.name};})},
         ],
         sorter: true,
         render: (text, record, index) => {
@@ -237,7 +241,7 @@ class ProviderListPage extends BaseListPage {
           title={() => (
             <div>
               {i18next.t("general:Providers")}&nbsp;&nbsp;&nbsp;&nbsp;
-              <Button type="primary" size="small" onClick={this.addProvider.bind(this)}>{i18next.t("general:Add")}</Button>
+              <Button id="add-button" type="primary" size="small" onClick={this.addProvider.bind(this)}>{i18next.t("general:Add")}</Button>
             </div>
           )}
           loading={this.state.loading}

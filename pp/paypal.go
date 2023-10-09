@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/casdoor/casdoor/conf"
@@ -52,13 +51,12 @@ func NewPaypalPaymentProvider(clientID string, secret string) (*PaypalPaymentPro
 
 func (pp *PaypalPaymentProvider) Pay(providerName string, productName string, payerName string, paymentName string, productDisplayName string, price float64, currency string, returnUrl string, notifyUrl string) (string, string, error) {
 	// https://github.com/go-pay/gopay/blob/main/doc/paypal.md
-	priceStr := strconv.FormatFloat(price, 'f', 2, 64)
 	units := make([]*paypal.PurchaseUnit, 0, 1)
 	unit := &paypal.PurchaseUnit{
 		ReferenceId: util.GetRandomString(16),
 		Amount: &paypal.Amount{
-			CurrencyCode: currency, // e.g."USD"
-			Value:        priceStr, // e.g."100.00"
+			CurrencyCode: currency,                    // e.g."USD"
+			Value:        priceFloat64ToString(price), // e.g."100.00"
 		},
 		Description: joinAttachString([]string{productDisplayName, productName, providerName}),
 	}
@@ -89,7 +87,7 @@ func (pp *PaypalPaymentProvider) Pay(providerName string, productName string, pa
 	return ppRsp.Response.Links[1].Href, ppRsp.Response.Id, nil
 }
 
-func (pp *PaypalPaymentProvider) Notify(request *http.Request, body []byte, authorityPublicKey string, orderId string) (*NotifyResult, error) {
+func (pp *PaypalPaymentProvider) Notify(body []byte, orderId string) (*NotifyResult, error) {
 	notifyResult := &NotifyResult{}
 	captureRsp, err := pp.Client.OrderCapture(context.Background(), orderId, nil)
 	if err != nil {
@@ -115,8 +113,8 @@ func (pp *PaypalPaymentProvider) Notify(request *http.Request, body []byte, auth
 	if err != nil {
 		return nil, err
 	}
-	if captureRsp.Code != paypal.Success {
-		errDetail := captureRsp.ErrorResponse.Details[0]
+	if detailRsp.Code != paypal.Success {
+		errDetail := detailRsp.ErrorResponse.Details[0]
 		switch errDetail.Issue {
 		case "ORDER_NOT_APPROVED":
 			notifyResult.PaymentStatus = PaymentStateCanceled
@@ -147,16 +145,15 @@ func (pp *PaypalPaymentProvider) Notify(request *http.Request, body []byte, auth
 		paymentStatus = PaymentStateError
 	}
 	notifyResult = &NotifyResult{
-		PaymentStatus: paymentStatus,
-		PaymentName:   paymentName,
-
+		PaymentStatus:      paymentStatus,
+		PaymentName:        paymentName,
 		ProductName:        productName,
 		ProductDisplayName: productDisplayName,
 		ProviderName:       providerName,
 		Price:              price,
 		Currency:           currency,
 
-		OutOrderId: orderId,
+		OrderId: orderId,
 	}
 	return notifyResult, nil
 }

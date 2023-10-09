@@ -14,12 +14,12 @@
 
 import React from "react";
 import {Button, Card, Col, Input, Row, Select, Switch} from "antd";
-import * as RoleBackend from "./backend/RoleBackend";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
-import * as Setting from "./Setting";
-import i18next from "i18next";
 import * as UserBackend from "./backend/UserBackend";
 import * as GroupBackend from "./backend/GroupBackend";
+import * as RoleBackend from "./backend/RoleBackend";
+import * as Setting from "./Setting";
+import i18next from "i18next";
 import * as DomainBackend from "./backend/DomainBackend";
 
 const {Option} = Select;
@@ -33,8 +33,8 @@ class RoleEditPage extends React.Component {
       roleName: decodeURIComponent(props.match.params.roleName),
       role: null,
       organizations: [],
-      groups: [],
       users: [],
+      groups: [],
       roles: [],
       domains: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
@@ -113,7 +113,6 @@ class RoleEditPage extends React.Component {
         });
       });
   }
-
   getRoles(organizationName) {
     RoleBackend.getRoles(organizationName)
       .then((res) => {

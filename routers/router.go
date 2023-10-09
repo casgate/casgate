@@ -51,6 +51,7 @@ func initAPI() {
 	beego.Router("/api/signup", &controllers.ApiController{}, "POST:Signup")
 	beego.Router("/api/login", &controllers.ApiController{}, "POST:Login")
 	beego.Router("/api/get-app-login", &controllers.ApiController{}, "GET:GetApplicationLogin")
+	beego.Router("/api/get-dashboard", &controllers.ApiController{}, "GET:GetDashboard")
 	beego.Router("/api/logout", &controllers.ApiController{}, "GET,POST:Logout")
 	beego.Router("/api/get-account", &controllers.ApiController{}, "GET:GetAccount")
 	beego.Router("/api/userinfo", &controllers.ApiController{}, "GET:GetUserinfo")
@@ -62,6 +63,7 @@ func initAPI() {
 	beego.Router("/api/webhook", &controllers.ApiController{}, "POST:HandleOfficialAccountEvent")
 	beego.Router("/api/get-webhook-event", &controllers.ApiController{}, "GET:GetWebhookEventType")
 	beego.Router("/api/get-captcha-status", &controllers.ApiController{}, "GET:GetCaptchaStatus")
+	beego.Router("/api/callback", &controllers.ApiController{}, "POST:Callback")
 
 	beego.Router("/api/get-organizations", &controllers.ApiController{}, "GET:GetOrganizations")
 	beego.Router("/api/get-organization", &controllers.ApiController{}, "GET:GetOrganization")
@@ -186,9 +188,6 @@ func initAPI() {
 	beego.Router("/api/login/oauth/access_token", &controllers.ApiController{}, "POST:GetOAuthToken")
 	beego.Router("/api/login/oauth/refresh_token", &controllers.ApiController{}, "POST:RefreshToken")
 	beego.Router("/api/login/oauth/introspect", &controllers.ApiController{}, "POST:IntrospectToken")
-	beego.Router("/api/get-records", &controllers.ApiController{}, "GET:GetRecords")
-	beego.Router("/api/get-records-filter", &controllers.ApiController{}, "POST:GetRecordsByFilter")
-	beego.Router("/api/add-record", &controllers.ApiController{}, "POST:AddRecord")
 
 	beego.Router("/api/get-sessions", &controllers.ApiController{}, "GET:GetSessions")
 	beego.Router("/api/get-session", &controllers.ApiController{}, "GET:GetSingleSession")
@@ -253,11 +252,12 @@ func initAPI() {
 
 	beego.Router("/api/send-email", &controllers.ApiController{}, "POST:SendEmail")
 	beego.Router("/api/send-sms", &controllers.ApiController{}, "POST:SendSms")
+	beego.Router("/api/send-notification", &controllers.ApiController{}, "POST:SendNotification")
 
-	beego.Router("/api/webauthn/signup/begin", &controllers.ApiController{}, "Get:WebAuthnSignupBegin")
-	beego.Router("/api/webauthn/signup/finish", &controllers.ApiController{}, "Post:WebAuthnSignupFinish")
-	beego.Router("/api/webauthn/signin/begin", &controllers.ApiController{}, "Get:WebAuthnSigninBegin")
-	beego.Router("/api/webauthn/signin/finish", &controllers.ApiController{}, "Post:WebAuthnSigninFinish")
+	beego.Router("/api/webauthn/signup/begin", &controllers.ApiController{}, "GET:WebAuthnSignupBegin")
+	beego.Router("/api/webauthn/signup/finish", &controllers.ApiController{}, "POST:WebAuthnSignupFinish")
+	beego.Router("/api/webauthn/signin/begin", &controllers.ApiController{}, "GET:WebAuthnSigninBegin")
+	beego.Router("/api/webauthn/signin/finish", &controllers.ApiController{}, "POST:WebAuthnSigninFinish")
 
 	beego.Router("/api/mfa/setup/initiate", &controllers.ApiController{}, "POST:MfaSetupInitiate")
 	beego.Router("/api/mfa/setup/verify", &controllers.ApiController{}, "POST:MfaSetupVerify")
@@ -280,7 +280,7 @@ func initAPI() {
 	beego.Router("/cas/:organization/:application/proxy", &controllers.RootController{}, "GET:CasProxy")
 	beego.Router("/cas/:organization/:application/validate", &controllers.RootController{}, "GET:CasValidate")
 
-	beego.Router("/cas/:organization/:application/p3/serviceValidate", &controllers.RootController{}, "GET:CasP3ServiceAndProxyValidate")
-	beego.Router("/cas/:organization/:application/p3/proxyValidate", &controllers.RootController{}, "GET:CasP3ServiceAndProxyValidate")
+	beego.Router("/cas/:organization/:application/p3/serviceValidate", &controllers.RootController{}, "GET:CasP3ServiceValidate")
+	beego.Router("/cas/:organization/:application/p3/proxyValidate", &controllers.RootController{}, "GET:CasP3ProxyValidate")
 	beego.Router("/cas/:organization/:application/samlValidate", &controllers.RootController{}, "POST:SamlValidate")
 }

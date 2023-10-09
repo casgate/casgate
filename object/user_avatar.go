@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"strings"
 
@@ -34,7 +35,7 @@ func downloadImage(client *http.Client, url string) (*bytes.Buffer, string, erro
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Printf("downloadImage() error for url [%s]: %s\n", url, err.Error())
-		if strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "no such host") {
+		if strings.Contains(err.Error(), "EOF") || strings.Contains(err.Error(), "no such host") || strings.Contains(err.Error(), "did not properly respond after a period of time") {
 			return nil, "", nil
 		} else {
 			return nil, "", err
@@ -58,22 +59,15 @@ func downloadImage(client *http.Client, url string) (*bytes.Buffer, string, erro
 	if strings.Contains(contentType, "text/html") {
 		fileExtension = ".html"
 	} else {
-		switch contentType {
-		case "image/jpeg":
-			fileExtension = ".jpg"
-		case "image/png":
-			fileExtension = ".png"
-		case "image/gif":
-			fileExtension = ".gif"
-		case "image/vnd.microsoft.icon":
-			fileExtension = ".ico"
-		case "image/x-icon":
-			fileExtension = ".ico"
-		case "image/svg+xml":
-			fileExtension = ".svg"
-		default:
-			return nil, "", fmt.Errorf("unsupported content type: %s", contentType)
+		fileExtensions, err := mime.ExtensionsByType(contentType)
+		if err != nil {
+			return nil, "", err
 		}
+		if fileExtensions == nil {
+			return nil, "", fmt.Errorf("fileExtensions is nil")
+		}
+
+		fileExtension = fileExtensions[0]
 	}
 
 	// Save the image to a bytes.Buffer

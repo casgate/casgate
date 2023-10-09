@@ -19,11 +19,6 @@ import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 
-import "codemirror/lib/codemirror.css";
-import PolicyTable from "./table/PoliciyTable";
-require("codemirror/theme/material-darker.css");
-require("codemirror/mode/javascript/javascript");
-
 const {Option} = Select;
 
 class AdapterEditPage extends React.Component {
@@ -86,56 +81,6 @@ class AdapterEditPage extends React.Component {
     });
   }
 
-  renderDataSourceNameConfig() {
-    if (Setting.builtInObject(this.state.adapter)) {
-      return null;
-    }
-    return (
-      <React.Fragment>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("provider:Host"), i18next.t("provider:Host - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Input value={this.state.adapter.host} onChange={e => {
-              this.updateAdapterField("host", e.target.value);
-            }} />
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("provider:Port"), i18next.t("provider:Port - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <InputNumber value={this.state.adapter.port} min={0} max={65535} onChange={value => {
-              this.updateAdapterField("port", value);
-            }} />
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:User"), i18next.t("general:User - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Input value={this.state.adapter.user} onChange={e => {
-              this.updateAdapterField("user", e.target.value);
-            }} />
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Password"), i18next.t("general:Password - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Input value={this.state.adapter.password} onChange={e => {
-              this.updateAdapterField("password", e.target.value);
-            }} />
-          </Col>
-        </Row>
-      </React.Fragment>
-    );
-  }
-
   renderAdapter() {
     return (
       <Card size="small" title={
@@ -172,55 +117,6 @@ class AdapterEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("provider:Type"), i18next.t("provider:Type - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Select virtual={false} disabled={Setting.builtInObject(this.state.adapter)} style={{width: "100%"}} value={this.state.adapter.type} onChange={(value => {
-              this.updateAdapterField("type", value);
-              const adapter = this.state.adapter;
-              // adapter["tableColumns"] = Setting.getAdapterTableColumns(this.state.adapter);
-              this.setState({
-                adapter: adapter,
-              });
-            })}>
-              {
-                ["Database"]
-                  .map((item, index) => <Option key={index} value={item}>{item}</Option>)
-              }
-            </Select>
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("syncer:Database type"), i18next.t("syncer:Database type - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Select virtual={false} disabled={Setting.builtInObject(this.state.adapter)} style={{width: "100%"}} value={this.state.adapter.databaseType} onChange={(value => {this.updateAdapterField("databaseType", value);})}>
-              {
-                [
-                  {id: "mysql", name: "MySQL"},
-                  {id: "postgres", name: "PostgreSQL"},
-                  {id: "mssql", name: "SQL Server"},
-                  {id: "oracle", name: "Oracle"},
-                  {id: "sqlite3", name: "Sqlite 3"},
-                ].map((databaseType, index) => <Option key={index} value={databaseType.id}>{databaseType.name}</Option>)
-              }
-            </Select>
-          </Col>
-        </Row>
-        {this.state.adapter.type === "Database" ? this.renderDataSourceNameConfig() : null}
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("syncer:Database"), i18next.t("syncer:Database - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Input disabled={Setting.builtInObject(this.state.adapter)} value={this.state.adapter.database} onChange={e => {
-              this.updateAdapterField("database", e.target.value);
-            }} />
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("syncer:Table"), i18next.t("syncer:Table - Tooltip"))} :
           </Col>
           <Col span={22} >
@@ -231,21 +127,145 @@ class AdapterEditPage extends React.Component {
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("adapter:Policies"), i18next.t("adapter:Policies - Tooltip"))} :
-          </Col>
-          <Col span={22}>
-            <PolicyTable owner={this.state.organizationName} name={this.state.adapterName} mode={this.state.mode} />
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
-            {Setting.getLabel(i18next.t("general:Is enabled"), i18next.t("general:Is enabled - Tooltip"))} :
+            {Setting.getLabel(i18next.t("adapter:Use same DB"), i18next.t("adapter:Use same DB - Tooltip"))} :
           </Col>
           <Col span={1} >
-            <Switch checked={this.state.adapter.isEnabled} onChange={checked => {
-              this.updateAdapterField("isEnabled", checked);
+            <Switch disabled={Setting.builtInObject(this.state.adapter)} checked={this.state.adapter.useSameDb || Setting.builtInObject(this.state.adapter)} onChange={checked => {
+              this.updateAdapterField("useSameDb", checked);
+              if (checked) {
+                this.updateAdapterField("type", "");
+                this.updateAdapterField("databaseType", "");
+                this.updateAdapterField("host", "");
+                this.updateAdapterField("port", 0);
+                this.updateAdapterField("user", "");
+                this.updateAdapterField("password", "");
+                this.updateAdapterField("database", "");
+              } else {
+                this.updateAdapterField("type", "Database");
+                this.updateAdapterField("databaseType", "mysql");
+                this.updateAdapterField("host", "localhost");
+                this.updateAdapterField("port", 3306);
+                this.updateAdapterField("user", "root");
+                this.updateAdapterField("password", "123456");
+                this.updateAdapterField("database", "dbName");
+              }
             }} />
+          </Col>
+        </Row>
+        {
+          (this.state.adapter.useSameDb || Setting.builtInObject(this.state.adapter)) ? null : (
+            <React.Fragment>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("provider:Type"), i18next.t("provider:Type - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <Select virtual={false} disabled={Setting.builtInObject(this.state.adapter)} style={{width: "100%"}} value={this.state.adapter.type} onChange={(value => {
+                    this.updateAdapterField("type", value);
+                    const adapter = this.state.adapter;
+                    // adapter["tableColumns"] = Setting.getAdapterTableColumns(this.state.adapter);
+                    this.setState({
+                      adapter: adapter,
+                    });
+                  })}>
+                    {
+                      ["Database"]
+                        .map((item, index) => <Option key={index} value={item}>{item}</Option>)
+                    }
+                  </Select>
+                </Col>
+              </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("syncer:Database type"), i18next.t("syncer:Database type - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <Select virtual={false} disabled={Setting.builtInObject(this.state.adapter)} style={{width: "100%"}} value={this.state.adapter.databaseType} onChange={(value => {this.updateAdapterField("databaseType", value);})}>
+                    {
+                      [
+                        {id: "mysql", name: "MySQL"},
+                        {id: "postgres", name: "PostgreSQL"},
+                        {id: "mssql", name: "SQL Server"},
+                        {id: "oracle", name: "Oracle"},
+                        {id: "sqlite3", name: "Sqlite 3"},
+                      ].map((databaseType, index) => <Option key={index} value={databaseType.id}>{databaseType.name}</Option>)
+                    }
+                  </Select>
+                </Col>
+              </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("provider:Host"), i18next.t("provider:Host - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <Input value={this.state.adapter.host} onChange={e => {
+                    this.updateAdapterField("host", e.target.value);
+                  }} />
+                </Col>
+              </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("provider:Port"), i18next.t("provider:Port - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <InputNumber value={this.state.adapter.port} min={0} max={65535} onChange={value => {
+                    this.updateAdapterField("port", value);
+                  }} />
+                </Col>
+              </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("general:User"), i18next.t("general:User - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <Input value={this.state.adapter.user} onChange={e => {
+                    this.updateAdapterField("user", e.target.value);
+                  }} />
+                </Col>
+              </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("general:Password"), i18next.t("general:Password - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <Input value={this.state.adapter.password} onChange={e => {
+                    this.updateAdapterField("password", e.target.value);
+                  }} />
+                </Col>
+              </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("syncer:Database"), i18next.t("syncer:Database - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <Input disabled={Setting.builtInObject(this.state.adapter)} value={this.state.adapter.database} onChange={e => {
+                    this.updateAdapterField("database", e.target.value);
+                  }} />
+                </Col>
+              </Row>
+            </React.Fragment>
+          )
+        }
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("provider:DB test"), i18next.t("provider:DB test - Tooltip"))} :
+          </Col>
+          <Col span={2} >
+            <Button type={"primary"} onClick={() => {
+              AdapterBackend.getPolicies("", "", `${this.state.organizationName}/${this.state.adapterName}`)
+                .then((res) => {
+                  if (res.status === "ok") {
+                    Setting.showMessage("success", i18next.t("syncer:Connect successfully"));
+                  } else {
+                    Setting.showMessage("error", i18next.t("syncer:Failed to connect") + ": " + res.msg);
+                  }
+                })
+                .catch(error => {
+                  Setting.showMessage("error", `${i18next.t("general:Failed to connect to server")}: ${error}`);
+                });
+            }
+            }>{i18next.t("syncer:Test DB Connection")}</Button>
           </Col>
         </Row>
       </Card>

@@ -81,7 +81,6 @@ class UserListPage extends BaseListPage {
       tag: "staff",
       region: "",
       isAdmin: (owner === "built-in"),
-      isGlobalAdmin: (owner === "built-in"),
       IsForbidden: false,
       score: this.state.organization.initScore,
       isDeleted: false,
@@ -189,7 +188,7 @@ class UserListPage extends BaseListPage {
 
     return (
       <Upload {...props}>
-        <Button type="primary" size="small">
+        <Button id="upload-button" type="primary" size="small">
           <UploadOutlined /> {i18next.t("user:Upload (.xlsx)")}
         </Button>
       </Upload>
@@ -300,13 +299,6 @@ class UserListPage extends BaseListPage {
         sorter: true,
         ...this.getColumnSearchProps("phone"),
       },
-      // {
-      //   title: 'Phone',
-      //   dataIndex: 'phone',
-      //   key: 'phone',
-      //   width: '120px',
-      //   sorter: (a, b) => a.phone.localeCompare(b.phone),
-      // },
       {
         title: i18next.t("user:Affiliation"),
         dataIndex: "affiliation",
@@ -348,18 +340,6 @@ class UserListPage extends BaseListPage {
         dataIndex: "isAdmin",
         key: "isAdmin",
         width: "110px",
-        sorter: true,
-        render: (text, record, index) => {
-          return (
-            <Switch disabled checkedChildren="ON" unCheckedChildren="OFF" checked={text} />
-          );
-        },
-      },
-      {
-        title: i18next.t("user:Is global admin"),
-        dataIndex: "isGlobalAdmin",
-        key: "isGlobalAdmin",
-        width: "140px",
         sorter: true,
         render: (text, record, index) => {
           return (
@@ -440,7 +420,7 @@ class UserListPage extends BaseListPage {
           title={() => (
             <div>
               {i18next.t("general:Users")}&nbsp;&nbsp;&nbsp;&nbsp;
-              <Button style={{marginRight: "5px"}} type="primary" size="small" onClick={this.addUser.bind(this)}>{i18next.t("general:Add")}</Button>
+              <Button style={{marginRight: "5px"}} type="primary" size="small" onClick={this.addUser.bind(this)}>{i18next.t("general:Add")} </Button>
               {
                 this.renderUpload()
               }

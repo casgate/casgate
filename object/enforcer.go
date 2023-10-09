@@ -15,10 +15,12 @@
 package object
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v2/config"
 	"github.com/casdoor/casdoor/util"
+	xormadapter "github.com/casdoor/xorm-adapter/v3"
 	"github.com/xorm-io/core"
 )
 
@@ -30,10 +32,10 @@ type Enforcer struct {
 	DisplayName string `xorm:"varchar(100)" json:"displayName"`
 	Description string `xorm:"varchar(100)" json:"description"`
 
-	Model     string `xorm:"varchar(100)" json:"model"`
-	Adapter   string `xorm:"varchar(100)" json:"adapter"`
-	IsEnabled bool   `json:"isEnabled"`
+	Model   string `xorm:"varchar(100)" json:"model"`
+	Adapter string `xorm:"varchar(100)" json:"adapter"`
 
+	ModelCfg map[string]string `xorm:"-" json:"modelCfg"`
 	*casbin.Enforcer
 }
 
@@ -120,44 +122,147 @@ func DeleteEnforcer(enforcer *Enforcer) (bool, error) {
 	return affected != 0, nil
 }
 
+func (enforcer *Enforcer) GetId() string {
+	return fmt.Sprintf("%s/%s", enforcer.Owner, enforcer.Name)
+}
+
 func (enforcer *Enforcer) InitEnforcer() error {
-	if enforcer.Enforcer == nil {
-		if enforcer == nil {
-			return errors.New("enforcer is nil")
-		}
-		if enforcer.Model == "" || enforcer.Adapter == "" {
-			return errors.New("missing model or adapter")
-		}
+	if enforcer.Enforcer != nil {
+		return nil
+	}
 
-		var err error
-		var m *Model
-		var a *Adapter
+	if enforcer.Model == "" {
+		return fmt.Errorf("the model for enforcer: %s should not be empty", enforcer.GetId())
+	}
+	if enforcer.Adapter == "" {
+		return fmt.Errorf("the adapter for enforcer: %s should not be empty", enforcer.GetId())
+	}
 
-		if m, err = GetModel(enforcer.Model); err != nil {
-			return err
-		} else if m == nil {
-			return errors.New("model not found")
-		}
-		if a, err = GetAdapter(enforcer.Adapter); err != nil {
-			return err
-		} else if a == nil {
-			return errors.New("adapter not found")
-		}
+	m, err := GetModel(enforcer.Model)
+	if err != nil {
+		return err
+	} else if m == nil {
+		return fmt.Errorf("the model: %s for enforcer: %s is not found", enforcer.Model, enforcer.GetId())
+	}
 
-		err = m.initModel()
-		if err != nil {
-			return err
-		}
-		err = a.initAdapter()
-		if err != nil {
-			return err
-		}
+	a, err := GetAdapter(enforcer.Adapter)
+	if err != nil {
+		return err
+	} else if a == nil {
+		return fmt.Errorf("the adapter: %s for enforcer: %s is not found", enforcer.Adapter, enforcer.GetId())
+	}
 
-		casbinEnforcer, err := casbin.NewEnforcer(m.Model, a.Adapter)
-		if err != nil {
-			return err
-		}
-		enforcer.Enforcer = casbinEnforcer
+	err = m.initModel()
+	if err != nil {
+		return err
+	}
+	err = a.InitAdapter()
+	if err != nil {
+		return err
+	}
+
+	casbinEnforcer, err := casbin.NewEnforcer(m.Model, a.Adapter)
+	if err != nil {
+		return err
+	}
+
+	enforcer.Enforcer = casbinEnforcer
+	return nil
+}
+
+func GetInitializedEnforcer(enforcerId string) (*Enforcer, error) {
+	enforcer, err := GetEnforcer(enforcerId)
+	if err != nil {
+		return nil, err
+	} else if enforcer == nil {
+		return nil, fmt.Errorf("the enforcer: %s is not found", enforcerId)
+	}
+
+	err = enforcer.InitEnforcer()
+	if err != nil {
+		return nil, err
+	}
+	return enforcer, nil
+}
+
+func GetPolicies(id string) ([]*xormadapter.CasbinRule, error) {
+	enforcer, err := GetInitializedEnforcer(id)
+	if err != nil {
+		return nil, err
+	}
+
+	pRules := enforcer.GetPolicy()
+	res := util.MatrixToCasbinRules("p", pRules)
+
+	if enforcer.GetModel()["g"] != nil {
+		gRules := enforcer.GetGroupingPolicy()
+		res2 := util.MatrixToCasbinRules("g", gRules)
+		res = append(res, res2...)
+	}
+
+	return res, nil
+}
+
+func UpdatePolicy(id string, ptype string, oldPolicy []string, newPolicy []string) (bool, error) {
+	enforcer, err := GetInitializedEnforcer(id)
+	if err != nil {
+		return false, err
+	}
+
+	if ptype == "p" {
+		return enforcer.UpdatePolicy(oldPolicy, newPolicy)
+	} else {
+		return enforcer.UpdateGroupingPolicy(oldPolicy, newPolicy)
+	}
+}
+
+func AddPolicy(id string, ptype string, policy []string) (bool, error) {
+	enforcer, err := GetInitializedEnforcer(id)
+	if err != nil {
+		return false, err
+	}
+
+	if ptype == "p" {
+		return enforcer.AddPolicy(policy)
+	} else {
+		return enforcer.AddGroupingPolicy(policy)
+	}
+}
+
+func RemovePolicy(id string, ptype string, policy []string) (bool, error) {
+	enforcer, err := GetInitializedEnforcer(id)
+	if err != nil {
+		return false, err
+	}
+
+	if ptype == "p" {
+		return enforcer.RemovePolicy(policy)
+	} else {
+		return enforcer.RemoveGroupingPolicy(policy)
+	}
+}
+
+func (enforcer *Enforcer) LoadModelCfg() error {
+	if enforcer.ModelCfg != nil {
+		return nil
+	}
+
+	model, err := GetModel(enforcer.Model)
+	if err != nil {
+		return err
+	} else if model == nil {
+		return fmt.Errorf("the model: %s for enforcer: %s is not found", enforcer.Model, enforcer.GetId())
+	}
+
+	cfg, err := config.NewConfigFromText(model.ModelText)
+	if err != nil {
+		return err
+	}
+
+	enforcer.ModelCfg = make(map[string]string)
+	enforcer.ModelCfg["p"] = cfg.String("policy_definition::p")
+	if cfg.String("role_definition::g") != "" {
+		enforcer.ModelCfg["g"] = cfg.String("role_definition::g")
 	}
 
 	return nil

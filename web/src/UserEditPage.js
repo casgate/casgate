@@ -15,9 +15,11 @@
 import React from "react";
 import {Button, Card, Col, Input, InputNumber, List, Result, Row, Select, Space, Spin, Switch, Tag} from "antd";
 import {withRouter} from "react-router-dom";
+import {TotpMfaType} from "./auth/MfaSetupPage";
 import * as GroupBackend from "./backend/GroupBackend";
 import * as UserBackend from "./backend/UserBackend";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
+import EnableMfaModal from "./common/modal/EnableMfaModal";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 import CropperDivModal from "./common/modal/CropperDivModal.js";
@@ -138,7 +140,7 @@ class UserEditPage extends React.Component {
   }
 
   getUserOrganization() {
-    return this.state.organizations.filter(organization => organization.name === this.state.user?.owner)[0];
+    return this.state.application?.organizationObj;
   }
 
   isGroupsVisible() {
@@ -151,6 +153,10 @@ class UserEditPage extends React.Component {
   }
 
   getGroups(organizationName) {
+    if (!Setting.isLocalAdminUser(this.props.account)) {
+      return;
+    }
+
     if (this.isGroupsVisible()) {
       GroupBackend.getGroups(organizationName)
         .then((res) => {
@@ -205,23 +211,6 @@ class UserEditPage extends React.Component {
   getCountryCode() {
     return this.props.account.countryCode;
   }
-
-  loadMore = (table, type) => {
-    return <div
-      style={{
-        textAlign: "center",
-        marginTop: 12,
-        height: 32,
-        lineHeight: "32px",
-      }}
-    >
-      <Button onClick={() => {
-        this.setState({
-          multiFactorAuths: Setting.addRow(table, {"type": type}),
-        });
-      }}>{i18next.t("general:Add")}</Button>
-    </div>;
-  };
 
   deleteMfa = () => {
     this.setState({
@@ -401,7 +390,7 @@ class UserEditPage extends React.Component {
           </Col>
           <Col span={22} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.user.type} onChange={(value => {this.updateUserField("type", value);})}
-              options={["normal-user"].map(item => Setting.getOption(item, item))}
+              options={["normal-user", "paid-user"].map(item => Setting.getOption(item, item))}
             />
           </Col>
         </Row>
@@ -413,7 +402,7 @@ class UserEditPage extends React.Component {
             {Setting.getLabel(i18next.t("general:Password"), i18next.t("general:Password - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <PasswordModal user={this.state.user} organization={this.getUserOrganization()} account={this.props.account} disabled={disabled} />
+            <PasswordModal user={this.state.user} userName={this.state.userName} organization={this.getUserOrganization()} account={this.props.account} disabled={disabled} />
           </Col>
         </Row>
       );
@@ -570,7 +559,7 @@ class UserEditPage extends React.Component {
                   {name: "ID card back", value: "idCardBack"},
                   {name: "ID card with person", value: "idCardWithPerson"},
                 ].map((entry) => {
-                  return this.renderImage(this.state.user.properties[entry.value] || "", this.getIdCardType(entry.name), this.getIdCardText(entry.name), entry.value, disabled);
+                  return this.renderImage(this.state.user.properties === null ? "" : (this.state.user.properties[entry.value] || ""), this.getIdCardType(entry.name), this.getIdCardText(entry.name), entry.value, disabled);
                 })
               }
             </Row>
@@ -853,19 +842,6 @@ class UserEditPage extends React.Component {
           </Col>
         </Row>
       );
-    } else if (accountItem.name === "Is global admin") {
-      return (
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Is global admin"), i18next.t("user:Is global admin - Tooltip"))} :
-          </Col>
-          <Col span={(Setting.isMobile()) ? 22 : 2} >
-            <Switch disabled={disabled} checked={this.state.user.isGlobalAdmin} onChange={checked => {
-              this.updateUserField("isGlobalAdmin", checked);
-            }} />
-          </Col>
-        </Row>
-      );
     } else if (accountItem.name === "Is forbidden") {
       return (
         <Row style={{marginTop: "20px"}} >
@@ -960,11 +936,18 @@ class UserEditPage extends React.Component {
                             </Button>
                           }
                         </Space>
-                      ) : <Button type={"default"} onClick={() => {
-                        this.props.history.push(`/mfa/setup?mfaType=${item.mfaType}`);
-                      }}>
-                        {i18next.t("mfa:Setup")}
-                      </Button>}
+                      ) :
+                        <Space>
+                          {item.mfaType !== TotpMfaType && Setting.isAdminUser(this.props.account) && window.location.href.indexOf("/users") !== -1 ?
+                            <EnableMfaModal user={this.state.user} mfaType={item.mfaType} onSuccess={() => {
+                              this.getUser();
+                            }} /> : null}
+                          <Button type={"default"} onClick={() => {
+                            this.props.history.push(`/mfa/setup?mfaType=${item.mfaType}`);
+                          }}>
+                            {i18next.t("mfa:Setup")}
+                          </Button>
+                        </Space>}
                     </List.Item>
                   )}
                 />
@@ -1008,11 +991,13 @@ class UserEditPage extends React.Component {
       <Col span={4} style={{textAlign: "center", margin: "auto"}} key={tag}>
         {
           imgUrl ?
-            <a target="_blank" rel="noreferrer" href={imgUrl} style={{marginBottom: "10px"}}>
-              <AccountAvatar src={imgUrl} alt={imgUrl} size={90} style={{marginBottom: "20px"}} />
-            </a>
+            <div style={{marginBottom: "10px"}}>
+              <a target="_blank" rel="noreferrer" href={imgUrl} style={{marginBottom: "10px"}}>
+                <AccountAvatar src={imgUrl} alt={imgUrl} height={150} />
+              </a>
+            </div>
             :
-            <Col style={{height: "78%", border: "1px dotted grey", borderRadius: 3, marginBottom: 5}}>
+            <Col style={{height: "78%", border: "1px dotted grey", borderRadius: 3, marginBottom: "10px"}}>
               <div style={{fontSize: 30, margin: 10}}>+</div>
               <div style={{verticalAlign: "middle", marginBottom: 10}}>{`Upload ${title}...`}</div>
             </Col>

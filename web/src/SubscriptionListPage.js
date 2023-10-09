@@ -15,6 +15,7 @@
 import React from "react";
 import {Link} from "react-router-dom";
 import {Button, Table} from "antd";
+import {ClockCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined, MinusCircleOutlined, SyncOutlined} from "@ant-design/icons";
 import moment from "moment";
 import * as Setting from "./Setting";
 import * as SubscriptionBackend from "./backend/SubscriptionBackend";
@@ -26,24 +27,19 @@ class SubscriptionListPage extends BaseListPage {
   newSubscription() {
     const randomName = Setting.getRandomName();
     const owner = Setting.getRequestOrganization(this.props.account);
-    const defaultDuration = 365;
 
     return {
       owner: owner,
-      name: `subscription_${randomName}`,
+      name: `sub_${randomName}`,
       createdTime: moment().format(),
       displayName: `New Subscription - ${randomName}`,
-      startDate: moment().format(),
-      endDate: moment().add(defaultDuration, "d").format(),
-      duration: defaultDuration,
+      startTime: moment().format(),
+      endTime: moment().add(30, "d").format(),
+      period: "Monthly",
       description: "",
       user: "",
       plan: "",
-      isEnabled: true,
-      submitter: this.props.account.name,
-      approver: this.props.account.name,
-      approveTime: moment().format(),
-      state: "Approved",
+      state: "Active",
     };
   }
 
@@ -133,11 +129,25 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("displayName"),
       },
       {
-        title: i18next.t("subscription:Duration"),
-        dataIndex: "duration",
-        key: "duration",
+        title: i18next.t("subscription:Period"),
+        dataIndex: "period",
+        key: "period",
         width: "140px",
-        ...this.getColumnSearchProps("duration"),
+        ...this.getColumnSearchProps("period"),
+      },
+      {
+        title: i18next.t("subscription:Start time"),
+        dataIndex: "startTime",
+        key: "startTime",
+        width: "140px",
+        ...this.getColumnSearchProps("startTime"),
+      },
+      {
+        title: i18next.t("subscription:End time"),
+        dataIndex: "endTime",
+        key: "endTime",
+        width: "140px",
+        ...this.getColumnSearchProps("endTime"),
       },
       {
         title: i18next.t("general:Plan"),
@@ -147,7 +157,7 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("plan"),
         render: (text, record, index) => {
           return (
-            <Link to={`/plans/${text}`}>
+            <Link to={`/plans/${record.owner}/${text}`}>
               {text}
             </Link>
           );
@@ -161,7 +171,21 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("user"),
         render: (text, record, index) => {
           return (
-            <Link to={`/users/${text}`}>
+            <Link to={`/users/${record.owner}/${text}`}>
+              {text}
+            </Link>
+          );
+        },
+      },
+      {
+        title: i18next.t("general:Payment"),
+        dataIndex: "payment",
+        key: "payment",
+        width: "140px",
+        ...this.getColumnSearchProps("payment"),
+        render: (text, record, index) => {
+          return (
+            <Link to={`/payments/${record.owner}/${text}`}>
               {text}
             </Link>
           );
@@ -176,10 +200,18 @@ class SubscriptionListPage extends BaseListPage {
         ...this.getColumnSearchProps("state"),
         render: (text, record, index) => {
           switch (text) {
-          case "Approved":
-            return Setting.getTag("success", i18next.t("permission:Approved"));
           case "Pending":
-            return Setting.getTag("error", i18next.t("permission:Pending"));
+            return Setting.getTag("processing", i18next.t("permission:Pending"), <ExclamationCircleOutlined />);
+          case "Active":
+            return Setting.getTag("success", i18next.t("permission:Active"), <SyncOutlined spin />);
+          case "Upcoming":
+            return Setting.getTag("warning", i18next.t("permission:Upcoming"), <ClockCircleOutlined />);
+          case "Expired":
+            return Setting.getTag("warning", i18next.t("permission:Expired"), <ClockCircleOutlined />);
+          case "Error":
+            return Setting.getTag("error", i18next.t("permission:Error"), <CloseCircleOutlined />);
+          case "Suspended":
+            return Setting.getTag("default", i18next.t("permission:Suspended"), <MinusCircleOutlined />);
           default:
             return null;
           }
