@@ -185,10 +185,67 @@ func (c *ApiController) Signup() {
 		}
 	}
 
-	affected, err := object.AddUser(user)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
+	var affected bool
+
+	if authForm.Id != "" {
+		// signup invited user
+		invitedUser, err := object.GetUserByField(organization.Name, "id", authForm.Id)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+
+		if invitedUser.Type != "invited-user" {
+			c.ResponseError(fmt.Errorf(c.T("account:Wrong user type")).Error())
+			return
+		}
+
+		if application.IsSignupItemVisible("Username") && invitedUser.Name != authForm.Username {
+			c.ResponseError(fmt.Errorf(c.T("account:Wrong username for invited user")).Error())
+			return
+		}
+
+		if application.IsSignupItemVisible("Email") && invitedUser.Email != authForm.Email {
+			c.ResponseError(fmt.Errorf(c.T("account:Wrong email for invited user")).Error())
+			return
+		}
+
+		user.Id = invitedUser.Id
+		user.Name = invitedUser.Name
+
+		columns := []string{"password", "type"}
+
+		if application.IsSignupItemVisible("Display name") {
+			columns = append(columns, "displayName")
+		}
+
+		if application.IsSignupItemVisible("Phone") {
+			columns = append(columns, "phone", "countryCode")
+		}
+
+		if application.IsSignupItemVisible("Affiliation") {
+			columns = append(columns, "affiliation")
+		}
+
+		if application.IsSignupItemVisible("ID card") {
+			columns = append(columns, "idCard")
+		}
+
+		if application.IsSignupItemVisible("Country/Region") {
+			columns = append(columns, "region")
+		}
+
+		affected, err = object.UpdateUser(invitedUser.GetId(), user, columns, false)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+	} else {
+		affected, err = object.AddUser(user)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
 	}
 
 	if !affected {

@@ -65,7 +65,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 		c.ResponseError(err.Error(), nil)
 		return
 	}
-	if !allowed {
+	if !allowed || user.Type == "invited-user" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}

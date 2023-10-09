@@ -53,7 +53,6 @@ func GetGroupCount(owner, field, value string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	return count, nil
 }
 

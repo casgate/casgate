@@ -107,6 +107,17 @@ class UserEditPage extends React.Component {
       });
   }
 
+  sendInvite() {
+    UserBackend.sendInvite(this.state.user)
+      .then((res) => {
+        if (res.status === "ok") {
+          Setting.showMessage("success", i18next.t("general:Successfully sended"));
+        } else {
+          Setting.showMessage("error", res.msg);
+        }
+      });
+  }
+
   getOrganizations() {
     OrganizationBackend.getOrganizations("admin")
       .then((res) => {
@@ -390,7 +401,7 @@ class UserEditPage extends React.Component {
           </Col>
           <Col span={22} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.user.type} onChange={(value => {this.updateUserField("type", value);})}
-              options={["normal-user", "paid-user"].map(item => Setting.getOption(item, item))}
+              options={["normal-user", "paid-user", "invited-user"].map(item => Setting.getOption(item, item))}
             />
           </Col>
         </Row>
@@ -422,6 +433,13 @@ class UserEditPage extends React.Component {
               }}
             />
           </Col>
+          {!this.isSelf() && Setting.isLocalAdminUser(this.props.account) &&
+          <Col span={Setting.isMobile() ? 22 : 11} >
+            <Button type="default" onClick={() => this.sendInvite()}>
+              {i18next.t("user:Send invite")}
+            </Button>
+          </Col>
+          }
           <Col span={Setting.isMobile() ? 22 : 11} >
             {/* backend auto get the current user, so admin can not edit. Just self can reset*/}
             {this.isSelf() ? <ResetModal application={this.state.application} disabled={disabled} buttonText={i18next.t("user:Reset Email...")} destType={"email"} /> : null}

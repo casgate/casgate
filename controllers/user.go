@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/beego/beego/utils/pagination"
+	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 )
@@ -377,7 +378,7 @@ func (c *ApiController) GetEmailAndPhone() {
 		return
 	}
 
-	if user == nil {
+	if user == nil || user.Type == "invited-user" {
 		c.ResponseError(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), util.GetId(organization, username)))
 		return
 	}
@@ -461,6 +462,11 @@ func (c *ApiController) SetPassword() {
 	}
 	if err != nil {
 		c.ResponseError(err.Error())
+		return
+	}
+
+	if targetUser.Type == "invited-user" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
 
@@ -612,4 +618,84 @@ func (c *ApiController) RemoveUserFromGroup() {
 	}
 
 	c.ResponseOk(affected)
+}
+
+// SendInvite
+// @Title SendInvite
+// @router /send-invite [post]
+// @Tag User API
+func (c *ApiController) SendInvite() {
+	owner := c.Input().Get("owner")
+	username := c.Input().Get("name")
+
+	if !c.IsAdmin() {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	user, err := object.GetUser(util.GetId(owner, username))
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if !util.IsEmailValid(user.Email) {
+		c.ResponseError(fmt.Sprintf(c.T("service:Invalid Email receivers: %s"), user.Email))
+		return
+	}
+
+	organization, err := object.GetOrganization(util.GetId("admin", owner))
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	application, err := object.GetApplication(util.GetId("admin", user.SignupApplication))
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	provider, err := application.GetEmailProvider()
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if provider == nil {
+		c.ResponseError(c.T("service:Please set an Email provider first"))
+		return
+	}
+
+	sender := organization.DisplayName
+	origin := conf.GetConfigString("origin")
+
+	var link string
+	switch user.Type {
+	case "invited-user":
+		link = fmt.Sprintf("%s/signup/%s?id=%s&u=%s&e=%s", origin, application.Name, user.Id, user.Name, user.Email)
+	default:
+		switch {
+		case application.Name == "app-built-in":
+			link = fmt.Sprintf("%s/login?u=%s", origin, user.Name)
+		case application.SigninUrl != "":
+			link = application.SigninUrl
+		default:
+			if len(application.RedirectUris) == 0 {
+				c.ResponseError(c.T("service:You must specify at least one Redirect URL"))
+				return
+			}
+			link = fmt.Sprintf("%s/login/oauth/authorize?client_id=%s&response_type=code&redirect_uri=%s&scope=read&state=casgate", origin, application.ClientId, application.RedirectUris[0])
+		}
+	}
+
+	content := fmt.Sprintf(provider.InviteContent, link)
+
+	err = object.SendEmail(provider, provider.InviteTitle, content, user.Email, sender)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk()
 }

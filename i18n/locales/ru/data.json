@@ -3,7 +3,10 @@
     "Failed to add user": "Не удалось добавить пользователя",
     "Get init score failed, error: %w": "Не удалось получить исходный балл, ошибка: %w",
     "Please sign out first": "Пожалуйста, сначала выйдите из системы",
-    "The application does not allow to sign up new account": "Приложение не позволяет зарегистрироваться новому аккаунту"
+    "The application does not allow to sign up new account": "Приложение не позволяет зарегистрироваться новому аккаунту",
+    "Wrong email for invited user": "Неверный email приглашенного пользователя",
+    "Wrong user type": "Неверный тип пользователя",
+    "Wrong username for invited user": "Неверное имя пользователя приглашенного пользователя"
   },
   "auth": {
     "Challenge method should be S256": "Метод испытаний должен быть S256",
@@ -97,7 +100,9 @@
   "service": {
     "Empty parameters for emailForm: %v": "Пустые параметры для emailForm: %v",
     "Invalid Email receivers: %s": "Некорректные получатели электронной почты: %s",
-    "Invalid phone receivers: %s": "Некорректные получатели телефонных звонков: %s"
+    "Invalid phone receivers: %s": "Некорректные получатели телефонных звонков: %s",
+    "Please set an Email provider first": "Please set an Email provider first",
+    "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
     "The objectKey: %s is not allowed": "Объект «objectKey: %s» не разрешен",

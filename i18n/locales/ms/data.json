@@ -3,7 +3,10 @@
     "Failed to add user": "Failed to add user",
     "Get init score failed, error: %w": "Get init score failed, error: %w",
     "Please sign out first": "Please sign out first",
-    "The application does not allow to sign up new account": "The application does not allow to sign up new account"
+    "The application does not allow to sign up new account": "The application does not allow to sign up new account",
+    "Wrong email for invited user": "Wrong email for invited user",
+    "Wrong user type": "Wrong user type",
+    "Wrong username for invited user": "Wrong username for invited user"
   },
   "auth": {
     "Challenge method should be S256": "Challenge method should be S256",
@@ -23,14 +26,6 @@
   },
   "cas": {
     "Service %s and %s do not match": "Service %s and %s do not match"
-  },
-  "chat": {
-    "The chat type must be \\\"AI\\\"": "The chat type must be \\\"AI\\\"",
-    "The chat: %s is not found": "The chat: %s is not found",
-    "The message is invalid": "The message is invalid",
-    "The message: %s is not found": "The message: %s is not found",
-    "The provider: %s is invalid": "The provider: %s is invalid",
-    "The provider: %s is not found": "The provider: %s is not found"
   },
   "check": {
     "Affiliation cannot be blank": "Affiliation cannot be blank",
@@ -105,7 +100,9 @@
   "service": {
     "Empty parameters for emailForm: %v": "Empty parameters for emailForm: %v",
     "Invalid Email receivers: %s": "Invalid Email receivers: %s",
-    "Invalid phone receivers: %s": "Invalid phone receivers: %s"
+    "Invalid phone receivers: %s": "Invalid phone receivers: %s",
+    "Please set an Email provider first": "Please set an Email provider first",
+    "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
     "The objectKey: %s is not allowed": "The objectKey: %s is not allowed",
