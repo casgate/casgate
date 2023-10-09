@@ -187,7 +187,13 @@ func (c *ApiController) Signup() {
 
 	var affected bool
 
-	if authForm.Id != "" {
+	if authForm.Id == "" {
+		affected, err = object.AddUser(user)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+	} else {
 		// signup invited user
 		invitedUser, err := object.GetUserByField(organization.Name, "id", authForm.Id)
 		if err != nil {
@@ -236,12 +242,6 @@ func (c *ApiController) Signup() {
 		}
 
 		affected, err = object.UpdateUser(invitedUser.GetId(), user, columns, false)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-	} else {
-		affected, err = object.AddUser(user)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return

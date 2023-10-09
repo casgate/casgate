@@ -60,12 +60,17 @@ func tokenToResponse(token *object.Token) *Response {
 func (c *ApiController) HandleLoggedIn(application *object.Application, user *object.User, form *form.AuthForm) (resp *Response) {
 	userId := user.GetId()
 
+	if user.Type == "invited-user" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	allowed, err := object.CheckLoginPermission(userId, application)
 	if err != nil {
 		c.ResponseError(err.Error(), nil)
 		return
 	}
-	if !allowed || user.Type == "invited-user" {
+	if !allowed {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
