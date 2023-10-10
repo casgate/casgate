@@ -639,8 +639,13 @@ func (c *ApiController) SendInvite() {
 		return
 	}
 
+	if user.Email == "" {
+		c.ResponseError(fmt.Sprintf(c.T("service:Missing email for send invite")))
+		return
+	}
+
 	if !util.IsEmailValid(user.Email) {
-		c.ResponseError(fmt.Sprintf(c.T("service:Invalid Email receivers: %s"), user.Email))
+		c.ResponseError(fmt.Sprintf(c.T("service:Invalid Email for send invite: %s"), user.Email))
 		return
 	}
 

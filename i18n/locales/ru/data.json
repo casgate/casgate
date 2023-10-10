@@ -99,8 +99,10 @@
   },
   "service": {
     "Empty parameters for emailForm: %v": "Пустые параметры для emailForm: %v",
+    "Invalid Email for send invite: %s": "Некорректный email для отправки приглашения: %s",
     "Invalid Email receivers: %s": "Некорректные получатели электронной почты: %s",
     "Invalid phone receivers: %s": "Некорректные получатели телефонных звонков: %s",
+    "Missing email for send invite": "Отсутствует email для отправки приглашения",
     "Please set an Email provider first": "Please set an Email provider first",
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },

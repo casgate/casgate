@@ -99,8 +99,10 @@
   },
   "service": {
     "Empty parameters for emailForm: %v": "Tham số trống cho emailForm: %v",
+    "Invalid Email for send invite: %s": "Invalid Email for send invite: %s",
     "Invalid Email receivers: %s": "Người nhận Email không hợp lệ: %s",
     "Invalid phone receivers: %s": "Người nhận điện thoại không hợp lệ: %s",
+    "Missing email for send invite": "Missing email for send invite",
     "Please set an Email provider first": "Please set an Email provider first",
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },

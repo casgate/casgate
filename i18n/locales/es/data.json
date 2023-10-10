@@ -99,8 +99,10 @@
   },
   "service": {
     "Empty parameters for emailForm: %v": "Parámetros vacíos para el formulario de correo electrónico: %v",
+    "Invalid Email for send invite: %s": "Invalid Email for send invite: %s",
     "Invalid Email receivers: %s": "Receptores de correo electrónico no válidos: %s",
     "Invalid phone receivers: %s": "Receptores de teléfono no válidos: %s",
+    "Missing email for send invite": "Missing email for send invite",
     "Please set an Email provider first": "Please set an Email provider first",
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },

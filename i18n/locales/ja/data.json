@@ -99,8 +99,10 @@
   },
   "service": {
     "Empty parameters for emailForm: %v": "EmailFormの空のパラメーター：％v",
+    "Invalid Email for send invite: %s": "Invalid Email for send invite: %s",
     "Invalid Email receivers: %s": "無効な電子メール受信者：%s",
     "Invalid phone receivers: %s": "電話受信者が無効です：%s",
+    "Missing email for send invite": "Missing email for send invite",
     "Please set an Email provider first": "Please set an Email provider first",
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },

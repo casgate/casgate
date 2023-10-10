@@ -99,8 +99,10 @@
   },
   "service": {
     "Empty parameters for emailForm: %v": "邮件参数为空: %v",
+    "Invalid Email for send invite: %s": "Invalid Email for send invite: %s",
     "Invalid Email receivers: %s": "无效的邮箱收件人: %s",
     "Invalid phone receivers: %s": "无效的手机短信收信人: %s",
+    "Missing email for send invite": "Missing email for send invite",
     "Please set an Email provider first": "Please set an Email provider first",
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
