@@ -268,7 +268,7 @@ func getValueByItem(policyPermissionItem policyPermission, policyItem string) (s
 }
 
 func getPolicyMappingRules(model *Model, permission *Permission) [][]string {
-	if model.CustomPolicyMapping {
+	if model != nil && model.CustomPolicyMapping {
 		return model.CustomPolicyMappingRules
 	}
 
