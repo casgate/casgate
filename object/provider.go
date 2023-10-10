@@ -48,12 +48,14 @@ type Provider struct {
 	Scopes            string            `xorm:"varchar(100)" json:"scopes"`
 	UserMapping       map[string]string `xorm:"varchar(500)" json:"userMapping"`
 
-	Host       string `xorm:"varchar(100)" json:"host"`
-	Port       int    `json:"port"`
-	DisableSsl bool   `json:"disableSsl"` // If the provider type is WeChat, DisableSsl means EnableQRCode
-	Title      string `xorm:"varchar(100)" json:"title"`
-	Content    string `xorm:"varchar(1000)" json:"content"` // If provider type is WeChat, Content means QRCode string by Base64 encoding
-	Receiver   string `xorm:"varchar(100)" json:"receiver"`
+	Host          string `xorm:"varchar(100)" json:"host"`
+	Port          int    `json:"port"`
+	DisableSsl    bool   `json:"disableSsl"` // If the provider type is WeChat, DisableSsl means EnableQRCode
+	Title         string `xorm:"varchar(100)" json:"title"`
+	Content       string `xorm:"varchar(1000)" json:"content"` // If provider type is WeChat, Content means QRCode string by Base64 encoding
+	InviteTitle   string `xorm:"varchar(100)" json:"inviteTitle"`
+	InviteContent string `xorm:"varchar(1000)" json:"inviteContent"`
+	Receiver      string `xorm:"varchar(100)" json:"receiver"`
 
 	RegionId     string `xorm:"varchar(100)" json:"regionId"`
 	SignName     string `xorm:"varchar(100)" json:"signName"`

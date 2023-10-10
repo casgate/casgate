@@ -3,7 +3,10 @@
     "Failed to add user": "添加用户失败",
     "Get init score failed, error: %w": "初始化分数失败: %w",
     "Please sign out first": "请先退出登录",
-    "The application does not allow to sign up new account": "该应用不允许注册新用户"
+    "The application does not allow to sign up new account": "该应用不允许注册新用户",
+    "Wrong email for invited user": "Wrong email for invited user",
+    "Wrong user type": "Wrong user type",
+    "Wrong username for invited user": "Wrong username for invited user"
   },
   "auth": {
     "Challenge method should be S256": "Challenge方法应该为S256",
@@ -96,8 +99,12 @@
   },
   "service": {
     "Empty parameters for emailForm: %v": "邮件参数为空: %v",
+    "Invalid Email for send invite: %s": "Invalid Email for send invite: %s",
     "Invalid Email receivers: %s": "无效的邮箱收件人: %s",
-    "Invalid phone receivers: %s": "无效的手机短信收信人: %s"
+    "Invalid phone receivers: %s": "无效的手机短信收信人: %s",
+    "Missing email for send invite": "Missing email for send invite",
+    "Please set an Email provider first": "Please set an Email provider first",
+    "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
     "The objectKey: %s is not allowed": "objectKey: %s被禁止",

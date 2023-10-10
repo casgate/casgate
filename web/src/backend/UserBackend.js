@@ -45,6 +45,20 @@ export function getUser(owner, name) {
   }).then(res => res.json());
 }
 
+export function sendInvite(user) {
+  const formData = new FormData();
+  formData.append("owner", user.owner);
+  formData.append("name", user.name);
+  return fetch(`${Setting.ServerUrl}/api/send-invite`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+    headers: {
+      "Accept-Language": Setting.getAcceptLanguage(),
+    },
+  }).then(res => res.json());
+}
+
 export function addUserKeys(user) {
   return fetch(`${Setting.ServerUrl}/api/add-user-keys`, {
     method: "POST",
@@ -59,6 +73,18 @@ export function addUserKeys(user) {
 export function updateUser(owner, name, user) {
   const newUser = Setting.deepCopy(user);
   return fetch(`${Setting.ServerUrl}/api/update-user?id=${owner}/${encodeURIComponent(name)}`, {
+    method: "POST",
+    credentials: "include",
+    body: JSON.stringify(newUser),
+    headers: {
+      "Accept-Language": Setting.getAcceptLanguage(),
+    },
+  }).then(res => res.json());
+}
+
+export function updateUserEmail(owner, name, user) {
+  const newUser = Setting.deepCopy(user);
+  return fetch(`${Setting.ServerUrl}/api/update-user?id=${owner}/${encodeURIComponent(name)}&columns=email`, {
     method: "POST",
     credentials: "include",
     body: JSON.stringify(newUser),

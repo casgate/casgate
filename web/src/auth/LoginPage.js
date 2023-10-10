@@ -519,7 +519,7 @@ class LoginPage extends React.Component {
             organization: application.organization,
             application: application.name,
             autoSignin: true,
-            username: Conf.ShowGithubCorner ? "admin" : "",
+            username: Conf.ShowGithubCorner ? "admin" : new URLSearchParams(this.props.location?.search).get("u") ?? "",
             password: Conf.ShowGithubCorner ? "123" : "",
           }}
           onFinish={(values) => {
@@ -585,6 +585,7 @@ class LoginPage extends React.Component {
                 <Input
                   id="input"
                   prefix={<UserOutlined className="site-form-item-icon" />}
+                  disabled={new URLSearchParams(this.props.location?.search).get("u") !== null}
                   placeholder={(this.state.loginMethod === "verificationCode") ? i18next.t("login:Email or phone") : i18next.t("login:username, Email or phone")}
                   onChange={e => {
                     this.setState({

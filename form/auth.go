@@ -18,6 +18,7 @@ type AuthForm struct {
 	Type string `json:"type"`
 
 	Organization   string `json:"organization"`
+	Id             string `json:"id"` // filled only for invited user
 	Username       string `json:"username"`
 	Password       string `json:"password"`
 	Name           string `json:"name"`

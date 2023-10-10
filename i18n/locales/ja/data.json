@@ -3,7 +3,10 @@
     "Failed to add user": "ユーザーの追加に失敗しました",
     "Get init score failed, error: %w": "イニットスコアの取得に失敗しました。エラー：%w",
     "Please sign out first": "最初にサインアウトしてください",
-    "The application does not allow to sign up new account": "アプリケーションは新しいアカウントの登録を許可しません"
+    "The application does not allow to sign up new account": "アプリケーションは新しいアカウントの登録を許可しません",
+    "Wrong email for invited user": "Wrong email for invited user",
+    "Wrong user type": "Wrong user type",
+    "Wrong username for invited user": "Wrong username for invited user"
   },
   "auth": {
     "Challenge method should be S256": "チャレンジメソッドはS256である必要があります",
@@ -96,8 +99,12 @@
   },
   "service": {
     "Empty parameters for emailForm: %v": "EmailFormの空のパラメーター：％v",
+    "Invalid Email for send invite: %s": "Invalid Email for send invite: %s",
     "Invalid Email receivers: %s": "無効な電子メール受信者：%s",
-    "Invalid phone receivers: %s": "電話受信者が無効です：%s"
+    "Invalid phone receivers: %s": "電話受信者が無効です：%s",
+    "Missing email for send invite": "Missing email for send invite",
+    "Please set an Email provider first": "Please set an Email provider first",
+    "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
     "The objectKey: %s is not allowed": "オブジェクトキー %s は許可されていません",

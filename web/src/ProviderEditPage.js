@@ -445,8 +445,10 @@ class ProviderEditPage extends React.Component {
                 this.updateProviderField("host", "smtp.example.com");
                 this.updateProviderField("port", 465);
                 this.updateProviderField("disableSsl", false);
-                this.updateProviderField("title", "Casdoor Verification Code");
-                this.updateProviderField("content", "You have requested a verification code at Casdoor. Here is your code: %s, please enter in 5 minutes.");
+                this.updateProviderField("title", "Casgate Verification Code");
+                this.updateProviderField("content", "You have requested a verification code at Casgate. Here is your code: %s, please enter in 5 minutes.");
+                this.updateProviderField("inviteTitle", "Casgate Invitation Link");
+                this.updateProviderField("inviteContent", "Your invitation link: %s.");
                 this.updateProviderField("receiver", this.props.account.email);
               } else if (value === "SMS") {
                 this.updateProviderField("type", "Twilio SMS");
@@ -900,6 +902,26 @@ class ProviderEditPage extends React.Component {
                   </Col>
                 </Row>
               )}
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("provider:Invite email title"), i18next.t("provider:Invite email title - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <Input value={this.state.provider.inviteTitle} onChange={e => {
+                    this.updateProviderField("inviteTitle", e.target.value);
+                  }} />
+                </Col>
+              </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("provider:Invite email content"), i18next.t("provider:Invite email content - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <TextArea autoSize={{minRows: 3, maxRows: 100}} value={this.state.provider.inviteContent} onChange={e => {
+                    this.updateProviderField("inviteContent", e.target.value);
+                  }} />
+                </Col>
+              </Row>
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                   {Setting.getLabel(i18next.t("provider:Email title"), i18next.t("provider:Email title - Tooltip"))} :

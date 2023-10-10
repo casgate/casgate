@@ -55,10 +55,10 @@ func CheckUserSignup(application *Application, organization *Organization, form 
 			return msg
 		}
 
-		if HasUserByField(organization.Name, "name", form.Username) {
+		if form.Id == "" && HasUserByField(organization.Name, "name", form.Username) {
 			return i18n.Translate(lang, "check:Username already exists")
 		}
-		if HasUserByField(organization.Name, "email", form.Email) {
+		if form.Id == "" && HasUserByField(organization.Name, "email", form.Email) {
 			return i18n.Translate(lang, "check:Email already exists")
 		}
 		if HasUserByField(organization.Name, "phone", form.Phone) {
@@ -79,7 +79,7 @@ func CheckUserSignup(application *Application, organization *Organization, form 
 				return i18n.Translate(lang, "check:Email cannot be empty")
 			}
 		} else {
-			if HasUserByField(organization.Name, "email", form.Email) {
+			if form.Id == "" && HasUserByField(organization.Name, "email", form.Email) {
 				return i18n.Translate(lang, "check:Email already exists")
 			} else if !util.IsEmailValid(form.Email) {
 				return i18n.Translate(lang, "check:Email is invalid")

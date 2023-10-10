@@ -68,7 +68,7 @@ class SignupPage extends React.Component {
     this.state = {
       classes: props,
       applicationName: (props.applicationName ?? props.match?.params?.applicationName) ?? null,
-      email: "",
+      email: new URLSearchParams(this.props.location?.search).get("e") ?? "",
       phone: "",
       countryCode: "",
       emailCode: "",
@@ -100,6 +100,10 @@ class SignupPage extends React.Component {
         this.onUpdateApplication(null);
       }
     }
+
+    this.setState(
+      {validEmail: Setting.isValidEmail(this.state.email)}
+    );
   }
 
   getApplication(applicationName) {
@@ -179,6 +183,7 @@ class SignupPage extends React.Component {
     const params = new URLSearchParams(window.location.search);
     values.plan = params.get("plan");
     values.pricing = params.get("pricing");
+    values.id = params.get("id");
     AuthBackend.signup(values)
       .then((res) => {
         if (res.status === "ok") {
@@ -235,7 +240,7 @@ class SignupPage extends React.Component {
             },
           ]}
         >
-          <Input />
+          <Input disabled={new URLSearchParams(this.props.location?.search).get("u") !== null} />
         </Form.Item>
       );
     } else if (signupItem.name === "Display name") {
@@ -363,7 +368,7 @@ class SignupPage extends React.Component {
               },
             ]}
           >
-            <Input onChange={e => this.setState({email: e.target.value})} />
+            <Input disabled={new URLSearchParams(this.props.location?.search).get("e") !== null} onChange={e => this.setState({email: e.target.value})} />
           </Form.Item>
           {
             signupItem.rule !== "No verification" &&
@@ -560,6 +565,8 @@ class SignupPage extends React.Component {
           application: application.name,
           organization: application.organization,
           countryCode: application.organizationObj.countryCodes?.[0],
+          username: new URLSearchParams(this.props.location?.search).get("u") ?? "",
+          email: new URLSearchParams(this.props.location?.search).get("e") ?? "",
         }}
         size="large"
         layout={Setting.isMobile() ? "vertical" : "horizontal"}
