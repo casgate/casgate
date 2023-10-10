@@ -60,7 +60,7 @@ func MapAttributeToUser(attribute *goldap.EntryAttribute, user *LdapUser, attrib
 		case "displayName":
 			user.Cn = util.TruncateIfTooLong(attributeValue, 100)
 		case "Phone":
-			user.Phone = util.TruncateIfTooLong(attributeValue, 20)
+			user.MobileTelephoneNumber = util.TruncateIfTooLong(attributeValue, 20)
 		case "Address":
 			user.Address = attributeValue
 		}

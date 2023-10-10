@@ -17,13 +17,13 @@ import {Button, Card, Col, Input, Row, Select, Switch} from "antd";
 import * as PermissionBackend from "./backend/PermissionBackend";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as UserBackend from "./backend/UserBackend";
+import * as GroupBackend from "./backend/GroupBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 import * as RoleBackend from "./backend/RoleBackend";
 import * as ModelBackend from "./backend/ModelBackend";
 import * as ApplicationBackend from "./backend/ApplicationBackend";
 import moment from "moment/moment";
-import * as GroupBackend from "./backend/GroupBackend";
 import * as DomainBackend from "./backend/DomainBackend";
 
 class PermissionEditPage extends React.Component {
@@ -75,7 +75,7 @@ class PermissionEditPage extends React.Component {
         });
 
         this.getUsers(permission.owner);
-        this.getGroups(this.state.organizationName);
+        this.getGroups(permission.owner);
         this.getRoles(permission.owner);
         this.getDomains(permission.owner);
         this.getModels(permission.owner);
@@ -230,6 +230,7 @@ class PermissionEditPage extends React.Component {
             <Select virtual={false} style={{width: "100%"}} disabled={!Setting.isAdminUser(this.props.account)} value={this.state.permission.owner} onChange={(owner => {
               this.updatePermissionField("owner", owner);
               this.getUsers(owner);
+              this.getGroups(owner);
               this.getRoles(owner);
               this.getModels(owner);
               this.getResources(owner);

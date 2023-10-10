@@ -17,15 +17,18 @@ package object
 import (
 	"errors"
 	"fmt"
+	"time"
 
-	"github.com/beego/beego"
 	"github.com/beego/beego/context"
 	"github.com/google/uuid"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 )
 
-const MfaTotpSecretSession = "mfa_totp_secret"
+const (
+	MfaTotpSecretSession   = "mfa_totp_secret"
+	MfaTotpPeriodInSeconds = 30
+)
 
 type TotpMfa struct {
 	Config     *MfaProps
@@ -35,10 +38,11 @@ type TotpMfa struct {
 }
 
 func (mfa *TotpMfa) Initiate(ctx *context.Context, userId string) (*MfaProps, error) {
-	issuer := beego.AppConfig.String("appname")
-	if issuer == "" {
-		issuer = "casdoor"
-	}
+	//issuer := beego.AppConfig.String("appname")
+	//if issuer == "" {
+	//	issuer = "casdoor"
+	//}
+	issuer := "Casdoor"
 
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      issuer,
@@ -76,7 +80,16 @@ func (mfa *TotpMfa) SetupVerify(ctx *context.Context, passcode string) error {
 	if secret == nil {
 		return errors.New("totp secret is missing")
 	}
-	result := totp.Validate(passcode, secret.(string))
+
+	result, err := totp.ValidateCustom(passcode, secret.(string), time.Now().UTC(), totp.ValidateOpts{
+		Period:    MfaTotpPeriodInSeconds,
+		Skew:      1,
+		Digits:    otp.DigitsSix,
+		Algorithm: otp.AlgorithmSHA1,
+	})
+	if err != nil {
+		return err
+	}
 
 	if result {
 		return nil
@@ -115,7 +128,15 @@ func (mfa *TotpMfa) Enable(ctx *context.Context, user *User) error {
 }
 
 func (mfa *TotpMfa) Verify(passcode string) error {
-	result := totp.Validate(passcode, mfa.Config.Secret)
+	result, err := totp.ValidateCustom(passcode, mfa.Config.Secret, time.Now().UTC(), totp.ValidateOpts{
+		Period:    MfaTotpPeriodInSeconds,
+		Skew:      1,
+		Digits:    otp.DigitsSix,
+		Algorithm: otp.AlgorithmSHA1,
+	})
+	if err != nil {
+		return err
+	}
 
 	if result {
 		return nil
@@ -133,7 +154,7 @@ func NewTotpMfaUtil(config *MfaProps) *TotpMfa {
 
 	return &TotpMfa{
 		Config:     config,
-		period:     30,
+		period:     MfaTotpPeriodInSeconds,
 		secretSize: 20,
 		digits:     otp.DigitsSix,
 	}

@@ -31,8 +31,8 @@ type Role struct {
 	DisplayName string `xorm:"varchar(100)" json:"displayName"`
 	Description string `xorm:"varchar(100)" json:"description"`
 
-	Groups    []string `xorm:"mediumtext" json:"groups"`
 	Users     []string `xorm:"mediumtext" json:"users"`
+	Groups    []string `xorm:"mediumtext" json:"groups"`
 	Roles     []string `xorm:"mediumtext" json:"roles"`
 	Domains   []string `xorm:"mediumtext" json:"domains"`
 	Tags      []string `xorm:"mediumtext" json:"tags"`
@@ -190,16 +190,15 @@ func AddRolesInBatch(roles []*Role) bool {
 	}
 
 	affected := false
-	for i := 0; i < (len(roles)-1)/batchSize+1; i++ {
-		start := i * batchSize
-		end := (i + 1) * batchSize
+	for i := 0; i < len(roles); i += batchSize {
+		start := i
+		end := i + batchSize
 		if end > len(roles) {
 			end = len(roles)
 		}
 
 		tmp := roles[start:end]
-		// TODO: save to log instead of standard output
-		// fmt.Printf("Add users: [%d - %d].\n", start, end)
+		fmt.Printf("The syncer adds roles: [%d - %d]\n", start, end)
 		if AddRoles(tmp) {
 			affected = true
 		}
@@ -272,15 +271,30 @@ func GetRolesByDomain(domainId string) ([]*Role, error) {
 	return roles, nil
 }
 
-func GetRolesByUser(userId string) ([]*Role, error) {
+func getRolesByUserInternal(userId string) ([]*Role, error) {
 	roles := []*Role{}
 	err := ormer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&roles)
 	if err != nil {
 		return roles, err
 	}
 
-	allRolesIds := make([]string, 0, len(roles))
+	res := []*Role{}
+	for _, role := range roles {
+		if util.InSlice(role.Users, userId) {
+			res = append(res, role)
+		}
+	}
 
+	return res, nil
+}
+
+func getRolesByUser(userId string) ([]*Role, error) {
+	roles, err := getRolesByUserInternal(userId)
+	if err != nil {
+		return roles, err
+	}
+
+	allRolesIds := []string{}
 	for _, role := range roles {
 		allRolesIds = append(allRolesIds, role.GetId())
 	}
@@ -354,16 +368,6 @@ func GetMaskedRoles(roles []*Role) []*Role {
 	}
 
 	return roles
-}
-
-func GetRolesByNamePrefix(owner string, prefix string) ([]*Role, error) {
-	roles := []*Role{}
-	err := ormer.Engine.Where("owner=? and name like ?", owner, prefix+"%").Find(&roles)
-	if err != nil {
-		return roles, err
-	}
-
-	return roles, nil
 }
 
 // GetAncestorRoles returns a list of roles that contain the given roleIds

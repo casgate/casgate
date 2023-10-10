@@ -16,7 +16,10 @@ package object
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
+	"os"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -32,7 +35,24 @@ import (
 	_ "modernc.org/sqlite" // db = sqlite
 )
 
-var ormer *Ormer
+var (
+	ormer                   *Ormer = nil
+	isCreateDatabaseDefined        = false
+	createDatabase                 = true
+)
+
+func InitFlag() {
+	if !isCreateDatabaseDefined {
+		isCreateDatabaseDefined = true
+		createDatabase = getCreateDatabaseFlag()
+	}
+}
+
+func getCreateDatabaseFlag() bool {
+	res := flag.Bool("createDatabase", false, "true if you need to create database")
+	flag.Parse()
+	return *res
+}
 
 func InitConfig() {
 	err := beego.LoadAppConfig("ini", "../conf/app.conf")
@@ -42,12 +62,23 @@ func InitConfig() {
 
 	beego.BConfig.WebConfig.Session.SessionOn = true
 
-	InitAdapter(true)
-	CreateTables(true)
+	InitAdapter()
+	CreateTables()
 	DoMigration()
 }
 
-func InitAdapter(createDatabase bool) {
+func InitAdapter() {
+	if conf.GetConfigString("driverName") == "" {
+		if !util.FileExist("conf/app.conf") {
+			dir, err := os.Getwd()
+			if err != nil {
+				panic(err)
+			}
+			dir = strings.ReplaceAll(dir, "\\", "/")
+			panic(fmt.Sprintf("The Casdoor config file: \"app.conf\" was not found, it should be placed at: \"%s/conf/app.conf\"", dir))
+		}
+	}
+
 	if createDatabase {
 		err := createDatabaseForPostgres(conf.GetConfigString("driverName"), conf.GetConfigDataSourceName(), conf.GetConfigString("dbName"))
 		if err != nil {
@@ -55,14 +86,18 @@ func InitAdapter(createDatabase bool) {
 		}
 	}
 
-	ormer = NewAdapter(conf.GetConfigString("driverName"), conf.GetConfigDataSourceName(), conf.GetConfigString("dbName"))
+	var err error
+	ormer, err = NewAdapter(conf.GetConfigString("driverName"), conf.GetConfigDataSourceName(), conf.GetConfigString("dbName"))
+	if err != nil {
+		panic(err)
+	}
 
 	tableNamePrefix := conf.GetConfigString("tableNamePrefix")
 	tbMapper := core.NewPrefixMapper(core.SnakeMapper{}, tableNamePrefix)
 	ormer.Engine.SetTableMapper(tbMapper)
 }
 
-func CreateTables(createDatabase bool) {
+func CreateTables() {
 	if createDatabase {
 		err := ormer.CreateDatabase()
 		if err != nil {
@@ -90,24 +125,32 @@ func finalizer(a *Ormer) {
 }
 
 // NewAdapter is the constructor for Ormer.
-func NewAdapter(driverName string, dataSourceName string, dbName string) *Ormer {
+func NewAdapter(driverName string, dataSourceName string, dbName string) (*Ormer, error) {
 	a := &Ormer{}
 	a.driverName = driverName
 	a.dataSourceName = dataSourceName
 	a.dbName = dbName
 
 	// Open the DB, create it if not existed.
-	a.open()
+	err := a.open()
+	if err != nil {
+		return nil, err
+	}
 
 	// Call the destructor when the object is released.
 	runtime.SetFinalizer(a, finalizer)
 
-	return a
+	return a, nil
+}
+
+func refineDataSourceNameForPostgres(dataSourceName string) string {
+	reg := regexp.MustCompile(`dbname=[^ ]+\s*`)
+	return reg.ReplaceAllString(dataSourceName, "")
 }
 
 func createDatabaseForPostgres(driverName string, dataSourceName string, dbName string) error {
 	if driverName == "postgres" {
-		db, err := sql.Open(driverName, dataSourceName)
+		db, err := sql.Open(driverName, refineDataSourceNameForPostgres(dataSourceName))
 		if err != nil {
 			return err
 		}
@@ -117,6 +160,21 @@ func createDatabaseForPostgres(driverName string, dataSourceName string, dbName 
 		if err != nil {
 			if !strings.Contains(err.Error(), "already exists") {
 				return err
+			}
+		}
+		schema := util.GetValueFromDataSourceName("search_path", dataSourceName)
+		if schema != "" {
+			db, err = sql.Open(driverName, dataSourceName)
+			if err != nil {
+				return err
+			}
+			defer db.Close()
+
+			_, err = db.Exec(fmt.Sprintf("CREATE SCHEMA %s;", schema))
+			if err != nil {
+				if !strings.Contains(err.Error(), "already exists") {
+					return err
+				}
 			}
 		}
 
@@ -141,7 +199,7 @@ func (a *Ormer) CreateDatabase() error {
 	return err
 }
 
-func (a *Ormer) open() {
+func (a *Ormer) open() error {
 	dataSourceName := a.dataSourceName + a.dbName
 	if a.driverName != "mysql" {
 		dataSourceName = a.dataSourceName
@@ -149,10 +207,18 @@ func (a *Ormer) open() {
 
 	engine, err := xorm.NewEngine(a.driverName, dataSourceName)
 	if err != nil {
-		panic(err)
+		return err
+	}
+
+	if a.driverName == "postgres" {
+		schema := util.GetValueFromDataSourceName("search_path", dataSourceName)
+		if schema != "" {
+			engine.SetSchema(schema)
+		}
 	}
 
 	a.Engine = engine
+	return nil
 }
 
 func (a *Ormer) close() {
@@ -229,12 +295,12 @@ func (a *Ormer) createTable() {
 		panic(err)
 	}
 
-	err = a.Engine.Sync2(new(VerificationRecord))
+	err = a.Engine.Sync2(new(Record))
 	if err != nil {
 		panic(err)
 	}
 
-	err = a.Engine.Sync2(new(Record))
+	err = a.Engine.Sync2(new(VerificationRecord))
 	if err != nil {
 		panic(err)
 	}
@@ -269,6 +335,11 @@ func (a *Ormer) createTable() {
 		panic(err)
 	}
 
+	err = a.Engine.Sync2(new(RadiusAccounting))
+	if err != nil {
+		panic(err)
+	}
+
 	err = a.Engine.Sync2(new(PermissionRule))
 	if err != nil {
 		panic(err)
@@ -298,77 +369,4 @@ func (a *Ormer) createTable() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func GetSession(owner string, offset, limit int, field, value, sortField, sortOrder string) *xorm.Session {
-	session := ormer.Engine.Prepare()
-	if offset != -1 && limit != -1 {
-		session.Limit(limit, offset)
-	}
-	if owner != "" {
-		session = session.And("owner=?", owner)
-	}
-	if field != "" && value != "" {
-		if util.FilterField(field) {
-			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), fmt.Sprintf("%%%s%%", value))
-		}
-	}
-	if sortField == "" || sortOrder == "" {
-		sortField = "created_time"
-	}
-	if sortOrder == "ascend" {
-		session = session.Asc(util.SnakeString(sortField))
-	} else {
-		session = session.Desc(util.SnakeString(sortField))
-	}
-	return session
-}
-
-func GetSessionForUser(owner string, offset, limit int, field, value, sortField, sortOrder string) *xorm.Session {
-	session := ormer.Engine.Prepare()
-	if offset != -1 && limit != -1 {
-		session.Limit(limit, offset)
-	}
-	if owner != "" {
-		if offset == -1 {
-			session = session.And("owner=?", owner)
-		} else {
-			session = session.And("a.owner=?", owner)
-		}
-	}
-	if field != "" && value != "" {
-		if util.FilterField(field) {
-			if offset != -1 {
-				field = fmt.Sprintf("a.%s", field)
-			}
-			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), fmt.Sprintf("%%%s%%", value))
-		}
-	}
-	if sortField == "" || sortOrder == "" {
-		sortField = "created_time"
-	}
-
-	tableNamePrefix := conf.GetConfigString("tableNamePrefix")
-	tableName := tableNamePrefix + "user"
-	if offset == -1 {
-		if sortOrder == "ascend" {
-			session = session.Asc(util.SnakeString(sortField))
-		} else {
-			session = session.Desc(util.SnakeString(sortField))
-		}
-	} else {
-		if sortOrder == "ascend" {
-			session = session.Alias("a").
-				Join("INNER", []string{tableName, "b"}, "a.owner = b.owner and a.name = b.name").
-				Select("b.*").
-				Asc("a." + util.SnakeString(sortField))
-		} else {
-			session = session.Alias("a").
-				Join("INNER", []string{tableName, "b"}, "a.owner = b.owner and a.name = b.name").
-				Select("b.*").
-				Desc("a." + util.SnakeString(sortField))
-		}
-	}
-
-	return session
 }

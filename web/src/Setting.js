@@ -32,7 +32,8 @@ export const ServerUrl = "";
 
 export const StaticBaseUrl = "https://cdn.casbin.org";
 
-export const Countries = [{label: "English", key: "en", country: "US", alt: "English"},
+export const Countries = [
+  {label: "English", key: "en", country: "US", alt: "English"},
   {label: "Español", key: "es", country: "ES", alt: "Español"},
   {label: "Français", key: "fr", country: "FR", alt: "Français"},
   {label: "Deutsch", key: "de", country: "DE", alt: "Deutsch"},
@@ -42,10 +43,19 @@ export const Countries = [{label: "English", key: "en", country: "US", alt: "Eng
   {label: "한국어", key: "ko", country: "KR", alt: "한국어"},
   {label: "Русский", key: "ru", country: "RU", alt: "Русский"},
   {label: "TiếngViệt", key: "vi", country: "VN", alt: "TiếngViệt"},
-  {label: "Português", key: "pt", country: "BR", alt: "Português"},
-  {label: "Itariano", key: "it", country: "IT", alt: "Itariano"},
-  {label: "Marley", key: "ms", country: "MY", alt: "Marley"},
-  {label: "Tkiš", key: "tr", country: "TR", alt: "Tkiš"},
+  {label: "Português", key: "pt", country: "PT", alt: "Português"},
+  {label: "Italiano", key: "it", country: "IT", alt: "Italiano"},
+  {label: "Malay", key: "ms", country: "MY", alt: "Malay"},
+  {label: "Türkçe", key: "tr", country: "TR", alt: "Türkçe"},
+  {label: "لغة عربية", key: "ar", country: "SA", alt: "لغة عربية"},
+  {label: "עִבְרִית", key: "he", country: "IL", alt: "עִבְרִית"},
+  {label: "Nederlands", key: "nl", country: "NL", alt: "Nederlands"},
+  {label: "Polski", key: "pl", country: "PL", alt: "Polski"},
+  {label: "Suomi", key: "fi", country: "FI", alt: "Suomi"},
+  {label: "Svenska", key: "sv", country: "SE", alt: "Svenska"},
+  {label: "Українська", key: "uk", country: "UA", alt: "Українська"},
+  {label: "Қазақ", key: "kk", country: "KZ", alt: "Қазақ"},
+  {label: "فارسی", key: "fa", country: "IR", alt: "فارسی"},
 ];
 
 export function getThemeData(organization, application) {
@@ -151,6 +161,10 @@ export const OtherProviderInfo = {
       logo: `${StaticBaseUrl}/img/email_mailtrap.png`,
       url: "https://mailtrap.io",
     },
+    "Azure ACS": {
+      logo: `${StaticBaseUrl}/img/social_azure.png`,
+      url: "https://learn.microsoft.com/zh-cn/azure/communication-services",
+    },
   },
   Storage: {
     "Local File System": {
@@ -213,6 +227,10 @@ export const OtherProviderInfo = {
       logo: `${StaticBaseUrl}/img/payment_paypal.png`,
       url: "https://www.paypal.com/",
     },
+    "Stripe": {
+      logo: `${StaticBaseUrl}/img/social_stripe.png`,
+      url: "https://stripe.com/",
+    },
     "GC": {
       logo: `${StaticBaseUrl}/img/payment_gc.png`,
       url: "https://gc.org",
@@ -254,6 +272,84 @@ export const OtherProviderInfo = {
     "MetaMask": {
       logo: `${StaticBaseUrl}/img/social_metamask.svg`,
       url: "https://metamask.io/",
+    },
+    "Web3Onboard": {
+      logo: `${StaticBaseUrl}/img/social_web3onboard.svg`,
+      url: "https://onboard.blocknative.com/",
+    },
+  },
+  Notification: {
+    "Telegram": {
+      logo: `${StaticBaseUrl}/img/social_telegram.png`,
+      url: "https://telegram.org/",
+    },
+    "Custom HTTP": {
+      logo: `${StaticBaseUrl}/img/email_default.png`,
+      url: "https://casdoor.org/docs/provider/notification/overview",
+    },
+    "DingTalk": {
+      logo: `${StaticBaseUrl}/img/social_dingtalk.png`,
+      url: "https://www.dingtalk.com/",
+    },
+    "Lark": {
+      logo: `${StaticBaseUrl}/img/social_lark.png`,
+      url: "https://www.larksuite.com/",
+    },
+    "Microsoft Teams": {
+      logo: `${StaticBaseUrl}/img/social_teams.png`,
+      url: "https://www.microsoft.com/microsoft-teams",
+    },
+    "Bark": {
+      logo: `${StaticBaseUrl}/img/social_bark.png`,
+      url: "https://apps.apple.com/us/app/bark-customed-notifications/id1403753865",
+    },
+    "Pushover": {
+      logo: `${StaticBaseUrl}/img/social_pushover.png`,
+      url: "https://pushover.net/",
+    },
+    "Pushbullet": {
+      logo: `${StaticBaseUrl}/img/social_pushbullet.png`,
+      url: "https://www.pushbullet.com/",
+    },
+    "Slack": {
+      logo: `${StaticBaseUrl}/img/social_slack.png`,
+      url: "https://slack.com/",
+    },
+    "Webpush": {
+      logo: `${StaticBaseUrl}/img/email_default.png`,
+      url: "https://developer.mozilla.org/en-US/docs/Web/API/Push_API",
+    },
+    "Discord": {
+      logo: `${StaticBaseUrl}/img/social_discord.png`,
+      url: "https://discord.com/",
+    },
+    "Google Chat": {
+      logo: `${StaticBaseUrl}/img/social_google_chat.png`,
+      url: "https://workspace.google.com/intl/en/products/chat/",
+    },
+    "Line": {
+      logo: `${StaticBaseUrl}/img/social_line.png`,
+      url: "https://line.me/",
+    },
+    "Matrix": {
+      logo: `${StaticBaseUrl}/img/social_matrix.png`,
+      url: "https://www.matrix.org/",
+    },
+    "Twitter": {
+      logo: `${StaticBaseUrl}/img/social_twitter.png`,
+      url: "https://twitter.com/",
+    },
+    "Reddit": {
+      logo: `${StaticBaseUrl}/img/social_reddit.png`,
+      url: "https://www.reddit.com/",
+    },
+    "Rocket Chat": {
+      logo: `${StaticBaseUrl}/img/social_rocket_chat.png`,
+      url: "https://rocket.chat/",
+    },
+    "Viber": {
+      logo: `${StaticBaseUrl}/img/social_viber.png`,
+      url: "https://www.viber.com/",
     },
   },
 };
@@ -605,7 +701,7 @@ export function isAdminUser(account) {
   if (account === undefined || account === null) {
     return false;
   }
-  return account.owner === "built-in" || account.isGlobalAdmin === true;
+  return account.owner === "built-in";
 }
 
 export function isLocalAdminUser(account) {
@@ -653,7 +749,7 @@ export function isMobile() {
 }
 
 export function getFormattedDate(date) {
-  if (date === undefined) {
+  if (!date) {
     return null;
   }
 
@@ -880,6 +976,7 @@ export function getProviderTypeOptions(category) {
         {id: "Default", name: "Default"},
         {id: "SUBMAIL", name: "SUBMAIL"},
         {id: "Mailtrap", name: "Mailtrap"},
+        {id: "Azure ACS", name: "Azure ACS"},
       ]
     );
   } else if (category === "SMS") {
@@ -906,7 +1003,7 @@ export function getProviderTypeOptions(category) {
         {id: "Local File System", name: "Local File System"},
         {id: "AWS S3", name: "AWS S3"},
         {id: "MinIO", name: "MinIO"},
-        {id: "Aliyun OSS", name: "Aliyun OSS"},
+        {id: "Aliyun OSS", name: "Alibaba Cloud OSS"},
         {id: "Tencent Cloud COS", name: "Tencent Cloud COS"},
         {id: "Azure Blob", name: "Azure Blob"},
         {id: "Qiniu Cloud Kodo", name: "Qiniu Cloud Kodo"},
@@ -924,6 +1021,7 @@ export function getProviderTypeOptions(category) {
       {id: "Alipay", name: "Alipay"},
       {id: "WeChat Pay", name: "WeChat Pay"},
       {id: "PayPal", name: "PayPal"},
+      {id: "Stripe", name: "Stripe"},
       {id: "GC", name: "GC"},
     ]);
   } else if (category === "Captcha") {
@@ -938,6 +1036,28 @@ export function getProviderTypeOptions(category) {
   } else if (category === "Web3") {
     return ([
       {id: "MetaMask", name: "MetaMask"},
+      {id: "Web3Onboard", name: "Web3-Onboard"},
+    ]);
+  } else if (category === "Notification") {
+    return ([
+      {id: "Telegram", name: "Telegram"},
+      {id: "Custom HTTP", name: "Custom HTTP"},
+      {id: "DingTalk", name: "DingTalk"},
+      {id: "Lark", name: "Lark"},
+      {id: "Microsoft Teams", name: "Microsoft Teams"},
+      {id: "Bark", name: "Bark"},
+      {id: "Pushover", name: "Pushover"},
+      {id: "Pushbullet", name: "Pushbullet"},
+      {id: "Slack", name: "Slack"},
+      {id: "Webpush", name: "Webpush"},
+      {id: "Discord", name: "Discord"},
+      {id: "Google Chat", name: "Google Chat"},
+      {id: "Line", name: "Line"},
+      {id: "Matrix", name: "Matrix"},
+      {id: "Twitter", name: "Twitter"},
+      {id: "Reddit", name: "Reddit"},
+      {id: "Rocket Chat", name: "Rocket Chat"},
+      {id: "Viber", name: "Viber"},
     ]);
   } else {
     return [];
@@ -1142,9 +1262,9 @@ export function getTags(tags, urlPrefix = null) {
   return res;
 }
 
-export function getTag(color, text) {
+export function getTag(color, text, icon) {
   return (
-    <Tag color={color}>
+    <Tag color={color} icon={icon}>
       {text}
     </Tag>
   );
@@ -1229,3 +1349,13 @@ export function builtInObject(obj) {
 
 export const CertScopeJWT = "JWT";
 export const CertScopeCACert = "CA Certificate";
+
+export function getCurrencySymbol(currency) {
+  if (currency === "USD" || currency === "usd") {
+    return "$";
+  } else if (currency === "CNY" || currency === "cny") {
+    return "¥";
+  } else {
+    return currency;
+  }
+}

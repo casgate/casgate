@@ -73,8 +73,8 @@ func parseListItem(lines *[]string, i int) []string {
 	return trimmedItems
 }
 
-func UploadUsers(owner string, fileId string) (bool, error) {
-	table := xlsx.ReadXlsxFile(fileId)
+func UploadUsers(owner string, path string) (bool, error) {
+	table := xlsx.ReadXlsxFile(path)
 
 	oldUserMap, err := getUserMap(owner)
 	if err != nil {
@@ -124,15 +124,14 @@ func UploadUsers(owner string, fileId string) (bool, error) {
 			IsDefaultAvatar:   false,
 			IsOnline:          parseLineItemBool(&line, 31),
 			IsAdmin:           parseLineItemBool(&line, 32),
-			IsGlobalAdmin:     parseLineItemBool(&line, 33),
-			IsForbidden:       parseLineItemBool(&line, 34),
-			IsDeleted:         parseLineItemBool(&line, 35),
-			SignupApplication: parseLineItem(&line, 36),
+			IsForbidden:       parseLineItemBool(&line, 33),
+			IsDeleted:         parseLineItemBool(&line, 34),
+			SignupApplication: parseLineItem(&line, 35),
 			Hash:              "",
 			PreHash:           "",
-			CreatedIp:         parseLineItem(&line, 37),
-			LastSigninTime:    parseLineItem(&line, 38),
-			LastSigninIp:      parseLineItem(&line, 39),
+			CreatedIp:         parseLineItem(&line, 36),
+			LastSigninTime:    parseLineItem(&line, 37),
+			LastSigninIp:      parseLineItem(&line, 38),
 			Ldap:              "",
 			Properties:        map[string]string{},
 		}
@@ -145,5 +144,6 @@ func UploadUsers(owner string, fileId string) (bool, error) {
 	if len(newUsers) == 0 {
 		return false, nil
 	}
+
 	return AddUsersInBatch(newUsers)
 }

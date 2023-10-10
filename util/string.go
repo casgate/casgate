@@ -23,6 +23,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -86,6 +87,17 @@ func CamelToSnakeCase(camel string) string {
 		buf.WriteRune(c)
 	}
 	return strings.ReplaceAll(buf.String(), " ", "")
+}
+
+func SnakeToCamel(snake string) string {
+	words := strings.Split(snake, "_")
+	for i := range words {
+		words[i] = strings.ToLower(words[i])
+		if i > 0 {
+			words[i] = strings.Title(words[i])
+		}
+	}
+	return strings.Join(words, "")
 }
 
 func GetOwnerAndNameFromId(id string) (string, string) {
@@ -173,32 +185,6 @@ func IsStringsEmpty(strs ...string) bool {
 		}
 	}
 	return false
-}
-
-func GetMaxLenStr(strs ...string) string {
-	m := 0
-	i := 0
-	for j, str := range strs {
-		l := len(str)
-		if l > m {
-			m = l
-			i = j
-		}
-	}
-	return strs[i]
-}
-
-func GetMinLenStr(strs ...string) string {
-	m := int(^uint(0) >> 1)
-	i := 0
-	for j, str := range strs {
-		l := len(str)
-		if l < m {
-			m = l
-			i = j
-		}
-	}
-	return strs[i]
 }
 
 func ReadStringFromPath(path string) string {
@@ -302,6 +288,25 @@ func ParseIdToString(input interface{}) (string, error) {
 		return strconv.FormatFloat(v, 'f', -1, 64), nil
 	default:
 		return "", fmt.Errorf("unsupported id type: %T", input)
+	}
+}
+
+func GetValueFromDataSourceName(key string, dataSourceName string) string {
+	reg := regexp.MustCompile(key + "=([^ ]+)")
+	matches := reg.FindStringSubmatch(dataSourceName)
+	if len(matches) >= 2 {
+		return matches[1]
+	}
+
+	return ""
+}
+
+func GetUsernameFromEmail(email string) string {
+	tokens := strings.Split(email, "@")
+	if len(tokens) == 0 {
+		return uuid.NewString()
+	} else {
+		return tokens[0]
 	}
 }
 

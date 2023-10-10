@@ -27,6 +27,15 @@ import pt from "./locales/pt/data.json";
 import it from "./locales/it/data.json";
 import ms from "./locales/ms/data.json";
 import tr from "./locales/tr/data.json";
+import ar from "./locales/ar/data.json";
+import he from "./locales/he/data.json";
+import nl from "./locales/nl/data.json";
+import pl from "./locales/pl/data.json";
+import fi from "./locales/fi/data.json";
+import sv from "./locales/sv/data.json";
+import uk from "./locales/uk/data.json";
+import kk from "./locales/kk/data.json";
+import fa from "./locales/fa/data.json";
 import * as Conf from "./Conf";
 import {initReactI18next} from "react-i18next";
 
@@ -45,6 +54,15 @@ const resources = {
   it: it,
   ms: ms,
   tr: tr,
+  ar: ar,
+  he: he,
+  nl: nl,
+  pl: pl,
+  fi: fi,
+  sv: sv,
+  uk: uk,
+  kk: kk,
+  fa: fa,
 };
 
 function initLanguage() {
@@ -102,6 +120,33 @@ function initLanguage() {
         break;
       case "tr":
         language = "tr";
+        break;
+      case "ar":
+        language = "ar";
+        break;
+      case "he":
+        language = "he";
+        break;
+      case "nl":
+        language = "nl";
+        break;
+      case "pl":
+        language = "pl";
+        break;
+      case "fi":
+        language = "fi";
+        break;
+      case "sv":
+        language = "sv";
+        break;
+      case "uk":
+        language = "uk";
+        break;
+      case "kk":
+        language = "kk";
+        break;
+      case "fa":
+        language = "fa";
         break;
       default:
         language = Conf.DefaultLanguage;

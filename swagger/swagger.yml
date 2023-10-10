@@ -85,24 +85,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
-  /api/add-domain:
-    post:
-      tags:
-      - Domain API
-      description: add domain
-      operationId: ApiController.AddDomain
-      parameters:
-      - in: body
-        name: body
-        description: The details of the domain
-        required: true
-        schema:
-          $ref: '#/definitions/object.Domain'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/add-enforcer:
     post:
       tags:
@@ -678,24 +660,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
-  /api/delete-domain:
-    post:
-      tags:
-      - Domain API
-      description: delete domain
-      operationId: ApiController.DeleteDomain
-      parameters:
-      - in: body
-        name: body
-        description: The details of the domain
-        required: true
-        schema:
-          $ref: '#/definitions/object.Domain'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/delete-enforcer:
     post:
       tags:
@@ -1235,6 +1199,17 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Cert'
+  /api/get-dashboard:
+    get:
+      tags:
+      - GetDashboard API
+      description: get information of dashboard
+      operationId: ApiController.GetDashboard
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/get-default-application:
     get:
       tags:
@@ -1252,42 +1227,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/Response'
-  /api/get-domain:
-    get:
-      tags:
-      - Domain API
-      description: get domain
-      operationId: ApiController.GetDomain
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the domains
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Domain'
-  /api/get-domains:
-    get:
-      tags:
-      - Domain API
-      description: get domains
-      operationId: ApiController.GetDomains
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of domains
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Domain'
   /api/get-email-and-phone:
     get:
       tags:
@@ -2836,29 +2775,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
-  /api/update-domain:
-    post:
-      tags:
-      - Domain API
-      description: update domain
-      operationId: ApiController.UpdateDomain
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the domain
-        required: true
-        type: string
-      - in: body
-        name: body
-        description: The details of the domain
-        required: true
-        schema:
-          $ref: '#/definitions/object.Domain'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/update-enforcer:
     post:
       tags:
@@ -3437,8 +3353,11 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  149401.<nil>.string:
-    title: string
+  1183.0xc000639290.false:
+    title: "false"
+    type: object
+  1217.0xc0006392c0.false:
+    title: "false"
     type: object
   LaravelResponse:
     title: LaravelResponse
@@ -3479,13 +3398,9 @@ definitions:
     type: object
     properties:
       data:
-        additionalProperties:
-          description: support string, struct or []struct
-          type: string
+        $ref: '#/definitions/1183.0xc000639290.false'
       data2:
-        additionalProperties:
-          description: support string, struct or []struct
-          type: string
+        $ref: '#/definitions/1217.0xc0006392c0.false'
       msg:
         type: string
       name:
@@ -3515,6 +3430,9 @@ definitions:
   object:
     title: object
     type: object
+  object.&{197049 0xc000a2cd50 false}:
+    title: '&{197049 0xc000a2cd50 false}'
+    type: object
   object.AccountItem:
     title: AccountItem
     type: object
@@ -3539,8 +3457,6 @@ definitions:
         type: string
       host:
         type: string
-      isEnabled:
-        type: boolean
       name:
         type: string
       owner:
@@ -3661,19 +3577,11 @@ definitions:
         $ref: '#/definitions/object.ThemeData'
       tokenFormat:
         type: string
-  object.AttributeMappingItem:
-    title: AttributeMappingItem
-    type: object
-    properties:
-      attribute:
-        type: string
-      userField:
-        type: string
   object.CasbinRequest:
     title: CasbinRequest
     type: array
     items:
-      $ref: '#/definitions/object.CasbinRequest'
+      $ref: '#/definitions/object.&{197049 0xc000a2cd50 false}'
   object.Cert:
     title: Cert
     type: object
@@ -3706,26 +3614,6 @@ definitions:
         type: string
       type:
         type: string
-  object.Domain:
-    title: Domain
-    type: object
-    properties:
-      createdTime:
-        type: string
-      description:
-        type: string
-      displayName:
-        type: string
-      domains:
-        type: array
-        items:
-          type: string
-      isEnabled:
-        type: boolean
-      name:
-        type: string
-      owner:
-        type: string
   object.Enforce:
     title: Enforce
     type: object
@@ -3741,10 +3629,11 @@ definitions:
         type: string
       displayName:
         type: string
-      isEnabled:
-        type: boolean
       model:
         type: string
+      modelCfg:
+        additionalProperties:
+          type: string
       name:
         type: string
       owner:
@@ -3858,23 +3747,13 @@ definitions:
     title: Ldap
     type: object
     properties:
-      attributeMappingItems:
-        type: array
-        items:
-          $ref: '#/definitions/object.AttributeMappingItem'
       autoSync:
         type: integer
         format: int64
       baseDn:
         type: string
-      cert:
-        type: string
       createdTime:
         type: string
-      enableAttributeMapping:
-        type: boolean
-      enableRoleMapping:
-        type: boolean
       enableSsl:
         type: boolean
       filter:
@@ -3896,10 +3775,6 @@ definitions:
       port:
         type: integer
         format: int64
-      roleMappingItems:
-        type: array
-        items:
-          $ref: '#/definitions/object.RoleMappingItem'
       serverName:
         type: string
       username:
@@ -3950,18 +3825,10 @@ definitions:
     properties:
       createdTime:
         type: string
-      customPolicyMapping:
-        type: boolean
-      customPolicyMappingRules:
-        type: array
-        items:
-          $ref: '#/definitions/149401.<nil>.string'
       description:
         type: string
       displayName:
         type: string
-      isEnabled:
-        type: boolean
       modelText:
         type: string
       name:
@@ -4176,10 +4043,6 @@ definitions:
           type: string
       effect:
         type: string
-      groups:
-        type: array
-        items:
-          type: string
       isEnabled:
         type: boolean
       model:
@@ -4511,10 +4374,6 @@ definitions:
         type: array
         items:
           type: string
-      groups:
-        type: array
-        items:
-          type: string
       isEnabled:
         type: boolean
       name:
@@ -4526,18 +4385,6 @@ definitions:
         items:
           type: string
       users:
-        type: array
-        items:
-          type: string
-  object.RoleMappingItem:
-    title: RoleMappingItem
-    type: object
-    properties:
-      attribute:
-        type: string
-      role:
-        type: string
-      values:
         type: array
         items:
           type: string
@@ -4634,8 +4481,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/object.TableColumn'
-      tablePrimaryKey:
-        type: string
       type:
         type: string
       user:
@@ -4647,6 +4492,8 @@ definitions:
       casdoorName:
         type: string
       isHashed:
+        type: boolean
+      isKey:
         type: boolean
       name:
         type: string
@@ -4862,8 +4709,6 @@ definitions:
         type: boolean
       isForbidden:
         type: boolean
-      isGlobalAdmin:
-        type: boolean
       isOnline:
         type: boolean
       kakao:
@@ -4929,8 +4774,6 @@ definitions:
         type: string
       password:
         type: string
-      passwordChangeRequired:
-        type: boolean
       passwordSalt:
         type: string
       passwordType:
@@ -5017,6 +4860,8 @@ definitions:
         type: string
       vk:
         type: string
+      web3onboard:
+        type: string
       webauthnCredentials:
         type: array
         items:
@@ -5102,6 +4947,7 @@ definitions:
     - PaymentStatePaid = "Paid"
     - PaymentStateCreated = "Created"
     - PaymentStateCanceled = "Canceled"
+    - PaymentStateTimeout = "Timeout"
     - PaymentStateError = "Error"
     example: Paid
   protocol.CredentialAssertion:

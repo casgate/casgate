@@ -13,11 +13,12 @@
 // limitations under the License.
 
 import React from "react";
-import {Button, Card, Col, Input, Row, Select, Switch} from "antd";
+import {Button, Card, Col, Input, Row, Select} from "antd";
 import * as AdapterBackend from "./backend/AdapterBackend";
 import * as EnforcerBackend from "./backend/EnforcerBackend";
 import * as ModelBackend from "./backend/ModelBackend";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
+import PolicyTable from "./table/PolicyTable";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 
@@ -42,7 +43,7 @@ class EnforcerEditPage extends React.Component {
   }
 
   getEnforcer() {
-    EnforcerBackend.getEnforcer(this.state.organizationName, this.state.enforcerName)
+    EnforcerBackend.getEnforcer(this.state.organizationName, this.state.enforcerName, true)
       .then((res) => {
         if (res.data === null) {
           this.props.history.push("/404");
@@ -169,7 +170,7 @@ class EnforcerEditPage extends React.Component {
             <Select virtual={false} disabled={Setting.builtInObject(this.state.enforcer)} style={{width: "100%"}} value={this.state.enforcer.model} onChange={(model => {
               this.updateEnforcerField("model", model);
             })}
-            options={this.state.models.map((model) => Setting.getOption(model.displayName, `${model.owner}/${model.name}`))
+            options={this.state.models.map((model) => Setting.getOption(`${model.owner}/${model.name}`, `${model.owner}/${model.name}`))
             } />
           </Col>
         </Row>
@@ -181,18 +182,16 @@ class EnforcerEditPage extends React.Component {
             <Select virtual={false} disabled={Setting.builtInObject(this.state.enforcer)} style={{width: "100%"}} value={this.state.enforcer.adapter} onChange={(adapter => {
               this.updateEnforcerField("adapter", adapter);
             })}
-            options={this.state.adapters.map((adapter) => Setting.getOption(adapter.name, `${adapter.owner}/${adapter.name}`))
+            options={this.state.adapters.map((adapter) => Setting.getOption(`${adapter.owner}/${adapter.name}`, `${adapter.owner}/${adapter.name}`))
             } />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
-            {Setting.getLabel(i18next.t("general:Is enabled"), i18next.t("general:Is enabled - Tooltip"))} :
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("adapter:Policies"), i18next.t("adapter:Policies - Tooltip"))} :
           </Col>
-          <Col span={1} >
-            <Switch checked={this.state.enforcer.isEnabled} onChange={checked => {
-              this.updateEnforcerField("isEnabled", checked);
-            }} />
+          <Col span={22}>
+            <PolicyTable enforcer={this.state.enforcer} modelCfg={this.state.enforcer?.modelCfg} mode={this.state.mode} />
           </Col>
         </Row>
       </Card>

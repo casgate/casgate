@@ -32,10 +32,11 @@ class PlanListPage extends BaseListPage {
       createdTime: moment().format(),
       displayName: `New Plan - ${randomName}`,
       description: "",
-      pricePerMonth: 10,
-      pricePerYear: 100,
+      price: 10,
       currency: "USD",
+      period: "Monthly",
       isEnabled: true,
+      paymentProviders: [],
       role: "",
       options: [],
     };
@@ -127,18 +128,26 @@ class PlanListPage extends BaseListPage {
         ...this.getColumnSearchProps("displayName"),
       },
       {
-        title: i18next.t("plan:Price per month"),
-        dataIndex: "pricePerMonth",
-        key: "pricePerMonth",
-        width: "130px",
-        ...this.getColumnSearchProps("pricePerMonth"),
+        title: i18next.t("payment:Currency"),
+        dataIndex: "currency",
+        key: "currency",
+        width: "120px",
+        sorter: true,
+        ...this.getColumnSearchProps("currency"),
       },
       {
-        title: i18next.t("plan:Price per year"),
-        dataIndex: "pricePerYear",
-        key: "pricePerYear",
+        title: i18next.t("plan:Price"),
+        dataIndex: "price",
+        key: "price",
         width: "130px",
-        ...this.getColumnSearchProps("pricePerYear"),
+        ...this.getColumnSearchProps("price"),
+      },
+      {
+        title: i18next.t("plan:Period"),
+        dataIndex: "period",
+        key: "period",
+        width: "130px",
+        ...this.getColumnSearchProps("period"),
       },
       {
         title: i18next.t("general:Role"),
@@ -148,7 +157,21 @@ class PlanListPage extends BaseListPage {
         ...this.getColumnSearchProps("role"),
         render: (text, record, index) => {
           return (
-            <Link to={`/roles/${encodeURIComponent(text)}`}>
+            <Link to={`/roles/${record.owner}/${text}`}>
+              {text}
+            </Link>
+          );
+        },
+      },
+      {
+        title: i18next.t("plan:Related product"),
+        dataIndex: "product",
+        key: "product",
+        width: "130px",
+        ...this.getColumnSearchProps("product"),
+        render: (text, record, index) => {
+          return (
+            <Link to={`/products/${record.owner}/${text}`}>
               {text}
             </Link>
           );

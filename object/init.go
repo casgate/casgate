@@ -74,7 +74,6 @@ func getBuiltInAccountItems() []*AccountItem {
 		{Name: "3rd-party logins", Visible: true, ViewRule: "Self", ModifyRule: "Self"},
 		{Name: "Properties", Visible: false, ViewRule: "Admin", ModifyRule: "Admin"},
 		{Name: "Is admin", Visible: true, ViewRule: "Admin", ModifyRule: "Admin"},
-		{Name: "Is global admin", Visible: true, ViewRule: "Admin", ModifyRule: "Admin"},
 		{Name: "Is forbidden", Visible: true, ViewRule: "Admin", ModifyRule: "Admin"},
 		{Name: "Is deleted", Visible: true, ViewRule: "Admin", ModifyRule: "Admin"},
 		{Name: "Multi-factor authentication", Visible: true, ViewRule: "Self", ModifyRule: "Self"},
@@ -146,7 +145,6 @@ func initBuiltInUser() {
 		Score:             2000,
 		Ranking:           1,
 		IsAdmin:           true,
-		IsGlobalAdmin:     true,
 		IsForbidden:       false,
 		IsDeleted:         false,
 		SignupApplication: "app-built-in",
@@ -319,7 +317,6 @@ func initBuiltInUserModel() {
 		Name:        "user-model-built-in",
 		CreatedTime: util.GetCurrentTime(),
 		DisplayName: "Built-in Model",
-		IsEnabled:   true,
 		ModelText: `[request_definition]
 r = sub, obj, act
 
@@ -377,7 +374,6 @@ m = (r.subOwner == p.subOwner || p.subOwner == "*") && \
 		Name:        "api-model-built-in",
 		CreatedTime: util.GetCurrentTime(),
 		DisplayName: "API Model",
-		IsEnabled:   true,
 		ModelText:   modelText,
 	}
 	_, err = AddModel(model)
@@ -428,15 +424,11 @@ func initBuiltInUserAdapter() {
 	}
 
 	adapter = &Adapter{
-		Owner:           "built-in",
-		Name:            "user-adapter-built-in",
-		CreatedTime:     util.GetCurrentTime(),
-		Type:            "Database",
-		DatabaseType:    conf.GetConfigString("driverName"),
-		TableNamePrefix: conf.GetConfigString("tableNamePrefix"),
-		Database:        conf.GetConfigString("dbName"),
-		Table:           "casbin_user_rule",
-		IsEnabled:       true,
+		Owner:       "built-in",
+		Name:        "user-adapter-built-in",
+		CreatedTime: util.GetCurrentTime(),
+		Table:       "casbin_user_rule",
+		UseSameDb:   true,
 	}
 	_, err = AddAdapter(adapter)
 	if err != nil {
@@ -455,15 +447,11 @@ func initBuiltInApiAdapter() {
 	}
 
 	adapter = &Adapter{
-		Owner:           "built-in",
-		Name:            "api-adapter-built-in",
-		CreatedTime:     util.GetCurrentTime(),
-		Type:            "Database",
-		DatabaseType:    conf.GetConfigString("driverName"),
-		TableNamePrefix: conf.GetConfigString("tableNamePrefix"),
-		Database:        conf.GetConfigString("dbName"),
-		Table:           "casbin_api_rule",
-		IsEnabled:       true,
+		Owner:       "built-in",
+		Name:        "api-adapter-built-in",
+		CreatedTime: util.GetCurrentTime(),
+		Table:       "casbin_api_rule",
+		UseSameDb:   true,
 	}
 	_, err = AddAdapter(adapter)
 	if err != nil {
@@ -485,10 +473,9 @@ func initBuiltInUserEnforcer() {
 		Owner:       "built-in",
 		Name:        "user-enforcer-built-in",
 		CreatedTime: util.GetCurrentTime(),
-		DisplayName: "Permission Enforcer",
+		DisplayName: "User Enforcer",
 		Model:       "built-in/user-model-built-in",
 		Adapter:     "built-in/user-adapter-built-in",
-		IsEnabled:   true,
 	}
 
 	_, err = AddEnforcer(enforcer)
@@ -514,7 +501,6 @@ func initBuiltInApiEnforcer() {
 		DisplayName: "API Enforcer",
 		Model:       "built-in/api-model-built-in",
 		Adapter:     "built-in/api-adapter-built-in",
-		IsEnabled:   true,
 	}
 
 	_, err = AddEnforcer(enforcer)

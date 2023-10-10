@@ -13,22 +13,28 @@
 // limitations under the License.
 
 import React from "react";
-import {Button, Descriptions, Modal, Spin} from "antd";
-import {CheckCircleTwoTone} from "@ant-design/icons";
+import {Button, Descriptions, Spin} from "antd";
 import i18next from "i18next";
 import * as ProductBackend from "./backend/ProductBackend";
+import * as PlanBackend from "./backend/PlanBackend";
+import * as PricingBackend from "./backend/PricingBackend";
 import * as Setting from "./Setting";
 
 class ProductBuyPage extends React.Component {
   constructor(props) {
     super(props);
+    const params = new URLSearchParams(window.location.search);
     this.state = {
       classes: props,
-      organizationName: props.organizationName !== undefined ? props.organizationName : props?.match?.params?.organizationName,
-      productName: props.productName !== undefined ? props.productName : props?.match?.params?.productName,
+      owner: props?.organizationName ?? props?.match?.params?.organizationName ?? props?.match?.params?.owner ?? null,
+      productName: props?.productName ?? props?.match?.params?.productName ?? null,
+      pricingName: props?.pricingName ?? props?.match?.params?.pricingName ?? null,
+      planName: params.get("plan"),
+      userName: params.get("user"),
       product: null,
+      pricing: props?.pricing ?? null,
+      plan: null,
       isPlacingOrder: false,
-      qrCodeModalProvider: null,
     };
   }
 
@@ -36,20 +42,57 @@ class ProductBuyPage extends React.Component {
     this.getProduct();
   }
 
-  getProduct() {
-    if (this.state.productName === undefined || this.state.organizationName === undefined) {
+  setStateAsync(state) {
+    return new Promise((resolve, reject) => {
+      this.setState(state, () => {
+        resolve();
+      });
+    });
+  }
+
+  onUpdatePricing(pricing) {
+    this.props.onUpdatePricing(pricing);
+  }
+
+  async getProduct() {
+    if (!this.state.owner || (!this.state.productName && !this.state.pricingName)) {
       return ;
     }
-    ProductBackend.getProduct(this.state.organizationName, this.state.productName)
-      .then((res) => {
-        if (res.status === "error") {
-          Setting.showMessage("error", res.msg);
-          return;
+    try {
+      // load pricing & plan
+      if (this.state.pricingName) {
+        if (!this.state.planName || !this.state.userName) {
+          return ;
         }
-        this.setState({
-          product: res.data,
+        let res = await PricingBackend.getPricing(this.state.owner, this.state.pricingName);
+        if (res.status !== "ok") {
+          throw new Error(res.msg);
+        }
+        const pricing = res.data;
+        res = await PlanBackend.getPlan(this.state.owner, this.state.planName);
+        if (res.status !== "ok") {
+          throw new Error(res.msg);
+        }
+        const plan = res.data;
+        await this.setStateAsync({
+          pricing: pricing,
+          plan: plan,
+          productName: plan.product,
         });
+        this.onUpdatePricing(pricing);
+      }
+      // load product
+      const res = await ProductBackend.getProduct(this.state.owner, this.state.productName);
+      if (res.status !== "ok") {
+        throw new Error(res.msg);
+      }
+      this.setState({
+        product: res.data,
       });
+    } catch (err) {
+      Setting.showMessage("error", err.message);
+      return;
+    }
   }
 
   getProductObj() {
@@ -85,21 +128,18 @@ class ProductBuyPage extends React.Component {
   }
 
   buyProduct(product, provider) {
-    if (provider.clientId.startsWith("http")) {
-      this.setState({
-        qrCodeModalProvider: provider,
-      });
-      return;
-    }
-
     this.setState({
       isPlacingOrder: true,
     });
 
-    ProductBackend.buyProduct(product.owner, product.name, provider.name)
+    ProductBackend.buyProduct(product.owner, product.name, provider.name, this.state.pricingName ?? "", this.state.planName ?? "", this.state.userName ?? "")
       .then((res) => {
         if (res.status === "ok") {
-          const payUrl = res.data;
+          const payment = res.data;
+          let payUrl = payment.payUrl;
+          if (provider.type === "WeChat Pay") {
+            payUrl = `/qrcode/${payment.owner}/${payment.name}?providerName=${provider.name}&payUrl=${encodeURI(payment.payUrl)}&successUrl=${encodeURI(payment.successUrl)}`;
+          }
           Setting.goToLink(payUrl);
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to save")}: ${res.msg}`);
@@ -114,45 +154,6 @@ class ProductBuyPage extends React.Component {
       });
   }
 
-  renderQrCodeModal() {
-    if (this.state.qrCodeModalProvider === undefined || this.state.qrCodeModalProvider === null) {
-      return null;
-    }
-
-    return (
-      <Modal title={
-        <div>
-          <CheckCircleTwoTone twoToneColor="rgb(45,120,213)" />
-          {" " + i18next.t("product:Please scan the QR code to pay")}
-        </div>
-      }
-      open={this.state.qrCodeModalProvider !== undefined && this.state.qrCodeModalProvider !== null}
-      onOk={() => {
-        Setting.goToLink(this.state.product.returnUrl);
-      }}
-      onCancel={() => {
-        this.setState({
-          qrCodeModalProvider: null,
-        });
-      }}
-      okText={i18next.t("product:I have completed the payment")}
-      cancelText={i18next.t("general:Cancel")}>
-        <p key={this.state.qrCodeModalProvider?.name}>
-          {
-            i18next.t("product:Please provide your username in the remark")
-          }
-          :&nbsp;&nbsp;
-          {
-            Setting.getTag("default", this.props.account.name)
-          }
-          <br />
-          <br />
-          <img src={this.state.qrCodeModalProvider?.clientId} alt={this.state.qrCodeModalProvider?.name} width={"472px"} style={{marginBottom: "20px"}} />
-        </p>
-      </Modal>
-    );
-  }
-
   getPayButton(provider) {
     let text = provider.type;
     if (provider.type === "Dummy") {
@@ -163,6 +164,8 @@ class ProductBuyPage extends React.Component {
       text = i18next.t("product:WeChat Pay");
     } else if (provider.type === "PayPal") {
       text = i18next.t("product:PayPal");
+    } else if (provider.type === "Stripe") {
+      text = i18next.t("product:Stripe");
     }
 
     return (
@@ -213,11 +216,11 @@ class ProductBuyPage extends React.Component {
     }
 
     return (
-      <div>
+      <div className="login-content">
         <Spin spinning={this.state.isPlacingOrder} size="large" tip={i18next.t("product:Placing order...")} style={{paddingTop: "10%"}} >
-          <Descriptions title={i18next.t("product:Buy Product")} bordered>
+          <Descriptions title={<span style={{fontSize: 28}}>{i18next.t("product:Buy Product")}</span>} bordered>
             <Descriptions.Item label={i18next.t("general:Name")} span={3}>
-              <span style={{fontSize: 28}}>
+              <span style={{fontSize: 25}}>
                 {Setting.getLanguageText(product?.displayName)}
               </span>
             </Descriptions.Item>
@@ -243,9 +246,6 @@ class ProductBuyPage extends React.Component {
             </Descriptions.Item>
           </Descriptions>
         </Spin>
-        {
-          this.renderQrCodeModal()
-        }
       </div>
     );
   }

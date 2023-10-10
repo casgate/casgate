@@ -90,7 +90,7 @@ func (c *ApiController) GetUsers() {
 
 	if limit == "" || page == "" {
 		if groupName != "" {
-			maskedUsers, err := object.GetMaskedUsers(object.GetGroupUsers(groupName))
+			maskedUsers, err := object.GetMaskedUsers(object.GetGroupUsers(util.GetId(owner, groupName)))
 			if err != nil {
 				c.ResponseError(err.Error())
 				return
@@ -256,6 +256,13 @@ func (c *ApiController) UpdateUser() {
 	if oldUser.Owner == "built-in" && oldUser.Name == "admin" && (user.Owner != "built-in" || user.Name != "admin") {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
+	}
+
+	if c.Input().Get("allowEmpty") == "" {
+		if user.DisplayName == "" {
+			c.ResponseError(c.T("user:Display name cannot be empty"))
+			return
+		}
 	}
 
 	if msg := object.CheckUpdateUser(oldUser, &user, c.GetAcceptLanguage()); msg != "" {
@@ -448,12 +455,25 @@ func (c *ApiController) SetPassword() {
 	}
 
 	targetUser, err := object.GetUser(userId)
+	if targetUser == nil {
+		c.ResponseError(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), userId))
+		return
+	}
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
 
-	if oldPassword != "" {
+	isAdmin := c.IsAdmin()
+	if isAdmin {
+		if oldPassword != "" {
+			msg := object.CheckPassword(targetUser, oldPassword, c.GetAcceptLanguage())
+			if msg != "" {
+				c.ResponseError(msg)
+				return
+			}
+		}
+	} else {
 		msg := object.CheckPassword(targetUser, oldPassword, c.GetAcceptLanguage())
 		if msg != "" {
 			c.ResponseError(msg)
@@ -574,6 +594,22 @@ func (c *ApiController) RemoveUserFromGroup() {
 	name := c.Ctx.Request.Form.Get("name")
 	groupName := c.Ctx.Request.Form.Get("groupName")
 
-	c.Data["json"] = wrapActionResponse(object.RemoveUserFromGroup(owner, name, util.GetId(owner, groupName)))
-	c.ServeJSON()
+	organization, err := object.GetOrganization(util.GetId("admin", owner))
+	if err != nil {
+		return
+	}
+	item := object.GetAccountItemByName("Groups", organization)
+	res, msg := object.CheckAccountItemModifyRule(item, c.IsAdmin(), c.GetAcceptLanguage())
+	if !res {
+		c.ResponseError(msg)
+		return
+	}
+
+	affected, err := object.DeleteGroupForUser(util.GetId(owner, name), groupName)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk(affected)
 }

@@ -50,13 +50,19 @@ func addSyncerJob(syncer *Syncer) error {
 		return nil
 	}
 
-	syncer.initAdapter()
+	err := syncer.initAdapter()
+	if err != nil {
+		return err
+	}
 
-	syncer.syncUsers()
+	err = syncer.syncUsers()
+	if err != nil {
+		return err
+	}
 
 	schedule := fmt.Sprintf("@every %ds", syncer.SyncInterval)
 	cron := getCronMap(syncer.Name)
-	_, err := cron.AddFunc(schedule, syncer.syncUsers)
+	_, err = cron.AddFunc(schedule, syncer.syncUsersNoError)
 	if err != nil {
 		return err
 	}

@@ -9,11 +9,11 @@
       "passwordType": "plain",
       "passwordSalt": "",
       "passwordOptions": ["AtLeast6"],
-      "countryCodes": ["US", "ES", "CN", "FR", "DE", "GB", "JP", "KR", "VN", "ID", "SG", "IN", "IT", "MY", "TR"],
+      "countryCodes": ["US", "GB", "ES", "FR", "DE", "CN", "JP", "KR", "VN", "ID", "SG", "IN", "IT", "MY", "TR", "DZ", "IL", "PH", "NL", "PL", "FI", "SE", "UA", "KZ"],
       "defaultAvatar": "",
       "defaultApplication": "",
       "tags": [],
-      "languages": ["en", "zh", "es", "fr", "de", "id", "ja", "ko", "ru", "vi", "it", "ms", "tr"],
+      "languages": ["en", "zh", "es", "fr", "de", "id", "ja", "ko", "ru", "vi", "it", "ms", "tr","ar", "he", "nl", "pl", "fi", "sv", "uk", "kk", "fa"],
       "masterPassword": "",
       "initScore": 2000,
       "enableSoftDeletion": false,
@@ -123,7 +123,6 @@
       "score": 2000,
       "ranking": 1,
       "isAdmin": true,
-      "isGlobalAdmin": true,
       "isForbidden": false,
       "isDeleted": false,
       "signupApplication": "",
@@ -177,9 +176,7 @@
   ],
   "permissions": [
     {
-      "actions": [
-        ""
-      ],
+      "actions": [],
       "displayName": "",
       "effect": "",
       "isEnabled": true,
@@ -187,15 +184,9 @@
       "name": "",
       "owner": "",
       "resourceType": "",
-      "resources": [
-        ""
-      ],
-      "roles": [
-        ""
-      ],
-      "users": [
-        ""
-      ]
+      "resources": [],
+      "roles": [],
+      "users": []
     }
   ],
   "payments": [
@@ -237,9 +228,7 @@
       "name": "",
       "owner": "",
       "price": 0,
-      "providers": [
-        ""
-      ],
+      "providers": [],
       "quantity": 0,
       "returnUrl": "",
       "sold": 0,
@@ -269,12 +258,8 @@
       "isEnabled": true,
       "name": "",
       "owner": "",
-      "roles": [
-        ""
-      ],
-      "users": [
-        ""
-      ]
+      "roles": [],
+      "users": []
     }
   ],
   "syncers": [
@@ -285,7 +270,7 @@
       "databaseType": "",
       "errorText": "",
       "host": "",
-      "isEnabled": true,
+      "isEnabled": false,
       "name": "",
       "organization": "",
       "owner": "",
@@ -299,9 +284,7 @@
           "isHashed": true,
           "name": "",
           "type": "",
-          "values": [
-            ""
-          ]
+          "values": []
         }
       ],
       "tablePrimaryKey": "",
@@ -331,9 +314,7 @@
   "webhooks": [
     {
       "contentType": "",
-      "events": [
-        ""
-      ],
+      "events": [],
       "headers": [
         {
           "name": "",

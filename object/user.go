@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
@@ -30,6 +31,19 @@ const (
 	NextChangePasswordForm      = "NextChangePasswordForm"
 	ChangePasswordSessionId     = "ChangePasswordSessionId"
 )
+
+const UserEnforcerId = "built-in/user-enforcer-built-in"
+
+var userEnforcer *UserGroupEnforcer
+
+func InitUserManager() {
+	enforcer, err := GetInitializedEnforcer(UserEnforcerId)
+	if err != nil {
+		panic(err)
+	}
+
+	userEnforcer = NewUserGroupEnforcer(enforcer.Enforcer)
+}
 
 type User struct {
 	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
@@ -73,7 +87,7 @@ type User struct {
 	IsDefaultAvatar        bool     `json:"isDefaultAvatar"`
 	IsOnline               bool     `json:"isOnline"`
 	IsAdmin                bool     `json:"isAdmin"`
-	IsGlobalAdmin          bool     `json:"isGlobalAdmin"`
+
 	IsForbidden            bool     `json:"isForbidden"`
 	IsDeleted              bool     `json:"isDeleted"`
 	SignupApplication      string   `xorm:"varchar(100)" json:"signupApplication"`
@@ -160,6 +174,7 @@ type User struct {
 	Yandex          string `xorm:"yandex varchar(100)" json:"yandex"`
 	Zoom            string `xorm:"zoom varchar(100)" json:"zoom"`
 	MetaMask        string `xorm:"metamask varchar(100)" json:"metamask"`
+	Web3Onboard     string `xorm:"web3onboard varchar(100)" json:"web3onboard"`
 	Custom          string `xorm:"custom varchar(100)" json:"custom"`
 
 	WebauthnCredentials []webauthn.Credential `xorm:"webauthnCredentials blob" json:"webauthnCredentials"`
@@ -184,16 +199,17 @@ type User struct {
 }
 
 type Userinfo struct {
-	Sub         string   `json:"sub"`
-	Iss         string   `json:"iss"`
-	Aud         string   `json:"aud"`
-	Name        string   `json:"preferred_username,omitempty"`
-	DisplayName string   `json:"name,omitempty"`
-	Email       string   `json:"email,omitempty"`
-	Avatar      string   `json:"picture,omitempty"`
-	Address     string   `json:"address,omitempty"`
-	Phone       string   `json:"phone,omitempty"`
-	Groups      []string `json:"groups,omitempty"`
+	Sub           string   `json:"sub"`
+	Iss           string   `json:"iss"`
+	Aud           string   `json:"aud"`
+	Name          string   `json:"preferred_username,omitempty"`
+	DisplayName   string   `json:"name,omitempty"`
+	Email         string   `json:"email,omitempty"`
+	EmailVerified bool     `json:"email_verified,omitempty"`
+	Avatar        string   `json:"picture,omitempty"`
+	Address       string   `json:"address,omitempty"`
+	Phone         string   `json:"phone,omitempty"`
+	Groups        []string `json:"groups,omitempty"`
 }
 
 type ManagedAccount struct {
@@ -483,7 +499,7 @@ func GetMaskedUsers(users []*User, errs ...error) ([]*User, error) {
 	return users, nil
 }
 
-func GetLastUser(owner string) (*User, error) {
+func getLastUser(owner string) (*User, error) {
 	user := User{Owner: owner}
 	existed, err := ormer.Engine.Desc("created_time", "id").Get(&user)
 	if err != nil {
@@ -530,19 +546,26 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 		columns = []string{
 			"owner", "display_name", "avatar",
 			"location", "address", "country_code", "region", "language", "affiliation", "title", "homepage", "bio", "tag", "language", "gender", "birthday", "education", "score", "karma", "ranking", "signup_application",
-			"is_admin", "is_global_admin", "is_forbidden", "is_deleted", "password_change_required", "hash", "is_default_avatar", "properties", "webauthnCredentials", "managedAccounts",
+			"is_admin", "is_forbidden", "is_deleted", "password_change_required", "hash", "is_default_avatar", "properties", "webauthnCredentials", "managedAccounts",
 			"signin_wrong_times", "last_signin_wrong_time", "groups", "access_key", "access_secret",
 			"github", "google", "qq", "wechat", "facebook", "dingtalk", "weibo", "gitee", "linkedin", "wecom", "lark", "gitlab", "adfs",
 			"baidu", "alipay", "casdoor", "infoflow", "apple", "azuread", "slack", "steam", "bilibili", "okta", "douyin", "line", "amazon",
 			"auth0", "battlenet", "bitbucket", "box", "cloudfoundry", "dailymotion", "deezer", "digitalocean", "discord", "dropbox",
 			"eveonline", "fitbit", "gitea", "heroku", "influxcloud", "instagram", "intercom", "kakao", "lastfm", "mailru", "meetup",
 			"microsoftonline", "naver", "nextcloud", "onedrive", "oura", "patreon", "paypal", "salesforce", "shopify", "soundcloud",
-			"spotify", "strava", "stripe", "tiktok", "tumblr", "twitch", "twitter", "typetalk", "uber", "vk", "wepay", "xero", "yahoo",
+			"spotify", "strava", "stripe", "type", "tiktok", "tumblr", "twitch", "twitter", "typetalk", "uber", "vk", "wepay", "xero", "yahoo",
 			"yammer", "yandex", "zoom", "custom",
 		}
 	}
 	if isAdmin {
-		columns = append(columns, "name", "email", "phone", "country_code")
+		columns = append(columns, "name", "email", "phone", "country_code", "type")
+	}
+
+	if util.ContainsString(columns, "groups") {
+		_, err := userEnforcer.UpdateGroupsForUser(user.GetId(), user.Groups)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	affected, err := updateUser(id, user, columns)
@@ -659,9 +682,18 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 }
 
 func AddUser(user *User) (bool, error) {
-	var err error
 	if user.Id == "" {
-		user.Id = util.GenerateId()
+		application, err := GetApplicationByUser(user)
+		if err != nil {
+			return false, err
+		}
+
+		id, err := GenerateIdForNewUser(application)
+		if err != nil {
+			return false, err
+		}
+
+		user.Id = id
 	}
 
 	if user.Owner == "" || user.Name == "" {
@@ -673,13 +705,11 @@ func AddUser(user *User) (bool, error) {
 		return false, nil
 	}
 
-	if user.PasswordType == "" && organization.PasswordType != "" {
-		user.PasswordType = organization.PasswordType
+	if user.PasswordType == "" || user.PasswordType == "plain" {
+		user.UpdateUserPassword(organization)
 	}
 
-	user.UpdateUserPassword(organization)
-
-	err = user.UpdateUserHash()
+	err := user.UpdateUserHash()
 	if err != nil {
 		return false, err
 	}
@@ -782,16 +812,15 @@ func AddUsersInBatch(users []*User) (bool, error) {
 	}
 
 	affected := false
-	for i := 0; i < (len(users)-1)/batchSize+1; i++ {
-		start := i * batchSize
-		end := (i + 1) * batchSize
+	for i := 0; i < len(users); i += batchSize {
+		start := i
+		end := i + batchSize
 		if end > len(users) {
 			end = len(users)
 		}
 
 		tmp := users[start:end]
-		// TODO: save to log instead of standard output
-		// fmt.Printf("Add users: [%d - %d].\n", start, end)
+		fmt.Printf("The syncer adds users: [%d - %d]\n", start, end)
 		if ok, err := AddUsers(tmp); err != nil {
 			return false, err
 		} else if ok {
@@ -845,6 +874,7 @@ func GetUserInfo(user *User, scope string, aud string, host string) *Userinfo {
 	}
 	if strings.Contains(scope, "email") {
 		resp.Email = user.Email
+		resp.EmailVerified = user.EmailVerified
 	}
 	if strings.Contains(scope, "address") {
 		resp.Address = user.Location
@@ -872,7 +902,7 @@ func ExtendUserWithRolesAndPermissions(user *User) (err error) {
 		return
 	}
 
-	user.Permissions, user.Roles, err = GetPermissionsAndRolesByUser(user.GetId())
+	user.Permissions, user.Roles, err = getPermissionsAndRolesByUser(user.GetId())
 	if err != nil {
 		return err
 	}
@@ -882,6 +912,10 @@ func ExtendUserWithRolesAndPermissions(user *User) (err error) {
 	}
 
 	return
+}
+
+func DeleteGroupForUser(user string, group string) (bool, error) {
+	return userEnforcer.DeleteGroupForUser(user, group)
 }
 
 func userChangeTrigger(oldName string, newName string) error {
@@ -972,13 +1006,40 @@ func (user *User) IsApplicationAdmin(application *Application) bool {
 		return false
 	}
 
-	return (user.Owner == application.Organization && user.IsAdmin) || user.IsGlobalAdmin
+	return (user.Owner == application.Organization && user.IsAdmin) || user.IsGlobalAdmin()
+}
+
+func (user *User) IsGlobalAdmin() bool {
+	if user == nil {
+		return false
+	}
+
+	return user.Owner == "built-in"
+}
+
+func GenerateIdForNewUser(application *Application) (string, error) {
+	if application == nil || application.GetSignupItemRule("ID") != "Incremental" {
+		return util.GenerateId(), nil
+	}
+
+	lastUser, err := getLastUser(application.Organization)
+	if err != nil {
+		return "", err
+	}
+
+	lastUserId := -1
+	if lastUser != nil {
+		lastUserId = util.ParseInt(lastUser.Id)
+	}
+
+	res := strconv.Itoa(lastUserId + 1)
+	return res, nil
 }
 
 func reachablePermissionsByUser(user *User) ([]*Permission, error) {
 	result := make([]*Permission, 0)
 
-	userPermissions, userRoles, err := GetPermissionsAndRolesByUser(user.GetId())
+	userPermissions, userRoles, err := getPermissionsAndRolesByUser(user.GetId())
 	if err != nil {
 		return nil, fmt.Errorf("GetPermissionsAndRolesByUser: %w", err)
 	}

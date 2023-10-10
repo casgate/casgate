@@ -15,7 +15,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 
 	"github.com/beego/beego"
@@ -26,21 +25,15 @@ import (
 	"github.com/casdoor/casdoor/ldap"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/proxy"
+	"github.com/casdoor/casdoor/radius"
 	"github.com/casdoor/casdoor/routers"
 	"github.com/casdoor/casdoor/util"
 )
 
-func getCreateDatabaseFlag() bool {
-	res := flag.Bool("createDatabase", false, "true if you need Casdoor to create database")
-	flag.Parse()
-	return *res
-}
-
 func main() {
-	createDatabase := getCreateDatabaseFlag()
-
-	object.InitAdapter(createDatabase)
-	object.CreateTables(createDatabase)
+	object.InitFlag()
+	object.InitAdapter()
+	object.CreateTables()
 	object.DoMigration()
 
 	object.InitDb()
@@ -49,6 +42,7 @@ func main() {
 	object.InitLdapAutoSynchronizer()
 	proxy.InitHttpClient()
 	authz.InitApi()
+	object.InitUserManager()
 
 	util.SafeGoroutine(func() { object.RunSyncUsersJob() })
 
@@ -64,7 +58,7 @@ func main() {
 	beego.InsertFilter("*", beego.BeforeRouter, routers.CorsFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.ApiFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PrometheusFilter)
-	beego.InsertFilter("*", beego.BeforeRouter, routers.RecordMessage)
+	beego.InsertFilter("*", beego.AfterExec, routers.RecordMessage, false)
 
 	beego.BConfig.WebConfig.Session.SessionOn = true
 	beego.BConfig.WebConfig.Session.SessionName = "casdoor_session_id"
@@ -87,6 +81,7 @@ func main() {
 	logs.SetLogFuncCall(false)
 
 	go ldap.StartLdapServer()
+	go radius.StartRadiusServer()
 	go object.ClearThroughputPerSecond()
 
 	beego.Run(fmt.Sprintf(":%v", port))

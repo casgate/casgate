@@ -40,6 +40,10 @@ type SmsForm struct {
 	OrgId     string   `json:"organizationId"` // e.g. "admin/built-in"
 }
 
+type NotificationForm struct {
+	Content string `json:"content"`
+}
+
 // SendEmail
 // @Title SendEmail
 // @Tag Service API
@@ -140,13 +144,45 @@ func (c *ApiController) SendSms() {
 		return
 	}
 
-	invalidReceivers := getInvalidSmsReceivers(smsForm)
-	if len(invalidReceivers) != 0 {
-		c.ResponseError(fmt.Sprintf(c.T("service:Invalid phone receivers: %s"), strings.Join(invalidReceivers, ", ")))
-		return
+	if provider.Type != "Custom HTTP SMS" {
+		invalidReceivers := getInvalidSmsReceivers(smsForm)
+		if len(invalidReceivers) != 0 {
+			c.ResponseError(fmt.Sprintf(c.T("service:Invalid phone receivers: %s"), strings.Join(invalidReceivers, ", ")))
+			return
+		}
 	}
 
 	err = object.SendSms(provider, smsForm.Content, smsForm.Receivers...)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk()
+}
+
+// SendNotification
+// @Title SendNotification
+// @Tag Service API
+// @Description This API is not for Casdoor frontend to call, it is for Casdoor SDKs.
+// @Param   from    body   controllers.NotificationForm    true         "Details of the notification request"
+// @Success 200 {object}  Response object
+// @router /api/send-notification [post]
+func (c *ApiController) SendNotification() {
+	provider, err := c.GetProviderFromContext("Notification")
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	var notificationForm NotificationForm
+	err = json.Unmarshal(c.Ctx.Input.RequestBody, &notificationForm)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	err = object.SendNotification(provider, notificationForm.Content)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

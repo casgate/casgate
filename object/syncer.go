@@ -25,6 +25,7 @@ type TableColumn struct {
 	Name        string   `json:"name"`
 	Type        string   `json:"type"`
 	CasdoorName string   `json:"casdoorName"`
+	IsKey       bool     `json:"isKey"`
 	IsHashed    bool     `json:"isHashed"`
 	Values      []string `json:"values"`
 }
@@ -36,15 +37,15 @@ type Syncer struct {
 
 	Organization string `xorm:"varchar(100)" json:"organization"`
 	Type         string `xorm:"varchar(100)" json:"type"`
+	DatabaseType string `xorm:"varchar(100)" json:"databaseType"`
+	SslMode      string `xorm:"varchar(100)" json:"sslMode"`
 
 	Host             string         `xorm:"varchar(100)" json:"host"`
 	Port             int            `json:"port"`
 	User             string         `xorm:"varchar(100)" json:"user"`
 	Password         string         `xorm:"varchar(100)" json:"password"`
-	DatabaseType     string         `xorm:"varchar(100)" json:"databaseType"`
 	Database         string         `xorm:"varchar(100)" json:"database"`
 	Table            string         `xorm:"varchar(100)" json:"table"`
-	TablePrimaryKey  string         `xorm:"varchar(100)" json:"tablePrimaryKey"`
 	TableColumns     []*TableColumn `xorm:"mediumtext" json:"tableColumns"`
 	AffiliationTable string         `xorm:"varchar(100)" json:"affiliationTable"`
 	AvatarBaseUrl    string         `xorm:"varchar(100)" json:"avatarBaseUrl"`
@@ -229,7 +230,32 @@ func (syncer *Syncer) getTable() string {
 	}
 }
 
-func RunSyncer(syncer *Syncer) {
-	syncer.initAdapter()
-	syncer.syncUsers()
+func (syncer *Syncer) getKey() string {
+	key := "id"
+	hasKey := false
+	hasId := false
+	for _, tableColumn := range syncer.TableColumns {
+		if tableColumn.IsKey {
+			hasKey = true
+			key = tableColumn.Name
+		}
+		if tableColumn.Name == "id" {
+			hasId = true
+		}
+	}
+
+	if !hasKey && !hasId {
+		key = syncer.TableColumns[0].Name
+	}
+
+	return key
+}
+
+func RunSyncer(syncer *Syncer) error {
+	err := syncer.initAdapter()
+	if err != nil {
+		return err
+	}
+
+	return syncer.syncUsers()
 }

@@ -50,13 +50,12 @@ type LdapUser struct {
 	Email                 string `json:"email"`
 	EmailAddress          string
 	TelephoneNumber       string
-	Mobile                string
+	Mobile                string `json:"mobile"`
 	MobileTelephoneNumber string
 	RegisteredAddress     string
 	PostalAddress         string
 
 	GroupId  string `json:"groupId"`
-	Phone    string `json:"phone"`
 	Address  string `json:"address"`
 	MemberOf string `json:"memberOf"`
 
@@ -307,7 +306,7 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 			DisplayName:       user.DisplayName,
 			Email:             util.ReturnAnyNotEmpty(user.Email, user.EmailAddress, user.Mail),
 			Mobile:            util.ReturnAnyNotEmpty(user.Mobile, user.MobileTelephoneNumber, user.TelephoneNumber),
-			Phone:             user.Phone,
+			MobileTelephoneNumber:             user.MobileTelephoneNumber,
 			RegisteredAddress: util.ReturnAnyNotEmpty(user.PostalAddress, user.RegisteredAddress),
 			Address:           user.Address,
 			Roles:             user.Roles,
@@ -373,18 +372,20 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 			}
 
 			newUser := &User{
-				Owner:       owner,
-				Name:        name,
-				CreatedTime: util.GetCurrentTime(),
-				DisplayName: syncUser.buildLdapDisplayName(),
-				Avatar:      organization.DefaultAvatar,
-				Email:       syncUser.Email,
-				Phone:       syncUser.Phone,
-				Address:     []string{syncUser.Address},
-				Affiliation: affiliation,
-				Tag:         tag,
-				Score:       score,
-				Ldap:        syncUser.Uuid,
+				Owner:             owner,
+				Name:              name,
+				CreatedTime:       util.GetCurrentTime(),
+				DisplayName:       syncUser.buildLdapDisplayName(),
+				SignupApplication: organization.DefaultApplication,
+				Type:              "normal-user",
+				Avatar:            organization.DefaultAvatar,
+				Email:             syncUser.Email,
+				Phone:             syncUser.Mobile,
+				Address:           []string{syncUser.Address},
+				Affiliation:       affiliation,
+				Tag:               tag,
+				Score:             score,
+				Ldap:              syncUser.Uuid,
 				Properties:  map[string]string{},
 			}
 

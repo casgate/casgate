@@ -47,16 +47,18 @@ func ProcessPolicyDifference(sourcePermissions []*Permission) error {
 			if err != nil {
 				return fmt.Errorf("GetPermissionsByModel: %w", err)
 			}
+			permissionsWithOld := append(permissions, permission)
 
 			oldPolicies := make(casbinPolicies, 0)
 
-			modelPolicies, err := getPermissionPolicies(permissions)
+			modelPolicies, err := getPermissionPolicies(permissionsWithOld)
 			if err != nil {
 				return fmt.Errorf("getPermissionPolicies: %w", err)
 			}
 			oldPolicies = append(oldPolicies, modelPolicies...)
 
 			permissionMap := make(map[string]*Permission, len(permissions))
+			permissionMap[permission.GetId()] = permission
 			newPolicies := make(casbinPolicies, 0)
 
 			ctx := context.Background()

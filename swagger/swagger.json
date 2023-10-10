@@ -131,34 +131,6 @@
                 }
             }
         },
-        "/api/add-domain": {
-            "post": {
-                "tags": [
-                    "Domain API"
-                ],
-                "description": "add domain",
-                "operationId": "ApiController.AddDomain",
-                "parameters": [
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "The details of the domain",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/object.Domain"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/api/add-enforcer": {
             "post": {
                 "tags": [
@@ -1049,34 +1021,6 @@
                 }
             }
         },
-        "/api/delete-domain": {
-            "post": {
-                "tags": [
-                    "Domain API"
-                ],
-                "description": "delete domain",
-                "operationId": "ApiController.DeleteDomain",
-                "parameters": [
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "The details of the domain",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/object.Domain"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/api/delete-enforcer": {
             "post": {
                 "tags": [
@@ -1908,6 +1852,23 @@
                 }
             }
         },
+        "/api/get-dashboard": {
+            "get": {
+                "tags": [
+                    "GetDashboard API"
+                ],
+                "description": "get information of dashboard",
+                "operationId": "ApiController.GetDashboard",
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/get-default-application": {
             "get": {
                 "tags": [
@@ -1929,61 +1890,6 @@
                         "description": "The Response object",
                         "schema": {
                             "$ref": "#/definitions/Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/get-domain": {
-            "get": {
-                "tags": [
-                    "Domain API"
-                ],
-                "description": "get domain",
-                "operationId": "ApiController.GetDomain",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "id",
-                        "description": "The id ( owner/name ) of the domains",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/object.Domain"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/get-domains": {
-            "get": {
-                "tags": [
-                    "Domain API"
-                ],
-                "description": "get domains",
-                "operationId": "ApiController.GetDomains",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "owner",
-                        "description": "The owner of domains",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/object.Domain"
-                            }
                         }
                     }
                 }
@@ -4344,41 +4250,6 @@
                 }
             }
         },
-        "/api/update-domain": {
-            "post": {
-                "tags": [
-                    "Domain API"
-                ],
-                "description": "update domain",
-                "operationId": "ApiController.UpdateDomain",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "id",
-                        "description": "The id ( owner/name ) of the domain",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "The details of the domain",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/object.Domain"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/api/update-enforcer": {
             "post": {
                 "tags": [
@@ -5259,8 +5130,12 @@
         }
     },
     "definitions": {
-        "149401.\u003cnil\u003e.string": {
-            "title": "string",
+        "1183.0xc000639290.false": {
+            "title": "false",
+            "type": "object"
+        },
+        "1217.0xc0006392c0.false": {
+            "title": "false",
             "type": "object"
         },
         "LaravelResponse": {
@@ -5316,16 +5191,10 @@
             "type": "object",
             "properties": {
                 "data": {
-                    "additionalProperties": {
-                        "description": "support string, struct or []struct",
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/1183.0xc000639290.false"
                 },
                 "data2": {
-                    "additionalProperties": {
-                        "description": "support string, struct or []struct",
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/1217.0xc0006392c0.false"
                 },
                 "msg": {
                     "type": "string"
@@ -5371,6 +5240,10 @@
             "title": "object",
             "type": "object"
         },
+        "object.\u0026{197049 0xc000a2cd50 false}": {
+            "title": "\u0026{197049 0xc000a2cd50 false}",
+            "type": "object"
+        },
         "object.AccountItem": {
             "title": "AccountItem",
             "type": "object",
@@ -5404,9 +5277,6 @@
                 },
                 "host": {
                     "type": "string"
-                },
-                "isEnabled": {
-                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"
@@ -5588,23 +5458,11 @@
                 }
             }
         },
-        "object.AttributeMappingItem": {
-            "title": "AttributeMappingItem",
-            "type": "object",
-            "properties": {
-                "attribute": {
-                    "type": "string"
-                },
-                "userField": {
-                    "type": "string"
-                }
-            }
-        },
         "object.CasbinRequest": {
             "title": "CasbinRequest",
             "type": "array",
             "items": {
-                "$ref": "#/definitions/object.CasbinRequest"
+                "$ref": "#/definitions/object.\u0026{197049 0xc000a2cd50 false}"
             }
         },
         "object.Cert": {
@@ -5654,36 +5512,6 @@
                 }
             }
         },
-        "object.Domain": {
-            "title": "Domain",
-            "type": "object",
-            "properties": {
-                "createdTime": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "domains": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "isEnabled": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "owner": {
-                    "type": "string"
-                }
-            }
-        },
         "object.Enforce": {
             "title": "Enforce",
             "type": "object"
@@ -5704,11 +5532,13 @@
                 "displayName": {
                     "type": "string"
                 },
-                "isEnabled": {
-                    "type": "boolean"
-                },
                 "model": {
                     "type": "string"
+                },
+                "modelCfg": {
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -5877,12 +5707,6 @@
             "title": "Ldap",
             "type": "object",
             "properties": {
-                "attributeMappingItems": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/object.AttributeMappingItem"
-                    }
-                },
                 "autoSync": {
                     "type": "integer",
                     "format": "int64"
@@ -5890,17 +5714,8 @@
                 "baseDn": {
                     "type": "string"
                 },
-                "cert": {
-                    "type": "string"
-                },
                 "createdTime": {
                     "type": "string"
-                },
-                "enableAttributeMapping": {
-                    "type": "boolean"
-                },
-                "enableRoleMapping": {
-                    "type": "boolean"
                 },
                 "enableSsl": {
                     "type": "boolean"
@@ -5932,12 +5747,6 @@
                 "port": {
                     "type": "integer",
                     "format": "int64"
-                },
-                "roleMappingItems": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/object.RoleMappingItem"
-                    }
                 },
                 "serverName": {
                     "type": "string"
@@ -6014,23 +5823,11 @@
                 "createdTime": {
                     "type": "string"
                 },
-                "customPolicyMapping": {
-                    "type": "boolean"
-                },
-                "customPolicyMappingRules": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/149401.\u003cnil\u003e.string"
-                    }
-                },
                 "description": {
                     "type": "string"
                 },
                 "displayName": {
                     "type": "string"
-                },
-                "isEnabled": {
-                    "type": "boolean"
                 },
                 "modelText": {
                     "type": "string"
@@ -6351,12 +6148,6 @@
                 },
                 "effect": {
                     "type": "string"
-                },
-                "groups": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "isEnabled": {
                     "type": "boolean"
@@ -6850,12 +6641,6 @@
                         "type": "string"
                     }
                 },
-                "groups": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "isEnabled": {
                     "type": "boolean"
                 },
@@ -6872,24 +6657,6 @@
                     }
                 },
                 "users": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "object.RoleMappingItem": {
-            "title": "RoleMappingItem",
-            "type": "object",
-            "properties": {
-                "attribute": {
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "values": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -7032,9 +6799,6 @@
                         "$ref": "#/definitions/object.TableColumn"
                     }
                 },
-                "tablePrimaryKey": {
-                    "type": "string"
-                },
                 "type": {
                     "type": "string"
                 },
@@ -7051,6 +6815,9 @@
                     "type": "string"
                 },
                 "isHashed": {
+                    "type": "boolean"
+                },
+                "isKey": {
                     "type": "boolean"
                 },
                 "name": {
@@ -7372,9 +7139,6 @@
                 "isForbidden": {
                     "type": "boolean"
                 },
-                "isGlobalAdmin": {
-                    "type": "boolean"
-                },
                 "isOnline": {
                     "type": "boolean"
                 },
@@ -7471,9 +7235,6 @@
                 },
                 "password": {
                     "type": "string"
-                },
-                "passwordChangeRequired": {
-                    "type": "boolean"
                 },
                 "passwordSalt": {
                     "type": "string"
@@ -7603,6 +7364,9 @@
                 "vk": {
                     "type": "string"
                 },
+                "web3onboard": {
+                    "type": "string"
+                },
                 "webauthnCredentials": {
                     "type": "array",
                     "items": {
@@ -7729,6 +7493,7 @@
                 "PaymentStatePaid = \"Paid\"",
                 "PaymentStateCreated = \"Created\"",
                 "PaymentStateCanceled = \"Canceled\"",
+                "PaymentStateTimeout = \"Timeout\"",
                 "PaymentStateError = \"Error\""
             ],
             "example": "Paid"

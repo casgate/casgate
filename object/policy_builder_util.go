@@ -202,6 +202,12 @@ func getOwnerEntities(owner, model string) (*Entities, error) {
 	ownerEntities.GroupsTree = makeAncestorGroupsTreeMap(ownerGroups)
 	ownerEntities.UsersByGroup = groupUsersByGroups(ownerUsers)
 	ownerEntities.Model = permissionModel
+	if ownerEntities.Model == nil {
+		ownerEntities.Model, err = getModel("built-in", "user-model-built-in")
+		if err != nil {
+			return nil, fmt.Errorf("getModel: %w", err)
+		}
+	}
 
 	return &ownerEntities, nil
 }
@@ -262,7 +268,7 @@ func getValueByItem(policyPermissionItem policyPermission, policyItem string) (s
 }
 
 func getPolicyMappingRules(model *Model, permission *Permission) [][]string {
-	if model.CustomPolicyMapping {
+	if model != nil && model.CustomPolicyMapping {
 		return model.CustomPolicyMappingRules
 	}
 

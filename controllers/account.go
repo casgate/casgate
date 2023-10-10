@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/casdoor/casdoor/form"
@@ -119,32 +118,15 @@ func (c *ApiController) Signup() {
 		}
 	}
 
-	id := util.GenerateId()
-	if application.GetSignupItemRule("ID") == "Incremental" {
-		lastUser, err := object.GetLastUser(authForm.Organization)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		lastIdInt := -1
-		if lastUser != nil {
-			lastIdInt = util.ParseInt(lastUser.Id)
-		}
-
-		id = strconv.Itoa(lastIdInt + 1)
+	id, err := object.GenerateIdForNewUser(application)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
 	}
 
 	username := authForm.Username
 	if !application.IsSignupItemVisible("Username") {
 		username = id
-	}
-
-	password := authForm.Password
-	msg = object.CheckPasswordComplexityByOrg(organization, password)
-	if msg != "" {
-		c.ResponseError(msg)
-		return
 	}
 
 	initScore, err := organization.GetInitScore()
@@ -153,12 +135,22 @@ func (c *ApiController) Signup() {
 		return
 	}
 
+	userType := "normal-user"
+	if authForm.Plan != "" && authForm.Pricing != "" {
+		err = object.CheckPricingAndPlan(authForm.Organization, authForm.Pricing, authForm.Plan)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+		userType = "paid-user"
+	}
+
 	user := &object.User{
 		Owner:             authForm.Organization,
 		Name:              username,
 		CreatedTime:       util.GetCurrentTime(),
 		Id:                id,
-		Type:              "normal-user",
+		Type:              userType,
 		Password:          authForm.Password,
 		DisplayName:       authForm.Name,
 		Avatar:            organization.DefaultAvatar,
@@ -171,7 +163,6 @@ func (c *ApiController) Signup() {
 		Region:            authForm.Region,
 		Score:             initScore,
 		IsAdmin:           false,
-		IsGlobalAdmin:     false,
 		IsForbidden:       false,
 		IsDeleted:         false,
 		SignupApplication: application.Name,
@@ -211,7 +202,7 @@ func (c *ApiController) Signup() {
 		return
 	}
 
-	if application.HasPromptPage() {
+	if application.HasPromptPage() && user.Type == "normal-user" {
 		// The prompt page needs the user to be signed in
 		c.SetSessionUsername(user.GetId())
 	}
@@ -226,15 +217,6 @@ func (c *ApiController) Signup() {
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
-	}
-
-	isSignupFromPricing := authForm.Plan != "" && authForm.Pricing != ""
-	if isSignupFromPricing {
-		_, err = object.Subscribe(organization.Name, user.Name, authForm.Plan, authForm.Pricing)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
 	}
 
 	record := object.NewRecord(c.Ctx)
@@ -316,27 +298,32 @@ func (c *ApiController) Logout() {
 			return
 		}
 
-		if application.IsRedirectUriValid(redirectUri) {
-			if user == "" {
-				user = util.GetId(token.Organization, token.User)
-			}
+		if user == "" {
+			user = util.GetId(token.Organization, token.User)
+		}
 
-			c.ClearUserSession()
-			// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
-			owner, username := util.GetOwnerAndNameFromId(user)
+		c.ClearUserSession()
+		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
+		owner, username := util.GetOwnerAndNameFromId(user)
 
-			_, err := object.DeleteSessionId(util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
-			if err != nil {
-				c.ResponseError(err.Error())
+		_, err = object.DeleteSessionId(util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+
+		util.LogInfo(c.Ctx, "API: [%s] logged out", user)
+
+		if redirectUri == "" {
+			c.ResponseOk()
+			return
+		} else {
+			if application.IsRedirectUriValid(redirectUri) {
+				c.Ctx.Redirect(http.StatusFound, fmt.Sprintf("%s?state=%s", strings.TrimRight(redirectUri, "/"), state))
+			} else {
+				c.ResponseError(fmt.Sprintf(c.T("token:Redirect URI: %s doesn't exist in the allowed Redirect URI list"), redirectUri))
 				return
 			}
-
-			util.LogInfo(c.Ctx, "API: [%s] logged out", user)
-
-			c.Ctx.Redirect(http.StatusFound, fmt.Sprintf("%s?state=%s", strings.TrimRight(redirectUri, "/"), state))
-		} else {
-			c.ResponseError(fmt.Sprintf(c.T("token:Redirect URI: %s doesn't exist in the allowed Redirect URI list"), redirectUri))
-			return
 		}
 	}
 }

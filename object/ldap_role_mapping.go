@@ -75,7 +75,7 @@ func buildRoleMappingMap(roleMappingItems []*RoleMappingItem) RoleMappingMap {
 func SyncRoles(syncUser LdapUser, name, owner string) error {
 	userId := util.GetId(owner, name)
 
-	currentUserRoles, err := GetRolesByUser(userId)
+	currentUserRoles, err := GetRoles(userId)
 	if err != nil {
 		return err
 	}
