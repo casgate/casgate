@@ -17,18 +17,19 @@ package form
 type AuthForm struct {
 	Type string `json:"type"`
 
-	Organization string `json:"organization"`
-	Id           string `json:"id"` // filled only for invited user
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	Name         string `json:"name"`
-	FirstName    string `json:"firstName"`
-	LastName     string `json:"lastName"`
-	Email        string `json:"email"`
-	Phone        string `json:"phone"`
-	Affiliation  string `json:"affiliation"`
-	IdCard       string `json:"idCard"`
-	Region       string `json:"region"`
+	Organization   string `json:"organization"`
+	Id             string `json:"id"` // filled only for invited user
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	Name           string `json:"name"`
+	FirstName      string `json:"firstName"`
+	LastName       string `json:"lastName"`
+	Email          string `json:"email"`
+	Phone          string `json:"phone"`
+	Affiliation    string `json:"affiliation"`
+	IdCard         string `json:"idCard"`
+	Region         string `json:"region"`
+	InvitationCode string `json:"invitationCode"`
 
 	Application string `json:"application"`
 	ClientId    string `json:"clientId"`
