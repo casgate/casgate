@@ -339,7 +339,7 @@ func GetPermissionsBySubmitter(owner string, submitter string) ([]*Permission, e
 
 func GetPermissionsByModel(owner string, model string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Desc("created_time").Find(&permissions, &Permission{Owner: owner, Model: model})
+	err := ormer.Engine.Desc("created_time").Where("owner = ? and model = ?", owner, model).Find(&permissions)
 	if err != nil {
 		return permissions, err
 	}
