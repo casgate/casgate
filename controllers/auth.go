@@ -492,7 +492,7 @@ func (c *ApiController) Login() {
 		userInfo := &idp.UserInfo{}
 		if provider.Category == "SAML" {
 			// SAML
-			userInfo.Id, err = object.ParseSamlResponse(authForm.SamlResponse, provider, c.Ctx.Request.Host)
+			userInfo, err = object.ParseSamlResponse(authForm.SamlResponse, provider, c.Ctx.Request.Host)
 			if err != nil {
 				c.ResponseError(err.Error())
 				return
@@ -534,13 +534,7 @@ func (c *ApiController) Login() {
 
 		if authForm.Method == "signup" {
 			user := &object.User{}
-			if provider.Category == "SAML" {
-				user, err = object.GetUser(util.GetId(application.Organization, userInfo.Id))
-				if err != nil {
-					c.ResponseError(err.Error())
-					return
-				}
-			} else if provider.Category == "OAuth" || provider.Category == "Web3" {
+			if provider.Category == "OAuth" || provider.Category == "Web3" || provider.Category == "SAML" {
 				user, err = object.GetUserByField(application.Organization, provider.Type, userInfo.Id)
 				if err != nil {
 					c.ResponseError(err.Error())
@@ -561,8 +555,8 @@ func (c *ApiController) Login() {
 				record.Organization = application.Organization
 				record.User = user.Name
 				util.SafeGoroutine(func() { object.AddRecord(record) })
-			} else if provider.Category == "OAuth" || provider.Category == "Web3" {
-				// Sign up via OAuth
+			} else if provider.Category == "OAuth" || provider.Category == "Web3" || provider.Category == "SAML" {
+				// Sign up via OAuth/Web3/SAML
 				if application.EnableLinkWithEmail {
 					if userInfo.Email != "" {
 						// Find existing user with Email
@@ -626,7 +620,10 @@ func (c *ApiController) Login() {
 						return
 					}
 
-					userId := userInfo.Id
+					var userId string
+					if provider.Category != "SAML" {
+						userId = userInfo.Id
+					}
 					if userId == "" {
 						userId = util.GenerateId()
 					}
@@ -664,11 +661,13 @@ func (c *ApiController) Login() {
 					}
 				}
 
-				// sync info from 3rd-party if possible
-				_, err := object.SetUserOAuthProperties(organization, user, provider.Type, userInfo)
-				if err != nil {
-					c.ResponseError(err.Error())
-					return
+				if provider.Category != "SAML" {
+					// sync info from 3rd-party if possible
+					_, err := object.SetUserOAuthProperties(organization, user, provider.Type, userInfo)
+					if err != nil {
+						c.ResponseError(err.Error())
+						return
+					}
 				}
 
 				_, err = object.LinkUserAccount(user, provider.Type, userInfo.Id)
@@ -689,10 +688,7 @@ func (c *ApiController) Login() {
 				record2.Organization = application.Organization
 				record2.User = user.Name
 				util.SafeGoroutine(func() { object.AddRecord(record2) })
-			} else if provider.Category == "SAML" {
-				resp = &Response{Status: "error", Msg: fmt.Sprintf(c.T("general:The user: %s doesn't exist"), util.GetId(application.Organization, userInfo.Id))}
 			}
-			// resp = &Response{Status: "ok", Msg: "", Data: res}
 		} else { // authForm.Method != "signup"
 			userId := c.GetSessionUsername()
 			if userId == "" {

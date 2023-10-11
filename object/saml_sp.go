@@ -23,23 +23,45 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/i18n"
+	"github.com/casdoor/casdoor/idp"
 	saml2 "github.com/russellhaering/gosaml2"
 	dsig "github.com/russellhaering/goxmldsig"
 )
 
-func ParseSamlResponse(samlResponse string, provider *Provider, host string) (string, error) {
+const (
+	firstNameOid = "urn:oid:2.5.4.42"
+	LastNameOid  = "urn:oid:2.5.4.4"
+	EmailOid     = "urn:oid:1.2.840.113549.1.9.1"
+)
+
+func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*idp.UserInfo, error) {
 	samlResponse, _ = url.QueryUnescape(samlResponse)
 	sp, err := buildSp(provider, samlResponse, host)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	assertionInfo, err := sp.RetrieveAssertionInfo(samlResponse)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return assertionInfo.NameID, err
+
+	displayName := fmt.Sprintf("%s %s", assertionInfo.Values.Get(firstNameOid), assertionInfo.Values.Get(LastNameOid))
+	if displayName == "" {
+		displayName = assertionInfo.NameID
+	}
+	email := assertionInfo.Values.Get(EmailOid)
+
+	userInfo := idp.UserInfo{
+		Id:          assertionInfo.NameID,
+		Username:    assertionInfo.NameID,
+		DisplayName: displayName,
+		Email:       email,
+		AvatarUrl:   fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
+	}
+	return &userInfo, nil
 }
 
 func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method string, err error) {
