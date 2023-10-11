@@ -88,13 +88,13 @@ type User struct {
 	IsOnline               bool     `json:"isOnline"`
 	IsAdmin                bool     `json:"isAdmin"`
 
-	IsForbidden            bool     `json:"isForbidden"`
-	IsDeleted              bool     `json:"isDeleted"`
-	SignupApplication      string   `xorm:"varchar(100)" json:"signupApplication"`
-	Hash                   string   `xorm:"varchar(100)" json:"hash"`
-	PreHash                string   `xorm:"varchar(100)" json:"preHash"`
-	AccessKey              string   `xorm:"varchar(100)" json:"accessKey"`
-	AccessSecret           string   `xorm:"varchar(100)" json:"accessSecret"`
+	IsForbidden       bool   `json:"isForbidden"`
+	IsDeleted         bool   `json:"isDeleted"`
+	SignupApplication string `xorm:"varchar(100)" json:"signupApplication"`
+	Hash              string `xorm:"varchar(100)" json:"hash"`
+	PreHash           string `xorm:"varchar(100)" json:"preHash"`
+	AccessKey         string `xorm:"varchar(100)" json:"accessKey"`
+	AccessSecret      string `xorm:"varchar(100)" json:"accessSecret"`
 
 	CreatedIp      string `xorm:"varchar(100)" json:"createdIp"`
 	LastSigninTime string `xorm:"varchar(100)" json:"lastSigninTime"`
@@ -176,6 +176,10 @@ type User struct {
 	MetaMask        string `xorm:"metamask varchar(100)" json:"metamask"`
 	Web3Onboard     string `xorm:"web3onboard varchar(100)" json:"web3onboard"`
 	Custom          string `xorm:"custom varchar(100)" json:"custom"`
+
+	// SAML Types
+	Keycloak    string `xorm:"keycloak varchar(100)" json:"keycloak"`
+	AliyunIDaaS string `xorm:"aliyunidaas varchar(100)" json:"aliyunidaas"`
 
 	WebauthnCredentials []webauthn.Credential `xorm:"webauthnCredentials blob" json:"webauthnCredentials"`
 	PreferredMfaType    string                `xorm:"varchar(100)" json:"preferredMfaType"`
@@ -554,7 +558,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 			"eveonline", "fitbit", "gitea", "heroku", "influxcloud", "instagram", "intercom", "kakao", "lastfm", "mailru", "meetup",
 			"microsoftonline", "naver", "nextcloud", "onedrive", "oura", "patreon", "paypal", "salesforce", "shopify", "soundcloud",
 			"spotify", "strava", "stripe", "type", "tiktok", "tumblr", "twitch", "twitter", "typetalk", "uber", "vk", "wepay", "xero", "yahoo",
-			"yammer", "yandex", "zoom", "custom",
+			"yammer", "yandex", "zoom", "custom", "keycloak", "aliyunidaas",
 		}
 	}
 	if isAdmin {

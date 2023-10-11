@@ -94,6 +94,7 @@ func SetUserField(user *User, field string, value string) (bool, error) {
 		bean["password_change_required"] = false
 		bean["password_salt"] = user.PasswordSalt
 	} else {
+		field = strings.ReplaceAll(field, " ", "")
 		bean[strings.ToLower(field)] = value
 	}
 
