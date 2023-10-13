@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	firstNameOid = "urn:oid:2.5.4.42"
-	LastNameOid  = "urn:oid:2.5.4.4"
-	EmailOid     = "urn:oid:1.2.840.113549.1.9.1"
+	defaultFirstNameOid = "urn:oid:2.5.4.42"
+	defaultLastNameOid  = "urn:oid:2.5.4.4"
+	defaultEmailOid     = "urn:oid:1.2.840.113549.1.9.1"
 )
 
 func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*idp.UserInfo, error) {
@@ -48,18 +48,53 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 		return nil, err
 	}
 
-	displayName := fmt.Sprintf("%s %s", assertionInfo.Values.Get(firstNameOid), assertionInfo.Values.Get(LastNameOid))
-	if displayName == "" {
-		displayName = assertionInfo.NameID
+	dataMap := map[string]string{
+		"id":          assertionInfo.NameID,
+		"username":    assertionInfo.NameID,
+		"displayName": fmt.Sprintf("%s %s", assertionInfo.Values.Get(defaultFirstNameOid), assertionInfo.Values.Get(defaultLastNameOid)),
+		"email":       assertionInfo.Values.Get(defaultEmailOid),
+		"avatarUrl":   fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
 	}
-	email := assertionInfo.Values.Get(EmailOid)
+
+	if strings.Trim(dataMap["displayName"], " ") == "" {
+		dataMap["displayName"] = assertionInfo.NameID
+	}
+
+	for k, attrArr := range provider.UserMapping {
+		if len(attrArr) > 0 {
+			dataMap[k] = ""
+		}
+
+		for _, attr := range attrArr {
+			var value string
+
+			value = assertionInfo.Values.Get(attr)
+			if attr == "ID" {
+				value = assertionInfo.NameID
+			}
+
+			switch k {
+			case "displayName":
+				if value != "" {
+					// few values are concatenated by space for displayName
+					dataMap[k] = strings.Trim(strings.Join([]string{dataMap[k], value}, " "), " ")
+				}
+			default:
+				if value != "" {
+					dataMap[k] = value
+					// the first non-empty attribute is taken for default case
+					break
+				}
+			}
+		}
+	}
 
 	userInfo := idp.UserInfo{
-		Id:          assertionInfo.NameID,
-		Username:    assertionInfo.NameID,
-		DisplayName: displayName,
-		Email:       email,
-		AvatarUrl:   fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
+		Id:          dataMap["id"],
+		Username:    dataMap["username"],
+		DisplayName: dataMap["displayName"],
+		Email:       dataMap["email"],
+		AvatarUrl:   dataMap["avatarUrl"],
 	}
 	return &userInfo, nil
 }

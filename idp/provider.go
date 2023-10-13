@@ -44,7 +44,7 @@ type ProviderInfo struct {
 	TokenURL    string
 	AuthURL     string
 	UserInfoURL string
-	UserMapping map[string]string
+	UserMapping map[string][]string
 }
 
 type IdProvider interface {
