@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/mitchellh/mapstructure"
@@ -33,7 +34,7 @@ type CustomIdProvider struct {
 	UserInfoURL string
 	TokenURL    string
 	AuthURL     string
-	UserMapping map[string]string
+	UserMapping map[string][]string
 	Scopes      []string
 }
 
@@ -99,12 +100,31 @@ func (idp *CustomIdProvider) GetUserInfo(token *oauth2.Token) (*UserInfo, error)
 	}
 
 	// map user info
-	for k, v := range idp.UserMapping {
-		_, ok := dataMap[v]
-		if !ok {
-			return nil, fmt.Errorf("cannot find %s in user from castom provider", v)
+	var displayName string
+	for k, attrArr := range idp.UserMapping {
+		for _, attr := range attrArr {
+			value := dataMap[attr]
+			if value != nil {
+				switch k {
+				case "displayName":
+					strValue, ok := value.(string)
+					if !ok {
+						return nil, fmt.Errorf("value of attribute %s for displayName is not string", k)
+					}
+
+					// few values are concatenated by space for displayName
+					displayName = strings.Trim(strings.Join([]string{displayName, strValue}, " "), " ")
+				default:
+					dataMap[k] = value
+					// the first non-empty attribute is taken for default case
+					break
+				}
+			}
 		}
-		dataMap[k] = dataMap[v]
+	}
+
+	if displayName != "" {
+		dataMap["displayName"] = displayName
 	}
 
 	// try to parse id to string

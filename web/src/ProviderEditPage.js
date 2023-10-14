@@ -118,7 +118,14 @@ class ProviderEditPage extends React.Component {
 
   updateUserMappingField(key, value) {
     const provider = this.state.provider;
-    provider.userMapping[key] = value;
+    if (value.length === 0) {
+      delete provider.userMapping[key];
+    } else {
+      if (!Array.isArray(value)) {
+        value = [value];
+      }
+      provider.userMapping[key] = value;
+    }
     this.setState({
       provider: provider,
     });
@@ -128,23 +135,38 @@ class ProviderEditPage extends React.Component {
     return (
       <React.Fragment>
         {Setting.getLabel(i18next.t("general:ID"), i18next.t("general:ID - Tooltip"))} :
-        <Input value={this.state.provider.userMapping.id} onChange={e => {
+        <Input value={this.state.provider.userMapping.id?.length > 0 ? this.state.provider.userMapping.id[0] : null} onChange={e => {
           this.updateUserMappingField("id", e.target.value);
         }} />
-        {Setting.getLabel(i18next.t("signup:Username"), i18next.t("signup:Username - Tooltip"))} :
-        <Input value={this.state.provider.userMapping.username} onChange={e => {
-          this.updateUserMappingField("username", e.target.value);
-        }} />
-        {Setting.getLabel(i18next.t("general:Display name"), i18next.t("general:Display name - Tooltip"))} :
-        <Input value={this.state.provider.userMapping.displayName} onChange={e => {
-          this.updateUserMappingField("displayName", e.target.value);
-        }} />
-        {Setting.getLabel(i18next.t("general:Email"), i18next.t("general:Email - Tooltip"))} :
-        <Input value={this.state.provider.userMapping.email} onChange={e => {
-          this.updateUserMappingField("email", e.target.value);
-        }} />
+        {Setting.getLabel(i18next.t("signup:Username"), i18next.t("provider:Username - Tooltip"))} :
+        <Select
+          mode="tags"
+          style={{width: "100%"}}
+          value={this.state.provider.userMapping.username}
+          onChange={value => {
+            this.updateUserMappingField("username", value);
+          }}
+        />
+        {Setting.getLabel(i18next.t("general:Display name"), i18next.t("provider:Display name - Tooltip"))} :
+        <Select
+          mode="tags"
+          style={{width: "100%"}}
+          value={this.state.provider.userMapping.displayName}
+          onChange={value => {
+            this.updateUserMappingField("displayName", value);
+          }}
+        />
+        {Setting.getLabel(i18next.t("general:Email"), i18next.t("provider:Email - Tooltip"))} :
+        <Select
+          mode="tags"
+          style={{width: "100%"}}
+          value={this.state.provider.userMapping.email}
+          onChange={value => {
+            this.updateUserMappingField("email", value);
+          }}
+        />
         {Setting.getLabel(i18next.t("general:Avatar"), i18next.t("general:Avatar - Tooltip"))} :
-        <Input value={this.state.provider.userMapping.avatarUrl} onChange={e => {
+        <Input value={this.state.provider.userMapping.avatarUrl?.length > 0 ? this.state.provider.userMapping.avatarUrl[0] : null} onChange={e => {
           this.updateUserMappingField("avatarUrl", e.target.value);
         }} />
       </React.Fragment>
@@ -599,14 +621,6 @@ class ProviderEditPage extends React.Component {
               </Row>
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("provider:User mapping"), i18next.t("provider:User mapping - Tooltip"))} :
-                </Col>
-                <Col span={22} >
-                  {this.renderUserMappingInput()}
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                   {Setting.getLabel(i18next.t("general:Favicon"), i18next.t("general:Favicon - Tooltip"))} :
                 </Col>
                 <Col span={22} >
@@ -634,6 +648,19 @@ class ProviderEditPage extends React.Component {
               </Row>
             </React.Fragment>
           )
+        }
+        {
+          (this.state.provider.type === "Custom" || this.state.provider.category === "SAML") &&
+          <React.Fragment>
+            <Row style={{marginTop: "20px"}} >
+              <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                {Setting.getLabel(i18next.t("provider:User mapping"), i18next.t("provider:User mapping - Tooltip"))} :
+              </Col>
+              <Col span={22} >
+                {this.renderUserMappingInput()}
+              </Col>
+            </Row>
+          </React.Fragment>
         }
         {
           (this.state.provider.category === "Captcha" && this.state.provider.type === "Default") ||
