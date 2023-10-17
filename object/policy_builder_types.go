@@ -8,10 +8,10 @@ var defaultPolicyMappingRules = [][]string{
 }
 
 var defaultPolicyDomainMappingRules = [][]string{
-	{"p", "permission.user", "permission.domain", "permission.resource", "permission.action", "permission.effect"},
-	{"p", "role.name", "permission.domain", "permission.resource", "permission.action", "permission.effect"},
-	{"g", "role.subrole", "role.name", "permission.domain"},
-	{"g", "role.user", "role.name", "permission.domain"},
+	{"p", "permission.user", "permission.domain.name", "permission.resource", "permission.action", "permission.effect"},
+	{"p", "role.name", "permission.domain.name", "permission.resource", "permission.action", "permission.effect"},
+	{"g", "role.subrole", "role.name", "permission.domain.name"},
+	{"g", "role.user", "role.name", "permission.domain.name"},
 }
 
 type policyDomain struct {
