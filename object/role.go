@@ -453,3 +453,23 @@ func subRolePermissions(role *Role) ([]*Permission, error) {
 
 	return result, nil
 }
+
+// AddRolesToUser add userid to roles if they don't contain them already
+func AddRolesToUser(userId string, roles []string) error {
+	for _, roleId := range roles {
+		role, err := GetRole(roleId)
+		if err != nil {
+			return err
+		}
+
+		if !util.InSlice(role.Users, userId) {
+			role.Users = append(role.Users, userId)
+
+			_, err = UpdateRole(role.GetId(), role)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}

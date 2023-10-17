@@ -32,8 +32,10 @@ import (
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/proxy"
+	"github.com/casdoor/casdoor/role_mapper"
 	"github.com/casdoor/casdoor/util"
 	"github.com/google/uuid"
+	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 var (
@@ -490,9 +492,10 @@ func (c *ApiController) Login() {
 		}
 
 		userInfo := &idp.UserInfo{}
+		var authData map[string]interface{}
 		if provider.Category == "SAML" {
 			// SAML
-			userInfo, err = object.ParseSamlResponse(authForm.SamlResponse, provider, c.Ctx.Request.Host)
+			userInfo, authData, err = object.ParseSamlResponse(authForm.SamlResponse, provider, c.Ctx.Request.Host)
 			if err != nil {
 				c.ResponseError(err.Error())
 				return
@@ -529,6 +532,16 @@ func (c *ApiController) Login() {
 			if err != nil {
 				c.ResponseError(fmt.Sprintf(c.T("auth:Failed to login in: %s"), err.Error()))
 				return
+			}
+
+			// decode JWT token without verifying the signature to fill authData
+			if provider.Category == "OAuth" {
+				jwtToken, _ := jwt.ParseSigned(token.AccessToken)
+				err = jwtToken.UnsafeClaimsWithoutVerification(&authData)
+				if err != nil {
+					c.ResponseError(c.T("auth:Invalid token"))
+					return
+				}
 			}
 		}
 
@@ -674,6 +687,21 @@ func (c *ApiController) Login() {
 				if err != nil {
 					c.ResponseError(err.Error())
 					return
+				}
+
+				if provider.EnableRoleMapping {
+					mapper, err := role_mapper.NewRoleMapper(provider.Category, provider.RoleMappingItems, authData)
+					if err != nil {
+						c.ResponseError(err.Error())
+						return
+					}
+
+					userRoles := mapper.GetRoles()
+					err = object.AddRolesToUser(user.GetId(), userRoles)
+					if err != nil {
+						c.ResponseError(err.Error())
+						return
+					}
 				}
 
 				resp = c.HandleLoggedIn(application, user, &authForm)

@@ -159,6 +159,13 @@ func (c *ApiController) UpdateProvider() {
 		return
 	}
 
+	for _, roleMappingItem := range provider.RoleMappingItems {
+		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
+			c.ResponseError(c.T("general:Missing parameter"))
+			return
+		}
+	}
+
 	c.Data["json"] = wrapActionResponse(object.UpdateProvider(id, &provider))
 	c.ServeJSON()
 }

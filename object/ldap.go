@@ -18,12 +18,6 @@ import (
 	"github.com/casdoor/casdoor/util"
 )
 
-type RoleMappingItem struct {
-	Attribute string   `json:"attribute"`
-	Values    []string `json:"values"`
-	Role      string   `json:"role"`
-}
-
 type AttributeMappingItem struct {
 	UserField string `json:"userField"`
 	Attribute string `json:"attribute"`

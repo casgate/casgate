@@ -36,16 +36,16 @@ const (
 	defaultEmailOid     = "urn:oid:1.2.840.113549.1.9.1"
 )
 
-func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*idp.UserInfo, error) {
+func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*idp.UserInfo, map[string]any, error) {
 	samlResponse, _ = url.QueryUnescape(samlResponse)
 	sp, err := buildSp(provider, samlResponse, host)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	assertionInfo, err := sp.RetrieveAssertionInfo(samlResponse)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	dataMap := map[string]string{
@@ -89,6 +89,13 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 		}
 	}
 
+	authData := map[string]interface{}{
+		"ID": assertionInfo.NameID,
+	}
+	for key := range assertionInfo.Values {
+		authData[key] = assertionInfo.Values.Get(key)
+	}
+
 	userInfo := idp.UserInfo{
 		Id:          dataMap["id"],
 		Username:    dataMap["username"],
@@ -96,7 +103,7 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 		Email:       dataMap["email"],
 		AvatarUrl:   dataMap["avatarUrl"],
 	}
-	return &userInfo, nil
+	return &userInfo, authData, nil
 }
 
 func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method string, err error) {
