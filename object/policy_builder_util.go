@@ -299,7 +299,11 @@ func getAncestorEntities[T NodeValueType](treeMap map[string]*TreeNode[T], entit
 
 func getAncestorEntitiesById[T NodeValueType](entityId string, treeMap map[string]*TreeNode[T]) []T {
 	result := make([]T, 0)
-	curnode := treeMap[entityId]
+	curnode, ok := treeMap[entityId]
+	if !ok {
+		return nil
+	}
+
 	result = append(result, curnode.value)
 	if len(curnode.ancestors) > 0 {
 		for _, ancestor := range curnode.ancestors {
