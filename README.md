@@ -16,7 +16,7 @@ This fork retains all the core features of the original Casdoor project.
 ### Additionally, CasGate aims to introduce the following features:
 <ul>
 <li>Temporary user password. Administrator may force specific user to change his password after first login.</li>
-<li>Auto assign user role by LDAP attributes</li>
+<li>Auto assign user role by LDAP, SAML or oAuth attributes</li>
 <li>Invite link</li>
 <li>Flexible AuthZ model mapping based on Casbin</li>  
 <li>and much more in development</li>
