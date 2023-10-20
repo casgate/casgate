@@ -150,7 +150,28 @@ class RecordListPage extends BaseListPage {
         width: "200px",
         sorter: true,
         ...this.getColumnSearchProps("action"),
-        fixed: (Setting.isMobile()) ? "false" : "right",
+        render: (text, record, index) => {
+          return text;
+        },
+      },
+      {
+        title: i18next.t("record:Status code"),
+        dataIndex: "statusCode",
+        key: "statusCode",
+        width: "200px",
+        sorter: true,
+        ...this.getColumnSearchProps("statusCode"),
+        render: (text, record, index) => {
+          return text;
+        },
+      },
+      {
+        title: i18next.t("record:Object"),
+        dataIndex: "object",
+        key: "object",
+        width: "200px",
+        sorter: true,
+        ...this.getColumnSearchProps("object"),
         render: (text, record, index) => {
           return text;
         },

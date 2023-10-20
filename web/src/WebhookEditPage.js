@@ -54,6 +54,7 @@ const previewTemplate = {
   "requestUri": "/api/add-application",
   "action": "login",
   "isTriggered": false,
+  "statusCode": "200",
   "object": JSON.stringify(applicationTemplate),
 };
 

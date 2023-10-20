@@ -303,6 +303,7 @@ func (c *ApiController) Logout() {
 	state := c.Input().Get("state")
 
 	user := c.GetSessionUsername()
+	c.Ctx.Input.SetData("user", user)
 
 	if accessToken == "" && redirectUri == "" {
 		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
