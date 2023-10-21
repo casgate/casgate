@@ -22,6 +22,8 @@ This fork retains all the core features of the original Casdoor project.
 <li>and much more in development</li>
 </ul>
 
+Important Note: This repository is currently a work in progress while we're preparing it for the first stable release and fine-tuning the community contribution process.
+
 ## License
 
 [Apache-2.0](https://github.com/casgate/casgate/blob/master/LICENSE)
