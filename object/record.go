@@ -15,7 +15,9 @@
 package object
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/beego/beego/context"
@@ -24,6 +26,8 @@ import (
 )
 
 var logPostOnly bool
+
+var sensitiveDataKeys = []string{"password", "passwordSalt", "clientSecret", "accessSecret", "totpSecret"}
 
 func init() {
 	logPostOnly = conf.GetConfigBool("logPostOnly")
@@ -42,8 +46,9 @@ type Record struct {
 	Method       string `xorm:"varchar(100)" json:"method"`
 	RequestUri   string `xorm:"varchar(1000)" json:"requestUri"`
 	Action       string `xorm:"varchar(1000)" json:"action"`
+	StatusCode   string `xorm:"varchar(5)" json:"statusCode"`
 
-	Object       string `xorm:"-" json:"object"`
+	Object       string `xorm:"text" json:"object"`
 	ExtendedUser *User  `xorm:"-" json:"extendedUser"`
 
 	IsTriggered bool `json:"isTriggered"`
@@ -59,7 +64,12 @@ func NewRecord(ctx *context.Context) *Record {
 
 	object := ""
 	if ctx.Input.RequestBody != nil && len(ctx.Input.RequestBody) != 0 {
-		object = string(ctx.Input.RequestBody)
+		object = maskObjectFields(string(ctx.Input.RequestBody))
+	}
+
+	statusCode := ctx.ResponseWriter.Status
+	if statusCode == 0 {
+		statusCode = 200
 	}
 
 	record := Record{
@@ -72,6 +82,7 @@ func NewRecord(ctx *context.Context) *Record {
 		Action:      action,
 		Object:      object,
 		IsTriggered: false,
+		StatusCode:  strconv.Itoa(statusCode),
 	}
 	return &record
 }
@@ -178,4 +189,24 @@ func SendWebhooks(record *Record) error {
 	}
 
 	return nil
+}
+
+func maskObjectFields(data string) string {
+	var jsonData map[string]interface{}
+	err := json.Unmarshal([]byte(data), &jsonData)
+	if err != nil {
+		return data
+	}
+	for k := range jsonData {
+		if util.InSlice(sensitiveDataKeys, k) {
+			jsonData[k] = "***"
+		}
+	}
+
+	res, err := json.Marshal(jsonData)
+	if err != nil {
+		return data
+	}
+
+	return string(res)
 }

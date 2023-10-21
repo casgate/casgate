@@ -63,6 +63,9 @@ func RecordMessage(ctx *context.Context) {
 	record := object.NewRecord(ctx)
 
 	userId := getUser(ctx)
+	if ctx.Request.URL.Path == "/api/logout" {
+		userId, _ = ctx.Input.GetData("user").(string)
+	}
 	if userId != "" {
 		record.Organization, record.User = util.GetOwnerAndNameFromId(userId)
 	}
