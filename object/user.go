@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -597,17 +598,22 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 		return 0, err
 	}
 
-	oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
-	if err != nil {
-		return 0, fmt.Errorf("reachablePermissionsByUser: %w", err)
-	}
-
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).Cols(columns...).Update(user)
 	if err != nil {
 		return 0, err
 	}
 
-	if affected != 0 {
+	hasImpactOnPolicy := 
+		(util.InSlice(columns, "groups") && !slices.Equal(oldUser.Groups, user.Groups)) ||
+		(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
+		(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
+
+	if affected != 0 && hasImpactOnPolicy {
+		oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
+		if err != nil {
+			return 0, fmt.Errorf("reachablePermissionsByUser: %w", err)
+		}
+
 		reachablePermissions, err := reachablePermissionsByUser(user)
 		if err != nil {
 			return 0, fmt.Errorf("reachablePermissionsByUser: %w", err)
@@ -659,17 +665,18 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 		return false, err
 	}
 
-	oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
-	if err != nil {
-		return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
-	}
-
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(user)
 	if err != nil {
 		return false, err
 	}
 
-	if affected != 0 {
+	if affected != 0 &&
+		(!slices.Equal(oldUser.Groups, user.Groups) || oldUser.Owner != user.Owner || oldUser.Name != user.Name) {
+		oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
+		if err != nil {
+			return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
+		}
+
 		reachablePermissions, err := reachablePermissionsByUser(user)
 		if err != nil {
 			return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
