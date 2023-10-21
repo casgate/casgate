@@ -67,23 +67,7 @@ func (c *ApiController) Enforce() {
 			c.ResponseError(err.Error())
 			return
 		}
-
-		res := []bool{}
-
-		if permission == nil {
-			res = append(res, false)
-		} else {
-			enforceResult, err := object.Enforce(permission, &request)
-			if err != nil {
-				c.ResponseError(err.Error())
-				return
-			}
-
-			res = append(res, enforceResult)
-		}
-
-		c.ResponseOk(res)
-		return
+		modelId = util.GetId(permission.Owner, permission.Model)
 	}
 
 	permissions := []*object.Permission{}
@@ -172,28 +156,7 @@ func (c *ApiController) BatchEnforce() {
 			return
 		}
 
-		res := [][]bool{}
-
-		if permission == nil {
-			l := len(requests)
-			resRequest := make([]bool, l)
-			for i := 0; i < l; i++ {
-				resRequest[i] = false
-			}
-
-			res = append(res, resRequest)
-		} else {
-			enforceResult, err := object.BatchEnforce(permission, &requests)
-			if err != nil {
-				c.ResponseError(err.Error())
-				return
-			}
-
-			res = append(res, enforceResult)
-		}
-
-		c.ResponseOk(res)
-		return
+		modelId = util.GetId(permission.Owner, permission.Model)
 	}
 
 	permissions := []*object.Permission{}
