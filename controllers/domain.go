@@ -39,7 +39,7 @@ func (c *ApiController) GetDomains() {
 	sortOrder := c.Input().Get("sortOrder")
 
 	if limit == "" || page == "" {
-		domains, err := object.GetDomains(owner)
+		domains, err := object.GetDomains(c.Ctx.Request.Context(), owner)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return

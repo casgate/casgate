@@ -26,13 +26,18 @@ import (
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/proxy"
 	"github.com/casdoor/casdoor/radius"
+	"github.com/casdoor/casdoor/repository"
 	"github.com/casdoor/casdoor/routers"
+	"github.com/casdoor/casdoor/txmanager"
 	"github.com/casdoor/casdoor/util"
 )
 
 func main() {
 	object.InitFlag()
-	object.InitAdapter()
+	ormer := object.InitAdapter()
+	trm := txmanager.NewTransactionManager(ormer.Engine)
+	repo := repository.NewRepo(trm)
+	object.InitRepo(trm, repo)
 	object.CreateTables()
 	object.DoMigration()
 
