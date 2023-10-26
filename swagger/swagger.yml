@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: Casdoor RESTful API
   description: Swagger Docs of Casdoor Backend API
-  version: 1.376.1
+  version: 1.376.2
   contact:
     email: casbin@googlegroups.com
 basePath: /
@@ -80,6 +80,24 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/object.Cert'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
+  /api/add-domain:
+    post:
+      tags:
+      - Domain API
+      description: add domain
+      operationId: ApiController.AddDomain
+      parameters:
+      - in: body
+        name: body
+        description: The details of the domain
+        required: true
+        schema:
+          $ref: '#/definitions/object.Domain'
       responses:
         "200":
           description: The Response object
@@ -455,6 +473,12 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/api/Callback:
+    post:
+      tags:
+      - Callback API
+      description: Get Login Error Counts
+      operationId: ApiController.Callback
   /api/api/get-captcha:
     get:
       tags:
@@ -510,6 +534,24 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/controllers.EmailForm'
+      responses:
+        "200":
+          description: object
+          schema:
+            $ref: '#/definitions/Response'
+  /api/api/send-notification:
+    post:
+      tags:
+      - Service API
+      description: This API is not for Casdoor frontend to call, it is for Casdoor SDKs.
+      operationId: ApiController.SendNotification
+      parameters:
+      - in: body
+        name: from
+        description: Details of the notification request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.NotificationForm'
       responses:
         "200":
           description: object
@@ -655,6 +697,24 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/object.Cert'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
+  /api/delete-domain:
+    post:
+      tags:
+      - Domain API
+      description: delete domain
+      operationId: ApiController.DeleteDomain
+      parameters:
+      - in: body
+        name: body
+        description: The details of the domain
+        required: true
+        schema:
+          $ref: '#/definitions/object.Domain'
       responses:
         "200":
           description: The Response object
@@ -1227,6 +1287,42 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/Response'
+  /api/get-domain:
+    get:
+      tags:
+      - Domain API
+      description: get domain
+      operationId: ApiController.GetDomain
+      parameters:
+      - in: query
+        name: id
+        description: The id ( owner/name ) of the domains
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.Domain'
+  /api/get-domains:
+    get:
+      tags:
+      - Domain API
+      description: get domains
+      operationId: ApiController.GetDomains
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of domains
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/object.Domain'
   /api/get-email-and-phone:
     get:
       tags:
@@ -2387,46 +2483,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
-  /api/login/oauth/access_token:
-    post:
-      tags:
-      - Token API
-      description: get OAuth access token
-      operationId: ApiController.GetOAuthToken
-      parameters:
-      - in: query
-        name: grant_type
-        description: OAuth grant type
-        required: true
-        type: string
-      - in: query
-        name: client_id
-        description: OAuth client id
-        required: true
-        type: string
-      - in: query
-        name: client_secret
-        description: OAuth client secret
-        required: true
-        type: string
-      - in: query
-        name: code
-        description: OAuth code
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.TokenWrapper'
-        "400":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.TokenError'
-        "401":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.TokenError'
   /api/login/oauth/introspect:
     post:
       description: The introspection endpoint is an OAuth 2.0 endpoint that takes a
@@ -2615,6 +2671,11 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/send-invite:
+    post:
+      tags:
+      - User API
+      operationId: ApiController.SendInvite
   /api/send-verification-code:
     post:
       tags:
@@ -2770,6 +2831,29 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/object.Cert'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
+  /api/update-domain:
+    post:
+      tags:
+      - Domain API
+      description: update domain
+      operationId: ApiController.UpdateDomain
+      parameters:
+      - in: query
+        name: id
+        description: The id ( owner/name ) of the domain
+        required: true
+        type: string
+      - in: body
+        name: body
+        description: The details of the domain
+        required: true
+        schema:
+          $ref: '#/definitions/object.Domain'
       responses:
         "200":
           description: The Response object
@@ -3352,12 +3436,52 @@ paths:
           description: '"The Response object"'
           schema:
             $ref: '#/definitions/controllers.Response'
+  /apiapi/login/oauth/access_token:
+    post:
+      tags:
+      - Token API
+      description: get OAuth access token
+      operationId: ApiController.GetOAuthToken
+      parameters:
+      - in: query
+        name: grant_type
+        description: OAuth grant type
+        required: true
+        type: string
+      - in: query
+        name: client_id
+        description: OAuth client id
+        required: true
+        type: string
+      - in: query
+        name: client_secret
+        description: OAuth client secret
+        required: true
+        type: string
+      - in: query
+        name: code
+        description: OAuth code
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.TokenWrapper'
+        "400":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.TokenError'
+        "401":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.TokenError'
 definitions:
-  1183.0xc000639290.false:
-    title: "false"
+  168883.<nil>.string:
+    title: string
     type: object
-  1217.0xc0006392c0.false:
-    title: "false"
+  287425.<nil>.string:
+    title: string
     type: object
   LaravelResponse:
     title: LaravelResponse
@@ -3393,14 +3517,24 @@ definitions:
         type: string
       title:
         type: string
+  controllers.NotificationForm:
+    title: NotificationForm
+    type: object
+    properties:
+      content:
+        type: string
   controllers.Response:
     title: Response
     type: object
     properties:
       data:
-        $ref: '#/definitions/1183.0xc000639290.false'
+        additionalProperties:
+          description: support string, struct or []struct
+          type: string
       data2:
-        $ref: '#/definitions/1217.0xc0006392c0.false'
+        additionalProperties:
+          description: support string, struct or []struct
+          type: string
       msg:
         type: string
       name:
@@ -3429,9 +3563,6 @@ definitions:
     type: object
   object:
     title: object
-    type: object
-  object.&{197049 0xc000a2cd50 false}:
-    title: '&{197049 0xc000a2cd50 false}'
     type: object
   object.AccountItem:
     title: AccountItem
@@ -3468,10 +3599,10 @@ definitions:
         format: int64
       table:
         type: string
-      tableNamePrefix:
-        type: string
       type:
         type: string
+      useSameDb:
+        type: boolean
       user:
         type: string
   object.Application:
@@ -3481,6 +3612,8 @@ definitions:
       affiliationUrl:
         type: string
       cert:
+        type: string
+      certPublicKey:
         type: string
       clientId:
         type: string
@@ -3530,6 +3663,10 @@ definitions:
           type: string
       homepageUrl:
         type: string
+      invitationCodes:
+        type: array
+        items:
+          type: string
       logo:
         type: string
       name:
@@ -3577,19 +3714,23 @@ definitions:
         $ref: '#/definitions/object.ThemeData'
       tokenFormat:
         type: string
+  object.AttributeMappingItem:
+    title: AttributeMappingItem
+    type: object
+    properties:
+      attribute:
+        type: string
+      userField:
+        type: string
   object.CasbinRequest:
     title: CasbinRequest
     type: array
     items:
-      $ref: '#/definitions/object.&{197049 0xc000a2cd50 false}'
+      $ref: '#/definitions/object.CasbinRequest'
   object.Cert:
     title: Cert
     type: object
     properties:
-      authorityPublicKey:
-        type: string
-      authorityRootPublicKey:
-        type: string
       bitSize:
         type: integer
         format: int64
@@ -3614,6 +3755,30 @@ definitions:
         type: string
       type:
         type: string
+  object.Domain:
+    title: Domain
+    type: object
+    properties:
+      createdTime:
+        type: string
+      description:
+        type: string
+      displayName:
+        type: string
+      domains:
+        type: array
+        items:
+          type: string
+      isEnabled:
+        type: boolean
+      name:
+        type: string
+      owner:
+        type: string
+      tags:
+        type: array
+        items:
+          type: string
   object.Enforce:
     title: Enforce
     type: object
@@ -3679,6 +3844,10 @@ definitions:
         type: string
       parentId:
         type: string
+      tags:
+        type: array
+        items:
+          type: string
       title:
         type: string
       type:
@@ -3747,13 +3916,23 @@ definitions:
     title: Ldap
     type: object
     properties:
+      attributeMappingItems:
+        type: array
+        items:
+          $ref: '#/definitions/object.AttributeMappingItem'
       autoSync:
         type: integer
         format: int64
       baseDn:
         type: string
+      cert:
+        type: string
       createdTime:
         type: string
+      enableAttributeMapping:
+        type: boolean
+      enableRoleMapping:
+        type: boolean
       enableSsl:
         type: boolean
       filter:
@@ -3775,6 +3954,10 @@ definitions:
       port:
         type: integer
         format: int64
+      roleMappingItems:
+        type: array
+        items:
+          $ref: '#/definitions/object.RoleMappingItem'
       serverName:
         type: string
       username:
@@ -3825,10 +4008,18 @@ definitions:
     properties:
       createdTime:
         type: string
+      customPolicyMapping:
+        type: boolean
+      customPolicyMappingRules:
+        type: array
+        items:
+          $ref: '#/definitions/168883.<nil>.string'
       description:
         type: string
       displayName:
         type: string
+      isEnabled:
+        type: boolean
       modelText:
         type: string
       name:
@@ -4011,6 +4202,8 @@ definitions:
         type: string
       state:
         $ref: '#/definitions/pp.PaymentState'
+      successUrl:
+        type: string
       tag:
         type: string
       type:
@@ -4043,6 +4236,10 @@ definitions:
           type: string
       effect:
         type: string
+      groups:
+        type: array
+        items:
+          type: string
       isEnabled:
         type: boolean
       model:
@@ -4091,12 +4288,17 @@ definitions:
           type: string
       owner:
         type: string
-      pricePerMonth:
+      paymentProviders:
+        type: array
+        items:
+          type: string
+      period:
+        type: string
+      price:
         type: number
         format: double
-      pricePerYear:
-        type: number
-        format: double
+      product:
+        type: string
       role:
         type: string
   object.Pricing:
@@ -4104,10 +4306,6 @@ definitions:
     type: object
     properties:
       application:
-        type: string
-      approveTime:
-        type: string
-      approver:
         type: string
       createdTime:
         type: string
@@ -4125,10 +4323,6 @@ definitions:
         type: array
         items:
           type: string
-      state:
-        type: string
-      submitter:
-        type: string
       trialDuration:
         type: integer
         format: int64
@@ -4238,6 +4432,10 @@ definitions:
         type: string
       intranetEndpoint:
         type: string
+      inviteContent:
+        type: string
+      inviteTitle:
+        type: string
       issuerUrl:
         type: string
       metadata:
@@ -4272,8 +4470,7 @@ definitions:
       type:
         type: string
       userMapping:
-        additionalProperties:
-          type: string
+        $ref: '#/definitions/287425.<nil>.string'
   object.ProviderItem:
     title: ProviderItem
     type: object
@@ -4325,6 +4522,8 @@ definitions:
         type: string
       requestUri:
         type: string
+      statusCode:
+        type: string
       user:
         type: string
   object.Resource:
@@ -4374,6 +4573,10 @@ definitions:
         type: array
         items:
           type: string
+      groups:
+        type: array
+        items:
+          type: string
       isEnabled:
         type: boolean
       name:
@@ -4384,7 +4587,23 @@ definitions:
         type: array
         items:
           type: string
+      tags:
+        type: array
+        items:
+          type: string
       users:
+        type: array
+        items:
+          type: string
+  object.RoleMappingItem:
+    title: RoleMappingItem
+    type: object
+    properties:
+      attribute:
+        type: string
+      role:
+        type: string
+      values:
         type: array
         items:
           type: string
@@ -4406,39 +4625,45 @@ definitions:
     title: Subscription
     type: object
     properties:
-      approveTime:
-        type: string
-      approver:
-        type: string
       createdTime:
         type: string
       description:
         type: string
       displayName:
         type: string
-      duration:
-        type: integer
-        format: int64
-      endDate:
+      endTime:
         type: string
         format: datetime
-      isEnabled:
-        type: boolean
       name:
         type: string
       owner:
         type: string
+      payment:
+        type: string
+      period:
+        type: string
       plan:
         type: string
-      startDate:
+      pricing:
+        type: string
+      startTime:
         type: string
         format: datetime
       state:
-        type: string
-      submitter:
-        type: string
+        $ref: '#/definitions/object.SubscriptionState'
       user:
         type: string
+  object.SubscriptionState:
+    title: SubscriptionState
+    type: string
+    enum:
+    - SubStatePending = "Pending"
+    - SubStateError = "Error"
+    - SubStateSuspended = "Suspended"
+    - SubStateActive = "Active"
+    - SubStateUpcoming = "Upcoming"
+    - SubStateExpired = "Expired"
+    example: Pending
   object.Syncer:
     title: Syncer
     type: object
@@ -4472,6 +4697,8 @@ definitions:
       port:
         type: integer
         format: int64
+      sslMode:
+        type: string
       syncInterval:
         type: integer
         format: int64
@@ -4597,6 +4824,8 @@ definitions:
         type: string
       alipay:
         type: string
+      aliyunidaas:
+        type: string
       amazon:
         type: string
       apple:
@@ -4716,6 +4945,8 @@ definitions:
       karma:
         type: integer
         format: int64
+      keycloak:
+        type: string
       language:
         type: string
       lark:
@@ -4774,6 +5005,8 @@ definitions:
         type: string
       password:
         type: string
+      passwordChangeRequired:
+        type: boolean
       passwordSalt:
         type: string
       passwordType:
@@ -4894,6 +5127,8 @@ definitions:
         type: string
       email:
         type: string
+      email_verified:
+        type: boolean
       groups:
         type: array
         items:
