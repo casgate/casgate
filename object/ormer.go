@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -35,10 +36,16 @@ import (
 	_ "modernc.org/sqlite" // db = sqlite
 )
 
+type TransactionManager interface {
+	WithTx(parentCtx context.Context, f func(ctx context.Context) error) error
+}
+
 var (
-	ormer                   *Ormer = nil
-	isCreateDatabaseDefined        = false
-	createDatabase                 = true
+	ormer                   *Ormer             = nil
+	trm                     TransactionManager = nil
+	repo                    Repository         = nil
+	isCreateDatabaseDefined                    = false
+	createDatabase                             = true
 )
 
 func InitFlag() {
@@ -67,7 +74,7 @@ func InitConfig() {
 	DoMigration()
 }
 
-func InitAdapter() {
+func InitAdapter() *Ormer {
 	if conf.GetConfigString("driverName") == "" {
 		if !util.FileExist("conf/app.conf") {
 			dir, err := os.Getwd()
@@ -95,6 +102,13 @@ func InitAdapter() {
 	tableNamePrefix := conf.GetConfigString("tableNamePrefix")
 	tbMapper := core.NewPrefixMapper(core.SnakeMapper{}, tableNamePrefix)
 	ormer.Engine.SetTableMapper(tbMapper)
+
+	return ormer
+}
+
+func InitRepo(txmanager TransactionManager, repository Repository) {
+	trm = txmanager
+	repo = repository
 }
 
 func CreateTables() {

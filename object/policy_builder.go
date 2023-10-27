@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/casdoor/casdoor/util"
@@ -24,8 +25,8 @@ type PolicyBuilder struct {
 	entities *Entities
 }
 
-func NewPolicyBuilder(owner, model string) (*PolicyBuilder, error) {
-	entities, err := getOwnerEntities(owner, model)
+func NewPolicyBuilder(ctx context.Context, owner, model string) (*PolicyBuilder, error) {
+	entities, err := getOwnerEntities(ctx, owner, model)
 	if err != nil {
 		return nil, fmt.Errorf("getOwnerEntities: %w", err)
 	}

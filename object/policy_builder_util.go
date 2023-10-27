@@ -1,6 +1,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -175,27 +176,27 @@ func spawnPolicyRoleByField(roles []policyRole, field string, values []string) [
 	return policyRoles
 }
 
-func getOwnerEntities(owner, model string) (*Entities, error) {
+func getOwnerEntities(ctx context.Context, owner, model string) (*Entities, error) {
 	var ownerEntities Entities
-	ownerDomains, err := GetDomains(owner)
+	ownerDomains, err := repo.GetDomains(ctx, owner)
 	if err != nil {
-		return nil, fmt.Errorf("GetDomains: %w", err)
+		return nil, fmt.Errorf("repo.GetDomains: %w", err)
 	}
-	ownerRoles, err := GetRoles(owner)
+	ownerRoles, err := repo.GetRoles(ctx, owner)
 	if err != nil {
-		return nil, fmt.Errorf("GetRoles: %w", err)
+		return nil, fmt.Errorf("repo.GetRoles: %w", err)
 	}
-	ownerGroups, err := GetGroups(owner)
+	ownerGroups, err := repo.GetGroups(ctx, owner)
 	if err != nil {
-		return nil, fmt.Errorf("GetGroups: %w", err)
+		return nil, fmt.Errorf("repo.GetGroups: %w", err)
 	}
-	ownerUsers, err := GetUsers(owner)
+	ownerUsers, err := repo.GetUsers(ctx, owner)
 	if err != nil {
-		return nil, fmt.Errorf("GetUsers: %w", err)
+		return nil, fmt.Errorf("repo.GetUsers: %w", err)
 	}
-	permissionModel, err := getModel(owner, model)
+	permissionModel, err := repo.GetModel(ctx, owner, model, false)
 	if err != nil {
-		return nil, fmt.Errorf("getModel: %w", err)
+		return nil, fmt.Errorf("repo.GetModel: %w", err)
 	}
 	ownerEntities.DomainsTree = makeAncestorDomainsTreeMap(ownerDomains)
 	ownerEntities.RolesTree = makeAncestorRolesTreeMap(ownerRoles)
@@ -203,9 +204,9 @@ func getOwnerEntities(owner, model string) (*Entities, error) {
 	ownerEntities.UsersByGroup = groupUsersByGroups(ownerUsers)
 	ownerEntities.Model = permissionModel
 	if ownerEntities.Model == nil {
-		ownerEntities.Model, err = getModel("built-in", "user-model-built-in")
+		ownerEntities.Model, err = repo.GetModel(ctx, "built-in", "user-model-built-in", false)
 		if err != nil {
-			return nil, fmt.Errorf("getModel: %w", err)
+			return nil, fmt.Errorf("repo.GetModel: %w", err)
 		}
 	}
 

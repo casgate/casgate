@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/casdoor/casdoor/util"
@@ -38,9 +39,8 @@ func GetDomainCount(owner, field, value string) (int64, error) {
 	return session.Count(&Domain{})
 }
 
-func GetDomains(owner string) ([]*Domain, error) {
-	domains := []*Domain{}
-	err := ormer.Engine.Desc("created_time").Find(&domains, &Domain{Owner: owner})
+func GetDomains(ctx context.Context, owner string) ([]*Domain, error) {
+	domains, err := repo.GetDomains(ctx, owner)
 	if err != nil {
 		return domains, err
 	}
@@ -292,10 +292,10 @@ func subDomainPermissions(domain *Domain) ([]*Permission, error) {
 }
 
 // GetAncestorDomains returns a list of domains that contain the given domainIds
-func GetAncestorDomains(domainIds ...string) ([]*Domain, error) {
+func GetAncestorDomains(ctx context.Context, domainIds ...string) ([]*Domain, error) {
 	owner, _ := util.GetOwnerAndNameFromIdNoCheck(domainIds[0])
 
-	allDomains, err := GetDomains(owner)
+	allDomains, err := GetDomains(ctx, owner)
 	if err != nil {
 		return nil, err
 	}

@@ -36,109 +36,134 @@ func ProcessPolicyDifference(sourcePermissions []*Permission) error {
 		return nil
 	}
 
-	modelProcessed := make(map[string]bool)
+	modelAdapterProcessed := make(map[string]bool)
 
+	ctx := context.Background()
+	g, ctx := errgroup.WithContext(ctx)
 	for _, permission := range sourcePermissions {
+		permission := permission
 		modelAdapterKey := util.GetId(permission.Owner, permission.Model) + permission.Adapter
-		if !modelProcessed[modelAdapterKey] {
-			owner := permission.Owner
-
-			permissions, err := GetPermissionsByModel(owner, permission.Model)
-			if err != nil {
-				return fmt.Errorf("GetPermissionsByModel: %w", err)
-			}
-			permissionsWithOld := append(permissions, permission)
-
-			oldPolicies := make(casbinPolicies, 0)
-
-			modelPolicies, err := getPermissionPolicies(permissionsWithOld)
-			if err != nil {
-				return fmt.Errorf("getPermissionPolicies: %w", err)
-			}
-			oldPolicies = append(oldPolicies, modelPolicies...)
-
-			permissionMap := make(map[string]*Permission, len(permissions))
-			permissionMap[permission.GetId()] = permission
-			newPolicies := make(casbinPolicies, 0)
-
-			ctx := context.Background()
-			g, ctx := errgroup.WithContext(ctx)
-			resultPolicies := make([]casbinPolicies, len(permissions))
-
-			pb, err := NewPolicyBuilder(owner, permission.Model)
-			if err != nil {
-				return fmt.Errorf("NewPolicyBuilder: %w", err)
-			}
-
-			// disable gc for calcPolicies time and enable back after for optimization. (up to 10x faster)
-			gcpercent := debug.SetGCPercent(-1)
-			memlimit := debug.SetMemoryLimit(math.MaxInt64)
-
-			for i, permission := range permissions {
-				i, permission := i, permission
-				g.Go(func() error {
-					policies, err := pb.CalcPermissionPolicies(permission)
-					if err != nil {
-						return fmt.Errorf("calcPermissionPolicies: %w", err)
-					}
-					resultPolicies[i] = policies
-					return nil
-				})
-
-				permissionMap[permission.GetId()] = permission
-			}
-
-			if err := g.Wait(); err != nil {
-				return fmt.Errorf("g.Wait: %w", err)
-			}
-
-			for _, policies := range resultPolicies {
-				newPolicies = append(newPolicies, policies...)
-			}
-
-			debug.SetGCPercent(gcpercent)
-			debug.SetMemoryLimit(memlimit)
-
-			newPoliciesHash := make(map[string]bool, len(newPolicies))
-			for _, policy := range newPolicies {
-				key := getPolicyKeyWithPermissionID(policy)
-				newPoliciesHash[key] = true
-			}
-
-			oldPoliciesHash := make(map[string]bool, len(oldPolicies))
-			oldPoliciesToRemove := make(casbinPolicies, 0, len(oldPolicies))
-			for _, policy := range oldPolicies {
-				key := getPolicyKeyWithPermissionID(policy)
-				if newPoliciesHash[key] {
-					oldPoliciesHash[getPolicyKey(policy)] = true
-				} else {
-					oldPoliciesToRemove = append(oldPoliciesToRemove, policy)
+		if !modelAdapterProcessed[modelAdapterKey] {
+			g.Go(func() error {
+				err := processModelAdapterPolicyDifference(ctx, permission)
+				if err != nil {
+					return fmt.Errorf("processModelAdapterPolicyDifference: %w", err)
 				}
-			}
-
-			newPoliciesToCreate := make(casbinPolicies, 0, len(oldPolicies))
-			for _, policy := range newPolicies {
-				key := getPolicyKey(policy)
-				if !oldPoliciesHash[key] {
-					newPoliciesToCreate = append(newPoliciesToCreate, policy)
-				}
-			}
-
-			err = removePolicies(oldPoliciesToRemove, permissionMap)
-			if err != nil {
-				return fmt.Errorf("removePolicy: %w", err)
-			}
-
-			err = createPolicies(newPoliciesToCreate, permissionMap)
-			if err != nil {
-				return fmt.Errorf("createPolicy: %w", err)
-			}
-
-			modelProcessed[modelAdapterKey] = true
+				return nil
+			})
+			modelAdapterProcessed[modelAdapterKey] = true
 		}
 	}
 
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("g.Wait(processModelAdapterPolicyDifference): %w", err)
+	}
+
 	return nil
+}
+
+func processModelAdapterPolicyDifference(parentCtx context.Context, permission *Permission) error {
+	return trm.WithTx(parentCtx, func(ctx context.Context) error {
+		owner := permission.Owner
+
+		//lock by model to avoid race conditions
+		m, err := repo.GetModel(ctx, owner, permission.Model, true)
+		if err != nil {
+			return fmt.Errorf("repo.GetModel(ForUpdate): %w, %v", err, m)
+		}
+
+		permissions, err := repo.GetPermissionsByModelAdapter(ctx, owner, permission.Model, permission.Adapter)
+		if err != nil {
+			return fmt.Errorf("repo.GetPermissionsByModel: %w", err)
+		}
+		permissionsWithOld := append(permissions, permission)
+
+		oldPolicies := make(casbinPolicies, 0)
+
+		modelPolicies, err := getPermissionPolicies(permissionsWithOld)
+		if err != nil {
+			return fmt.Errorf("getPermissionPolicies: %w", err)
+		}
+		oldPolicies = append(oldPolicies, modelPolicies...)
+
+		permissionMap := make(map[string]*Permission, len(permissions))
+		permissionMap[permission.GetId()] = permission
+		newPolicies := make(casbinPolicies, 0)
+
+		g, ctx := errgroup.WithContext(ctx)
+		resultPolicies := make([]casbinPolicies, len(permissions))
+
+		pb, err := NewPolicyBuilder(ctx, owner, permission.Model)
+		if err != nil {
+			return fmt.Errorf("NewPolicyBuilder: %w", err)
+		}
+
+		// disable gc for calcPolicies time and enable back after for optimization. (up to 10x faster)
+		gcpercent := debug.SetGCPercent(-1)
+		memlimit := debug.SetMemoryLimit(math.MaxInt64)
+
+		for i, permission := range permissions {
+			i, permission := i, permission
+			g.Go(func() error {
+				policies, err := pb.CalcPermissionPolicies(permission)
+				if err != nil {
+					return fmt.Errorf("calcPermissionPolicies: %w", err)
+				}
+				resultPolicies[i] = policies
+				return nil
+			})
+
+			permissionMap[permission.GetId()] = permission
+		}
+
+		if err := g.Wait(); err != nil {
+			return fmt.Errorf("g.Wait: %w", err)
+		}
+
+		for _, policies := range resultPolicies {
+			newPolicies = append(newPolicies, policies...)
+		}
+
+		debug.SetGCPercent(gcpercent)
+		debug.SetMemoryLimit(memlimit)
+
+		newPoliciesHash := make(map[string]bool, len(newPolicies))
+		for _, policy := range newPolicies {
+			key := getPolicyKeyWithPermissionID(policy)
+			newPoliciesHash[key] = true
+		}
+
+		oldPoliciesHash := make(map[string]bool, len(oldPolicies))
+		oldPoliciesToRemove := make(casbinPolicies, 0, len(oldPolicies))
+		for _, policy := range oldPolicies {
+			key := getPolicyKeyWithPermissionID(policy)
+			if newPoliciesHash[key] {
+				oldPoliciesHash[getPolicyKey(policy)] = true
+			} else {
+				oldPoliciesToRemove = append(oldPoliciesToRemove, policy)
+			}
+		}
+
+		newPoliciesToCreate := make(casbinPolicies, 0, len(oldPolicies))
+		for _, policy := range newPolicies {
+			key := getPolicyKey(policy)
+			if !oldPoliciesHash[key] {
+				newPoliciesToCreate = append(newPoliciesToCreate, policy)
+			}
+		}
+
+		err = removePolicies(oldPoliciesToRemove, permissionMap)
+		if err != nil {
+			return fmt.Errorf("removePolicy: %w", err)
+		}
+
+		err = createPolicies(newPoliciesToCreate, permissionMap)
+		if err != nil {
+			return fmt.Errorf("createPolicy: %w", err)
+		}
+
+		return nil
+	})
 }
 
 // getPermissionPolicies get policies from db by permissions with same model
@@ -152,7 +177,6 @@ func getPermissionPolicies(permissions []*Permission) (casbinPolicies, error) {
 		permissionIds = append(permissionIds, permission.GetId())
 	}
 	enforcer := getPermissionEnforcer(permissions[0], permissionIds...)
-	enforcer.GetPolicy()
 
 	result := make(casbinPolicies, 0)
 	for _, policy := range enforcer.GetNamedPolicy("p") {
