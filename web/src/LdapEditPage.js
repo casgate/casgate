@@ -21,7 +21,7 @@ import * as CertBackend from "./backend/CertBackend";
 import * as Setting from "./Setting";
 import i18next from "i18next";
 import LdapAttributeMappingTable from "./table/LdapAttributeMappingTable";
-import LdapRoleMappingTable from "./table/LdapRoleMappingTable";
+import RoleMappingTable from "./table/RoleMappingTable";
 
 const {Option} = Select;
 
@@ -296,10 +296,13 @@ class LdapEditPage extends React.Component {
               {Setting.getLabel(i18next.t("ldap:Role mapping"), i18next.t("ldap:Role mapping - Tooltip"))} :
             </Col>
             <Col span={20}>
-              <LdapRoleMappingTable
+              <RoleMappingTable
                 title={i18next.t("ldap:Role mapping rules")}
                 table={this.state.ldap.roleMappingItems}
                 owner={this.state.ldap.owner}
+                attributes={["uidNumber", "cn", "sn", "gidNumber", "entryUUID", "displayName", "mail", "email",
+                  "emailAddress", "telephoneNumber", "mobile", "mobileTelephoneNumber", "registeredAddress", "postalAddress",
+                  "userPrincipalName", "memberOf"]}
                 onUpdateTable={(value) => {this.updateLdapField("roleMappingItems", value);}}
               />
             </Col>

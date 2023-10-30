@@ -28,6 +28,7 @@ import copy from "copy-to-clipboard";
 import {CaptchaPreview} from "./common/CaptchaPreview";
 import {CountryCodeSelect} from "./common/select/CountryCodeSelect";
 import * as Web3Auth from "./auth/Web3Auth";
+import RoleMappingTable from "./table/RoleMappingTable";
 
 const {Option} = Select;
 const {TextArea} = Input;
@@ -111,6 +112,11 @@ class ProviderEditPage extends React.Component {
       this.getCerts(value);
     }
     provider[key] = value;
+
+    if (key === "owner" && value === "admin") {
+      provider["enableRoleMapping"] = false;
+    }
+
     this.setState({
       provider: provider,
     });
@@ -660,6 +666,37 @@ class ProviderEditPage extends React.Component {
                 {this.renderUserMappingInput()}
               </Col>
             </Row>
+          </React.Fragment>
+        }
+        {
+          (this.state.provider.category === "OAuth" || this.state.provider.category === "SAML") &&
+          <React.Fragment>
+            <Row style={{marginTop: "20px"}} >
+              <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                {Setting.getLabel(i18next.t("provider:Role mapping"), i18next.t("provider:Role mapping - Tooltip"))} :
+              </Col>
+              <Col span={22} >
+                <Switch disabled={this.state.provider["owner"] === "admin"} checked={this.state.provider.enableRoleMapping} onChange={checked => {
+                  this.updateProviderField("enableRoleMapping", checked);
+                }} />
+              </Col>
+            </Row>
+            {this.state.provider?.enableRoleMapping &&
+              <Row style={{marginTop: "20px"}}>
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("provider:Role mapping table"), i18next.t("provider:Role mapping table - Tooltip"))} :
+                </Col>
+                <Col span={22}>
+                  <RoleMappingTable
+                    title={i18next.t("ldap:Role mapping rules")}
+                    table={this.state.provider.roleMappingItems}
+                    owner={this.state.provider.owner}
+                    attributes={["email", "role"]}
+                    onUpdateTable={(value) => {this.updateProviderField("roleMappingItems", value);}}
+                  />
+                </Col>
+              </Row>
+            }
           </React.Fragment>
         }
         {

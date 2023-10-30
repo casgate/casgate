@@ -19,12 +19,12 @@ import i18next from "i18next";
 import {DeleteOutlined, PlusOutlined} from "@ant-design/icons";
 import * as RoleBackend from "../backend/RoleBackend";
 
-class LdapRoleMappingTable extends React.Component {
+class RoleMappingTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       classes: props,
-      attributes: this.getDefaultAttributes(),
+      attributes: this.props.attributes,
       newAttributeName: "",
       roles: [],
       roleMappingTable: this.props.table ? this.props.table.map((item, index) => {
@@ -92,12 +92,6 @@ class LdapRoleMappingTable extends React.Component {
   deleteRow(table, i) {
     table = Setting.deleteRow(table, i);
     this.updateTable(table);
-  }
-
-  getDefaultAttributes() {
-    return ["uidNumber", "cn", "sn", "gidNumber", "entryUUID", "displayName", "mail", "email",
-      "emailAddress", "telephoneNumber", "mobile", "mobileTelephoneNumber", "registeredAddress", "postalAddress",
-      "userPrincipalName", "memberOf"];
   }
 
   getRoles(organizationName) {
@@ -234,4 +228,4 @@ class LdapRoleMappingTable extends React.Component {
   }
 }
 
-export default LdapRoleMappingTable;
+export default RoleMappingTable;

@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
+	"github.com/xorm-io/builder"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -42,6 +43,21 @@ type Role struct {
 func GetRoleCount(owner, field, value string) (int64, error) {
 	session := GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Role{})
+}
+
+func GetRolesByIds(roleIds []string) ([]*Role, error) {
+	condBuilder := builder.NewCond()
+	for _, roleId := range roleIds {
+		owner, name := util.GetOwnerAndNameFromIdNoCheck(roleId)
+		condBuilder = condBuilder.Or(builder.Eq{"owner": owner, "name": name})
+	}
+	roles := []*Role{}
+	err := ormer.Engine.Desc("created_time").Where(condBuilder).Find(&roles)
+	if err != nil {
+		return roles, err
+	}
+
+	return roles, nil
 }
 
 func GetRoles(owner string) ([]*Role, error) {
@@ -452,4 +468,24 @@ func subRolePermissions(role *Role) ([]*Permission, error) {
 	}
 
 	return result, nil
+}
+
+// AddRolesToUser add userid to roles if they don't contain them already
+func AddRolesToUser(userId string, roleIds []string) error {
+	roles, err := GetRolesByIds(roleIds)
+	if err != nil {
+		return err
+	}
+
+	for _, role := range roles {
+		if !util.InSlice(role.Users, userId) {
+			role.Users = append(role.Users, userId)
+
+			_, err = UpdateRole(role.GetId(), role)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

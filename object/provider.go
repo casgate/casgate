@@ -47,6 +47,8 @@ type Provider struct {
 	CustomLogo        string              `xorm:"varchar(200)" json:"customLogo"`
 	Scopes            string              `xorm:"varchar(100)" json:"scopes"`
 	UserMapping       map[string][]string `xorm:"varchar(500)" json:"userMapping"`
+	EnableRoleMapping bool                `xorm:"bool" json:"enableRoleMapping"`
+	RoleMappingItems  []*RoleMappingItem  `xorm:"text" json:"roleMappingItems"`
 
 	Host          string `xorm:"varchar(100)" json:"host"`
 	Port          int    `json:"port"`
@@ -74,6 +76,12 @@ type Provider struct {
 	EnableSignAuthnRequest bool   `json:"enableSignAuthnRequest"`
 
 	ProviderUrl string `xorm:"varchar(200)" json:"providerUrl"`
+}
+
+type RoleMappingItem struct {
+	Attribute string   `json:"attribute"`
+	Values    []string `json:"values"`
+	Role      string   `json:"role"`
 }
 
 func GetMaskedProvider(provider *Provider, isMaskEnabled bool) *Provider {
