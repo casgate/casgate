@@ -6,7 +6,7 @@
       "displayName": "",
       "websiteUrl": "",
       "favicon": "",
-      "passwordType": "plain",
+      "passwordType": "argon2id",
       "passwordSalt": "",
       "passwordOptions": ["AtLeast6"],
       "countryCodes": ["US", "GB", "ES", "FR", "DE", "CN", "JP", "KR", "VN", "ID", "SG", "IN", "IT", "MY", "TR", "DZ", "IL", "PH", "NL", "PL", "FI", "SE", "UA", "KZ"],
