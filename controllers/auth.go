@@ -538,7 +538,7 @@ func (c *ApiController) Login() {
 			if provider.Category == "OAuth" {
 				jwtToken, _ := jwt.ParseSigned(token.AccessToken)
 
-				if (jwtToken != nil) {
+				if jwtToken != nil {
 					err = jwtToken.UnsafeClaimsWithoutVerification(&authData)
 					if err != nil {
 						c.ResponseError(c.T("auth:Invalid token"))
