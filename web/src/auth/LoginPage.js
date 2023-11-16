@@ -597,22 +597,11 @@ class LoginPage extends React.Component {
               this.renderPasswordOrCodeInput()
             }
           </Row>
-          <div style={{display: "inline-flex", justifyContent: "space-between", width: "320px", marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px"}}>
-            <Form.Item name="autoSignin" valuePropName="checked" noStyle>
-              <Checkbox style={{float: "left"}}>
-                {i18next.t("login:Auto sign in")}
-              </Checkbox>
-            </Form.Item>
-            {
-              Setting.renderForgetLink(application, i18next.t("login:Forgot password?"))
-            }
-          </div>
-          {AgreementModal.isAgreementRequired(application) ? AgreementModal.renderAgreementFormItem(application, true, {}, this) : null}
           <Form.Item>
             <Button
               type="primary"
               htmlType="submit"
-              style={{width: "100%", marginBottom: "5px"}}
+              style={{width: "100%"}}
             >
               {
                 this.state.loginMethod === "webAuthn" ? i18next.t("login:Sign in with WebAuthn") :
@@ -626,6 +615,19 @@ class LoginPage extends React.Component {
               this.renderFooter(application)
             }
           </Form.Item>
+          <div style={{display: "inline-flex", justifyContent: "space-between", width: "320px", marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px"}}>
+            <Form.Item name="autoSignin" valuePropName="checked" noStyle>
+              <Checkbox>
+                {i18next.t("login:Auto sign in")}
+              </Checkbox>
+            </Form.Item>
+          </div>
+          {AgreementModal.isAgreementRequired(application) ? AgreementModal.renderAgreementFormItem(application, true, {}, this) : null}
+          <div style={{paddingTop: "24px"}}>
+            {
+              Setting.renderForgetLink(application, i18next.t("login:Forgot password?"))
+            }
+          </div>
           <Form.Item>
             {
               application.providers.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
@@ -716,17 +718,19 @@ class LoginPage extends React.Component {
   }
 
   renderFooter(application) {
+    if (!application.enableSignUp) {
+      return;
+    }
+
     return (
       <span style={{float: "right"}}>
         {
-          !application.enableSignUp ? null : (
-            <React.Fragment>
-              {i18next.t("login:No account?")}&nbsp;
-              {
-                Setting.renderSignupLink(application, i18next.t("login:sign up now"))
-              }
-            </React.Fragment>
-          )
+          <React.Fragment>
+            {i18next.t("login:No account?")}&nbsp;
+            {
+              Setting.renderSignupLink(application, i18next.t("login:sign up now"))
+            }
+          </React.Fragment>
         }
       </span>
     );
@@ -1035,9 +1039,9 @@ class LoginPage extends React.Component {
               {
                 Setting.renderHelmet(application)
               }
-              {
+              <div style={{marginBottom: "var(--space-3-x)"}}>{
                 Setting.renderLogo(application)
-              }
+              }</div>
               {
                 this.renderBackButton()
               }
