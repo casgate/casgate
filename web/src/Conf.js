@@ -23,8 +23,8 @@ export const DefaultLanguage = "en";
 export const InitThemeAlgorithm = true;
 export const ThemeDefault = {
   themeType: "default",
-  colorPrimary: "#5734d3",
-  borderRadius: 6,
+  colorPrimary: "#1E5CD9",
+  borderRadius: 4,
   isCompact: false,
 };
 
