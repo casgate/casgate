@@ -14,7 +14,7 @@
 
 import React from "react";
 import {Button, Checkbox, Col, Form, Input, Result, Row, Spin, Tabs} from "antd";
-import {ArrowLeftOutlined, LockOutlined, UserOutlined} from "@ant-design/icons";
+import {ArrowLeftOutlined} from "@ant-design/icons";
 import {withRouter} from "react-router-dom";
 import * as UserWebauthnBackend from "../backend/UserWebauthnBackend";
 import OrganizationSelect from "../common/select/OrganizationSelect";
@@ -583,7 +583,6 @@ class LoginPage extends React.Component {
               >
                 <Input
                   id="input"
-                  prefix={<UserOutlined className="site-form-item-icon" />}
                   disabled={new URLSearchParams(this.props.location?.search).get("u") !== null}
                   placeholder={(this.state.loginMethod === "verificationCode") ? i18next.t("login:Email or phone") : i18next.t("login:username, Email or phone")}
                   onChange={e => {
@@ -848,7 +847,6 @@ class LoginPage extends React.Component {
             rules={[{required: true, message: i18next.t("login:Please input your password!")}]}
           >
             <Input.Password
-              prefix={<LockOutlined className="site-form-item-icon" />}
               type="password"
               placeholder={i18next.t("general:Password")}
               disabled={!application.enablePassword}
