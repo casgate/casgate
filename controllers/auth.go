@@ -537,10 +537,13 @@ func (c *ApiController) Login() {
 			// decode JWT token without verifying the signature to fill authData
 			if provider.Category == "OAuth" {
 				jwtToken, _ := jwt.ParseSigned(token.AccessToken)
-				err = jwtToken.UnsafeClaimsWithoutVerification(&authData)
-				if err != nil {
-					c.ResponseError(c.T("auth:Invalid token"))
-					return
+
+				if jwtToken != nil {
+					err = jwtToken.UnsafeClaimsWithoutVerification(&authData)
+					if err != nil {
+						c.ResponseError(c.T("auth:Invalid token"))
+						return
+					}
 				}
 			}
 		}

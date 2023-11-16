@@ -113,6 +113,8 @@ func GetIdProvider(idpInfo *ProviderInfo, redirectUrl string) IdProvider {
 		return NewMetaMaskIdProvider()
 	case "Web3Onboard":
 		return NewWeb3OnboardIdProvider()
+	case "VK":
+		return NewVkIdProvider(idpInfo.ClientId, idpInfo.ClientSecret, redirectUrl)
 	default:
 		if isGothSupport(idpInfo.Type) {
 			return NewGothIdProvider(idpInfo.Type, idpInfo.ClientId, idpInfo.ClientSecret, redirectUrl, idpInfo.HostUrl)
