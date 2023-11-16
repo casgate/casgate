@@ -1,6 +1,30 @@
 /* stylelint-disable at-rule-name-case */
 /* stylelint-disable selector-class-pattern */
 
+:root {
+  --space-x-x: 1px;
+  --space-x-4: 2px;
+  --space-x-2: 4px;
+  --space-x: 8px;
+  --space-2-x: 16px;
+  --space-3-x: 24px;
+  --space-4-x: 32px;
+  --space-5-x: 40px;
+  --space-6-x: 48px;
+  --space-7-x: 56px;
+  --space-8-x: 64px;
+  --space-9-x: 72px;
+  --space-10-x: 80px;
+  --space-15-x: 120px;
+  --color-action-primary: rgb(30 92 217 / 100%);
+  --color-text-primary: rgb(46 58 82 / 100%);
+  --color-text-tertiary: rgb(163 177 204 / 100%);
+  --color-text-button-primary: rgb(255 255 255 / 100%);
+  --color-background-bg-neutral: rgb(163 177 204 / 100%);
+  --color-background-bg-secondary: rgb(255 255 255 / 100%);
+  --color-background-bg-tertiary: rgb(206 216 235 / 100%);
+}
+
 .App {
   text-align: center;
 }
@@ -40,7 +64,7 @@ img {
 }
 
 .panel-logo {
-  margin-bottom: 30px;
+  margin-bottom: var(--space-3-x);
 }
 
 .select-box {
@@ -99,16 +123,14 @@ img {
 }
 
 .login-panel {
-  margin-top: 50px;
-  margin-bottom: 50px;
-  display: flex;
-  background-color: rgb(255 255 255);
   overflow: hidden;
-}
-
-.login-form {
-  text-align: center;
-  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  width: 480px;
+  height: 450px;
+  padding: var(--space-3-x) var(--space-4-x) var(--space-4-x) var(--space-4-x);
+  background: var(--color-background-bg-secondary);
+  border-radius: var(--space-2-x);
 }
 
 .login-content {

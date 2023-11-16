@@ -31,7 +31,6 @@ import SelfLoginButton from "./SelfLoginButton";
 import i18next from "i18next";
 import CustomGithubCorner from "../common/CustomGithubCorner";
 import {SendCodeInput} from "../common/SendCodeInput";
-import LanguageSelect from "../common/select/LanguageSelect";
 import {CaptchaModal, CaptchaRule} from "../common/modal/CaptchaModal";
 import RedirectForm from "../common/RedirectForm";
 import {MfaAuthVerifyForm, NextMfa, RequiredMfa} from "./mfa/MfaAuthVerifyForm";
@@ -1035,23 +1034,21 @@ class LoginPage extends React.Component {
               <div dangerouslySetInnerHTML={{__html: application.formSideHtml}} />
             </div>
             <div className="login-form">
-              <div>
-                <div>
-                  {
-                    Setting.renderHelmet(application)
-                  }
-                  {
-                    Setting.renderLogo(application)
-                  }
-                  {
-                    this.renderBackButton()
-                  }
-                  <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} />
-                  {
-                    this.renderLoginPanel(application)
-                  }
-                </div>
-              </div>
+              {
+                Setting.renderHelmet(application)
+              }
+              {
+                Setting.renderLogo(application)
+              }
+              {
+                this.renderBackButton()
+              }
+              {/* Choose lang button removed, default browser lang will use */}
+              {/* <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} /> */}
+              <h1 style={{fontSize: "28px", fontStyle: "normal", fontWeight: "700", lineHeight: "32px", margin: "unset", marginBottom: "var(--space-3-x)"}}>{i18next.t("application:Login")}</h1>
+              {
+                this.renderLoginPanel(application)
+              }
             </div>
           </div>
         </div>

@@ -1072,12 +1072,12 @@ export function renderLogo(application) {
   if (application.homepageUrl !== "") {
     return (
       <a target="_blank" rel="noreferrer" href={application.homepageUrl}>
-        <img className="panel-logo" width={250} src={application.logo} alt={application.displayName} />
+        <img className="panel-logo" height={30} src={application.logo} alt={application.displayName} />
       </a>
     );
   } else {
     return (
-      <img className="panel-logo" width={250} src={application.logo} alt={application.displayName} />
+      <img className="panel-logo" height={30} src={application.logo} alt={application.displayName} />
     );
   }
 }
