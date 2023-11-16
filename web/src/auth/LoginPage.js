@@ -502,15 +502,6 @@ class LoginPage extends React.Component {
 
     const showForm = application.enablePassword || application.enableCodeSignin || application.enableWebAuthn;
     if (showForm) {
-      let loginWidth = 320;
-      if (Setting.getLanguage() === "fr") {
-        loginWidth += 20;
-      } else if (Setting.getLanguage() === "es") {
-        loginWidth += 40;
-      } else if (Setting.getLanguage() === "ru") {
-        loginWidth += 10;
-      }
-
       return (
         <Form
           name="normal_login"
@@ -524,7 +515,6 @@ class LoginPage extends React.Component {
           onFinish={(values) => {
             this.onFinish(values);
           }}
-          style={{width: `${loginWidth}px`}}
           size="large"
           ref={this.form}
         >
@@ -844,6 +834,9 @@ class LoginPage extends React.Component {
   renderPasswordOrCodeInput() {
     const application = this.getApplicationObj();
     if (this.state.loginMethod === "password") {
+      const passwordVisibleIcon = <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.32118 13.9685C2.56899 14.0603 2.84472 13.9444 2.97219 13.7129C3.07372 13.5286 3.18284 13.3482 3.29396 13.17C3.66067 12.5817 4.2176 11.7983 4.97763 11.0167C6.49947 9.45174 8.79933 7.92748 12.0004 7.92748C15.2014 7.92748 17.5013 9.45174 19.0231 11.0167C19.7832 11.7983 20.3401 12.5817 20.7068 13.17C20.8177 13.3479 20.927 13.5286 21.0287 13.7133C21.156 13.9446 21.4316 14.0602 21.6791 13.9684C21.9532 13.8667 22.0836 13.5535 21.9425 13.2974C21.8332 13.099 21.716 12.9047 21.5968 12.7134C21.2047 12.0844 20.6082 11.2447 19.7899 10.4031C18.155 8.72194 15.5984 7 12.0004 7C8.40238 7 5.84578 8.72194 4.2109 10.4031C3.39258 11.2447 2.7961 12.0844 2.40398 12.7134C2.28438 12.9053 2.16694 13.0996 2.05745 13.2981C1.91627 13.5541 2.04706 13.867 2.32118 13.9685Z" fill="black" /><path fillRule="evenodd" clipRule="evenodd" d="M15 14C15 15.6569 13.6569 17 12 17C10.3431 17 9 15.6569 9 14C9 12.3431 10.3431 11 12 11C13.6569 11 15 12.3431 15 14ZM14 14C14 15.1046 13.1046 16 12 16C10.8954 16 10 15.1046 10 14C10 12.8954 10.8954 12 12 12C13.1046 12 14 12.8954 14 14Z" fill="black" /></svg>;
+      const passwordHiddenIcon = <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 10C20 10 18 15 12 15C6 15 4 10 4 10" stroke="black" /><path d="M12 15V17" stroke="black" /><path d="M7 13.9995L6 15.9995" stroke="black" /><path d="M17 13.9995L18 15.9995" stroke="black" /></svg>;
+
       return (
         <Col span={24}>
           <Form.Item
@@ -854,6 +847,7 @@ class LoginPage extends React.Component {
               type="password"
               placeholder={i18next.t("general:Password")}
               disabled={!application.enablePassword}
+              iconRender={visible => visible ? passwordVisibleIcon : passwordHiddenIcon}
             />
           </Form.Item>
         </Col>
