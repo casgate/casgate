@@ -503,132 +503,140 @@ class LoginPage extends React.Component {
     const showForm = application.enablePassword || application.enableCodeSignin || application.enableWebAuthn;
     if (showForm) {
       return (
-        <Form
-          name="normal_login"
-          initialValues={{
-            organization: application.organization,
-            application: application.name,
-            autoSignin: true,
-            username: Conf.ShowGithubCorner ? "admin" : new URLSearchParams(this.props.location?.search).get("u") ?? "",
-            password: Conf.ShowGithubCorner ? "123" : "",
-          }}
-          onFinish={(values) => {
-            this.onFinish(values);
-          }}
-          size="large"
-          ref={this.form}
-        >
-          <Form.Item
-            hidden={true}
-            name="application"
-            rules={[
-              {
-                required: true,
-                message: i18next.t("application:Please input your application!"),
-              },
-            ]}
+        <React.Fragment>
+          <h1 style={{fontSize: "28px", fontStyle: "normal", fontWeight: "700", lineHeight: "32px", margin: "unset", marginBottom: "var(--space-3-x)"}}>{i18next.t("application:Login")}</h1>
+          <Form
+            name="normal_login"
+            initialValues={{
+              organization: application.organization,
+              application: application.name,
+              autoSignin: true,
+              username: Conf.ShowGithubCorner ? "admin" : new URLSearchParams(this.props.location?.search).get("u") ?? "",
+              password: Conf.ShowGithubCorner ? "123" : "",
+            }}
+            onFinish={(values) => {
+              this.onFinish(values);
+            }}
+            size="large"
+            ref={this.form}
           >
-          </Form.Item>
-          <Form.Item
-            hidden={true}
-            name="organization"
-            rules={[
-              {
-                required: true,
-                message: i18next.t("application:Please input your organization!"),
-              },
-            ]}
-          >
-          </Form.Item>
-          {this.renderMethodChoiceBox()}
-          <Row style={{minHeight: 130, alignItems: "center"}}>
-            <Col span={24}>
-              <Form.Item
-                name="username"
-                rules={[
-                  {
-                    required: true,
-                    message: i18next.t("login:Please input your Email or Phone!"),
-                  },
-                  {
-                    validator: (_, value) => {
-                      if (this.state.loginMethod === "verificationCode") {
-                        if (!Setting.isValidEmail(value) && !Setting.isValidPhone(value)) {
-                          this.setState({validEmailOrPhone: false});
-                          return Promise.reject(i18next.t("login:The input is not valid Email or phone number!"));
-                        }
-
-                        if (Setting.isValidEmail(value)) {
-                          this.setState({validEmail: true});
-                        } else {
-                          this.setState({validEmail: false});
-                        }
-                      }
-
-                      this.setState({validEmailOrPhone: true});
-                      return Promise.resolve();
-                    },
-                  },
-                ]}
-              >
-                <Input
-                  id="input"
-                  disabled={new URLSearchParams(this.props.location?.search).get("u") !== null}
-                  placeholder={(this.state.loginMethod === "verificationCode") ? i18next.t("login:Email or phone") : i18next.t("login:username, Email or phone")}
-                  onChange={e => {
-                    this.setState({
-                      username: e.target.value,
-                    });
-                  }}
-                />
-              </Form.Item>
-            </Col>
-            {
-              this.renderPasswordOrCodeInput()
-            }
-          </Row>
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              style={{width: "100%"}}
+            <Form.Item
+              hidden={true}
+              name="application"
+              rules={[
+                {
+                  required: true,
+                  message: i18next.t("application:Please input your application!"),
+                },
+              ]}
             >
-              {
-                this.state.loginMethod === "webAuthn" ? i18next.t("login:Sign in with WebAuthn") :
-                  i18next.t("login:Sign In")
-              }
-            </Button>
-            {
-              this.renderCaptchaModal(application)
-            }
-            {
-              this.renderFooter(application)
-            }
-          </Form.Item>
-          <div style={{display: "inline-flex", justifyContent: "space-between", width: "320px", marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px"}}>
-            <Form.Item name="autoSignin" valuePropName="checked" noStyle>
-              <Checkbox>
-                {i18next.t("login:Auto sign in")}
-              </Checkbox>
             </Form.Item>
-          </div>
-          {AgreementModal.isAgreementRequired(application) ? AgreementModal.renderAgreementFormItem(application, true, {}, this) : null}
-          <div style={{paddingTop: "24px"}}>
-            {
-              Setting.renderForgetLink(application, i18next.t("login:Forgot password?"))
-            }
-          </div>
-          <Form.Item>
-            {
-              application.providers.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
-                return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
-              })
-            }
-            {
-              this.renderOtherFormProvider(application)
-            }
-          </Form.Item>
-        </Form>
+            <Form.Item
+              hidden={true}
+              name="organization"
+              rules={[
+                {
+                  required: true,
+                  message: i18next.t("application:Please input your organization!"),
+                },
+              ]}
+            >
+            </Form.Item>
+            {this.renderMethodChoiceBox()}
+            <Row style={{minHeight: 130, alignItems: "center"}}>
+              <Col span={24}>
+                <Form.Item
+                  name="username"
+                  rules={[
+                    {
+                      required: true,
+                      message: i18next.t("login:Please input your Email or Phone!"),
+                    },
+                    {
+                      validator: (_, value) => {
+                        if (this.state.loginMethod === "verificationCode") {
+                          if (!Setting.isValidEmail(value) && !Setting.isValidPhone(value)) {
+                            this.setState({validEmailOrPhone: false});
+                            return Promise.reject(i18next.t("login:The input is not valid Email or phone number!"));
+                          }
+
+                          if (Setting.isValidEmail(value)) {
+                            this.setState({validEmail: true});
+                          } else {
+                            this.setState({validEmail: false});
+                          }
+                        }
+
+                        this.setState({validEmailOrPhone: true});
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
+                >
+                  <Input
+                    id="input"
+                    disabled={new URLSearchParams(this.props.location?.search).get("u") !== null}
+                    placeholder={(this.state.loginMethod === "verificationCode") ? i18next.t("login:Email or phone") : i18next.t("login:username, Email or phone")}
+                    onChange={e => {
+                      this.setState({
+                        username: e.target.value,
+                      });
+                    }}
+                  />
+                </Form.Item>
+              </Col>
+              {
+                this.renderPasswordOrCodeInput()
+              }
+            </Row>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                style={{width: "100%"}}
+              >
+                {
+                  this.state.loginMethod === "webAuthn" ? i18next.t("login:Sign in with WebAuthn") :
+                    i18next.t("login:Sign In")
+                }
+              </Button>
+              {
+                this.renderCaptchaModal(application)
+              }
+              {
+                this.renderFooter(application)
+              }
+            </Form.Item>
+            <div style={{
+              display: "inline-flex",
+              justifyContent: "space-between",
+              width: "320px",
+              marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px",
+            }}>
+              <Form.Item name="autoSignin" valuePropName="checked" noStyle>
+                <Checkbox>
+                  {i18next.t("login:Auto sign in")}
+                </Checkbox>
+              </Form.Item>
+            </div>
+            {AgreementModal.isAgreementRequired(application) ? AgreementModal.renderAgreementFormItem(application, true, {}, this) : null}
+            <div style={{paddingTop: "24px"}}>
+              {
+                Setting.renderForgetLink(application, i18next.t("login:Forgot password?"))
+              }
+            </div>
+            <Form.Item>
+              {
+                application.providers.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
+                  return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
+                })
+              }
+              {
+                this.renderOtherFormProvider(application)
+              }
+            </Form.Item>
+          </Form>
+        </React.Fragment>
       );
     } else {
       return (
@@ -1041,7 +1049,6 @@ class LoginPage extends React.Component {
               }
               {/* Choose lang button removed, default browser lang will use */}
               {/* <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} /> */}
-              <h1 style={{fontSize: "28px", fontStyle: "normal", fontWeight: "700", lineHeight: "32px", margin: "unset", marginBottom: "var(--space-3-x)"}}>{i18next.t("application:Login")}</h1>
               {
                 this.renderLoginPanel(application)
               }

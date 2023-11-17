@@ -40,9 +40,9 @@ export function ChangePasswordForm({application, userOwner, userName, onSuccess,
 
   return (
     <React.Fragment>
-      <h1 style={{fontSize: "28px", fontWeight: "400", marginTop: "10px", marginBottom: "40px"}}>{i18next.t("changePassword:Change password")}</h1>
+      <h1 style={{fontSize: "28px", fontWeight: "700", marginTop: "var(--space-x)", marginBottom: "var(--space-3-x)"}}>{i18next.t("changePassword:Change password")}</h1>
       <Row type="flex" justify="center" align="middle">
-        <Col span={16} style={{width: 600}}>
+        <Col span={24} flex="auto">
           <Form
             labelCol={{span: 8}}
             wrapperCol={{span: 16}}
@@ -56,7 +56,6 @@ export function ChangePasswordForm({application, userOwner, userName, onSuccess,
             }}
             size="large"
             layout={Setting.isMobile() ? "vertical" : "horizontal"}
-            style={{width: Setting.isMobile() ? "300px" : "400px"}}
           >
             <Form.Item
               name="application"
@@ -151,9 +150,8 @@ export function ChangePasswordForm({application, userOwner, userName, onSuccess,
               <Input.Password />
             </Form.Item>
 
-            <Form.Item
-              wrapperCol={{span: 24}}>
-              <Button type="primary" htmlType="submit" loading={loading}>
+            <Form.Item wrapperCol={{span: 24}}>
+              <Button type="primary" htmlType="submit" loading={loading} style={{width: "100%"}}>
                 {i18next.t("changePassword:Change password")}
               </Button>
             </Form.Item>
