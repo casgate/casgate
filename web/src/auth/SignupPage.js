@@ -611,11 +611,13 @@ class SignupPage extends React.Component {
             {i18next.t("signup:sign in now")}
           </a>
         </Form.Item>
-        {
-          application.providers.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
-            return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
-          })
-        }
+        <div style={{display: "flex", justifyContent: "center", marginBottom: "unset", marginTop: 24}}>
+          {
+            application.providers.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
+              return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
+            })
+          }
+        </div>
       </Form>
     );
   }

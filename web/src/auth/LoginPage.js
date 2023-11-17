@@ -479,7 +479,7 @@ class LoginPage extends React.Component {
   renderAuthProviders(application) {
     const authProviders = application.providers.filter(providerItem => this.isProviderVisible(providerItem));
     if (authProviders.length) {
-      return <Form.Item>
+      return <React.Fragment>
         {
           authProviders.map(providerItem => {
             return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
@@ -488,7 +488,7 @@ class LoginPage extends React.Component {
         {
           this.renderOtherFormProvider(application)
         }
-      </Form.Item>;
+      </React.Fragment>;
     }
   }
 
@@ -627,7 +627,7 @@ class LoginPage extends React.Component {
               display: "inline-flex",
               justifyContent: "space-between",
               width: "320px",
-              marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px",
+              marginBottom: AgreementModal.isAgreementRequired(application) && "5px",
             }}>
               <Form.Item name="autoSignin" valuePropName="checked" noStyle>
                 <Checkbox>
@@ -641,9 +641,11 @@ class LoginPage extends React.Component {
                 Setting.renderForgetLink(application, i18next.t("login:Forgot password?"))
               }
             </div>
-            {
-              this.renderAuthProviders(application)
-            }
+            <div style={{display: "flex", justifyContent: "center", marginBottom: "unset", marginTop: 24}}>
+              {
+                this.renderAuthProviders(application)
+              }
+            </div>
           </Form>
         </React.Fragment>
       );
