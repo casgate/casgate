@@ -1050,9 +1050,9 @@ class LoginPage extends React.Component {
               {
                 Setting.renderHelmet(application)
               }
-              <div style={{marginBottom: "var(--space-3-x)"}}>{
+              {
                 Setting.renderLogo(application)
-              }</div>
+              }
               {
                 this.renderBackButton()
               }
