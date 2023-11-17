@@ -476,6 +476,22 @@ class LoginPage extends React.Component {
     }
   }
 
+  renderAuthProviders(application) {
+    const authProviders = application.providers.filter(providerItem => this.isProviderVisible(providerItem));
+    if (authProviders.length) {
+      return <Form.Item>
+        {
+          authProviders.map(providerItem => {
+            return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
+          })
+        }
+        {
+          this.renderOtherFormProvider(application)
+        }
+      </Form.Item>;
+    }
+  }
+
   renderForm(application) {
     if (this.state.msg !== null) {
       return Util.renderMessage(this.state.msg);
@@ -625,16 +641,9 @@ class LoginPage extends React.Component {
                 Setting.renderForgetLink(application, i18next.t("login:Forgot password?"))
               }
             </div>
-            <Form.Item>
-              {
-                application.providers.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
-                  return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
-                })
-              }
-              {
-                this.renderOtherFormProvider(application)
-              }
-            </Form.Item>
+            {
+              this.renderAuthProviders(application)
+            }
           </Form>
         </React.Fragment>
       );
