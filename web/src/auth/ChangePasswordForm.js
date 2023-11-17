@@ -40,7 +40,7 @@ export function ChangePasswordForm({application, userOwner, userName, onSuccess,
 
   return (
     <React.Fragment>
-      <h1 style={{fontSize: "28px", fontWeight: "700", margin: "unset", marginBottom: "var(--space-3-x)"}}>{i18next.t("changePassword:Change password")}</h1>
+      <h1>{i18next.t("changePassword:Change password")}</h1>
       <Row type="flex" justify="center" align="middle">
         <Col span={24} flex="auto">
           <Form

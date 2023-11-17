@@ -520,7 +520,7 @@ class LoginPage extends React.Component {
     if (showForm) {
       return (
         <React.Fragment>
-          <h1 style={{fontSize: "28px", fontStyle: "normal", fontWeight: "700", lineHeight: "32px", margin: "unset", marginBottom: "var(--space-3-x)"}}>{i18next.t("application:Login")}</h1>
+          <h1>{i18next.t("application:Login")}</h1>
           <Form
             name="normal_login"
             initialValues={{

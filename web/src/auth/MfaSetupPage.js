@@ -224,8 +224,7 @@ class MfaSetupPage extends React.Component {
         <Col span={24} style={{justifyContent: "center"}}>
           <Row>
             <Col span={24}>
-              <p style={{textAlign: "center", fontSize: "28px"}}>
-                {i18next.t("mfa:Protect your account with Multi-factor authentication")}</p>
+              <h1>{i18next.t("mfa:Protect your account with Multi-factor authentication")}</h1>
               <p style={{textAlign: "center", fontSize: "16px", marginTop: "10px"}}>{i18next.t("mfa:Each time you sign in to your Account, you'll need your password and a authentication code")}</p>
             </Col>
           </Row>

@@ -1,4 +1,4 @@
-import {CopyOutlined, UserOutlined} from "@ant-design/icons";
+import {CopyOutlined} from "@ant-design/icons";
 import {Button, Col, Form, Input, QRCode, Space} from "antd";
 import copy from "copy-to-clipboard";
 import i18next from "i18next";
@@ -47,7 +47,6 @@ export const MfaVerifyTotpForm = ({mfaProps, onFinish}) => {
   return (
     <Form
       form={form}
-      style={{width: "300px"}}
       onFinish={onFinish}
     >
       {renderSecret()}
@@ -57,7 +56,6 @@ export const MfaVerifyTotpForm = ({mfaProps, onFinish}) => {
       >
         <Input
           style={{marginTop: 24}}
-          prefix={<UserOutlined />}
           placeholder={i18next.t("mfa:Passcode")}
         />
       </Form.Item>
