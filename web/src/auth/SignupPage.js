@@ -25,7 +25,6 @@ import * as AgreementModal from "../common/modal/AgreementModal";
 import {SendCodeInput} from "../common/SendCodeInput";
 import RegionSelect from "../common/select/RegionSelect";
 import CustomGithubCorner from "../common/CustomGithubCorner";
-import LanguageSelect from "../common/select/LanguageSelect";
 import {withRouter} from "react-router-dom";
 import {CountryCodeSelect} from "../common/select/CountryCodeSelect";
 import * as PasswordChecker from "../common/PasswordChecker";
@@ -56,8 +55,8 @@ export const tailFormItemLayout = {
       offset: 0,
     },
     sm: {
-      span: 16,
-      offset: 8,
+      span: 24,
+      offset: 0,
     },
   },
 };
@@ -570,7 +569,6 @@ class SignupPage extends React.Component {
         }}
         size="large"
         layout={Setting.isMobile() ? "vertical" : "horizontal"}
-        style={{width: Setting.isMobile() ? "300px" : "400px"}}
       >
         <Form.Item
           name="application"
@@ -598,7 +596,7 @@ class SignupPage extends React.Component {
           application.signupItems?.map(signupItem => this.renderFormItem(application, signupItem))
         }
         <Form.Item {...tailFormItemLayout}>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" style={{width: "100%"}}>
             {i18next.t("account:Sign Up")}
           </Button>
             &nbsp;&nbsp;{i18next.t("signup:Have account?")}&nbsp;
@@ -613,11 +611,13 @@ class SignupPage extends React.Component {
             {i18next.t("signup:sign in now")}
           </a>
         </Form.Item>
-        {
-          application.providers.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
-            return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
-          })
-        }
+        <div style={{display: "flex", justifyContent: "center", marginBottom: "unset", marginTop: 24}}>
+          {
+            application.providers.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
+              return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
+            })
+          }
+        </div>
       </Form>
     );
   }
@@ -651,7 +651,8 @@ class SignupPage extends React.Component {
               {
                 Setting.renderLogo(application)
               }
-              <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} />
+              {/* Choose lang button removed, default browser lang will use */}
+              {/* <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} /> */}
               {
                 this.renderForm(application)
               }

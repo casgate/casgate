@@ -14,7 +14,7 @@
 
 import React from "react";
 import {Button, Checkbox, Col, Form, Input, Result, Row, Spin, Tabs} from "antd";
-import {ArrowLeftOutlined, LockOutlined, UserOutlined} from "@ant-design/icons";
+import {ArrowLeftOutlined} from "@ant-design/icons";
 import {withRouter} from "react-router-dom";
 import * as UserWebauthnBackend from "../backend/UserWebauthnBackend";
 import OrganizationSelect from "../common/select/OrganizationSelect";
@@ -31,7 +31,6 @@ import SelfLoginButton from "./SelfLoginButton";
 import i18next from "i18next";
 import CustomGithubCorner from "../common/CustomGithubCorner";
 import {SendCodeInput} from "../common/SendCodeInput";
-import LanguageSelect from "../common/select/LanguageSelect";
 import {CaptchaModal, CaptchaRule} from "../common/modal/CaptchaModal";
 import RedirectForm from "../common/RedirectForm";
 import {MfaAuthVerifyForm, NextMfa, RequiredMfa} from "./mfa/MfaAuthVerifyForm";
@@ -477,6 +476,22 @@ class LoginPage extends React.Component {
     }
   }
 
+  renderAuthProviders(application) {
+    const authProviders = application.providers.filter(providerItem => this.isProviderVisible(providerItem));
+    if (authProviders.length) {
+      return <React.Fragment>
+        {
+          authProviders.map(providerItem => {
+            return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
+          })
+        }
+        {
+          this.renderOtherFormProvider(application)
+        }
+      </React.Fragment>;
+    }
+  }
+
   renderForm(application) {
     if (this.state.msg !== null) {
       return Util.renderMessage(this.state.msg);
@@ -503,142 +518,136 @@ class LoginPage extends React.Component {
 
     const showForm = application.enablePassword || application.enableCodeSignin || application.enableWebAuthn;
     if (showForm) {
-      let loginWidth = 320;
-      if (Setting.getLanguage() === "fr") {
-        loginWidth += 20;
-      } else if (Setting.getLanguage() === "es") {
-        loginWidth += 40;
-      } else if (Setting.getLanguage() === "ru") {
-        loginWidth += 10;
-      }
-
       return (
-        <Form
-          name="normal_login"
-          initialValues={{
-            organization: application.organization,
-            application: application.name,
-            autoSignin: true,
-            username: Conf.ShowGithubCorner ? "admin" : new URLSearchParams(this.props.location?.search).get("u") ?? "",
-            password: Conf.ShowGithubCorner ? "123" : "",
-          }}
-          onFinish={(values) => {
-            this.onFinish(values);
-          }}
-          style={{width: `${loginWidth}px`}}
-          size="large"
-          ref={this.form}
-        >
-          <Form.Item
-            hidden={true}
-            name="application"
-            rules={[
-              {
-                required: true,
-                message: i18next.t("application:Please input your application!"),
-              },
-            ]}
+        <React.Fragment>
+          <h1>{i18next.t("application:Login")}</h1>
+          <Form
+            name="normal_login"
+            initialValues={{
+              organization: application.organization,
+              application: application.name,
+              autoSignin: true,
+              username: Conf.ShowGithubCorner ? "admin" : new URLSearchParams(this.props.location?.search).get("u") ?? "",
+              password: Conf.ShowGithubCorner ? "123" : "",
+            }}
+            onFinish={(values) => {
+              this.onFinish(values);
+            }}
+            size="large"
+            ref={this.form}
           >
-          </Form.Item>
-          <Form.Item
-            hidden={true}
-            name="organization"
-            rules={[
-              {
-                required: true,
-                message: i18next.t("application:Please input your organization!"),
-              },
-            ]}
-          >
-          </Form.Item>
-          {this.renderMethodChoiceBox()}
-          <Row style={{minHeight: 130, alignItems: "center"}}>
-            <Col span={24}>
-              <Form.Item
-                name="username"
-                rules={[
-                  {
-                    required: true,
-                    message: i18next.t("login:Please input your Email or Phone!"),
-                  },
-                  {
-                    validator: (_, value) => {
-                      if (this.state.loginMethod === "verificationCode") {
-                        if (!Setting.isValidEmail(value) && !Setting.isValidPhone(value)) {
-                          this.setState({validEmailOrPhone: false});
-                          return Promise.reject(i18next.t("login:The input is not valid Email or phone number!"));
-                        }
-
-                        if (Setting.isValidEmail(value)) {
-                          this.setState({validEmail: true});
-                        } else {
-                          this.setState({validEmail: false});
-                        }
-                      }
-
-                      this.setState({validEmailOrPhone: true});
-                      return Promise.resolve();
-                    },
-                  },
-                ]}
-              >
-                <Input
-                  id="input"
-                  prefix={<UserOutlined className="site-form-item-icon" />}
-                  disabled={new URLSearchParams(this.props.location?.search).get("u") !== null}
-                  placeholder={(this.state.loginMethod === "verificationCode") ? i18next.t("login:Email or phone") : i18next.t("login:username, Email or phone")}
-                  onChange={e => {
-                    this.setState({
-                      username: e.target.value,
-                    });
-                  }}
-                />
-              </Form.Item>
-            </Col>
-            {
-              this.renderPasswordOrCodeInput()
-            }
-          </Row>
-          <div style={{display: "inline-flex", justifyContent: "space-between", width: "320px", marginBottom: AgreementModal.isAgreementRequired(application) ? "5px" : "25px"}}>
-            <Form.Item name="autoSignin" valuePropName="checked" noStyle>
-              <Checkbox style={{float: "left"}}>
-                {i18next.t("login:Auto sign in")}
-              </Checkbox>
-            </Form.Item>
-            {
-              Setting.renderForgetLink(application, i18next.t("login:Forgot password?"))
-            }
-          </div>
-          {AgreementModal.isAgreementRequired(application) ? AgreementModal.renderAgreementFormItem(application, true, {}, this) : null}
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              style={{width: "100%", marginBottom: "5px"}}
+            <Form.Item
+              hidden={true}
+              name="application"
+              rules={[
+                {
+                  required: true,
+                  message: i18next.t("application:Please input your application!"),
+                },
+              ]}
             >
+            </Form.Item>
+            <Form.Item
+              hidden={true}
+              name="organization"
+              rules={[
+                {
+                  required: true,
+                  message: i18next.t("application:Please input your organization!"),
+                },
+              ]}
+            >
+            </Form.Item>
+            {this.renderMethodChoiceBox()}
+            <Row style={{minHeight: 130, alignItems: "center"}}>
+              <Col span={24}>
+                <Form.Item
+                  name="username"
+                  rules={[
+                    {
+                      required: true,
+                      message: i18next.t("login:Please input your Email or Phone!"),
+                    },
+                    {
+                      validator: (_, value) => {
+                        if (this.state.loginMethod === "verificationCode") {
+                          if (!Setting.isValidEmail(value) && !Setting.isValidPhone(value)) {
+                            this.setState({validEmailOrPhone: false});
+                            return Promise.reject(i18next.t("login:The input is not valid Email or phone number!"));
+                          }
+
+                          if (Setting.isValidEmail(value)) {
+                            this.setState({validEmail: true});
+                          } else {
+                            this.setState({validEmail: false});
+                          }
+                        }
+
+                        this.setState({validEmailOrPhone: true});
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
+                >
+                  <Input
+                    id="input"
+                    disabled={new URLSearchParams(this.props.location?.search).get("u") !== null}
+                    placeholder={(this.state.loginMethod === "verificationCode") ? i18next.t("login:Email or phone") : i18next.t("login:username, Email or phone")}
+                    onChange={e => {
+                      this.setState({
+                        username: e.target.value,
+                      });
+                    }}
+                  />
+                </Form.Item>
+              </Col>
               {
-                this.state.loginMethod === "webAuthn" ? i18next.t("login:Sign in with WebAuthn") :
-                  i18next.t("login:Sign In")
+                this.renderPasswordOrCodeInput()
               }
-            </Button>
-            {
-              this.renderCaptchaModal(application)
-            }
-            {
-              this.renderFooter(application)
-            }
-          </Form.Item>
-          <Form.Item>
-            {
-              application.providers.filter(providerItem => this.isProviderVisible(providerItem)).map(providerItem => {
-                return ProviderButton.renderProviderLogo(providerItem.provider, application, 30, 5, "small", this.props.location);
-              })
-            }
-            {
-              this.renderOtherFormProvider(application)
-            }
-          </Form.Item>
-        </Form>
+            </Row>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                style={{width: "100%"}}
+              >
+                {
+                  this.state.loginMethod === "webAuthn" ? i18next.t("login:Sign in with WebAuthn") :
+                    i18next.t("login:Sign In")
+                }
+              </Button>
+              {
+                this.renderCaptchaModal(application)
+              }
+              {
+                this.renderFooter(application)
+              }
+            </Form.Item>
+            <div style={{
+              display: "inline-flex",
+              justifyContent: "space-between",
+              width: "320px",
+              marginBottom: AgreementModal.isAgreementRequired(application) && "5px",
+            }}>
+              <Form.Item name="autoSignin" valuePropName="checked" noStyle>
+                <Checkbox>
+                  {i18next.t("login:Auto sign in")}
+                </Checkbox>
+              </Form.Item>
+            </div>
+            {AgreementModal.isAgreementRequired(application) ? AgreementModal.renderAgreementFormItem(application, true, {}, this) : null}
+            <div style={{paddingTop: "24px"}}>
+              {
+                Setting.renderForgetLink(application, i18next.t("login:Forgot password?"))
+              }
+            </div>
+            <div style={{display: "flex", justifyContent: "center", marginBottom: "unset", marginTop: 24}}>
+              {
+                this.renderAuthProviders(application)
+              }
+            </div>
+          </Form>
+        </React.Fragment>
       );
     } else {
       return (
@@ -718,17 +727,19 @@ class LoginPage extends React.Component {
   }
 
   renderFooter(application) {
+    if (!application.enableSignUp) {
+      return;
+    }
+
     return (
       <span style={{float: "right"}}>
         {
-          !application.enableSignUp ? null : (
-            <React.Fragment>
-              {i18next.t("login:No account?")}&nbsp;
-              {
-                Setting.renderSignupLink(application, i18next.t("login:sign up now"))
-              }
-            </React.Fragment>
-          )
+          <React.Fragment>
+            {i18next.t("login:No account?")}&nbsp;
+            {
+              Setting.renderSignupLink(application, i18next.t("login:sign up now"))
+            }
+          </React.Fragment>
         }
       </span>
     );
@@ -842,6 +853,9 @@ class LoginPage extends React.Component {
   renderPasswordOrCodeInput() {
     const application = this.getApplicationObj();
     if (this.state.loginMethod === "password") {
+      const passwordVisibleIcon = <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.32118 13.9685C2.56899 14.0603 2.84472 13.9444 2.97219 13.7129C3.07372 13.5286 3.18284 13.3482 3.29396 13.17C3.66067 12.5817 4.2176 11.7983 4.97763 11.0167C6.49947 9.45174 8.79933 7.92748 12.0004 7.92748C15.2014 7.92748 17.5013 9.45174 19.0231 11.0167C19.7832 11.7983 20.3401 12.5817 20.7068 13.17C20.8177 13.3479 20.927 13.5286 21.0287 13.7133C21.156 13.9446 21.4316 14.0602 21.6791 13.9684C21.9532 13.8667 22.0836 13.5535 21.9425 13.2974C21.8332 13.099 21.716 12.9047 21.5968 12.7134C21.2047 12.0844 20.6082 11.2447 19.7899 10.4031C18.155 8.72194 15.5984 7 12.0004 7C8.40238 7 5.84578 8.72194 4.2109 10.4031C3.39258 11.2447 2.7961 12.0844 2.40398 12.7134C2.28438 12.9053 2.16694 13.0996 2.05745 13.2981C1.91627 13.5541 2.04706 13.867 2.32118 13.9685Z" fill="black" /><path fillRule="evenodd" clipRule="evenodd" d="M15 14C15 15.6569 13.6569 17 12 17C10.3431 17 9 15.6569 9 14C9 12.3431 10.3431 11 12 11C13.6569 11 15 12.3431 15 14ZM14 14C14 15.1046 13.1046 16 12 16C10.8954 16 10 15.1046 10 14C10 12.8954 10.8954 12 12 12C13.1046 12 14 12.8954 14 14Z" fill="black" /></svg>;
+      const passwordHiddenIcon = <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 10C20 10 18 15 12 15C6 15 4 10 4 10" stroke="black" /><path d="M12 15V17" stroke="black" /><path d="M7 13.9995L6 15.9995" stroke="black" /><path d="M17 13.9995L18 15.9995" stroke="black" /></svg>;
+
       return (
         <Col span={24}>
           <Form.Item
@@ -849,10 +863,10 @@ class LoginPage extends React.Component {
             rules={[{required: true, message: i18next.t("login:Please input your password!")}]}
           >
             <Input.Password
-              prefix={<LockOutlined className="site-form-item-icon" />}
               type="password"
               placeholder={i18next.t("general:Password")}
               disabled={!application.enablePassword}
+              iconRender={visible => visible ? passwordVisibleIcon : passwordHiddenIcon}
             />
           </Form.Item>
         </Col>
@@ -1035,23 +1049,20 @@ class LoginPage extends React.Component {
               <div dangerouslySetInnerHTML={{__html: application.formSideHtml}} />
             </div>
             <div className="login-form">
-              <div>
-                <div>
-                  {
-                    Setting.renderHelmet(application)
-                  }
-                  {
-                    Setting.renderLogo(application)
-                  }
-                  {
-                    this.renderBackButton()
-                  }
-                  <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} />
-                  {
-                    this.renderLoginPanel(application)
-                  }
-                </div>
-              </div>
+              {
+                Setting.renderHelmet(application)
+              }
+              {
+                Setting.renderLogo(application)
+              }
+              {
+                this.renderBackButton()
+              }
+              {/* Choose lang button removed, default browser lang will use */}
+              {/* <LanguageSelect languages={application.organizationObj.languages} style={{top: "55px", right: "5px", position: "absolute"}} /> */}
+              {
+                this.renderLoginPanel(application)
+              }
             </div>
           </div>
         </div>

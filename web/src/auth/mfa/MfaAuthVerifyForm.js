@@ -64,10 +64,8 @@ export function MfaAuthVerifyForm({formValues, oAuthParams, mfaProps, applicatio
 
   if (mfaType !== RecoveryMfaType) {
     return (
-      <div style={{width: 300, height: 350}}>
-        <div style={{marginBottom: 24, textAlign: "center", fontSize: "24px"}}>
-          {i18next.t("mfa:Multi-factor authentication")}
-        </div>
+      <React.Fragment>
+        <h1>{i18next.t("mfa:Multi-factor authentication")}</h1>
         <div style={{marginBottom: 24}}>
           {i18next.t("mfa:Multi-factor authentication description")}
         </div>
@@ -88,17 +86,15 @@ export function MfaAuthVerifyForm({formValues, oAuthParams, mfaProps, applicatio
           <a onClick={() => {
             setMfaType("recovery");
           }}>
-            {i18next.t("mfa:Use a recovery code")}
+            &nbsp;{i18next.t("mfa:Use a recovery code")}
           </a>
         </span>
-      </div>
+      </React.Fragment>
     );
   } else {
     return (
-      <div style={{width: 300, height: 350}}>
-        <div style={{marginBottom: 24, textAlign: "center", fontSize: "24px"}}>
-          {i18next.t("mfa:Multi-factor recover")}
-        </div>
+      <React.Fragment>
+        <h1>{i18next.t("mfa:Multi-factor recover")}</h1>
         <div style={{marginBottom: 24}}>
           {i18next.t("mfa:Multi-factor recover description")}
         </div>
@@ -121,7 +117,7 @@ export function MfaAuthVerifyForm({formValues, oAuthParams, mfaProps, applicatio
             {i18next.t("mfa:Use SMS verification code")}
           </a>
         </span>
-      </div>
+      </React.Fragment>
     );
   }
 }

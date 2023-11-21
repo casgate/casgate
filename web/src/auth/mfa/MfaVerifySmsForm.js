@@ -47,7 +47,6 @@ export const MfaVerifySmsForm = ({mfaProps, application, onFinish, method, user}
   return (
     <Form
       form={form}
-      style={{width: "300px"}}
       onFinish={onFinish}
       initialValues={{
         countryCode: mfaProps.countryCode,

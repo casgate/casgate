@@ -454,7 +454,7 @@ class ForgetPage extends React.Component {
             <Col span={24} style={{justifyContent: "center"}}>
               <Row>
                 <Col span={24}>
-                  <div style={{marginTop: "80px", marginBottom: "10px", textAlign: "center"}}>
+                  <div style={{marginTop: "24px", marginBottom: "10px", textAlign: "center"}}>
                     {
                       Setting.renderHelmet(application)
                     }
@@ -466,9 +466,7 @@ class ForgetPage extends React.Component {
               </Row>
               <Row>
                 <Col span={24}>
-                  <div style={{textAlign: "center", fontSize: "28px"}}>
-                    {i18next.t("forget:Retrieve password")}
-                  </div>
+                  <h1 style={{textAlign: "center"}}>{i18next.t("forget:Retrieve password")}</h1>
                 </Col>
               </Row>
               <Row>
@@ -493,7 +491,7 @@ class ForgetPage extends React.Component {
                       width: "90%",
                       maxWidth: "500px",
                       margin: "auto",
-                      marginTop: "80px",
+                      marginTop: "24px",
                     }}
                   >
                   </Steps>
