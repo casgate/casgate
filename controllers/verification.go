@@ -377,8 +377,8 @@ func (c *ApiController) VerifyCode() {
 		}
 	}
 
-	if result := object.CheckVerificationCode(checkDest, authForm.Code, c.GetAcceptLanguage()); result.Code != object.VerificationSuccess {
-		c.ResponseError(result.Msg)
+	if err := object.CheckOneTimePassword(user, checkDest, authForm.Code, c.GetAcceptLanguage()); err != nil {
+		c.ResponseError(err.Error())
 		return
 	}
 	err = object.DisableVerificationCode(checkDest)
@@ -386,6 +386,7 @@ func (c *ApiController) VerifyCode() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.SetSession("verifiedUserId", user.GetId())
 	c.SetSession("verifiedCode", authForm.Code)
 
 	c.ResponseOk()

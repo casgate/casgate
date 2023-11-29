@@ -448,11 +448,12 @@ func (c *ApiController) SetPassword() {
 			return
 		}
 	} else {
-		if code != c.GetSession("verifiedCode") {
+		if code != c.GetSession("verifiedCode") || userId != c.GetSession("verifiedUserId") {
 			c.ResponseError(c.T("general:Missing parameter"))
 			return
 		}
 		c.SetSession("verifiedCode", "")
+		c.SetSession("verifiedUserId", "")
 	}
 
 	targetUser, err := object.GetUser(userId)

@@ -298,18 +298,18 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 	res := make([]LdapUser, len(users))
 	for i, user := range users {
 		res[i] = LdapUser{
-			UidNumber:         user.UidNumber,
-			Uid:               user.Uid,
-			Cn:                user.Cn,
-			GroupId:           user.GidNumber,
-			Uuid:              user.GetLdapUuid(),
-			DisplayName:       user.DisplayName,
-			Email:             util.ReturnAnyNotEmpty(user.Email, user.EmailAddress, user.Mail),
-			Mobile:            util.ReturnAnyNotEmpty(user.Mobile, user.MobileTelephoneNumber, user.TelephoneNumber),
-			MobileTelephoneNumber:             user.MobileTelephoneNumber,
-			RegisteredAddress: util.ReturnAnyNotEmpty(user.PostalAddress, user.RegisteredAddress),
-			Address:           user.Address,
-			Roles:             user.Roles,
+			UidNumber:             user.UidNumber,
+			Uid:                   user.Uid,
+			Cn:                    user.Cn,
+			GroupId:               user.GidNumber,
+			Uuid:                  user.GetLdapUuid(),
+			DisplayName:           user.DisplayName,
+			Email:                 util.ReturnAnyNotEmpty(user.Email, user.EmailAddress, user.Mail),
+			Mobile:                util.ReturnAnyNotEmpty(user.Mobile, user.MobileTelephoneNumber, user.TelephoneNumber),
+			MobileTelephoneNumber: user.MobileTelephoneNumber,
+			RegisteredAddress:     util.ReturnAnyNotEmpty(user.PostalAddress, user.RegisteredAddress),
+			Address:               user.Address,
+			Roles:                 user.Roles,
 		}
 	}
 	return res
@@ -386,7 +386,7 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				Tag:               tag,
 				Score:             score,
 				Ldap:              syncUser.Uuid,
-				Properties:  map[string]string{},
+				Properties:        map[string]string{},
 			}
 
 			if organization.DefaultApplication != "" {

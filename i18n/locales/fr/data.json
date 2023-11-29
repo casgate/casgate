@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "L'application ne permet pas de créer un nouveau compte",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "La méthode de défi doit être S256",
@@ -22,7 +23,8 @@
     "The provider: %s is not enabled for the application": "Le fournisseur :%s n'est pas activé pour l'application",
     "Unauthorized operation": "Opération non autorisée",
     "Unknown authentication type (not password or provider), form = %s": "Type d'authentification inconnu (pas de mot de passe ou de fournisseur), formulaire = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
+    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
   },
   "cas": {
     "Service %s and %s do not match": "Les services %s et %s ne correspondent pas"
@@ -36,11 +38,12 @@
     "Email is invalid": "L'adresse e-mail est invalide",
     "Empty username.": "Nom d'utilisateur vide.",
     "FirstName cannot be blank": "Le prénom ne peut pas être laissé vide",
+    "Invitation code cannot be blank": "Invitation code cannot be blank",
+    "Invitation code is invalid": "Invitation code is invalid",
     "LDAP user name or password incorrect": "Nom d'utilisateur ou mot de passe LDAP incorrect",
     "LastName cannot be blank": "Le nom de famille ne peut pas être vide",
     "Multiple accounts with same uid, please check your ldap server": "Plusieurs comptes avec le même identifiant d'utilisateur, veuillez vérifier votre serveur LDAP",
     "Organization does not exist": "L'organisation n'existe pas",
-    "Password must have at least 6 characters": "Le mot de passe doit comporter au moins 6 caractères",
     "Phone already exists": "Le téléphone existe déjà",
     "Phone cannot be empty": "Le téléphone ne peut pas être vide",
     "Phone number is invalid": "Le numéro de téléphone est invalide",

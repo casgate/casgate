@@ -18,9 +18,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/casdoor/casdoor/idp"
+	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
 )
 
@@ -30,6 +32,12 @@ func GetUserByField(organizationName string, field string, value string) (*User,
 	}
 
 	user := User{Owner: organizationName}
+
+	match, mErr := regexp.MatchString("^[a-z_]+$", util.SnakeString(field))
+	if !match || mErr != nil {
+		field = ""
+	}
+
 	existed, err := ormer.Engine.Where(fmt.Sprintf("%s=?", strings.ToLower(field)), value).Get(&user)
 	if err != nil {
 		return nil, err
