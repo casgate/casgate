@@ -328,7 +328,7 @@ func (c *ApiController) TestLdapConnection() {
 		0, false, filter, attrs, nil)
 	searchResult, err := connection.Conn.Search(searchRequest)
 
-	if err != nil || searchResult == nil || len(searchResult.Entries) == 0 {
+	if err != nil && (searchResult == nil || len(searchResult.Entries) == 0) {
 		c.ResponseError(err.Error())
 		return
 	}
