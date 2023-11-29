@@ -188,18 +188,29 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 		return nil, errors.New("no result")
 	}
 
-	roleMappingMap := buildRoleMappingMap(ldapServer.RoleMappingItems)
+	var roleMappingMap RoleMappingMap
+	if ldapServer.EnableRoleMapping {
+		roleMappingMap = buildRoleMappingMap(ldapServer.RoleMappingItems)
+	}
 
 	var ldapUsers []LdapUser
 	for _, entry := range searchResult.Entries {
 		var user LdapUser
 		for _, attribute := range entry.Attributes {
+			// check attribute value with role mapping rules
+			if ldapServer.EnableRoleMapping {
+				if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attribute.Name)]; ok {
+					for _, value := range attribute.Values {
+						if roleMappingMapRoles, ok := roleMappingMapItem[RoleMappingItemValue(value)]; ok {
+							user.Roles = append(user.Roles, roleMappingMapRoles.StrRoles()...)
+						}
+					}
+				}
+			}
+
 			if ldapServer.EnableAttributeMapping {
 				MapAttributeToUser(attribute, &user, attributeMappingMap)
 				continue
-			}
-
-			if user.Uid == "" {
 			}
 
 			switch attribute.Name {
@@ -239,15 +250,6 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 				user.PostalAddress = attribute.Values[0]
 			case "memberOf":
 				user.MemberOf = attribute.Values[0]
-			}
-
-			// check attribute value with role mapping rules
-			if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attribute.Name)]; ok {
-				for _, value := range attribute.Values {
-					if roleMappingMapRoles, ok := roleMappingMapItem[RoleMappingItemValue(value)]; ok {
-						user.Roles = append(user.Roles, roleMappingMapRoles.StrRoles()...)
-					}
-				}
 			}
 		}
 
@@ -298,18 +300,18 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 	res := make([]LdapUser, len(users))
 	for i, user := range users {
 		res[i] = LdapUser{
-			UidNumber:         user.UidNumber,
-			Uid:               user.Uid,
-			Cn:                user.Cn,
-			GroupId:           user.GidNumber,
-			Uuid:              user.GetLdapUuid(),
-			DisplayName:       user.DisplayName,
-			Email:             util.ReturnAnyNotEmpty(user.Email, user.EmailAddress, user.Mail),
-			Mobile:            util.ReturnAnyNotEmpty(user.Mobile, user.MobileTelephoneNumber, user.TelephoneNumber),
-			MobileTelephoneNumber:             user.MobileTelephoneNumber,
-			RegisteredAddress: util.ReturnAnyNotEmpty(user.PostalAddress, user.RegisteredAddress),
-			Address:           user.Address,
-			Roles:             user.Roles,
+			UidNumber:             user.UidNumber,
+			Uid:                   user.Uid,
+			Cn:                    user.Cn,
+			GroupId:               user.GidNumber,
+			Uuid:                  user.GetLdapUuid(),
+			DisplayName:           user.DisplayName,
+			Email:                 util.ReturnAnyNotEmpty(user.Email, user.EmailAddress, user.Mail),
+			Mobile:                util.ReturnAnyNotEmpty(user.Mobile, user.MobileTelephoneNumber, user.TelephoneNumber),
+			MobileTelephoneNumber: user.MobileTelephoneNumber,
+			RegisteredAddress:     util.ReturnAnyNotEmpty(user.PostalAddress, user.RegisteredAddress),
+			Address:               user.Address,
+			Roles:                 user.Roles,
 		}
 	}
 	return res
@@ -386,7 +388,7 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				Tag:               tag,
 				Score:             score,
 				Ldap:              syncUser.Uuid,
-				Properties:  map[string]string{},
+				Properties:        map[string]string{},
 			}
 
 			if organization.DefaultApplication != "" {
