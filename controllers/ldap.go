@@ -16,6 +16,8 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
+	goldap "github.com/go-ldap/ldap/v3"
 
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
@@ -281,4 +283,55 @@ func (c *ApiController) SyncLdapUsers() {
 		Exist:  exist,
 		Failed: failed,
 	})
+}
+
+// TestLdapConnection
+// @Title TestLdapConnection
+// @Tag Account API
+// @Description test ldap connection
+// @Param	body	body	object.Ldap		true	"The details of the ldap"
+// @Success 200 {object} controllers.Response The Response object
+// @router /test-ldap [post]
+func (c *ApiController) TestLdapConnection() {
+	var ldap object.Ldap
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
+	if err != nil || util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
+		c.ResponseError(c.T("general:Missing parameter"))
+		return
+	}
+
+	for _, roleMappingItem := range ldap.RoleMappingItems {
+		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
+			c.ResponseError(c.T("general:Missing parameter"))
+			return
+		}
+	}
+
+	var connection *object.LdapConn
+	connection, err = ldap.GetLdapConn()
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+	connection.Conn.Start()
+
+	err = connection.Conn.Bind(ldap.Username, ldap.Password)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	const cnAttr = "cn"
+	filter := fmt.Sprintf("(%s=*)", cnAttr)
+	attrs := []string{cnAttr}
+	searchRequest := goldap.NewSearchRequest(ldap.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases, 2,
+		0, false, filter, attrs, nil)
+	searchResult, err := connection.Conn.Search(searchRequest)
+
+	if err != nil || searchResult == nil || len(searchResult.Entries) == 0 {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk()
 }

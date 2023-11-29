@@ -4480,6 +4480,34 @@
                 }
             }
         },
+        "/api/test-ldap": {
+            "post": {
+                "tags": [
+                    "Account API"
+                ],
+                "description": "test ldap connection",
+                "operationId": "ApiController.TestLdapConnection",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "The details of the ldap",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/object.Ldap"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/update-model": {
             "post": {
                 "tags": [
