@@ -1439,6 +1439,34 @@
                 }
             }
         },
+        "/api/test-openid": {
+            "post": {
+                "tags": [
+                    "Provider API"
+                ],
+                "description": "test OpenId connection",
+                "operationId": "ApiController.TestOpenIdConnection",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "The details of the OpenId provider",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/object.Provider"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/delete-resource": {
             "post": {
                 "tags": [
