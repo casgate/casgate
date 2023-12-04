@@ -64,6 +64,7 @@
   },
   "general": {
     "Missing parameter": "Parameter hilang",
+    "Not implemented": "Not implemented",
     "Please login first": "Silahkan login terlebih dahulu",
     "The user: %s doesn't exist": "Pengguna: %s tidak ada",
     "don't support captchaProvider: ": "Jangan mendukung captchaProvider:",

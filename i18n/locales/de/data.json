@@ -64,6 +64,7 @@
   },
   "general": {
     "Missing parameter": "Fehlender Parameter",
+    "Not implemented": "Not implemented",
     "Please login first": "Bitte zuerst einloggen",
     "The user: %s doesn't exist": "Der Benutzer %s existiert nicht",
     "don't support captchaProvider: ": "Unterstütze captchaProvider nicht:",

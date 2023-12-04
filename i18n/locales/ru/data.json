@@ -64,6 +64,7 @@
   },
   "general": {
     "Missing parameter": "Отсутствующий параметр",
+    "Not implemented": "Не реализовано",
     "Please login first": "Пожалуйста, сначала войдите в систему",
     "The user: %s doesn't exist": "Пользователь %s не существует",
     "don't support captchaProvider: ": "не поддерживайте captchaProvider:",
