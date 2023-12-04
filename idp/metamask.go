@@ -25,6 +25,7 @@ import (
 )
 
 type MetaMaskIdProvider struct {
+	BaseProvider
 	Client *http.Client
 }
 

@@ -37,6 +37,7 @@ type Web3AuthToken struct {
 }
 
 type Web3OnboardIdProvider struct {
+	BaseProvider
 	Client *http.Client
 }
 

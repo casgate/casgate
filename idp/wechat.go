@@ -31,6 +31,7 @@ import (
 )
 
 type WeChatIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }

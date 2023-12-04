@@ -51,6 +51,15 @@ type IdProvider interface {
 	SetHttpClient(client *http.Client)
 	GetToken(code string) (*oauth2.Token, error)
 	GetUserInfo(token *oauth2.Token) (*UserInfo, error)
+	TestConnection() (string, bool)
+}
+
+type BaseProvider struct {
+	ProviderInfo
+}
+
+func (b *BaseProvider) TestConnection() (string, bool) {
+	return "general:Not implemented", false
 }
 
 func GetIdProvider(idpInfo *ProviderInfo, redirectUrl string) IdProvider {

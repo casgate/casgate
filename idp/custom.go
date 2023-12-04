@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/casdoor/casdoor/util"
@@ -28,6 +29,7 @@ import (
 )
 
 type CustomIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 

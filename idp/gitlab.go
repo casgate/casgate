@@ -27,6 +27,7 @@ import (
 )
 
 type GitlabIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }
