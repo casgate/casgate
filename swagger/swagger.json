@@ -1439,34 +1439,6 @@
                 }
             }
         },
-        "/api/test-openid": {
-            "post": {
-                "tags": [
-                    "Provider API"
-                ],
-                "description": "test OpenId connection",
-                "operationId": "ApiController.TestOpenIdConnection",
-                "parameters": [
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "The details of the OpenId provider",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/object.Provider"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/api/delete-resource": {
             "post": {
                 "tags": [
@@ -4263,6 +4235,62 @@
                 }
             }
         },
+        "/api/test-ldap": {
+            "post": {
+                "tags": [
+                    "Account API"
+                ],
+                "description": "test ldap connection",
+                "operationId": "ApiController.TestLdapConnection",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "The details of the ldap",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/object.Ldap"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/test-provider": {
+            "post": {
+                "tags": [
+                    "Provider API"
+                ],
+                "description": "test provider connection",
+                "operationId": "ApiController.TestProviderConnection",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "The details of the provider",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/object.Provider"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/unlink": {
             "post": {
                 "tags": [
@@ -4487,34 +4515,6 @@
                 ],
                 "description": "update ldap",
                 "operationId": "ApiController.UpdateLdap",
-                "parameters": [
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "The details of the ldap",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/object.Ldap"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/test-ldap": {
-            "post": {
-                "tags": [
-                    "Account API"
-                ],
-                "description": "test ldap connection",
-                "operationId": "ApiController.TestLdapConnection",
                 "parameters": [
                     {
                         "in": "body",
@@ -5377,11 +5377,11 @@
         }
     },
     "definitions": {
-        "168883.\u003cnil\u003e.string": {
+        "168743.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "287425.\u003cnil\u003e.string": {
+        "288580.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6165,7 +6165,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/168883.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/168743.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6776,6 +6776,9 @@
                 "domain": {
                     "type": "string"
                 },
+                "enableRoleMapping": {
+                    "type": "boolean"
+                },
                 "enableSignAuthnRequest": {
                     "type": "boolean"
                 },
@@ -6828,6 +6831,12 @@
                 "regionId": {
                     "type": "string"
                 },
+                "roleMappingItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/object.RoleMappingItem"
+                    }
+                },
                 "scopes": {
                     "type": "string"
                 },
@@ -6847,7 +6856,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/287425.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/288580.\u003cnil\u003e.string"
                 }
             }
         },
