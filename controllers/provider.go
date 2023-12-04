@@ -16,13 +16,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/beego/beego/utils/pagination"
+	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
-	"net/http"
-	"net/url"
-	"strings"
 )
 
 // GetProviders
@@ -222,55 +219,26 @@ func (c *ApiController) DeleteProvider() {
 	c.ServeJSON()
 }
 
-// TestOpenIdConnection
-// @Title TestOpenIdConnection
+// TestProviderConnection
+// @Title TestProviderConnection
 // @Tag Provider API
-// @Description test OpenId connection
-// @Param   body    body   object.Provider  true        "The details of the OpenId provider"
+// @Description test provider connection
+// @Param   body    body   object.Provider  true        "The details of the provider"
 // @Success 200 {object} controllers.Response The Response object
-// @router /test-openid [post]
-func (c *ApiController) TestOpenIdConnection() {
-	var provider object.Provider
-	err := json.Unmarshal(c.Ctx.Input.RequestBody, &provider)
+// @router /test-provider [post]
+func (c *ApiController) TestProviderConnection() {
+	var idpInfo idp.ProviderInfo
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &idpInfo)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	provider := idp.GetIdProvider(&idpInfo, idpInfo.RedirectUrl)
 
-	if provider.Category != "OAuth" {
-		c.ResponseError(fmt.Sprintf("saml_sp:provider %s's category is not OAuth", provider.Name))
+	message, result := provider.TestConnection()
+	if !result {
+		c.ResponseError(c.T(message))
 		return
 	}
-
-	if provider.ClientId == "" || provider.ClientSecret == "" || provider.CustomAuthUrl == "" {
-		c.ResponseError("empty clientId, clientSecret or authUrl")
-		return
-	}
-
-	httpClient := new(http.Client)
-	realmPath, _ := strings.CutSuffix(provider.CustomAuthUrl, "/protocol/openid-connect/auth")
-	openidConfigurationPath := realmPath + "/.well-known/openid-configuration"
-
-	resp, err := httpClient.Get(openidConfigurationPath)
-	if err != nil || resp.StatusCode != 200 {
-		c.ResponseError(err.Error())
-		return
-	}
-
-	data := url.Values{}
-	data.Add("grant_type", "client_credentials")
-	data.Add("client_id", provider.ClientId)
-	data.Add("client_secret", provider.ClientSecret)
-
-	tokenResponse, err := httpClient.Post(provider.CustomTokenUrl, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
-	if err != nil || tokenResponse.StatusCode != 200 {
-		data.Add("scope", provider.Scopes)
-		tokenResponse, err = httpClient.Post(provider.CustomTokenUrl, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
-		if err != nil || tokenResponse.StatusCode != 200 {
-			c.ResponseError(fmt.Sprintf("%d", tokenResponse.StatusCode))
-			return
-		}
-	}
-
 	c.ResponseOk()
 }
