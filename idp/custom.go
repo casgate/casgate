@@ -67,6 +67,29 @@ func (idp *CustomIdProvider) GetToken(code string) (*oauth2.Token, error) {
 	return idp.Config.Exchange(ctx, code)
 }
 
+func (idp *CustomIdProvider) TestConnection() (string, bool) {
+	if util.IsStringsEmpty(idp.ClientId, idp.ClientSecret, idp.AuthURL) {
+		return "general:Missing parameter", false
+	}
+
+	httpClient := new(http.Client)
+	data := url.Values{}
+	data.Add("grant_type", "client_credentials")
+	data.Add("client_id", idp.ClientId)
+	data.Add("client_secret", idp.ClientSecret)
+
+	tokenResponse, err := httpClient.Post(idp.TokenURL, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
+	if err != nil || tokenResponse.StatusCode != 200 {
+		data.Add("scope", strings.Join(idp.Scopes, " "))
+		tokenResponse, err = httpClient.Post(idp.TokenURL, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
+		if err != nil || tokenResponse.StatusCode != 200 {
+			return fmt.Sprintf("%d", tokenResponse.StatusCode), false
+		}
+	}
+
+	return "", true
+}
+
 type CustomUserInfo struct {
 	Id          string `mapstructure:"id"`
 	Username    string `mapstructure:"username"`
