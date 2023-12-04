@@ -324,6 +324,7 @@ func (c *ApiController) TestLdapConnection() {
 	const cnAttr = "cn"
 	filter := fmt.Sprintf("(%s=*)", cnAttr)
 	attrs := []string{cnAttr}
+	// SizeLimit is 2 because of go-ldap returns SizeLimit-1 entities
 	searchRequest := goldap.NewSearchRequest(ldap.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases, 2,
 		0, false, filter, attrs, nil)
 	searchResult, err := connection.Conn.Search(searchRequest)
