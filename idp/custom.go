@@ -52,6 +52,8 @@ func NewCustomIdProvider(idpInfo *ProviderInfo, redirectUrl string) *CustomIdPro
 			TokenURL: idpInfo.TokenURL,
 		},
 	}
+	idp.AuthURL = idpInfo.AuthURL
+	idp.TokenURL = idpInfo.TokenURL
 	idp.UserInfoURL = idpInfo.UserInfoURL
 	idp.UserMapping = idpInfo.UserMapping
 
@@ -67,27 +69,27 @@ func (idp *CustomIdProvider) GetToken(code string) (*oauth2.Token, error) {
 	return idp.Config.Exchange(ctx, code)
 }
 
-func (idp *CustomIdProvider) TestConnection() (string, bool) {
-	if util.IsStringsEmpty(idp.ClientId, idp.ClientSecret, idp.AuthURL) {
-		return "general:Missing parameter", false
+func (idp *CustomIdProvider) TestConnection() error {
+	if util.IsStringsEmpty(idp.Config.ClientID, idp.Config.ClientSecret, idp.AuthURL) {
+		return NewMissingParameterError("Missing parameter")
 	}
 
 	httpClient := new(http.Client)
 	data := url.Values{}
 	data.Add("grant_type", "client_credentials")
-	data.Add("client_id", idp.ClientId)
-	data.Add("client_secret", idp.ClientSecret)
+	data.Add("client_id", idp.Config.ClientID)
+	data.Add("client_secret", idp.Config.ClientSecret)
 
 	tokenResponse, err := httpClient.Post(idp.TokenURL, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
 	if err != nil || tokenResponse.StatusCode != 200 {
 		data.Add("scope", strings.Join(idp.Scopes, " "))
 		tokenResponse, err = httpClient.Post(idp.TokenURL, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
 		if err != nil || tokenResponse.StatusCode != 200 {
-			return fmt.Sprintf("%d", tokenResponse.StatusCode), false
+			return NewStatusError(tokenResponse.StatusCode)
 		}
 	}
 
-	return "", true
+	return nil
 }
 
 type CustomUserInfo struct {

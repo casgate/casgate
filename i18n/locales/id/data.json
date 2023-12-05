@@ -67,6 +67,7 @@
     "Not implemented": "Not implemented",
     "Please login first": "Silahkan login terlebih dahulu",
     "The user: %s doesn't exist": "Pengguna: %s tidak ada",
+    "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "Jangan mendukung captchaProvider:",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
   },

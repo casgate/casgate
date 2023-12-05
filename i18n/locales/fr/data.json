@@ -67,6 +67,7 @@
     "Not implemented": "Not implemented",
     "Please login first": "Veuillez d'abord vous connecter",
     "The user: %s doesn't exist": "L'utilisateur : %s n'existe pas",
+    "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "Ne pas prendre en charge la captchaProvider",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
   },
