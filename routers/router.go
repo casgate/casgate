@@ -158,6 +158,7 @@ func initAPI() {
 	beego.Router("/api/update-ldap", &controllers.ApiController{}, "POST:UpdateLdap")
 	beego.Router("/api/delete-ldap", &controllers.ApiController{}, "POST:DeleteLdap")
 	beego.Router("/api/sync-ldap-users", &controllers.ApiController{}, "POST:SyncLdapUsers")
+	beego.Router("/api/test-ldap", &controllers.ApiController{}, "POST:TestLdapConnection")
 
 	beego.Router("/api/get-providers", &controllers.ApiController{}, "GET:GetProviders")
 	beego.Router("/api/get-provider", &controllers.ApiController{}, "GET:GetProvider")
@@ -165,6 +166,7 @@ func initAPI() {
 	beego.Router("/api/update-provider", &controllers.ApiController{}, "POST:UpdateProvider")
 	beego.Router("/api/add-provider", &controllers.ApiController{}, "POST:AddProvider")
 	beego.Router("/api/delete-provider", &controllers.ApiController{}, "POST:DeleteProvider")
+	beego.Router("/api/test-openid", &controllers.ApiController{}, "POST:TestProviderConnection")
 
 	beego.Router("/api/get-applications", &controllers.ApiController{}, "GET:GetApplications")
 	beego.Router("/api/get-application", &controllers.ApiController{}, "GET:GetApplication")

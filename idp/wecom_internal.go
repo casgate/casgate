@@ -27,6 +27,7 @@ import (
 // WeComInternalIdProvider
 // This idp is using wecom internal application api as idp
 type WeComInternalIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }

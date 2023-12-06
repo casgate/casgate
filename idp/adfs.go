@@ -31,6 +31,7 @@ import (
 )
 
 type AdfsIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 	Host   string

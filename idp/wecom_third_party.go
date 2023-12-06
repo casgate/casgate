@@ -26,6 +26,7 @@ import (
 )
 
 type WeComIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }

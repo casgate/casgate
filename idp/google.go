@@ -31,6 +31,7 @@ import (
 const GoogleIdTokenKey = "GoogleIdToken"
 
 type GoogleIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }

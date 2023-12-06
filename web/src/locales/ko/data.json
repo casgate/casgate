@@ -64,9 +64,9 @@
     "Invitation code - Tooltip": "Invitation code - Tooltip",
     "Invitation code copied to clipboard successfully": "Invitation code copied to clipboard successfully",
     "Left": "왼쪽",
-    "Login": "Login",
     "Logged in successfully": "성공적으로 로그인했습니다",
     "Logged out successfully": "로그아웃이 성공적으로 되었습니다",
+    "Login": "Login",
     "New Application": "새로운 응용 프로그램",
     "No verification": "No verification",
     "Normal": "Normal",
@@ -868,7 +868,9 @@
     "admin (Shared)": "관리자 (공유)"
   },
   "record": {
-    "Is triggered": "반응하다"
+    "Is triggered": "반응하다",
+    "Object": "Object",
+    "Status code": "Status code"
   },
   "resource": {
     "Copy Link": "링크 복사하기",

@@ -26,6 +26,7 @@ import (
 )
 
 type OktaIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 	Host   string

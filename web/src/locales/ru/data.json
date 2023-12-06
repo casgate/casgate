@@ -64,9 +64,9 @@
     "Invitation code - Tooltip": "Invitation code - Tooltip",
     "Invitation code copied to clipboard successfully": "Invitation code copied to clipboard successfully",
     "Left": "Левый",
-    "Login": "Вход",
     "Logged in successfully": "Успешный вход в систему",
     "Logged out successfully": "Успешный выход из системы",
+    "Login": "Вход",
     "New Application": "Новое приложение",
     "No verification": "No verification",
     "Normal": "Normal",
@@ -868,7 +868,9 @@
     "admin (Shared)": "администратор (общий)"
   },
   "record": {
-    "Is triggered": "Сработало"
+    "Is triggered": "Сработало",
+    "Object": "Object",
+    "Status code": "Status code"
   },
   "resource": {
     "Copy Link": "Копировать ссылку",

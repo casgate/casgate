@@ -26,6 +26,7 @@ import (
 )
 
 type InfoflowIdProvider struct {
+	BaseProvider
 	Client  *http.Client
 	Config  *oauth2.Config
 	AgentId string

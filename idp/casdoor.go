@@ -27,6 +27,7 @@ import (
 )
 
 type CasdoorIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 	Host   string

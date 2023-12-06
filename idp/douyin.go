@@ -27,6 +27,7 @@ import (
 )
 
 type DouyinIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }

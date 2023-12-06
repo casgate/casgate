@@ -28,6 +28,7 @@ import (
 )
 
 type WeiBoIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }

@@ -27,6 +27,7 @@ import (
 )
 
 type LinkedInIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }

@@ -64,9 +64,9 @@
     "Invitation code - Tooltip": "Invitation code - Tooltip",
     "Invitation code copied to clipboard successfully": "Invitation code copied to clipboard successfully",
     "Left": "Esquerda",
-    "Login": "Login",
     "Logged in successfully": "Login realizado com sucesso",
     "Logged out successfully": "Logout realizado com sucesso",
+    "Login": "Login",
     "New Application": "Nova Aplicação",
     "No verification": "Sem verificação",
     "Normal": "Normal",
@@ -868,7 +868,9 @@
     "admin (Shared)": "admin (Compartilhado)"
   },
   "record": {
-    "Is triggered": "Foi acionado"
+    "Is triggered": "Foi acionado",
+    "Object": "Object",
+    "Status code": "Status code"
   },
   "resource": {
     "Copy Link": "Copiar Link",

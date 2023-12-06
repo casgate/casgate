@@ -15,26 +15,27 @@
 package idp
 
 import (
-	"fmt"
-	"errors"
 	"encoding/json"
-	"strconv"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	 "time"
+	"strconv"
+	"time"
 
 	"golang.org/x/oauth2"
 )
 
 type VkAccessToken struct {
-	AccessToken   string `json:"access_token"`
-	UserId        int    `json:"user_id"`
-	ExpiresIn     int    `json:"expires_in"`
-	Email         string `json:"email"`
+	AccessToken string `json:"access_token"`
+	UserId      int    `json:"user_id"`
+	ExpiresIn   int    `json:"expires_in"`
+	Email       string `json:"email"`
 }
 
 type VkIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }
@@ -44,10 +45,10 @@ type VkUserInfoResponse struct {
 }
 
 type VkUserInfo struct {
-	ID              int    `json:"id"`
-	FirstName       string `json:"first_name"`
-	LastName        string `json:"last_name"`
-	Avatar			string `json:"photo_50"`	
+	ID        int    `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Avatar    string `json:"photo_50"`
 }
 
 func NewVkIdProvider(clientId string, clientSecret string, redirectUrl string) *VkIdProvider {
@@ -100,7 +101,7 @@ func (idp *VkIdProvider) GetToken(code string) (*oauth2.Token, error) {
 	}
 
 	// Unquote the string to remove escaping
-	unescapedContent, err := strconv.Unquote(fmt.Sprintf("`%s`",string(tokenContent)))
+	unescapedContent, err := strconv.Unquote(fmt.Sprintf("`%s`", string(tokenContent)))
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +118,7 @@ func (idp *VkIdProvider) GetToken(code string) (*oauth2.Token, error) {
 	}
 	token = token.WithExtra(map[string]interface{}{
 		"UserId": tokenResp.UserId,
-		"Email": tokenResp.Email,
+		"Email":  tokenResp.Email,
 	})
 	return token, nil
 }
@@ -154,17 +155,16 @@ func (idp *VkIdProvider) GetUserInfo(token *oauth2.Token) (*UserInfo, error) {
 
 	email, _ := token.Extra("Email").(string)
 
-	if (len(vkUserInfo.Users) == 0) {
+	if len(vkUserInfo.Users) == 0 {
 		return nil, errors.ErrUnsupported
 	}
 
 	userInfo := UserInfo{
-		Id:  strconv.Itoa(userId),
-		Email: 	 email,
+		Id:          strconv.Itoa(userId),
+		Email:       email,
 		Username:    email,
 		DisplayName: vkUserInfo.Users[0].LastName + " " + vkUserInfo.Users[0].FirstName,
-		AvatarUrl: vkUserInfo.Users[0].Avatar, 
-
+		AvatarUrl:   vkUserInfo.Users[0].Avatar,
 	}
 	return &userInfo, nil
 }

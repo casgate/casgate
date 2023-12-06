@@ -85,6 +85,7 @@ import (
 )
 
 type GothIdProvider struct {
+	BaseProvider
 	Provider goth.Provider
 	Session  goth.Session
 }

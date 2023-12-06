@@ -27,6 +27,7 @@ import (
 )
 
 type QqIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }
