@@ -82,11 +82,7 @@ func (idp *CustomIdProvider) TestConnection() error {
 
 	tokenResponse, err := httpClient.Post(idp.TokenURL, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
 	if err != nil || tokenResponse.StatusCode != 200 {
-		data.Add("scope", strings.Join(idp.Scopes, " "))
-		tokenResponse, err = httpClient.Post(idp.TokenURL, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
-		if err != nil || tokenResponse.StatusCode != 200 {
-			return NewStatusError(tokenResponse.StatusCode)
-		}
+		return NewStatusError(tokenResponse.StatusCode)
 	}
 
 	return nil
