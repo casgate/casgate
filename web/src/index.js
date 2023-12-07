@@ -23,12 +23,19 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import {BrowserRouter} from "react-router-dom";
 import "./backend/FetchFilter";
+import * as Setting from "./Setting";
 
 const container = document.getElementById("root");
+const baseHref = document.getElementsByTagName("base")[0].getAttribute("href").slice(0, -1);
+let baselink = "";
+if (baseHref) {
+  baselink = new URL(baseHref).pathname;
+}
 
 const app = createRoot(container);
+Setting.initServerUrl(baselink);
 
-app.render(<BrowserRouter>
+app.render(<BrowserRouter basename={baselink}>
   <App />
 </BrowserRouter>);
 

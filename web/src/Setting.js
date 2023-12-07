@@ -28,7 +28,7 @@ import moment from "moment";
 
 const {Option} = Select;
 
-export const ServerUrl = "";
+export let ServerUrl = "";
 
 export const StaticBaseUrl = "https://cdn.casbin.org";
 
@@ -399,11 +399,8 @@ export function getCountryImage(country) {
   return <img src={`${StaticBaseUrl}/flag-icons/${country.code}.svg`} alt={country.name} height={20} style={{marginRight: 10}} />;
 }
 
-export function initServerUrl() {
-  // const hostname = window.location.hostname;
-  // if (hostname === "localhost") {
-  //   ServerUrl = `http://${hostname}:8000`;
-  // }
+export function initServerUrl(serverUrl) {
+  ServerUrl = serverUrl;
 }
 
 export function isLocalhost() {

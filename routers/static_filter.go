@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,6 +36,8 @@ var (
 	newStaticBaseUrl = conf.GetConfigString("staticBaseUrl")
 	enableGzip       = conf.GetConfigBool("enableGzip")
 	frontendBaseDir  = conf.GetConfigString("frontendBaseDir")
+	origin           = strings.Trim(conf.GetConfigString("origin"), "/")
+	originPath       = getOriginPath()
 )
 
 func getWebBuildFolder() string {
@@ -158,6 +161,11 @@ func serveFileWithReplace(w http.ResponseWriter, r *http.Request, name string) {
 	oldContent := util.ReadStringFromPath(name)
 	newContent := strings.ReplaceAll(oldContent, oldStaticBaseUrl, newStaticBaseUrl)
 
+	serveNonRootLocation := originPath != ""
+	if serveNonRootLocation && strings.HasSuffix(name, "index.html") {
+		newContent = strings.ReplaceAll(oldContent, "href=\"\"", fmt.Sprintf("href=\"%s/\"", origin))
+	}
+
 	http.ServeContent(w, r, d.Name(), d.ModTime(), strings.NewReader(newContent))
 }
 
@@ -180,4 +188,12 @@ func makeGzipResponse(w http.ResponseWriter, r *http.Request, path string) {
 	defer gz.Close()
 	gzw := gzipResponseWriter{Writer: gz, ResponseWriter: w}
 	serveFileWithReplace(gzw, r, path)
+}
+
+func getOriginPath() string {
+	originUrl, err := url.Parse(origin)
+	if err != nil {
+		panic(err)
+	}
+	return originUrl.Path
 }
