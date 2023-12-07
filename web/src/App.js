@@ -115,7 +115,6 @@ class App extends Component {
       requiredEnableMfa: false,
     };
 
-    Setting.initServerUrl();
     Auth.initAuthWithConfig({
       serverUrl: Setting.ServerUrl,
       appName: Conf.DefaultApplication, // the application used in Casdoor root path: "/"
@@ -573,7 +572,7 @@ class App extends Component {
   };
 
   isWithoutCard() {
-    return Setting.isMobile() || window.location.pathname.startsWith("/trees");
+    return Setting.isMobile() || window.location.pathname.startsWith(`${Setting.ServerUrl}/trees`);
   }
 
   renderContent() {
@@ -659,20 +658,20 @@ class App extends Component {
   }
 
   isDoorPages() {
-    return this.isEntryPages() || window.location.pathname.startsWith("/callback");
+    return this.isEntryPages() || window.location.pathname.startsWith(`${Setting.ServerUrl}/callback`);
   }
 
   isEntryPages() {
-    return window.location.pathname.startsWith("/signup") ||
-        window.location.pathname.startsWith("/login") ||
-        window.location.pathname.startsWith("/forget") ||
-        window.location.pathname.startsWith("/prompt") ||
-        window.location.pathname.startsWith("/result") ||
-        window.location.pathname.startsWith("/cas") ||
-        window.location.pathname.startsWith("/auto-signup") ||
-        window.location.pathname.startsWith("/select-plan") ||
-        window.location.pathname.startsWith("/buy-plan") ||
-        window.location.pathname.startsWith("/qrcode") ;
+    return window.location.pathname.startsWith(`${Setting.ServerUrl}/signup`) ||
+        window.location.pathname.startsWith(`${Setting.ServerUrl}/login`) ||
+        window.location.pathname.startsWith(`${Setting.ServerUrl}/forget`) ||
+        window.location.pathname.startsWith(`${Setting.ServerUrl}/prompt`) ||
+        window.location.pathname.startsWith(`${Setting.ServerUrl}/result`) ||
+        window.location.pathname.startsWith(`${Setting.ServerUrl}/cas`) ||
+        window.location.pathname.startsWith(`${Setting.ServerUrl}/auto-signup`) ||
+        window.location.pathname.startsWith(`${Setting.ServerUrl}/select-plan`) ||
+        window.location.pathname.startsWith(`${Setting.ServerUrl}/buy-plan`) ||
+        window.location.pathname.startsWith(`${Setting.ServerUrl}/qrcode`) ;
   }
 
   renderPage() {
