@@ -25,7 +25,7 @@ const AppListPage = (props) => {
     }
     ApplicationBackend.getApplicationsByOrganization("admin", props.account.owner)
       .then((res) => {
-        setApplications(res.data || []);
+        setApplications(res.data.filter((app) => app.isPublic) || []);
       });
   }, [props.account]);
 

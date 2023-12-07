@@ -109,7 +109,9 @@
     "Token expire - Tooltip": "アクセストークンの有効期限",
     "Token format": "トークン形式",
     "Token format - Tooltip": "アクセストークンのフォーマット",
-    "You are unexpected to see this prompt page": "このプロンプトページを見ることは予期せぬことである"
+    "You are unexpected to see this prompt page": "このプロンプトページを見ることは予期せぬことである",
+    "is Public": "is Public",
+    "is Public - Tooltip": "is Public - Tooltip"
   },
   "cert": {
     "Bit size": "ビットサイズ",

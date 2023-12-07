@@ -109,7 +109,9 @@
     "Token expire - Tooltip": "Access token expiration time",
     "Token format": "Token format",
     "Token format - Tooltip": "The format of access token",
-    "You are unexpected to see this prompt page": "You are unexpected to see this prompt page"
+    "You are unexpected to see this prompt page": "You are unexpected to see this prompt page",
+    "is Public": "is Public",
+    "is Public - Tooltip": "Only public applications are shown at apps page"
   },
   "cert": {
     "Bit size": "Bit size",
