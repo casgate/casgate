@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/casdoor/casdoor/util"
@@ -28,6 +29,7 @@ import (
 )
 
 type CustomIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 
@@ -50,6 +52,8 @@ func NewCustomIdProvider(idpInfo *ProviderInfo, redirectUrl string) *CustomIdPro
 			TokenURL: idpInfo.TokenURL,
 		},
 	}
+	idp.AuthURL = idpInfo.AuthURL
+	idp.TokenURL = idpInfo.TokenURL
 	idp.UserInfoURL = idpInfo.UserInfoURL
 	idp.UserMapping = idpInfo.UserMapping
 
@@ -63,6 +67,25 @@ func (idp *CustomIdProvider) SetHttpClient(client *http.Client) {
 func (idp *CustomIdProvider) GetToken(code string) (*oauth2.Token, error) {
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, idp.Client)
 	return idp.Config.Exchange(ctx, code)
+}
+
+func (idp *CustomIdProvider) TestConnection() error {
+	if util.IsStringsEmpty(idp.Config.ClientID, idp.Config.ClientSecret, idp.AuthURL) {
+		return NewMissingParameterError("Missing parameter")
+	}
+
+	httpClient := new(http.Client)
+	data := url.Values{}
+	data.Add("grant_type", "client_credentials")
+	data.Add("client_id", idp.Config.ClientID)
+	data.Add("client_secret", idp.Config.ClientSecret)
+
+	tokenResponse, err := httpClient.Post(idp.TokenURL, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
+	if err != nil || tokenResponse.StatusCode != 200 {
+		return NewStatusError(tokenResponse.StatusCode)
+	}
+
+	return nil
 }
 
 type CustomUserInfo struct {

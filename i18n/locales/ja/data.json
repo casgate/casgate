@@ -65,8 +65,10 @@
   },
   "general": {
     "Missing parameter": "不足しているパラメーター",
+    "Not implemented": "Not implemented",
     "Please login first": "最初にログインしてください",
     "The user: %s doesn't exist": "そのユーザー：%sは存在しません",
+    "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "captchaProviderをサポートしないでください",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
   },

@@ -65,8 +65,10 @@
   },
   "general": {
     "Missing parameter": "Thiếu tham số",
+    "Not implemented": "Not implemented",
     "Please login first": "Vui lòng đăng nhập trước",
     "The user: %s doesn't exist": "Người dùng: %s không tồn tại",
+    "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "không hỗ trợ captchaProvider: ",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
   },

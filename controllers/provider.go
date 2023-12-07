@@ -16,8 +16,10 @@ package controllers
 
 import (
 	"encoding/json"
-
+	"errors"
+	"fmt"
 	"github.com/beego/beego/utils/pagination"
+	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 )
@@ -217,4 +219,44 @@ func (c *ApiController) DeleteProvider() {
 
 	c.Data["json"] = wrapActionResponse(object.DeleteProvider(&provider))
 	c.ServeJSON()
+}
+
+// TestProviderConnection
+// @Title TestProviderConnection
+// @Tag Provider API
+// @Description test provider connection
+// @Param   body    body   object.Provider  true        "The details of the provider"
+// @Success 200 {object} controllers.Response The Response object
+// @router /test-provider [post]
+func (c *ApiController) TestProviderConnection() {
+	var provider object.Provider
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &provider)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+	idpInfo := object.FromProviderToIdpInfo(nil, &provider)
+	idProvider := idp.GetIdProvider(idpInfo, idpInfo.RedirectUrl)
+
+	err = idProvider.TestConnection()
+	if err != nil {
+		var missingParameterError *idp.MissingParameterError
+		var statusError *idp.StatusError
+		var notImplementedError *idp.NotImplementedError
+		switch {
+		case errors.As(err, &missingParameterError):
+			c.ResponseError(c.T("general:Missing parameter"))
+			break
+		case errors.As(err, &statusError):
+			c.ResponseError(fmt.Sprintf(c.T("general:Unexpected status code %s"), err.Error()))
+			break
+		case errors.As(err, &notImplementedError):
+			c.ResponseError(c.T("general:Not implemented"))
+			break
+		default:
+			c.ResponseError(c.T(err.Error()))
+		}
+		return
+	}
+	c.ResponseOk()
 }

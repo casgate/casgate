@@ -34,6 +34,7 @@ import (
 )
 
 type AlipayIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }

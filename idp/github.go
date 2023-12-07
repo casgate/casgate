@@ -27,6 +27,7 @@ import (
 )
 
 type GithubIdProvider struct {
+	BaseProvider
 	Client *http.Client
 	Config *oauth2.Config
 }

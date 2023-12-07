@@ -188,18 +188,29 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 		return nil, errors.New("no result")
 	}
 
-	roleMappingMap := buildRoleMappingMap(ldapServer.RoleMappingItems)
+	var roleMappingMap RoleMappingMap
+	if ldapServer.EnableRoleMapping {
+		roleMappingMap = buildRoleMappingMap(ldapServer.RoleMappingItems)
+	}
 
 	var ldapUsers []LdapUser
 	for _, entry := range searchResult.Entries {
 		var user LdapUser
 		for _, attribute := range entry.Attributes {
+			// check attribute value with role mapping rules
+			if ldapServer.EnableRoleMapping {
+				if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attribute.Name)]; ok {
+					for _, value := range attribute.Values {
+						if roleMappingMapRoles, ok := roleMappingMapItem[RoleMappingItemValue(value)]; ok {
+							user.Roles = append(user.Roles, roleMappingMapRoles.StrRoles()...)
+						}
+					}
+				}
+			}
+
 			if ldapServer.EnableAttributeMapping {
 				MapAttributeToUser(attribute, &user, attributeMappingMap)
 				continue
-			}
-
-			if user.Uid == "" {
 			}
 
 			switch attribute.Name {
@@ -239,15 +250,6 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 				user.PostalAddress = attribute.Values[0]
 			case "memberOf":
 				user.MemberOf = attribute.Values[0]
-			}
-
-			// check attribute value with role mapping rules
-			if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attribute.Name)]; ok {
-				for _, value := range attribute.Values {
-					if roleMappingMapRoles, ok := roleMappingMapItem[RoleMappingItemValue(value)]; ok {
-						user.Roles = append(user.Roles, roleMappingMapRoles.StrRoles()...)
-					}
-				}
 			}
 		}
 

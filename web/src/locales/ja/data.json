@@ -64,9 +64,9 @@
     "Invitation code - Tooltip": "Invitation code - Tooltip",
     "Invitation code copied to clipboard successfully": "Invitation code copied to clipboard successfully",
     "Left": "左",
-    "Login": "Login",
     "Logged in successfully": "正常にログインしました",
     "Logged out successfully": "正常にログアウトしました",
+    "Login": "Login",
     "New Application": "新しいアプリケーション",
     "No verification": "No verification",
     "Normal": "Normal",
@@ -868,7 +868,9 @@
     "admin (Shared)": "管理者（共有）"
   },
   "record": {
-    "Is triggered": "トリガーされています"
+    "Is triggered": "トリガーされています",
+    "Object": "Object",
+    "Status code": "Status code"
   },
   "resource": {
     "Copy Link": "コピー リンク",

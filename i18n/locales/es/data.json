@@ -65,8 +65,10 @@
   },
   "general": {
     "Missing parameter": "Parámetro faltante",
+    "Not implemented": "Not implemented",
     "Please login first": "Por favor, inicia sesión primero",
     "The user: %s doesn't exist": "El usuario: %s no existe",
+    "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "No apoyo a captchaProvider",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
   },

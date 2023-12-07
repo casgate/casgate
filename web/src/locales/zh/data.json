@@ -64,9 +64,9 @@
     "Invitation code - Tooltip": "Invitation code - Tooltip",
     "Invitation code copied to clipboard successfully": "Invitation code copied to clipboard successfully",
     "Left": "居左",
-    "Login": "Login",
     "Logged in successfully": "登录成功",
     "Logged out successfully": "登出成功",
+    "Login": "Login",
     "New Application": "添加应用",
     "No verification": "不校验",
     "Normal": "标准",
@@ -868,7 +868,9 @@
     "admin (Shared)": "admin（共享）"
   },
   "record": {
-    "Is triggered": "已触发"
+    "Is triggered": "已触发",
+    "Object": "Object",
+    "Status code": "Status code"
   },
   "resource": {
     "Copy Link": "复制链接",
