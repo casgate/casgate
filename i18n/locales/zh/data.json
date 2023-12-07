@@ -137,6 +137,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "验证码还未发送",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "非法的验证码提供商",
     "Phone number is invalid in your region %s": "您所在地区的电话号码无效 %s",
     "Turing test failed.": "验证码还未发送",

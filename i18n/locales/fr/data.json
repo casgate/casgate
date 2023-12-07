@@ -137,6 +137,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "Le code n'a pas encore été envoyé !",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "Fournisseur de captcha invalide.",
     "Phone number is invalid in your region %s": "Le numéro de téléphone n'est pas valide dans votre région %s",
     "Turing test failed.": "Le test de Turing a échoué.",

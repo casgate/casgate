@@ -137,6 +137,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "Mã chưa được gửi đến!",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "Nhà cung cấp captcha không hợp lệ.",
     "Phone number is invalid in your region %s": "Số điện thoại không hợp lệ trong vùng của bạn %s",
     "Turing test failed.": "Kiểm định Turing thất bại.",

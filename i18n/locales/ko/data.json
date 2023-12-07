@@ -137,6 +137,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "코드는 아직 전송되지 않았습니다!",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "잘못된 captcha 제공자입니다.",
     "Phone number is invalid in your region %s": "전화 번호가 당신의 지역 %s에서 유효하지 않습니다",
     "Turing test failed.": "튜링 테스트 실패.",
