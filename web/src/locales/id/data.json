@@ -109,7 +109,9 @@
     "Token expire - Tooltip": "Waktu kadaluwarsa token akses",
     "Token format": "Format token",
     "Token format - Tooltip": "Format dari token akses",
-    "You are unexpected to see this prompt page": "Anda tidak mengharapkan untuk melihat halaman prompt ini"
+    "You are unexpected to see this prompt page": "Anda tidak mengharapkan untuk melihat halaman prompt ini",
+    "is Public": "is Public",
+    "is Public - Tooltip": "is Public - Tooltip"
   },
   "cert": {
     "Bit size": "Ukuran bit",

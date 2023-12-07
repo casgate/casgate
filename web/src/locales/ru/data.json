@@ -109,7 +109,9 @@
     "Token expire - Tooltip": "Время истечения токена доступа",
     "Token format": "Формат жетона",
     "Token format - Tooltip": "Формат токена доступа",
-    "You are unexpected to see this prompt page": "Вы не ожидали увидеть эту страницу-подсказку"
+    "You are unexpected to see this prompt page": "Вы не ожидали увидеть эту страницу-подсказку",
+    "is Public": "Общедоступное",
+    "is Public - Tooltip": "На странице приложений показываются только общедоступные приложения"
   },
   "cert": {
     "Bit size": "Размер бита",

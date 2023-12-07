@@ -109,7 +109,9 @@
     "Token expire - Tooltip": "Tempo de expiração do token de acesso",
     "Token format": "Formato do token",
     "Token format - Tooltip": "O formato do token de acesso",
-    "You are unexpected to see this prompt page": "Você não deveria ver esta página de prompt"
+    "You are unexpected to see this prompt page": "Você não deveria ver esta página de prompt",
+    "is Public": "is Public",
+    "is Public - Tooltip": "is Public - Tooltip"
   },
   "cert": {
     "Bit size": "Tamanho do bit",

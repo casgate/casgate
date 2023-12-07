@@ -109,7 +109,9 @@
     "Token expire - Tooltip": "Ablaufzeit des Access-Tokens",
     "Token format": "Token-Format",
     "Token format - Tooltip": "Das Format des Access-Tokens",
-    "You are unexpected to see this prompt page": "Sie sind unerwartet auf diese Aufforderungsseite gelangt"
+    "You are unexpected to see this prompt page": "Sie sind unerwartet auf diese Aufforderungsseite gelangt",
+    "is Public": "is Public",
+    "is Public - Tooltip": "is Public - Tooltip"
   },
   "cert": {
     "Bit size": "Bitgröße",
