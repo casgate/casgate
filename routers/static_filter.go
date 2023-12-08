@@ -167,7 +167,7 @@ func serveFileWithReplace(w http.ResponseWriter, r *http.Request, name string) {
 
 	serveNonRootLocation := originPath != ""
 	if serveNonRootLocation && strings.HasSuffix(name, "index.html") {
-		newContent = strings.ReplaceAll(oldContent, "href=\"\"", fmt.Sprintf("href=\"%s/\"", origin))
+		newContent = strings.ReplaceAll(oldContent, "href=\"/\"", fmt.Sprintf("href=\"%s/\"", origin))
 	}
 
 	http.ServeContent(w, r, d.Name(), d.ModTime(), strings.NewReader(newContent))
