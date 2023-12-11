@@ -167,12 +167,6 @@ func CheckPassword(user *User, password string, lang string, options ...bool) st
 	if len(options) > 0 {
 		enableCaptcha = options[0]
 	}
-	// check the login error times
-	if !enableCaptcha {
-		if msg := checkSigninErrorTimes(user, lang); msg != "" {
-			return msg
-		}
-	}
 
 	organization, err := GetOrganizationByUser(user)
 	if err != nil {
@@ -189,19 +183,30 @@ func CheckPassword(user *User, password string, lang string, options ...bool) st
 	}
 	credManager := cred.GetCredManager(passwordType)
 	if credManager != nil {
+		var ok bool
 		if organization.MasterPassword != "" {
 			if credManager.IsPasswordCorrect(password, organization.MasterPassword, organization.PasswordSalt) {
-				resetUserSigninErrorTimes(user)
-				return ""
+				ok = true
 			}
 		}
 
 		if credManager.IsPasswordCorrect(password, user.Password, user.PasswordSalt) {
+			ok = true
+		}
+
+		// check the login error times
+		if !enableCaptcha && ok {
+			if msg := checkSigninErrorTimes(user, lang); msg != "" {
+				return msg
+			}
 			resetUserSigninErrorTimes(user)
+		}
+
+		if ok {
 			return ""
 		}
 
-		return recordSigninErrorInfo(user, lang, enableCaptcha)
+		return recordSigninErrorInfo(user, lang)
 	} else {
 		return fmt.Sprintf(i18n.Translate(lang, "check:unsupported password type: %s"), organization.PasswordType)
 	}
@@ -275,18 +280,14 @@ func CheckUserPassword(organization string, username string, password string, la
 	}
 
 	if user == nil || user.IsDeleted {
-		return nil, fmt.Sprintf(i18n.Translate(lang, "general:The user: %s doesn't exist"), util.GetId(organization, username))
-	}
-
-	if user.IsForbidden {
-		return nil, i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator")
+		return nil, fmt.Sprintf(i18n.Translate(lang, "general:The user name or password/code is incorrect"))
 	}
 
 	if user.Ldap != "" {
 		// ONLY for ldap users
 		if msg := checkLdapUserPassword(user, password, lang); msg != "" {
 			if msg == "user not exist" {
-				return nil, fmt.Sprintf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
+				return nil, fmt.Sprintf(i18n.Translate(lang, "general:The user name or password/code is incorrect"))
 			}
 			return nil, msg
 		}
@@ -295,6 +296,11 @@ func CheckUserPassword(organization string, username string, password string, la
 			return nil, msg
 		}
 	}
+
+	if user.IsForbidden {
+		return nil, i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator")
+	}
+
 	return user, ""
 }
 

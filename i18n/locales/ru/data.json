@@ -126,9 +126,6 @@
     "Display name cannot be empty": "Отображаемое имя не может быть пустым",
     "New password cannot contain blank space.": "Новый пароль не может содержать пробелы."
   },
-  "user_upload": {
-    "Failed to import users": "Не удалось импортировать пользователей"
-  },
   "util": {
     "No application is found for userId: %s": "Не найдено заявки для пользователя с идентификатором: %s",
     "No provider for category: %s is found for application: %s": "Нет поставщика для категории: %s для приложения: %s",

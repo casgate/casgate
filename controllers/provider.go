@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/object"
@@ -42,6 +43,17 @@ func (c *ApiController) GetProviders() {
 
 	ok, isMaskEnabled := c.IsMaskedEnabled()
 	if !ok {
+		return
+	}
+
+	user := c.getCurrentUser()
+	if user == nil {
+		c.ResponseError(c.T("general:Please login first"))
+		return
+	}
+
+	if !c.IsGlobalAdmin() && owner != user.Owner {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
 

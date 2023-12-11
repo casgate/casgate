@@ -5377,11 +5377,11 @@
         }
     },
     "definitions": {
-        "168743.\u003cnil\u003e.string": {
+        "168941.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "288580.\u003cnil\u003e.string": {
+        "286475.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -5652,6 +5652,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "isPublic": {
+                    "type": "boolean"
                 },
                 "logo": {
                     "type": "string"
@@ -6165,7 +6168,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/168743.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/168941.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6856,7 +6859,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/288580.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/286475.\u003cnil\u003e.string"
                 }
             }
         },
