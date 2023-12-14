@@ -111,6 +111,15 @@ func getSessionUser(ctx *context.Context) string {
 	return user.(string)
 }
 
+func getSid(ctx *context.Context) string {
+	sid := ctx.Input.CruSession.SessionID()
+	userId := getSessionUser(ctx)
+	if sid == "" || userId == "" {
+		return ""
+	}
+	return util.GetSid(userId, sid)
+}
+
 func setSessionUser(ctx *context.Context, user string) {
 	err := ctx.Input.CruSession.Set("username", user)
 	if err != nil {
