@@ -55,6 +55,10 @@ func fastAutoSignin(ctx *context.Context) (string, error) {
 	if userId == "" {
 		return "", nil
 	}
+	sid := getSid(ctx)
+	if sid == "" {
+		return "", nil
+	}
 
 	clientId := ctx.Input.Query("client_id")
 	responseType := ctx.Input.Query("response_type")
@@ -79,7 +83,7 @@ func fastAutoSignin(ctx *context.Context) (string, error) {
 		return "", nil
 	}
 
-	code, err := object.GetOAuthCode(userId, clientId, responseType, redirectUri, scope, state, nonce, codeChallenge, ctx.Request.Host, getAcceptLanguage(ctx))
+	code, err := object.GetOAuthCode(userId, clientId, responseType, redirectUri, scope, state, nonce, codeChallenge, ctx.Request.Host, sid, getAcceptLanguage(ctx))
 	if err != nil {
 		return "", err
 	} else if code.Message != "" {
