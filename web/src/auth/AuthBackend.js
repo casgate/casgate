@@ -36,8 +36,8 @@ export function signup(values) {
   }).then(res => res.json());
 }
 
-export function getEmailAndPhone(organization, username) {
-  return fetch(`${authConfig.serverUrl}/api/get-email-and-phone?organization=${organization}&username=${username}`, {
+export function getEmailAndPhone(organization, applicationId, username, captchaToken, captchaCode) {
+  return fetch(`${authConfig.serverUrl}/api/get-email-and-phone?organization=${organization}&applicationId=${applicationId}&username=${username}&captchaToken=${captchaToken}&captchaCode=${captchaCode}`, {
     method: "GET",
     credentials: "include",
     headers: {

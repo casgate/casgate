@@ -25,6 +25,7 @@ import {CheckCircleOutlined, KeyOutlined, LockOutlined, SolutionOutlined, UserOu
 import CustomGithubCorner from "../common/CustomGithubCorner";
 import {withRouter} from "react-router-dom";
 import * as PasswordChecker from "../common/PasswordChecker";
+import {CaptchaModal} from "../common/modal/CaptchaModal";
 
 const {Option} = Select;
 
@@ -43,6 +44,10 @@ class ForgetPage extends React.Component {
       isVerifyTypeFixed: false,
       verifyType: "", // "email", "phone"
       current: 0,
+      captchaCode: "",
+      captchaToken: "",
+      captchaVisible: false,
+      oneTimeCode: "",
     };
 
     this.form = React.createRef();
@@ -82,49 +87,55 @@ class ForgetPage extends React.Component {
   onFormFinish(name, info, forms) {
     switch (name) {
     case "step1":
-      const username = forms.step1.getFieldValue("username");
-      AuthBackend.getEmailAndPhone(forms.step1.getFieldValue("organization"), username)
-        .then((res) => {
-          if (res.status === "ok") {
-            const phone = res.data.phone;
-            const email = res.data.email;
+      if (this.state.captchaCode !== "") {
+        const username = forms.step1.getFieldValue("username");
+        AuthBackend.getEmailAndPhone(forms.step1.getFieldValue("organization"), Setting.getApplicationName(this.getApplicationObj()), username, this.state.captchaToken, this.state.captchaCode)
+          .then((res) => {
+            if (res.status === "ok") {
+              const phone = res.data.phone;
+              const email = res.data.email;
 
-            if (!phone && !email) {
-              Setting.showMessage("error", "no verification method!");
-            } else {
-              this.setState({
-                name: res.data.name,
-                phone: phone,
-                email: email,
-              });
-
-              const saveFields = (type, dest, fixed) => {
+              if (!phone && !email) {
+                Setting.showMessage("error", "no verification method!");
+              } else {
                 this.setState({
-                  verifyType: type,
-                  isVerifyTypeFixed: fixed,
-                  dest: dest,
+                  name: res.data.name,
+                  phone: phone,
+                  email: email,
+                  oneTimeCode: res.data.oneTimeCode,
                 });
-              };
 
-              switch (res.data2) {
-              case "email":
-                saveFields("email", email, true);
-                break;
-              case "phone":
-                saveFields("phone", phone, true);
-                break;
-              case "username":
-                phone !== "" ? saveFields("phone", phone, false) : saveFields("email", email, false);
+                const saveFields = (type, dest, fixed) => {
+                  this.setState({
+                    verifyType: type,
+                    isVerifyTypeFixed: fixed,
+                    dest: dest,
+                  });
+                };
+
+                switch (res.data2) {
+                case "email":
+                  saveFields("email", email, true);
+                  break;
+                case "phone":
+                  saveFields("phone", phone, true);
+                  break;
+                case "username":
+                  phone !== "" ? saveFields("phone", phone, false) : saveFields("email", email, false);
+                }
+
+                this.setState({
+                  current: 1,
+                });
               }
-
-              this.setState({
-                current: 1,
-              });
+            } else {
+              this.setState({captchaVisible: false, captchaCode: "", captchaToken: ""});
+              Setting.showMessage("error", res.msg);
             }
-          } else {
-            Setting.showMessage("error", res.msg);
-          }
-        });
+          });
+        break;
+      }
+      this.setState({captchaVisible: true});
       break;
     case "step2":
       UserBackend.verifyCode({
@@ -146,6 +157,11 @@ class ForgetPage extends React.Component {
     default:
       break;
     }
+  }
+
+  onCaptchaFinish(captchaType, captchaToken, clientSecret) {
+    this.setState({captchaVisible: false, captchaCode: clientSecret, captchaToken: captchaToken});
+    this.form.current.submit();
   }
 
   onFinish(values) {
@@ -322,6 +338,7 @@ class ForgetPage extends React.Component {
               method={"forget"}
               onButtonClickArgs={[this.state.dest, this.state.verifyType, Setting.getApplicationName(this.getApplicationObj()), this.state.name]}
               application={application}
+              oneTimeCode={this.state.oneTimeCode}
             />
           </Form.Item>
           <br />
@@ -503,6 +520,15 @@ class ForgetPage extends React.Component {
                 {this.renderForm(application)}
               </div>
             </Col>
+          </Row>
+          <Row>
+            <CaptchaModal
+              owner={application.owner}
+              name={application.name}
+              visible={this.state.captchaVisible}
+              onOk={this.onCaptchaFinish.bind(this)}
+              onCancel={() => this.setState({captchaVisible: false})}
+              isCurrentProvider={false} />
           </Row>
         </div>
       </React.Fragment>

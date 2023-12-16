@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
@@ -30,6 +31,12 @@ func GetSession(owner string, offset, limit int, field, value, sortField, sortOr
 	if owner != "" {
 		session = session.And("owner=?", owner)
 	}
+
+	match, mErr := regexp.MatchString("^[a-z_]+$", util.SnakeString(field))
+	if !match || mErr != nil {
+		field = ""
+	}
+
 	if field != "" && value != "" {
 		if util.FilterField(field) {
 			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), fmt.Sprintf("%%%s%%", value))
@@ -38,6 +45,12 @@ func GetSession(owner string, offset, limit int, field, value, sortField, sortOr
 	if sortField == "" || sortOrder == "" {
 		sortField = "created_time"
 	}
+
+	match, mErr = regexp.MatchString("^[a-z_]+$", util.SnakeString(sortField))
+	if !match || mErr != nil {
+		sortField = "created_time"
+	}
+
 	if sortOrder == "ascend" {
 		session = session.Asc(util.SnakeString(sortField))
 	} else {
@@ -58,6 +71,12 @@ func GetSessionForUser(owner string, offset, limit int, field, value, sortField,
 			session = session.And("a.owner=?", owner)
 		}
 	}
+
+	match, mErr := regexp.MatchString("^[a-z_]+$", util.SnakeString(field))
+	if !match || mErr != nil {
+		field = ""
+	}
+
 	if field != "" && value != "" {
 		if util.FilterField(field) {
 			if offset != -1 {
@@ -67,6 +86,11 @@ func GetSessionForUser(owner string, offset, limit int, field, value, sortField,
 		}
 	}
 	if sortField == "" || sortOrder == "" {
+		sortField = "created_time"
+	}
+
+	match, mErr = regexp.MatchString("^[a-z_]+$", util.SnakeString(sortField))
+	if !match || mErr != nil {
 		sortField = "created_time"
 	}
 

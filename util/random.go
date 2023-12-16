@@ -14,7 +14,15 @@
 
 package util
 
-import "github.com/thanhpk/randstr"
+import (
+	"math/rand"
+	"time"
+
+	"github.com/thanhpk/randstr"
+)
+
+// From Casnode/object/validateCode.go line 116
+var stdNums = []byte("0123456789")
 
 func GenerateClientId() string {
 	return randstr.Hex(10)
@@ -22,4 +30,13 @@ func GenerateClientId() string {
 
 func GenerateClientSecret() string {
 	return randstr.Hex(20)
+}
+
+func GetRandomCode(length int) string {
+	var result []byte
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i := 0; i < length; i++ {
+		result = append(result, stdNums[r.Intn(len(stdNums))])
+	}
+	return string(result)
 }

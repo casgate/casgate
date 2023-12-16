@@ -31,6 +31,7 @@ type VerificationForm struct {
 	CaptchaType  string `form:"captchaType"`
 	ClientSecret string `form:"clientSecret"`
 	CaptchaToken string `form:"captchaToken"`
+	OneTimeCode  string `form:"oneTimeCode"`
 }
 
 const (
@@ -46,15 +47,20 @@ func (form *VerificationForm) CheckParameter(checkType int, lang string) string 
 		if form.Dest == "" {
 			return i18n.Translate(lang, "general:Missing parameter") + ": dest."
 		}
-		if form.CaptchaType == "" {
-			return i18n.Translate(lang, "general:Missing parameter") + ": checkType."
-		}
 		if !strings.Contains(form.ApplicationId, "/") {
 			return i18n.Translate(lang, "verification:Wrong parameter") + ": applicationId."
 		}
+		if form.OneTimeCode == "" && (form.CaptchaToken == "" || form.ClientSecret == "") {
+			if form.CaptchaToken == "" {
+				return i18n.Translate(lang, "general:Missing parameter") + ": captchaToken."
+			}
+			if form.ClientSecret == "" {
+				return i18n.Translate(lang, "general:Missing parameter") + ": clientSecret."
+			}
+		}
 	}
 
-	if form.CaptchaType != "none" {
+	if checkType == VerifyCaptcha {
 		if form.CaptchaToken == "" {
 			return i18n.Translate(lang, "general:Missing parameter") + ": captchaToken."
 		}

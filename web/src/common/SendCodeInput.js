@@ -21,10 +21,11 @@ import {CaptchaModal} from "./modal/CaptchaModal";
 
 const {Search} = Input;
 
-export const SendCodeInput = ({value, disabled, textBefore, onChange, onButtonClickArgs, application, method, countryCode}) => {
+export const SendCodeInput = ({value, disabled, textBefore, onChange, onButtonClickArgs, application, method, countryCode, oneTimeCode}) => {
   const [visible, setVisible] = React.useState(false);
   const [buttonLeftTime, setButtonLeftTime] = React.useState(0);
   const [buttonLoading, setButtonLoading] = React.useState(false);
+  const [OTCode, setOTCode] = React.useState(oneTimeCode);
 
   const handleCountDown = (leftTime = 60) => {
     let leftTimeSecond = leftTime;
@@ -40,19 +41,32 @@ export const SendCodeInput = ({value, disabled, textBefore, onChange, onButtonCl
     setTimeout(countDown, 1000);
   };
 
-  const handleOk = (captchaType, captchaToken, clintSecret) => {
+  const handleOk = (captchaType, captchaToken, clientSecret) => {
     setVisible(false);
     setButtonLoading(true);
-    UserBackend.sendCode(captchaType, captchaToken, clintSecret, method, countryCode, ...onButtonClickArgs).then(res => {
+    sendCode("", captchaToken, clientSecret);
+  };
+
+  const handleCancel = () => {
+    setVisible(false);
+  };
+
+  const checkCode = () => {
+    if (OTCode) {
+      sendCode(OTCode, "", "");
+      setOTCode("");
+    } else {
+      setVisible(true);
+    }
+  };
+
+  const sendCode = (oneTimeCode, captchaToken, clientSecret) => {
+    UserBackend.sendCode(oneTimeCode, captchaToken, clientSecret, method, countryCode, ...onButtonClickArgs).then(res => {
       setButtonLoading(false);
       if (res) {
         handleCountDown(60);
       }
     });
-  };
-
-  const handleCancel = () => {
-    setVisible(false);
   };
 
   return (
@@ -69,7 +83,7 @@ export const SendCodeInput = ({value, disabled, textBefore, onChange, onButtonCl
             {buttonLeftTime > 0 ? `${buttonLeftTime} s` : buttonLoading ? i18next.t("code:Sending") : i18next.t("code:Send Code")}
           </Button>
         }
-        onSearch={() => setVisible(true)}
+        onSearch={checkCode}
       />
       <CaptchaModal
         owner={application.owner}

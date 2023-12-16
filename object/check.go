@@ -15,6 +15,7 @@
 package object
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -28,8 +29,8 @@ import (
 )
 
 const (
-	SigninWrongTimesLimit     = 5
-	LastSignWrongTimeDuration = time.Minute * 15
+	SigninWrongTimesLimit     = 4
+	LastSignWrongTimeDuration = time.Minute * 5
 )
 
 func CheckUserSignup(application *Application, organization *Organization, form *form.AuthForm, lang string) string {
@@ -205,6 +206,19 @@ func CheckPassword(user *User, password string, lang string, options ...bool) st
 	} else {
 		return fmt.Sprintf(i18n.Translate(lang, "check:unsupported password type: %s"), organization.PasswordType)
 	}
+}
+
+func CheckOneTimePassword(user *User, dest, code, lang string) error {
+	// check the login error times
+	if msg := checkSigninErrorTimes(user, lang); msg != "" {
+		return errors.New(msg)
+	}
+	result := CheckVerificationCode(dest, code, lang)
+	if result.Code != VerificationSuccess {
+		return errors.New(recordSigninErrorInfo(user, lang))
+	}
+	resetUserSigninErrorTimes(user)
+	return nil
 }
 
 func CheckPasswordComplexityByOrg(organization *Organization, password string) string {

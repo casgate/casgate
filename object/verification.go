@@ -17,7 +17,6 @@ package object
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"strings"
 	"time"
 
@@ -86,7 +85,7 @@ func SendVerificationCodeToEmail(organization *Organization, user *User, provide
 
 	sender := organization.DisplayName
 	title := provider.Title
-	code := getRandomCode(6)
+	code := util.GetRandomCode(6)
 	// "You have requested a verification code at Casdoor. Here is your code: %s, please enter in 5 minutes."
 	content := fmt.Sprintf(provider.Content, code)
 
@@ -114,7 +113,7 @@ func SendVerificationCodeToPhone(organization *Organization, user *User, provide
 		return err
 	}
 
-	code := getRandomCode(6)
+	code := util.GetRandomCode(6)
 	if err := SendSms(provider, code, dest); err != nil {
 		return err
 	}
@@ -226,16 +225,4 @@ func GetVerifyType(username string) (verificationCodeType string) {
 	} else {
 		return VerifyTypePhone
 	}
-}
-
-// From Casnode/object/validateCode.go line 116
-var stdNums = []byte("0123456789")
-
-func getRandomCode(length int) string {
-	var result []byte
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 0; i < length; i++ {
-		result = append(result, stdNums[r.Intn(len(stdNums))])
-	}
-	return string(result)
 }
