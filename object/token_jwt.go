@@ -33,8 +33,10 @@ type Claims struct {
 }
 
 type UserShort struct {
-	Owner string `xorm:"varchar(100) notnull pk" json:"owner"`
-	Name  string `xorm:"varchar(100) notnull pk" json:"name"`
+	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
+	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
+	DisplayName string `xorm:"varchar(100)" json:"displayName"`
+	Email       string `xorm:"varchar(100) index" json:"email"`
 
 	Properties map[string]string `json:"properties,omitempty"`
 }
@@ -147,8 +149,10 @@ type ClaimsWithoutThirdIdp struct {
 
 func getShortUser(user *User) *UserShort {
 	res := &UserShort{
-		Owner: user.Owner,
-		Name:  user.Name,
+		Owner:       user.Owner,
+		Name:        user.Name,
+		DisplayName: user.DisplayName,
+		Email:       user.Email,
 	}
 	return res
 }
