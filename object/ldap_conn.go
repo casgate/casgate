@@ -317,7 +317,7 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 	return res
 }
 
-func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUsers []LdapUser, failedUsers []LdapUser, err error) {
+func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (failedUsers []LdapUser, err error) {
 	var uuids []string
 	for _, user := range syncUsers {
 		uuids = append(uuids, user.Uuid)
@@ -346,31 +346,52 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 	}
 	tag := strings.Join(ou, ".")
 
-	for _, syncUser := range syncUsers {
-		existUuids, err := GetExistUuids(owner, uuids)
-		if err != nil {
-			return nil, nil, err
-		}
+	ldapUuids, err := GetExistUuids(owner, uuids)
+	if err != nil {
+		return nil, err
+	}
 
-		found := false
-		if len(existUuids) > 0 {
-			for _, existUuid := range existUuids {
-				if syncUser.Uuid == existUuid {
-					existUsers = append(existUsers, syncUser)
-					found = true
+	for _, syncUser := range syncUsers {
+		foundLdapUuid := ""
+		if len(ldapUuids) > 0 {
+			for _, ldapUuid := range ldapUuids {
+				if syncUser.Uuid == ldapUuid {
+					foundLdapUuid = ldapUuid
 				}
 			}
 		}
 
 		name, err := syncUser.buildLdapUserName()
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
-		if !found {
+		var affected bool
+		if foundLdapUuid != "" {
+			existUser, err := GetUserByLdapUuid(owner, foundLdapUuid)
+			if err != nil {
+				return nil, err
+			}
+
+			existUser.Owner = owner
+			existUser.Name = name
+			existUser.DisplayName = syncUser.buildLdapDisplayName()
+			existUser.Email = syncUser.Email
+			existUser.Phone = syncUser.Mobile
+			existUser.Address = []string{syncUser.Address}
+			existUser.Affiliation = affiliation
+			existUser.Tag = tag
+			existUser.Ldap = syncUser.Uuid
+
+			existUserId := fmt.Sprintf("%s/%s", existUser.Owner, existUser.Name)
+			affected, err = UpdateUserForAllFields(existUserId, existUser)
+			if err != nil {
+				return nil, err
+			}
+		} else {
 			score, err := organization.GetInitScore()
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 
 			newUser := &User{
@@ -395,32 +416,30 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				newUser.SignupApplication = organization.DefaultApplication
 			}
 
-			affected, err := AddUser(newUser)
+			affected, err = AddUser(newUser)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
-
-			if !affected {
-				failedUsers = append(failedUsers, syncUser)
-				continue
-			}
+		}
+		if !affected {
+			failedUsers = append(failedUsers, syncUser)
+			continue
 		}
 
 		ldap, err := GetLdap(ldapId)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		if ldap.EnableRoleMapping {
 			err = SyncRoles(syncUser, name, owner)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		}
-
 	}
 
-	return existUsers, failedUsers, err
+	return failedUsers, err
 }
 
 func GetExistUuids(owner string, uuids []string) ([]string, error) {

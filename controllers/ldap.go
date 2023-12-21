@@ -271,7 +271,7 @@ func (c *ApiController) SyncLdapUsers() {
 		return
 	}
 
-	exist, failed, _ := object.SyncLdapUsers(owner, users, ldapId)
+	failed, _ := object.SyncLdapUsers(owner, users, ldapId)
 
 	err = object.UpdateLdapSyncTime(ldapId)
 	if err != nil {
@@ -280,7 +280,6 @@ func (c *ApiController) SyncLdapUsers() {
 	}
 
 	c.ResponseOk(&LdapSyncResp{
-		Exist:  exist,
 		Failed: failed,
 	})
 }
