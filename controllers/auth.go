@@ -566,6 +566,12 @@ func (c *ApiController) Login() {
 					c.ResponseError(c.T("check:The user is forbidden to sign in, please contact the administrator"))
 				}
 
+				_, err = object.SetUserOAuthProperties(user, provider.Type, userInfo)
+				if err != nil {
+					c.ResponseError(err.Error())
+					return
+				}
+
 				resp = c.HandleLoggedIn(application, user, &authForm)
 
 				record := object.NewRecord(c.Ctx)
@@ -680,7 +686,7 @@ func (c *ApiController) Login() {
 
 				if provider.Category != "SAML" {
 					// sync info from 3rd-party if possible
-					_, err := object.SetUserOAuthProperties(organization, user, provider.Type, userInfo)
+					_, err := object.SetUserOAuthProperties(user, provider.Type, userInfo)
 					if err != nil {
 						c.ResponseError(err.Error())
 						return
@@ -746,7 +752,7 @@ func (c *ApiController) Login() {
 			}
 
 			// sync info from 3rd-party if possible
-			_, err = object.SetUserOAuthProperties(organization, user, provider.Type, userInfo)
+			_, err = object.SetUserOAuthProperties(user, provider.Type, userInfo)
 			if err != nil {
 				c.ResponseError(err.Error())
 				return
