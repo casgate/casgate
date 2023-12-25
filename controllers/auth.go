@@ -566,7 +566,7 @@ func (c *ApiController) Login() {
 					c.ResponseError(c.T("check:The user is forbidden to sign in, please contact the administrator"))
 				}
 
-				_, err = object.SetUserOAuthProperties(user, provider.Type, userInfo)
+				_, err = object.SetUserExternalIdpProperties(user, provider, userInfo)
 				if err != nil {
 					c.ResponseError(err.Error())
 					return
@@ -684,13 +684,10 @@ func (c *ApiController) Login() {
 					}
 				}
 
-				if provider.Category != "SAML" {
-					// sync info from 3rd-party if possible
-					_, err := object.SetUserOAuthProperties(user, provider.Type, userInfo)
-					if err != nil {
-						c.ResponseError(err.Error())
-						return
-					}
+				_, err := object.SetUserExternalIdpProperties(user, provider, userInfo)
+				if err != nil {
+					c.ResponseError(err.Error())
+					return
 				}
 
 				_, err = object.LinkUserAccount(user, provider.Type, userInfo.Id)
@@ -751,8 +748,7 @@ func (c *ApiController) Login() {
 				return
 			}
 
-			// sync info from 3rd-party if possible
-			_, err = object.SetUserOAuthProperties(user, provider.Type, userInfo)
+			_, err = object.SetUserExternalIdpProperties(user, provider, userInfo)
 			if err != nil {
 				c.ResponseError(err.Error())
 				return
