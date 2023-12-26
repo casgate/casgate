@@ -126,9 +126,6 @@
     "Display name cannot be empty": "El nombre de pantalla no puede estar vacío",
     "New password cannot contain blank space.": "La nueva contraseña no puede contener espacios en blanco."
   },
-  "user_upload": {
-    "Failed to import users": "Error al importar usuarios"
-  },
   "util": {
     "No application is found for userId: %s": "No se encuentra ninguna aplicación para el Id de usuario: %s",
     "No provider for category: %s is found for application: %s": "No se encuentra un proveedor para la categoría: %s para la aplicación: %s",

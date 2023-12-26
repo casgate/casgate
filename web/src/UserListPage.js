@@ -14,8 +14,7 @@
 
 import React from "react";
 import {Link} from "react-router-dom";
-import {Button, Space, Switch, Table, Upload} from "antd";
-import {UploadOutlined} from "@ant-design/icons";
+import {Button, Space, Switch, Table} from "antd";
 import moment from "moment";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as Setting from "./Setting";
@@ -145,22 +144,6 @@ class UserListPage extends BaseListPage {
       });
   }
 
-  uploadFile(info) {
-    const {status, response: res} = info.file;
-    if (status === "done") {
-      if (res.status === "ok") {
-        Setting.showMessage("success", "Users uploaded successfully, refreshing the page");
-
-        const {pagination} = this.state;
-        this.fetch({pagination});
-      } else {
-        Setting.showMessage("error", `Users failed to upload: ${res.msg}`);
-      }
-    } else if (status === "error") {
-      Setting.showMessage("error", "File failed to upload");
-    }
-  }
-
   getOrganization(organizationName) {
     OrganizationBackend.getOrganization("admin", organizationName)
       .then((res) => {
@@ -172,27 +155,6 @@ class UserListPage extends BaseListPage {
           Setting.showMessage("error", `Failed to get organization: ${res.msg}`);
         }
       });
-  }
-
-  renderUpload() {
-    const props = {
-      name: "file",
-      accept: ".xlsx",
-      method: "post",
-      action: `${Setting.ServerUrl}/api/upload-users`,
-      withCredentials: true,
-      onChange: (info) => {
-        this.uploadFile(info);
-      },
-    };
-
-    return (
-      <Upload {...props}>
-        <Button id="upload-button" type="primary" size="small">
-          <UploadOutlined /> {i18next.t("user:Upload (.xlsx)")}
-        </Button>
-      </Upload>
-    );
   }
 
   renderTable(users) {
@@ -421,9 +383,6 @@ class UserListPage extends BaseListPage {
             <div>
               {i18next.t("general:Users")}&nbsp;&nbsp;&nbsp;&nbsp;
               <Button style={{marginRight: "5px"}} type="primary" size="small" onClick={this.addUser.bind(this)}>{i18next.t("general:Add")} </Button>
-              {
-                this.renderUpload()
-              }
             </div>
           )}
           loading={this.state.loading}

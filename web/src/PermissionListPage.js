@@ -14,14 +14,13 @@
 
 import React from "react";
 import {Link} from "react-router-dom";
-import {Button, Switch, Table, Upload} from "antd";
+import {Button, Switch, Table} from "antd";
 import moment from "moment";
 import * as Setting from "./Setting";
 import * as PermissionBackend from "./backend/PermissionBackend";
 import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
 import PopconfirmModal from "./common/modal/PopconfirmModal";
-import {UploadOutlined} from "@ant-design/icons";
 
 class PermissionListPage extends BaseListPage {
   newPermission() {
@@ -80,41 +79,6 @@ class PermissionListPage extends BaseListPage {
       .catch(error => {
         Setting.showMessage("error", `${i18next.t("general:Failed to connect to server")}: ${error}`);
       });
-  }
-
-  uploadPermissionFile(info) {
-    const {status, response: res} = info.file;
-    if (status === "done") {
-      if (res.status === "ok") {
-        Setting.showMessage("success", "Users uploaded successfully, refreshing the page");
-
-        const {pagination} = this.state;
-        this.fetch({pagination});
-      } else {
-        Setting.showMessage("error", `Users failed to upload: ${res.msg}`);
-      }
-    } else if (status === "error") {
-      Setting.showMessage("error", "File failed to upload");
-    }
-  }
-  renderPermissionUpload() {
-    const props = {
-      name: "file",
-      accept: ".xlsx",
-      method: "post",
-      action: `${Setting.ServerUrl}/api/upload-permissions`,
-      withCredentials: true,
-      onChange: (info) => {
-        this.uploadPermissionFile(info);
-      },
-    };
-
-    return (
-      <Upload {...props}>
-        <Button id="upload-button" type="primary" size="small">
-          <UploadOutlined /> {i18next.t("user:Upload (.xlsx)")}
-        </Button></Upload>
-    );
   }
 
   renderTable(permissions) {
@@ -389,9 +353,6 @@ class PermissionListPage extends BaseListPage {
             <div>
               {i18next.t("general:Permissions")}&nbsp;&nbsp;&nbsp;&nbsp;
               <Button id="add-button" style={{marginRight: "5px"}} type="primary" size="small" onClick={this.addPermission.bind(this)}>{i18next.t("general:Add")}</Button>
-              {
-                this.renderPermissionUpload()
-              }
             </div>
           )}
           loading={this.state.loading}
