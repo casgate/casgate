@@ -46,27 +46,16 @@ class LdapSyncPage extends React.Component {
     LdapBackend.syncUsers(this.state.ldap.owner, this.state.ldap.id, selectedUsers)
       .then((res => {
         if (res.status === "ok") {
-          const exist = res.data.exist;
           const failed = res.data.failed;
-          const existUser = [];
           const failedUser = [];
 
-          if ((!exist || exist.length === 0) && (!failed || failed.length === 0)) {
+          if (!failed || failed.length === 0) {
             Setting.goToLink(`/organizations/${this.state.ldap.owner}/users`);
           } else {
-            if (exist && exist.length > 0) {
-              exist.forEach(elem => {
-                existUser.push(elem.cn);
-              });
-              Setting.showMessage("error", `User [${existUser}] is already exist`);
-            }
-
-            if (failed && failed.length > 0) {
-              failed.forEach(elem => {
-                failedUser.push(elem.cn);
-              });
-              Setting.showMessage("error", `Sync [${failedUser}] failed`);
-            }
+            failed.forEach(elem => {
+              failedUser.push(elem.cn);
+            });
+            Setting.showMessage("error", `Sync [${failedUser}] failed`);
           }
         } else {
           Setting.showMessage("error", res.msg);
@@ -222,9 +211,6 @@ class LdapSyncPage extends React.Component {
           selectedUsers: selectedRows,
         });
       },
-      getCheckboxProps: record => ({
-        disabled: this.state.existUuids.indexOf(record.uuid) !== -1,
-      }),
     };
 
     return (
