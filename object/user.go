@@ -427,6 +427,24 @@ func GetUserByUserId(owner string, userId string) (*User, error) {
 	}
 }
 
+func GetUserByLdapUuid(owner string, ldapUuid string) (*User, error) {
+	if owner == "" || ldapUuid == "" {
+		return nil, nil
+	}
+
+	user := User{Owner: owner, Ldap: ldapUuid}
+	existed, err := ormer.Engine.Get(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	if existed {
+		return &user, nil
+	} else {
+		return nil, nil
+	}
+}
+
 func GetUserByAccessKey(accessKey string) (*User, error) {
 	if accessKey == "" {
 		return nil, nil
@@ -603,10 +621,10 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 		return 0, err
 	}
 
-	hasImpactOnPolicy := 
+	hasImpactOnPolicy :=
 		(util.InSlice(columns, "groups") && !slices.Equal(oldUser.Groups, user.Groups)) ||
-		(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
-		(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
+			(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
+			(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
 
 	if affected != 0 && hasImpactOnPolicy {
 		oldReachablePermissions, err := reachablePermissionsByUser(oldUser)

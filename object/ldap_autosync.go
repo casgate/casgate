@@ -111,12 +111,12 @@ func syncUsers(ldap *Ldap) error {
 		return nil
 	}
 
-	existed, failed, err := SyncLdapUsers(ldap.Owner, AutoAdjustLdapUser(users), ldap.Id)
+	failed, err := SyncLdapUsers(ldap.Owner, AutoAdjustLdapUser(users), ldap.Id)
 	if len(failed) != 0 {
-		logs.Warning(fmt.Sprintf("ldap autosync,%d new users,but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)), failed)
+		logs.Warning(fmt.Sprintf("ldap autosync, %d synchronized users, but %d users failed during synchronizing:", len(users)-len(failed), len(failed)), failed)
 		logs.Warning(err.Error())
 	} else {
-		logs.Info(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)))
+		logs.Info(fmt.Sprintf("ldap autosync success, %d synchronized users", len(users)))
 	}
 
 	err = UpdateLdapSyncTime(ldap.Id)
@@ -130,7 +130,7 @@ func syncUsers(ldap *Ldap) error {
 // LdapAutoSynchronizerStartUpAll
 // start all autosync goroutine for existing ldap servers in each organizations
 func (l *LdapAutoSynchronizer) LdapAutoSynchronizerStartUpAll() error {
-	organizations := []*Organization{}
+	var organizations []*Organization
 	err := ormer.Engine.Desc("created_time").Find(&organizations)
 	if err != nil {
 		logs.Info("failed to Star up LdapAutoSynchronizer; ")
