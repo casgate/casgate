@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
@@ -47,6 +48,21 @@ func (c *ApiController) ResponseOk(data ...interface{}) {
 func (c *ApiController) ResponseError(error string, data ...interface{}) {
 	resp := &Response{Status: "error", Msg: error}
 	c.ResponseJsonData(resp, data...)
+}
+
+// ResponseErrorWithStatus ...
+func (c *ApiController) ResponseErrorWithStatus(status int, error string) {
+	resp := &Error{Code: status, Message: error}
+
+	http.Error(c.Ctx.ResponseWriter, error, status)
+
+	c.Data["json"] = resp
+	c.ServeJSON()
+}
+
+// ResponseNotFound ...
+func (c *ApiController) ResponseNotFound(error string) {
+	c.ResponseErrorWithStatus(http.StatusNotFound, error)
 }
 
 func (c *ApiController) T(error string) string {

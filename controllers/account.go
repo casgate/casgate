@@ -43,6 +43,11 @@ type Response struct {
 	Data2  interface{} `json:"data2"`
 }
 
+type Error struct {
+	Code     int         `json:"code,omitempty"`
+	Message  string      `json:"message"`
+}
+
 type Captcha struct {
 	Type          string `json:"type"`
 	AppKey        string `json:"appKey"`
