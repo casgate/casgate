@@ -67,6 +67,7 @@
     "Not implemented": "Not implemented",
     "Please login first": "Пожалуйста, сначала войдите в систему",
     "The user: %s doesn't exist": "Пользователь %s не существует",
+    "Invalid username or password": "Неправильное имя пользователя или пароль",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "не поддерживайте captchaProvider:",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"

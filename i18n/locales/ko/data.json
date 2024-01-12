@@ -67,6 +67,7 @@
     "Not implemented": "Not implemented",
     "Please login first": "먼저 로그인 하십시오",
     "The user: %s doesn't exist": "사용자 %s는 존재하지 않습니다",
+    "Invalid username or password": "잘못된 사용자 이름 또는 비밀번호",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "CaptchaProvider를 지원하지 마세요",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
