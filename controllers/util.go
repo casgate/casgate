@@ -54,7 +54,7 @@ func (c *ApiController) ResponseError(error string, data ...interface{}) {
 func (c *ApiController) ResponseErrorWithStatus(status int, error string) {
 	resp := &Error{Code: status, Message: error}
 
-	http.Error(c.Ctx.ResponseWriter, error, status)
+	c.Ctx.Output.Status = http.StatusNotFound
 
 	c.Data["json"] = resp
 	c.ServeJSON()
