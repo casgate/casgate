@@ -60,7 +60,8 @@
     "Your region is not allow to signup by phone": "あなたの地域は電話でサインアップすることができません",
     "password or code is incorrect": "password or code is incorrect",
     "password or code is incorrect, you have %d remaining chances": "パスワードまたはコードが間違っています。あと%d回の試行機会があります",
-    "unsupported password type: %s": "サポートされていないパスワードタイプ：%s"
+    "unsupported password type: %s": "サポートされていないパスワードタイプ：%s",
+    "password must not be same as previous": "password must not be same as previous"
   },
   "general": {
     "Missing parameter": "不足しているパラメーター",

@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/casdoor/casdoor/cred"
+	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/xorm-io/core"
 )
@@ -78,6 +80,30 @@ func GetUserByFields(organization string, field string) (*User, error) {
 	}
 
 	return nil, nil
+}
+
+func IsPasswordSame(user *User, password string) (bool, error) {
+	organization, err := GetOrganizationByUser(user)
+	if err != nil {
+		return false, err
+	}
+
+	credManager := cred.GetCredManager(organization.PasswordType)
+
+	return credManager.IsPasswordCorrect(password, user.Password, user.PasswordSalt), nil
+}
+
+func CheckPasswordSame(user *User, password string, lang string) string {
+	isSame, err := IsPasswordSame(user, password)
+	if err != nil {
+		return err.Error()
+	}
+
+	if isSame {
+		return i18n.Translate(lang, "check:password must not be same as previous")
+	}
+
+	return ""
 }
 
 func SetUserField(user *User, field string, value string) (bool, error) {

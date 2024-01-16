@@ -60,7 +60,8 @@
     "Your region is not allow to signup by phone": "所在地区不支持手机号注册",
     "password or code is incorrect": "密码错误",
     "password or code is incorrect, you have %d remaining chances": "密码错误，您还有 %d 次尝试的机会",
-    "unsupported password type: %s": "不支持的密码类型: %s"
+    "unsupported password type: %s": "不支持的密码类型: %s",
+    "password must not be same as previous": "password must not be same as previous"
   },
   "general": {
     "Missing parameter": "缺少参数",

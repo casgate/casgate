@@ -60,7 +60,8 @@
     "Your region is not allow to signup by phone": "Ihre Region ist nicht berechtigt, sich telefonisch anzumelden",
     "password or code is incorrect": "password or code is incorrect",
     "password or code is incorrect, you have %d remaining chances": "Das Passwort oder der Code ist falsch. Du hast noch %d Versuche übrig",
-    "unsupported password type: %s": "Nicht unterstützter Passworttyp: %s"
+    "unsupported password type: %s": "Nicht unterstützter Passworttyp: %s",
+    "password must not be same as previous": "password must not be same as previous"
   },
   "general": {
     "Missing parameter": "Fehlender Parameter",

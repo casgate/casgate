@@ -60,7 +60,8 @@
     "Your region is not allow to signup by phone": "Ваш регион не разрешает регистрацию по телефону",
     "password or code is incorrect": "password or code is incorrect",
     "password or code is incorrect, you have %d remaining chances": "Неправильный пароль или код, у вас осталось %d попыток",
-    "unsupported password type: %s": "неподдерживаемый тип пароля: %s"
+    "unsupported password type: %s": "неподдерживаемый тип пароля: %s",
+    "password must not be same as previous": "пароль не должен быть такой же как предыдущий"
   },
   "general": {
     "Missing parameter": "Отсутствующий параметр",

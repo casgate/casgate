@@ -60,7 +60,8 @@
     "Your region is not allow to signup by phone": "당신의 지역은 전화로 가입할 수 없습니다",
     "password or code is incorrect": "password or code is incorrect",
     "password or code is incorrect, you have %d remaining chances": "암호 또는 코드가 올바르지 않습니다. %d번의 기회가 남아 있습니다",
-    "unsupported password type: %s": "지원되지 않는 암호 유형: %s"
+    "unsupported password type: %s": "지원되지 않는 암호 유형: %s",
+    "password must not be same as previous": "password must not be same as previous"
   },
   "general": {
     "Missing parameter": "누락된 매개변수",
