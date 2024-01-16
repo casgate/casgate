@@ -493,6 +493,12 @@ func (c *ApiController) SetPassword() {
 		return
 	}
 
+	msg = object.CheckPasswordSame(targetUser, newPassword, c.GetAcceptLanguage())
+	if msg != "" {
+		c.ResponseError(msg)
+		return
+	}
+
 	targetUser.Password = newPassword
 	_, err = object.SetUserField(targetUser, "password", targetUser.Password)
 	if err != nil {

@@ -60,7 +60,8 @@
     "Your region is not allow to signup by phone": "Wilayah Anda tidak diizinkan untuk mendaftar melalui telepon",
     "password or code is incorrect": "password or code is incorrect",
     "password or code is incorrect, you have %d remaining chances": "Kata sandi atau kode salah, Anda memiliki %d kesempatan tersisa",
-    "unsupported password type: %s": "jenis sandi tidak didukung: %s"
+    "unsupported password type: %s": "jenis sandi tidak didukung: %s",
+    "password must not be same as previous": "password must not be same as previous"
   },
   "general": {
     "Missing parameter": "Parameter hilang",
