@@ -142,6 +142,7 @@ func (c *ApiController) GetUsers() {
 // @Param   phone  query    string  false 	     "The phone of the user"
 // @Param   userId query    string  false 	     "The userId of the user"
 // @Success 200 {object} object.User The Response object
+// @Failure 404 Not found
 // @router /get-user [get]
 func (c *ApiController) GetUser() {
 	id := c.Input().Get("id")
@@ -155,6 +156,11 @@ func (c *ApiController) GetUser() {
 		userFromUserId, err = object.GetUserByUserId(owner, userId)
 		if err != nil {
 			c.ResponseError(err.Error())
+			return
+		}
+
+		if userFromUserId == nil {
+			c.ResponseNotFound("user not found")
 			return
 		}
 

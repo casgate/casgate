@@ -258,3 +258,8 @@ func (c *ApiController) Finish() {
 	}
 	c.Controller.Finish()
 }
+
+type Error struct {
+	Code     int         `json:"code,omitempty"`
+	Message  string      `json:"message"`
+}
