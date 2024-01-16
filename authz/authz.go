@@ -51,22 +51,23 @@ p, *, *, GET, /api/get-account, *, *
 p, *, *, GET, /api/userinfo, *, *
 p, *, *, GET, /api/user, *, *
 p, *, *, GET, /api/health, *, *
-p, *, *, POST, /api/webhook, *, *
+p, *, !anonymous, POST, /api/webhook, *, *
 p, *, *, GET, /api/get-webhook-event, *, *
 p, *, *, GET, /api/get-captcha-status, *, *
 p, *, *, *, /api/login/oauth, *, *
 p, *, *, GET, /api/get-application, *, *
+p, *, !anonymous, POST, /api/add-application, *, *
 p, *, *, GET, /api/get-organization-applications, *, *
-p, *, *, GET, /api/get-user, *, *
+p, *, !anonymous, GET, /api/get-user, *, *
 p, *, *, GET, /api/get-user-application, *, *
-p, *, *, GET, /api/get-resources, *, *
-p, *, *, GET, /api/get-records, *, *
-p, *, *, GET, /api/get-product, *, *
-p, *, *, POST, /api/buy-product, *, *
-p, *, *, GET, /api/get-payment, *, *
-p, *, *, POST, /api/update-payment, *, *
-p, *, *, POST, /api/invoice-payment, *, *
-p, *, *, POST, /api/notify-payment, *, *
+p, *, !anonymous, GET, /api/get-resources, *, *
+p, *, !anonymous, GET, /api/get-records, *, *
+p, *, !anonymous, GET, /api/get-product, *, *
+p, *, !anonymous, POST, /api/buy-product, *, *
+p, *, !anonymous, GET, /api/get-payment, *, *
+p, *, !anonymous, POST, /api/update-payment, *, *
+p, *, !anonymous, POST, /api/invoice-payment, *, *
+p, *, !anonymous, POST, /api/notify-payment, *, *
 p, *, *, POST, /api/unlink, *, *
 p, *, *, POST, /api/set-password, *, *
 p, *, *, POST, /api/send-verification-code, *, *
@@ -74,7 +75,7 @@ p, *, *, GET, /api/get-captcha, *, *
 p, *, *, POST, /api/verify-captcha, *, *
 p, *, *, POST, /api/verify-code, *, *
 p, *, *, POST, /api/reset-email-or-phone, *, *
-p, *, *, POST, /api/upload-resource, *, *
+p, *, !anonymous, POST, /api/upload-resource, *, *
 p, *, *, GET, /.well-known/openid-configuration, *, *
 p, *, *, *, /.well-known/jwks, *, *
 p, *, *, GET, /api/get-saml-login, *, *
@@ -88,9 +89,10 @@ p, *, *, GET, /api/get-prometheus-info, *, *
 p, *, *, *, /api/metrics, *, *
 p, *, *, GET, /api/get-pricing, *, *
 p, *, *, GET, /api/get-plan, *, *
-p, *, *, GET, /api/get-subscription, *, *
+p, *, !anonymous, GET, /api/get-subscriptions, *, *
+p, *, !anonymous, GET, /api/get-subscription, *, *
 p, *, *, GET, /api/get-provider, *, *
-p, *, *, GET, /api/get-organization-names, *, *
+p, *, !anonymous, GET, /api/get-organization-names, *, *
 `
 
 		sa := stringadapter.NewAdapter(ruleText)

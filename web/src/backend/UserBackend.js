@@ -153,9 +153,9 @@ export function setPassword(userOwner, userName, oldPassword, newPassword, code 
   }).then(res => res.json());
 }
 
-export function sendCode(captchaType, captchaToken, clientSecret, method, countryCode = "", dest, type, applicationId, checkUser = "") {
+export function sendCode(oneTimeCode, captchaToken, clientSecret, method, countryCode = "", dest, type, applicationId, checkUser = "") {
   const formData = new FormData();
-  formData.append("captchaType", captchaType);
+  formData.append("oneTimeCode", oneTimeCode);
   formData.append("captchaToken", captchaToken);
   formData.append("clientSecret", clientSecret);
   formData.append("method", method);

@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "Die Anwendung erlaubt es nicht, sich für ein neues Konto anzumelden",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "Die Challenge-Methode sollte S256 sein",
@@ -138,6 +139,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "Der Code wurde noch nicht versendet!",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "Ungültiger Captcha-Anbieter.",
     "Phone number is invalid in your region %s": "Die Telefonnummer ist in Ihrer Region %s ungültig",
     "Turing test failed.": "Turing-Test fehlgeschlagen.",

@@ -20,10 +20,18 @@ import (
 	"strings"
 
 	"github.com/beego/beego/utils/pagination"
+	"github.com/casdoor/casdoor/captcha"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 )
+
+type GetEmailAndPhoneResp struct {
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	Phone       string `json:"phone"`
+	OneTimeCode string `json:"oneTimeCode"`
+}
 
 // GetGlobalUsers
 // @Title GetGlobalUsers
@@ -376,7 +384,29 @@ func (c *ApiController) DeleteUser() {
 // @router /get-email-and-phone [get]
 func (c *ApiController) GetEmailAndPhone() {
 	organization := c.Ctx.Request.Form.Get("organization")
+	applicationId := c.Ctx.Request.Form.Get("applicationId")
 	username := c.Ctx.Request.Form.Get("username")
+	clientSecret := c.Ctx.Request.Form.Get("captchaCode")
+	captchaToken := c.Ctx.Request.Form.Get("captchaToken")
+
+	applicationCaptchaProvider, err := object.GetCaptchaProviderByApplication(applicationId, "false", c.GetAcceptLanguage())
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if applicationCaptchaProvider != nil {
+		if captchaProvider := captcha.GetCaptchaProvider(applicationCaptchaProvider.Type); captchaProvider == nil {
+			c.ResponseError(c.T("general:don't support captchaProvider: ") + applicationCaptchaProvider.Type)
+			return
+		} else if isHuman, err := captchaProvider.VerifyCaptcha(captchaToken, clientSecret); err != nil {
+			c.ResponseError(err.Error())
+			return
+		} else if !isHuman {
+			c.ResponseError(c.T("verification:Incorrect input of captcha characters."))
+			return
+		}
+	}
 
 	user, err := object.GetUserByFields(organization, username)
 	if err != nil {
@@ -389,7 +419,11 @@ func (c *ApiController) GetEmailAndPhone() {
 		return
 	}
 
-	respUser := object.User{Name: user.Name}
+	oneTimeCode := util.GetRandomCode(6)
+
+	c.SetSession("oneTimeCode", oneTimeCode)
+
+	respUser := GetEmailAndPhoneResp{Name: user.Name, OneTimeCode: oneTimeCode}
 	var contentType string
 	switch username {
 	case user.Email:
@@ -454,11 +488,12 @@ func (c *ApiController) SetPassword() {
 			return
 		}
 	} else {
-		if code != c.GetSession("verifiedCode") {
+		if code != c.GetSession("verifiedCode") || userId != c.GetSession("verifiedUserId") {
 			c.ResponseError(c.T("general:Missing parameter"))
 			return
 		}
 		c.SetSession("verifiedCode", "")
+		c.SetSession("verifiedUserId", "")
 	}
 
 	targetUser, err := object.GetUser(userId)

@@ -94,6 +94,11 @@ func (c *ApiController) Signup() {
 		return
 	}
 
+	if application.Organization != organization.Name {
+		c.ResponseError(c.T("account:organization in request differs from application organization"))
+		return
+	}
+
 	msg := object.CheckUserSignup(application, organization, &authForm, c.GetAcceptLanguage())
 	if msg != "" {
 		c.ResponseError(msg)

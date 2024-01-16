@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "该应用不允许注册新用户",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "Challenge方法应该为S256",
@@ -138,6 +139,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "验证码还未发送",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "非法的验证码提供商",
     "Phone number is invalid in your region %s": "您所在地区的电话号码无效 %s",
     "Turing test failed.": "验证码还未发送",

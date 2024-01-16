@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "アプリケーションは新しいアカウントの登録を許可しません",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "チャレンジメソッドはS256である必要があります",
@@ -138,6 +139,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "まだコードが送信されていません！",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "無効なCAPTCHAプロバイダー。",
     "Phone number is invalid in your region %s": "電話番号はあなたの地域で無効です %s",
     "Turing test failed.": "チューリングテストは失敗しました。",

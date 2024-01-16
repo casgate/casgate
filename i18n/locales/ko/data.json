@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "이 응용 프로그램은 새로운 계정 가입을 허용하지 않습니다",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "도전 방식은 S256이어야 합니다",
@@ -138,6 +139,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "코드는 아직 전송되지 않았습니다!",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "잘못된 captcha 제공자입니다.",
     "Phone number is invalid in your region %s": "전화 번호가 당신의 지역 %s에서 유효하지 않습니다",
     "Turing test failed.": "튜링 테스트 실패.",

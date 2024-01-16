@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "Ứng dụng không cho phép đăng ký tài khoản mới",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "Phương pháp thách thức nên là S256",
@@ -138,6 +139,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "Mã chưa được gửi đến!",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "Nhà cung cấp captcha không hợp lệ.",
     "Phone number is invalid in your region %s": "Số điện thoại không hợp lệ trong vùng của bạn %s",
     "Turing test failed.": "Kiểm định Turing thất bại.",
