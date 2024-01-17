@@ -346,17 +346,17 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (failedUse
 	}
 	tag := strings.Join(ou, ".")
 
-	ldapUuids, err := GetExistUuids(owner, uuids)
+	existLdapUsers, err := GetExistLdapUsers(owner, uuids)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, syncUser := range syncUsers {
-		foundLdapUuid := ""
-		if len(ldapUuids) > 0 {
-			for _, ldapUuid := range ldapUuids {
-				if syncUser.Uuid == ldapUuid {
-					foundLdapUuid = ldapUuid
+		var foundUser *User
+		if len(existLdapUsers) > 0 {
+			for _, ldapUser := range existLdapUsers {
+				if syncUser.Uuid == ldapUser.Ldap {
+					foundUser = ldapUser
 				}
 			}
 		}
@@ -367,24 +367,16 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (failedUse
 		}
 
 		var affected bool
-		if foundLdapUuid != "" {
-			existUser, err := GetUserByLdapUuid(owner, foundLdapUuid)
-			if err != nil {
-				return nil, err
-			}
+		if foundUser != nil {
+			foundUser.DisplayName = syncUser.buildLdapDisplayName()
+			foundUser.Email = syncUser.Email
+			foundUser.Phone = syncUser.Mobile
+			foundUser.Address = []string{syncUser.Address}
+			foundUser.Affiliation = affiliation
+			foundUser.Tag = tag
 
-			existUser.Owner = owner
-			existUser.Name = name
-			existUser.DisplayName = syncUser.buildLdapDisplayName()
-			existUser.Email = syncUser.Email
-			existUser.Phone = syncUser.Mobile
-			existUser.Address = []string{syncUser.Address}
-			existUser.Affiliation = affiliation
-			existUser.Tag = tag
-			existUser.Ldap = syncUser.Uuid
-
-			existUserId := fmt.Sprintf("%s/%s", existUser.Owner, existUser.Name)
-			affected, err = UpdateUserForAllFields(existUserId, existUser)
+			existUserId := fmt.Sprintf("%s/%s", owner, foundUser.Name)
+			affected, err = UpdateUserForAllFields(existUserId, foundUser)
 			if err != nil {
 				return nil, err
 			}
