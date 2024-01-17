@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "이 응용 프로그램은 새로운 계정 가입을 허용하지 않습니다",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "도전 방식은 S256이어야 합니다",
@@ -54,19 +55,21 @@
     "Username cannot be an email address": "사용자 이름은 이메일 주소가 될 수 없습니다",
     "Username cannot contain white spaces": "사용자 이름에는 공백이 포함될 수 없습니다",
     "Username cannot start with a digit": "사용자 이름은 숫자로 시작할 수 없습니다",
-    "Username is too long (maximum is 39 characters).": "사용자 이름이 너무 깁니다 (최대 39자).",
+    "Username is too long (maximum is 255 characters).": "사용자 이름이 너무 깁니다 (최대 255자).",
     "Username must have at least 2 characters": "사용자 이름은 적어도 2개의 문자가 있어야 합니다",
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "올바르지 않은 비밀번호나 코드를 여러 번 입력했습니다. %d분 동안 기다리신 후 다시 시도해주세요",
     "Your region is not allow to signup by phone": "당신의 지역은 전화로 가입할 수 없습니다",
     "password or code is incorrect": "password or code is incorrect",
     "password or code is incorrect, you have %d remaining chances": "암호 또는 코드가 올바르지 않습니다. %d번의 기회가 남아 있습니다",
-    "unsupported password type: %s": "지원되지 않는 암호 유형: %s"
+    "unsupported password type: %s": "지원되지 않는 암호 유형: %s",
+    "password must not be same as previous": "password must not be same as previous"
   },
   "general": {
     "Missing parameter": "누락된 매개변수",
     "Not implemented": "Not implemented",
     "Please login first": "먼저 로그인 하십시오",
     "The user: %s doesn't exist": "사용자 %s는 존재하지 않습니다",
+    "Invalid username or password": "잘못된 사용자 이름 또는 비밀번호",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "CaptchaProvider를 지원하지 마세요",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
@@ -133,6 +136,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "코드는 아직 전송되지 않았습니다!",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "잘못된 captcha 제공자입니다.",
     "Phone number is invalid in your region %s": "전화 번호가 당신의 지역 %s에서 유효하지 않습니다",
     "Turing test failed.": "튜링 테스트 실패.",

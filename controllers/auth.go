@@ -61,6 +61,7 @@ func tokenToResponse(token *object.Token) *Response {
 // HandleLoggedIn ...
 func (c *ApiController) HandleLoggedIn(application *object.Application, user *object.User, form *form.AuthForm) (resp *Response) {
 	userId := user.GetId()
+	sid := c.getSid(userId)
 
 	if user.Type == "invited-user" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
@@ -144,7 +145,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 			c.ResponseError(c.T("auth:Challenge method should be S256"))
 			return
 		}
-		code, err := object.GetOAuthCode(userId, clientId, responseType, redirectUri, scope, state, nonce, codeChallenge, c.Ctx.Request.Host, c.GetAcceptLanguage())
+		code, err := object.GetOAuthCode(userId, clientId, responseType, redirectUri, scope, state, nonce, codeChallenge, c.Ctx.Request.Host, sid, c.GetAcceptLanguage())
 		if err != nil {
 			c.ResponseError(err.Error(), nil)
 			return
@@ -161,7 +162,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 			resp = &Response{Status: "error", Msg: fmt.Sprintf("error: grant_type: %s is not supported in this application", form.Type), Data: ""}
 		} else {
 			scope := c.Input().Get("scope")
-			token, _ := object.GetTokenByUser(application, user, scope, c.Ctx.Request.Host)
+			token, _ := object.GetTokenByUser(application, user, scope, c.Ctx.Request.Host, sid)
 			resp = tokenToResponse(token)
 		}
 	} else if form.Type == ResponseTypeSaml { // saml flow

@@ -53,16 +53,30 @@ func (c *ApiController) SendVerificationCode() {
 		return
 	}
 
-	if vform.CaptchaType != "none" {
-		if captchaProvider := captcha.GetCaptchaProvider(vform.CaptchaType); captchaProvider == nil {
-			c.ResponseError(c.T("general:don't support captchaProvider: ") + vform.CaptchaType)
+	if vform.OneTimeCode != "" {
+		if vform.OneTimeCode != c.GetSession("oneTimeCode") {
+			c.ResponseError(c.T("verification:Incorrect input of oneTimeCode"))
 			return
-		} else if isHuman, err := captchaProvider.VerifyCaptcha(vform.CaptchaToken, vform.ClientSecret); err != nil {
+		}
+		c.SetSession("oneTimeCode", "")
+	} else {
+		applicationCaptchaProvider, err := object.GetCaptchaProviderByApplication(vform.ApplicationId, "false", c.GetAcceptLanguage())
+		if err != nil {
 			c.ResponseError(err.Error())
 			return
-		} else if !isHuman {
-			c.ResponseError(c.T("verification:Turing test failed."))
-			return
+		}
+
+		if applicationCaptchaProvider != nil {
+			if captchaProvider := captcha.GetCaptchaProvider(applicationCaptchaProvider.Type); captchaProvider == nil {
+				c.ResponseError(c.T("general:don't support captchaProvider: ") + applicationCaptchaProvider.Type)
+				return
+			} else if isHuman, err := captchaProvider.VerifyCaptcha(vform.CaptchaToken, vform.ClientSecret); err != nil {
+				c.ResponseError(err.Error())
+				return
+			} else if !isHuman {
+				c.ResponseError(c.T("verification:Incorrect input of captcha characters."))
+				return
+			}
 		}
 	}
 
@@ -377,8 +391,8 @@ func (c *ApiController) VerifyCode() {
 		}
 	}
 
-	if result := object.CheckVerificationCode(checkDest, authForm.Code, c.GetAcceptLanguage()); result.Code != object.VerificationSuccess {
-		c.ResponseError(result.Msg)
+	if err := object.CheckOneTimePassword(user, checkDest, authForm.Code, c.GetAcceptLanguage()); err != nil {
+		c.ResponseError(err.Error())
 		return
 	}
 	err = object.DisableVerificationCode(checkDest)
@@ -386,6 +400,7 @@ func (c *ApiController) VerifyCode() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.SetSession("verifiedUserId", user.GetId())
 	c.SetSession("verifiedCode", authForm.Code)
 
 	c.ResponseOk()

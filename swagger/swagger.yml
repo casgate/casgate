@@ -2244,6 +2244,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.User'
+        "404":
+          description: Not found
   /api/get-user-application:
     get:
       tags:
@@ -3516,7 +3518,7 @@ definitions:
   168941.<nil>.string:
     title: string
     type: object
-  286475.<nil>.string:
+  288777.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -4514,7 +4516,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/286475.<nil>.string'
+        $ref: '#/definitions/288777.<nil>.string'
   object.ProviderItem:
     title: ProviderItem
     type: object

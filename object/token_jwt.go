@@ -28,12 +28,15 @@ type Claims struct {
 	Nonce     string `json:"nonce,omitempty"`
 	Tag       string `json:"tag"`
 	Scope     string `json:"scope,omitempty"`
+	Sid       string `json:"sid,omitempty"`
 	jwt.RegisteredClaims
 }
 
 type UserShort struct {
-	Owner string `xorm:"varchar(100) notnull pk" json:"owner"`
-	Name  string `xorm:"varchar(100) notnull pk" json:"name"`
+	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
+	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
+	DisplayName string `xorm:"varchar(100)" json:"displayName"`
+	Email       string `xorm:"varchar(100) index" json:"email"`
 
 	Properties map[string]string `json:"properties,omitempty"`
 }
@@ -130,6 +133,7 @@ type ClaimsShort struct {
 	TokenType string `json:"tokenType,omitempty"`
 	Nonce     string `json:"nonce,omitempty"`
 	Scope     string `json:"scope,omitempty"`
+	Sid       string `json:"sid,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -139,13 +143,16 @@ type ClaimsWithoutThirdIdp struct {
 	Nonce     string `json:"nonce,omitempty"`
 	Tag       string `json:"tag"`
 	Scope     string `json:"scope,omitempty"`
+	Sid       string `json:"sid,omitempty"`
 	jwt.RegisteredClaims
 }
 
 func getShortUser(user *User) *UserShort {
 	res := &UserShort{
-		Owner: user.Owner,
-		Name:  user.Name,
+		Owner:       user.Owner,
+		Name:        user.Name,
+		DisplayName: user.DisplayName,
+		Email:       user.Email,
 	}
 	return res
 }
@@ -243,6 +250,7 @@ func getShortClaims(claims Claims) ClaimsShort {
 		TokenType:        claims.TokenType,
 		Nonce:            claims.Nonce,
 		Scope:            claims.Scope,
+		Sid:              claims.Sid,
 		RegisteredClaims: claims.RegisteredClaims,
 	}
 	return res
@@ -254,6 +262,7 @@ func getShortClaimsWithProperties(claims Claims) ClaimsShort {
 		TokenType:        claims.TokenType,
 		Nonce:            claims.Nonce,
 		Scope:            claims.Scope,
+		Sid:              claims.Sid,
 		RegisteredClaims: claims.RegisteredClaims,
 	}
 
@@ -268,6 +277,7 @@ func getClaimsWithoutThirdIdp(claims Claims) ClaimsWithoutThirdIdp {
 		Nonce:               claims.Nonce,
 		Tag:                 claims.Tag,
 		Scope:               claims.Scope,
+		Sid:                 claims.Sid,
 		RegisteredClaims:    claims.RegisteredClaims,
 	}
 	return res
@@ -295,7 +305,7 @@ func refineUser(user *User) *User {
 	return user
 }
 
-func generateJwtToken(application *Application, user *User, nonce string, scope string, host string) (string, string, string, error) {
+func generateJwtToken(application *Application, user *User, nonce string, scope string, host string, sid string) (string, string, string, error) {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(time.Duration(application.ExpireInHours) * time.Hour)
 	refreshExpireTime := nowTime.Add(time.Duration(application.RefreshExpireInHours) * time.Hour)
@@ -317,6 +327,7 @@ func generateJwtToken(application *Application, user *User, nonce string, scope 
 		// FIXME: A workaround for custom claim by reusing `tag` in user info
 		Tag:   user.Tag,
 		Scope: scope,
+		Sid:   sid,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    originBackend,
 			Subject:   user.Id,

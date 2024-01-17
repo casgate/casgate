@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "Die Anwendung erlaubt es nicht, sich für ein neues Konto anzumelden",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "Die Challenge-Methode sollte S256 sein",
@@ -54,19 +55,21 @@
     "Username cannot be an email address": "Benutzername kann keine E-Mail-Adresse sein",
     "Username cannot contain white spaces": "Benutzername darf keine Leerzeichen enthalten",
     "Username cannot start with a digit": "Benutzername darf nicht mit einer Ziffer beginnen",
-    "Username is too long (maximum is 39 characters).": "Benutzername ist zu lang (das Maximum beträgt 39 Zeichen).",
+    "Username is too long (maximum is 255 characters).": "Benutzername ist zu lang (das Maximum beträgt 255 Zeichen).",
     "Username must have at least 2 characters": "Benutzername muss mindestens 2 Zeichen lang sein",
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "Sie haben zu oft das falsche Passwort oder den falschen Code eingegeben. Bitte warten Sie %d Minuten und versuchen Sie es erneut",
     "Your region is not allow to signup by phone": "Ihre Region ist nicht berechtigt, sich telefonisch anzumelden",
     "password or code is incorrect": "password or code is incorrect",
     "password or code is incorrect, you have %d remaining chances": "Das Passwort oder der Code ist falsch. Du hast noch %d Versuche übrig",
-    "unsupported password type: %s": "Nicht unterstützter Passworttyp: %s"
+    "unsupported password type: %s": "Nicht unterstützter Passworttyp: %s",
+    "password must not be same as previous": "password must not be same as previous"
   },
   "general": {
     "Missing parameter": "Fehlender Parameter",
     "Not implemented": "Not implemented",
     "Please login first": "Bitte zuerst einloggen",
     "The user: %s doesn't exist": "Der Benutzer %s existiert nicht",
+    "Invalid username or password": "Ungültiger Benutzername oder Passwort",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "Unterstütze captchaProvider nicht:",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
@@ -133,6 +136,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "Der Code wurde noch nicht versendet!",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "Ungültiger Captcha-Anbieter.",
     "Phone number is invalid in your region %s": "Die Telefonnummer ist in Ihrer Region %s ungültig",
     "Turing test failed.": "Turing-Test fehlgeschlagen.",

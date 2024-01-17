@@ -316,3 +316,7 @@ func TruncateIfTooLong(s string, maxLen int) string {
 	}
 	return s
 }
+
+func GetSid(userId, sessionId string) string {
+	return GetHmacSha256(userId, sessionId)
+}

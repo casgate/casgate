@@ -135,7 +135,8 @@ h1 {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  width: 480px;
+  min-width: 390px;
+  max-width: 480px;
   padding: var(--space-3-x) var(--space-4-x) var(--space-4-x) var(--space-4-x);
   background: var(--color-background-bg-secondary);
   border-radius: var(--space-2-x);
@@ -158,6 +159,10 @@ h1 {
   background: #ced8eb no-repeat;
   background-size: 100% 100%;
   background-attachment: fixed;
+
+  @media screen and (max-width: 480px) {
+    background: var(--color-background-bg-secondary);
+  }
 }
 
 .ant-menu-horizontal {

@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "Ứng dụng không cho phép đăng ký tài khoản mới",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "Phương pháp thách thức nên là S256",
@@ -54,19 +55,21 @@
     "Username cannot be an email address": "Tên người dùng không thể là địa chỉ email",
     "Username cannot contain white spaces": "Tên người dùng không thể chứa khoảng trắng",
     "Username cannot start with a digit": "Tên người dùng không thể bắt đầu bằng chữ số",
-    "Username is too long (maximum is 39 characters).": "Tên đăng nhập quá dài (tối đa là 39 ký tự).",
+    "Username is too long (maximum is 255 characters).": "Tên đăng nhập quá dài (tối đa là 255 ký tự).",
     "Username must have at least 2 characters": "Tên đăng nhập phải có ít nhất 2 ký tự",
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "Bạn đã nhập sai mật khẩu hoặc mã quá nhiều lần, vui lòng đợi %d phút và thử lại",
     "Your region is not allow to signup by phone": "Vùng của bạn không được phép đăng ký bằng điện thoại",
     "password or code is incorrect": "password or code is incorrect",
     "password or code is incorrect, you have %d remaining chances": "Mật khẩu hoặc mã không chính xác, bạn còn %d lần cơ hội",
-    "unsupported password type: %s": "Loại mật khẩu không được hỗ trợ: %s"
+    "unsupported password type: %s": "Loại mật khẩu không được hỗ trợ: %s",
+    "password must not be same as previous": "password must not be same as previous"
   },
   "general": {
     "Missing parameter": "Thiếu tham số",
     "Not implemented": "Not implemented",
     "Please login first": "Vui lòng đăng nhập trước",
     "The user: %s doesn't exist": "Người dùng: %s không tồn tại",
+    "Invalid username or password": "Sai username hoặc password",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "không hỗ trợ captchaProvider: ",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
@@ -133,6 +136,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "Mã chưa được gửi đến!",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "Nhà cung cấp captcha không hợp lệ.",
     "Phone number is invalid in your region %s": "Số điện thoại không hợp lệ trong vùng của bạn %s",
     "Turing test failed.": "Kiểm định Turing thất bại.",

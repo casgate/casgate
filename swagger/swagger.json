@@ -3443,6 +3443,9 @@
                         "schema": {
                             "$ref": "#/definitions/object.User"
                         }
+                    },
+                    "404": {
+                        "description": "Not found"
                     }
                 }
             }
@@ -5381,7 +5384,7 @@
             "title": "string",
             "type": "object"
         },
-        "286475.\u003cnil\u003e.string": {
+        "288777.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6859,7 +6862,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/286475.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/288777.\u003cnil\u003e.string"
                 }
             }
         },

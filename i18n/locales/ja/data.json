@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "アプリケーションは新しいアカウントの登録を許可しません",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "チャレンジメソッドはS256である必要があります",
@@ -54,19 +55,21 @@
     "Username cannot be an email address": "ユーザー名には電子メールアドレスを使用できません",
     "Username cannot contain white spaces": "ユーザ名にはスペースを含めることはできません",
     "Username cannot start with a digit": "ユーザー名は数字で始めることはできません",
-    "Username is too long (maximum is 39 characters).": "ユーザー名が長すぎます（最大39文字）。",
+    "Username is too long (maximum is 255 characters).": "ユーザー名が長すぎます（最大255文字）。",
     "Username must have at least 2 characters": "ユーザー名は少なくとも2文字必要です",
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "あなたは間違ったパスワードまたはコードを何度も入力しました。%d 分間待ってから再度お試しください",
     "Your region is not allow to signup by phone": "あなたの地域は電話でサインアップすることができません",
     "password or code is incorrect": "password or code is incorrect",
     "password or code is incorrect, you have %d remaining chances": "パスワードまたはコードが間違っています。あと%d回の試行機会があります",
-    "unsupported password type: %s": "サポートされていないパスワードタイプ：%s"
+    "unsupported password type: %s": "サポートされていないパスワードタイプ：%s",
+    "password must not be same as previous": "password must not be same as previous"
   },
   "general": {
     "Missing parameter": "不足しているパラメーター",
     "Not implemented": "Not implemented",
     "Please login first": "最初にログインしてください",
     "The user: %s doesn't exist": "そのユーザー：%sは存在しません",
+    "Invalid username or password": "ユーザー名かパスワードが無効",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "captchaProviderをサポートしないでください",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
@@ -133,6 +136,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "まだコードが送信されていません！",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "無効なCAPTCHAプロバイダー。",
     "Phone number is invalid in your region %s": "電話番号はあなたの地域で無効です %s",
     "Turing test failed.": "チューリングテストは失敗しました。",

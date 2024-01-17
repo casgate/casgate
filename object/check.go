@@ -15,6 +15,7 @@
 package object
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -28,8 +29,8 @@ import (
 )
 
 const (
-	SigninWrongTimesLimit     = 5
-	LastSignWrongTimeDuration = time.Minute * 15
+	SigninWrongTimesLimit     = 4
+	LastSignWrongTimeDuration = time.Minute * 5
 )
 
 func CheckUserSignup(application *Application, organization *Organization, form *form.AuthForm, lang string) string {
@@ -212,6 +213,19 @@ func CheckPassword(user *User, password string, lang string, options ...bool) st
 	}
 }
 
+func CheckOneTimePassword(user *User, dest, code, lang string) error {
+	// check the login error times
+	if msg := checkSigninErrorTimes(user, lang); msg != "" {
+		return errors.New(msg)
+	}
+	result := CheckVerificationCode(dest, code, lang)
+	if result.Code != VerificationSuccess {
+		return errors.New(recordSigninErrorInfo(user, lang))
+	}
+	resetUserSigninErrorTimes(user)
+	return nil
+}
+
 func CheckPasswordComplexityByOrg(organization *Organization, password string) string {
 	errorMsg := checkPasswordComplexity(password, organization.PasswordOptions)
 	return errorMsg
@@ -280,7 +294,7 @@ func CheckUserPassword(organization string, username string, password string, la
 	}
 
 	if user == nil || user.IsDeleted {
-		return nil, fmt.Sprintf(i18n.Translate(lang, "general:The user name or password/code is incorrect"))
+		return nil, fmt.Sprintf(i18n.Translate(lang, "general:Invalid username or password"))
 	}
 
 	if user.Ldap != "" {
@@ -406,8 +420,8 @@ func CheckLoginPermission(userId string, application *Application) (bool, error)
 func CheckUsername(username string, lang string) string {
 	if username == "" {
 		return i18n.Translate(lang, "check:Empty username.")
-	} else if len(username) > 39 {
-		return i18n.Translate(lang, "check:Username is too long (maximum is 39 characters).")
+	} else if len(username) > 255 {
+		return i18n.Translate(lang, "check:Username is too long (maximum is 255 characters).")
 	}
 
 	// https://stackoverflow.com/questions/58726546/github-username-convention-using-regex

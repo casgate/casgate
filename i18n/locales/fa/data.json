@@ -6,7 +6,8 @@
     "The application does not allow to sign up new account": "The application does not allow to sign up new account",
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong user type": "Wrong user type",
-    "Wrong username for invited user": "Wrong username for invited user"
+    "Wrong username for invited user": "Wrong username for invited user",
+    "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
     "Challenge method should be S256": "Challenge method should be S256",
@@ -54,19 +55,21 @@
     "Username cannot be an email address": "Username cannot be an email address",
     "Username cannot contain white spaces": "Username cannot contain white spaces",
     "Username cannot start with a digit": "Username cannot start with a digit",
-    "Username is too long (maximum is 39 characters).": "Username is too long (maximum is 39 characters).",
+    "Username is too long (maximum is 255 characters).": "Username is too long (maximum is 255 characters).",
     "Username must have at least 2 characters": "Username must have at least 2 characters",
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "You have entered the wrong password or code too many times, please wait for %d minutes and try again",
     "Your region is not allow to signup by phone": "Your region is not allow to signup by phone",
     "password or code is incorrect": "password or code is incorrect",
     "password or code is incorrect, you have %d remaining chances": "password or code is incorrect, you have %d remaining chances",
-    "unsupported password type: %s": "unsupported password type: %s"
+    "unsupported password type: %s": "unsupported password type: %s",
+    "password must not be same as previous": "password must not be same as previous"
   },
   "general": {
     "Missing parameter": "Missing parameter",
     "Not implemented": "Not implemented",
     "Please login first": "Please login first",
     "The user: %s doesn't exist": "The user: %s doesn't exist",
+    "Invalid username or password": "Invalid username or password",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "don't support captchaProvider: ",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
@@ -133,6 +136,8 @@
   },
   "verification": {
     "Code has not been sent yet!": "Code has not been sent yet!",
+    "Incorrect input of captcha characters.": "Incorrect input of captcha characters.",
+    "Incorrect input of oneTimeCode": "Incorrect input of oneTimeCode",
     "Invalid captcha provider.": "Invalid captcha provider.",
     "Phone number is invalid in your region %s": "Phone number is invalid in your region %s",
     "Turing test failed.": "Turing test failed.",

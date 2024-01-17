@@ -48,7 +48,7 @@ func InitUserManager() {
 
 type User struct {
 	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
-	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
+	Name        string `xorm:"varchar(255) notnull pk" json:"name"`
 	CreatedTime string `xorm:"varchar(100) index" json:"createdTime"`
 	UpdatedTime string `xorm:"varchar(100)" json:"updatedTime"`
 
@@ -64,7 +64,7 @@ type User struct {
 	Avatar                 string   `xorm:"varchar(500)" json:"avatar"`
 	AvatarType             string   `xorm:"varchar(100)" json:"avatarType"`
 	PermanentAvatar        string   `xorm:"varchar(500)" json:"permanentAvatar"`
-	Email                  string   `xorm:"varchar(100) index" json:"email"`
+	Email                  string   `xorm:"varchar(255) index" json:"email"`
 	EmailVerified          bool     `json:"emailVerified"`
 	Phone                  string   `xorm:"varchar(20) index" json:"phone"`
 	CountryCode            string   `xorm:"varchar(6)" json:"countryCode"`
@@ -76,7 +76,7 @@ type User struct {
 	IdCardType             string   `xorm:"varchar(100)" json:"idCardType"`
 	IdCard                 string   `xorm:"varchar(100) index" json:"idCard"`
 	Homepage               string   `xorm:"varchar(100)" json:"homepage"`
-	Bio                    string   `xorm:"varchar(100)" json:"bio"`
+	Bio                    string   `xorm:"varchar(1024)" json:"bio"`
 	Tag                    string   `xorm:"varchar(100)" json:"tag"`
 	Language               string   `xorm:"varchar(100)" json:"language"`
 	Gender                 string   `xorm:"varchar(100)" json:"gender"`

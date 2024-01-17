@@ -102,6 +102,10 @@ func (c *ApiController) getCurrentUser() *object.User {
 	return user
 }
 
+func (c *ApiController) getSid(userId string) string {
+	return util.GetSid(userId, c.StartSession().SessionID())
+}
+
 // GetSessionUsername ...
 func (c *ApiController) GetSessionUsername() string {
 	// check if user session expired
@@ -253,4 +257,9 @@ func (c *ApiController) Finish() {
 		}
 	}
 	c.Controller.Finish()
+}
+
+type Error struct {
+	Code     int         `json:"code,omitempty"`
+	Message  string      `json:"message"`
 }
