@@ -58,5 +58,5 @@ func recordSigninErrorInfo(user *User, lang string) string {
 
 	// update user
 	UpdateUser(user.GetId(), user, []string{"signin_wrong_times", "last_signin_wrong_time"}, false)
-	return fmt.Sprint(i18n.Translate(lang, "general:The user name or password/code is incorrect"))
+	return fmt.Sprint(i18n.Translate(lang, "general:Invalid username or password/code"))
 }

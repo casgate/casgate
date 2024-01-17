@@ -49,7 +49,6 @@
     "Phone number is invalid": "Số điện thoại không hợp lệ",
     "Session outdated, please login again": "Phiên làm việc hết hạn, vui lòng đăng nhập lại",
     "The user is forbidden to sign in, please contact the administrator": "Người dùng bị cấm đăng nhập, vui lòng liên hệ với quản trị viên",
-    "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "Tên người dùng chỉ có thể chứa các ký tự chữ và số, gạch dưới hoặc gạch ngang, không được có hai ký tự gạch dưới hoặc gạch ngang liền kề và không được bắt đầu hoặc kết thúc bằng dấu gạch dưới hoặc gạch ngang.",
     "Username already exists": "Tên đăng nhập đã tồn tại",
     "Username cannot be an email address": "Tên người dùng không thể là địa chỉ email",
@@ -59,17 +58,15 @@
     "Username must have at least 2 characters": "Tên đăng nhập phải có ít nhất 2 ký tự",
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "Bạn đã nhập sai mật khẩu hoặc mã quá nhiều lần, vui lòng đợi %d phút và thử lại",
     "Your region is not allow to signup by phone": "Vùng của bạn không được phép đăng ký bằng điện thoại",
-    "password or code is incorrect": "password or code is incorrect",
-    "password or code is incorrect, you have %d remaining chances": "Mật khẩu hoặc mã không chính xác, bạn còn %d lần cơ hội",
-    "unsupported password type: %s": "Loại mật khẩu không được hỗ trợ: %s",
-    "password must not be same as previous": "password must not be same as previous"
+    "password must not be same as previous": "password must not be same as previous",
+    "unsupported password type: %s": "Loại mật khẩu không được hỗ trợ: %s"
   },
   "general": {
+    "Invalid username or password/code": "Invalid username or password/code",
     "Missing parameter": "Thiếu tham số",
     "Not implemented": "Not implemented",
     "Please login first": "Vui lòng đăng nhập trước",
     "The user: %s doesn't exist": "Người dùng: %s không tồn tại",
-    "Invalid username or password": "Sai username hoặc password",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "không hỗ trợ captchaProvider: ",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"

@@ -49,7 +49,6 @@
     "Phone number is invalid": "El número de teléfono no es válido",
     "Session outdated, please login again": "Sesión expirada, por favor vuelva a iniciar sesión",
     "The user is forbidden to sign in, please contact the administrator": "El usuario no está autorizado a iniciar sesión, por favor contacte al administrador",
-    "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "El nombre de usuario solo puede contener caracteres alfanuméricos, guiones bajos o guiones, no puede tener guiones o subrayados consecutivos, y no puede comenzar ni terminar con un guión o subrayado.",
     "Username already exists": "El nombre de usuario ya existe",
     "Username cannot be an email address": "Nombre de usuario no puede ser una dirección de correo electrónico",
@@ -59,17 +58,15 @@
     "Username must have at least 2 characters": "Nombre de usuario debe tener al menos 2 caracteres",
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "Has ingresado la contraseña o código incorrecto demasiadas veces, por favor espera %d minutos e intenta de nuevo",
     "Your region is not allow to signup by phone": "Tu región no está permitida para registrarse por teléfono",
-    "password or code is incorrect": "password or code is incorrect",
-    "password or code is incorrect, you have %d remaining chances": "Contraseña o código incorrecto, tienes %d intentos restantes",
-    "unsupported password type: %s": "Tipo de contraseña no compatible: %s",
-    "password must not be same as previous": "password must not be same as previous"
+    "password must not be same as previous": "password must not be same as previous",
+    "unsupported password type: %s": "Tipo de contraseña no compatible: %s"
   },
   "general": {
+    "Invalid username or password/code": "Nombre de usuario o contraseña/código no válido",
     "Missing parameter": "Parámetro faltante",
     "Not implemented": "Not implemented",
     "Please login first": "Por favor, inicia sesión primero",
     "The user: %s doesn't exist": "El usuario: %s no existe",
-    "Invalid username or password": "Usuario o contraseña invalido",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "No apoyo a captchaProvider",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
