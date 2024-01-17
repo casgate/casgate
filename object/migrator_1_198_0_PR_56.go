@@ -38,7 +38,7 @@ func (*Migrator_1_198_0_PR_56) DoMigration() *migrate.Migration {
 		Migrate: func(engine *xorm.Engine) error {
 			dbType := engine.Dialect().URI().DBType
 
-			if dbType != schemas.POSTGRES || dbType != schemas.MYSQL {
+			if dbType != schemas.POSTGRES && dbType != schemas.MYSQL {
 				logs.Warn("You must make migration: 20240111IncreaseFieldsLenForUser manually")
 				return nil
 			}
