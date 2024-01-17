@@ -41,19 +41,13 @@ func (c *ApiController) GetProviders() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	ok, isMaskEnabled := c.IsMaskedEnabled()
 	if !ok {
-		return
-	}
-
-	user := c.getCurrentUser()
-	if user == nil {
-		c.ResponseError(c.T("general:Please login first"))
-		return
-	}
-
-	if !c.IsGlobalAdmin() && owner != user.Owner {
-		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
 

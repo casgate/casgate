@@ -38,13 +38,7 @@ func (c *ApiController) GetPayments() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
-	user := c.getCurrentUser()
-	if user == nil {
-		c.ResponseError(c.T("general:Please login first"))
-		return
-	}
-
-	if !c.IsGlobalAdmin() && owner != user.Owner {
+	if !c.IsGlobalAdmin() && owner == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}

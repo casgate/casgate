@@ -66,18 +66,30 @@ func getObject(ctx *context.Context) (string, string) {
 	path := ctx.Request.URL.Path
 
 	if method == http.MethodGet {
+		var objOwner, objName string
 		// query == "?id=built-in/admin"
 		id := ctx.Input.Query("id")
 		if id != "" {
-			return util.GetOwnerAndNameFromIdNoCheck(id)
+			objOwner, objName = util.GetOwnerAndNameFromIdNoCheck(id)
 		}
 
 		owner := ctx.Input.Query("owner")
 		if owner != "" {
-			return owner, ""
+			if objOwner != "" {
+				return "", ""
+			}
+			objOwner = owner
 		}
 
-		return "", ""
+		organization := ctx.Input.Query("organization")
+		if organization != "" {
+			if objOwner != "admin" {
+				return "", ""
+			}
+			objOwner = organization
+		}
+
+		return objOwner, objName
 	} else {
 		body := ctx.Input.RequestBody
 
@@ -159,12 +171,13 @@ func ApiFilter(ctx *context.Context) {
 	if urlPath != "/api/get-app-login" && urlPath != "/api/get-resource" {
 		objOwner, objName = getObject(ctx)
 	}
+	id := ctx.Input.Query("id")
 
 	if strings.HasPrefix(urlPath, "/api/notify-payment") {
 		urlPath = "/api/notify-payment"
 	}
 
-	isAllowed := authz.IsAllowed(subOwner, subName, method, urlPath, objOwner, objName)
+	isAllowed := authz.IsAllowed(subOwner, subName, method, urlPath, objOwner, objName, id)
 
 	result := "deny"
 	if isAllowed {

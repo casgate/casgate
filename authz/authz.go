@@ -110,7 +110,7 @@ p, *, *, GET, /api/get-organization-names, *, *
 	}
 }
 
-func IsAllowed(subOwner string, subName string, method string, urlPath string, objOwner string, objName string) bool {
+func IsAllowed(subOwner string, subName string, method string, urlPath string, objOwner string, objName string, id string) bool {
 	if conf.IsDemoMode() {
 		if !isAllowedInDemoMode(subOwner, subName, method, urlPath, objOwner, objName) {
 			return false
@@ -126,8 +126,21 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 		return true
 	}
 
-	if user != nil && user.IsAdmin && (subOwner == objOwner || (objOwner == "admin")) {
-		return true
+	if id != "" {
+		objIdOwner, _ := util.GetOwnerAndNameFromIdNoCheck(id)
+		if subOwner != "built-in" && objIdOwner != objOwner {
+			return false
+		}
+	}
+
+	if user != nil {
+		if user.IsDeleted {
+			return false
+		}
+
+		if user.IsAdmin && (subOwner == objOwner || (objOwner == "admin")) {
+			return true
+		}
 	}
 
 	res, err := Enforcer.Enforce(subOwner, subName, method, urlPath, objOwner, objName)

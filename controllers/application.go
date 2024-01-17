@@ -41,13 +41,7 @@ func (c *ApiController) GetApplications() {
 	sortOrder := c.Input().Get("sortOrder")
 	organization := c.Input().Get("organization")
 
-	user := c.getCurrentUser()
-	if user == nil {
-		c.ResponseError(c.T("general:Please login first"))
-		return
-	}
-
-	if !c.IsGlobalAdmin() && organization != user.Owner {
+	if !c.IsGlobalAdmin() && organization == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}

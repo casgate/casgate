@@ -38,12 +38,7 @@ func (c *ApiController) GetSessions() {
 	sortOrder := c.Input().Get("sortOrder")
 	owner := c.Input().Get("owner")
 
-	user := c.getCurrentUser()
-	if user == nil {
-		c.ResponseError(c.T("general:Please login first"))
-		return
-	}
-	if !c.IsAdmin() || user.Owner != owner {
+	if !c.IsGlobalAdmin() && owner == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
