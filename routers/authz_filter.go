@@ -28,6 +28,7 @@ import (
 type Object struct {
 	Owner        string `json:"owner"`
 	Name         string `json:"name"`
+	Organization string `json:"organization"`
 	AccessKey    string `json:"accessKey"`
 	AccessSecret string `json:"accessSecret"`
 }
@@ -107,6 +108,13 @@ func getObject(ctx *context.Context) (string, string) {
 		if err != nil {
 			// panic(err)
 			return "", ""
+		}
+
+		if obj.Organization != "" {
+			if obj.Owner != "admin" {
+				return "", ""
+			}
+			obj.Owner = obj.Organization
 		}
 
 		if path == "/api/delete-resource" {

@@ -105,23 +105,6 @@ func (c *ApiController) UpdateWebhook() {
 		return
 	}
 
-	if !c.IsGlobalAdmin() {
-		user := c.getCurrentUser()
-		if user == nil {
-			c.ResponseError(c.T("general:Please login first"))
-			return
-		}
-		oldWebhook, err := object.GetWebhook(id)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-		if user.Owner != webhook.Organization || user.Owner != oldWebhook.Organization {
-			c.ResponseError(c.T("auth:Unauthorized operation"))
-			return
-		}
-	}
-
 	c.Data["json"] = wrapActionResponse(object.UpdateWebhook(id, &webhook))
 	c.ServeJSON()
 }
@@ -141,18 +124,6 @@ func (c *ApiController) AddWebhook() {
 		return
 	}
 
-	if !c.IsGlobalAdmin() {
-		user := c.getCurrentUser()
-		if user == nil {
-			c.ResponseError(c.T("general:Please login first"))
-			return
-		}
-		if user.Owner != webhook.Organization {
-			c.ResponseError(c.T("auth:Unauthorized operation"))
-			return
-		}
-	}
-
 	c.Data["json"] = wrapActionResponse(object.AddWebhook(&webhook))
 	c.ServeJSON()
 }
@@ -169,16 +140,6 @@ func (c *ApiController) DeleteWebhook() {
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &webhook)
 	if err != nil {
 		c.ResponseError(err.Error())
-		return
-	}
-	user := c.getCurrentUser()
-	if user == nil {
-		c.ResponseError(c.T("general:Please login first"))
-		return
-	}
-
-	if !user.IsGlobalAdmin() && user.Owner != webhook.Organization {
-		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
 
