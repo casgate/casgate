@@ -123,6 +123,9 @@ func GetIdProvider(idpInfo *ProviderInfo, redirectUrl string) IdProvider {
 		return NewWeb3OnboardIdProvider()
 	case "VK":
 		return NewVkIdProvider(idpInfo.ClientId, idpInfo.ClientSecret, redirectUrl)
+	case "Yandex":
+		return NewYandexIdProvider(idpInfo.ClientId, idpInfo.ClientSecret, redirectUrl)
+			
 	default:
 		if isGothSupport(idpInfo.Type) {
 			return NewGothIdProvider(idpInfo.Type, idpInfo.ClientId, idpInfo.ClientSecret, redirectUrl, idpInfo.HostUrl)
