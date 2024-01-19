@@ -38,6 +38,11 @@ func (c *ApiController) GetPermissions() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	if limit == "" || page == "" {
 		permissions, err := object.GetPermissions(owner)
 		if err != nil {

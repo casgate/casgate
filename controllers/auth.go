@@ -346,7 +346,7 @@ func (c *ApiController) Login() {
 				c.ResponseError(err.Error(), nil)
 				return
 			} else if user == nil {
-				c.ResponseError(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), util.GetId(authForm.Organization, authForm.Username)))
+				c.ResponseError(fmt.Sprintf(c.T("general:Invalid username or password/code"), util.GetId(authForm.Organization, authForm.Username)))
 				return
 			}
 
@@ -724,7 +724,7 @@ func (c *ApiController) Login() {
 		} else { // authForm.Method != "signup"
 			userId := c.GetSessionUsername()
 			if userId == "" {
-				c.ResponseError(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), util.GetId(application.Organization, userInfo.Id)), userInfo)
+				c.ResponseError(fmt.Sprintf(c.T("general:Invalid username or password/code"), util.GetId(application.Organization, userInfo.Id)), userInfo)
 				return
 			}
 

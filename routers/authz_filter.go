@@ -28,6 +28,7 @@ import (
 type Object struct {
 	Owner        string `json:"owner"`
 	Name         string `json:"name"`
+	Organization string `json:"organization"`
 	AccessKey    string `json:"accessKey"`
 	AccessSecret string `json:"accessSecret"`
 }
@@ -66,6 +67,7 @@ func getObject(ctx *context.Context) (string, string) {
 	path := ctx.Request.URL.Path
 
 	if method == http.MethodGet {
+		var objOwner, objName string
 		// query == "?id=built-in/admin"
 		id := ctx.Input.Query("id")
 		owner := ctx.Input.Query("owner")
@@ -75,14 +77,25 @@ func getObject(ctx *context.Context) (string, string) {
 		}
 
 		if id != "" {
-			return util.GetOwnerAndNameFromIdNoCheck(id)
+			objOwner, objName = util.GetOwnerAndNameFromIdNoCheck(id)
 		}
 
 		if owner != "" {
-			return owner, ""
+			if objOwner != "" {
+				return "", ""
+			}
+			objOwner = owner
 		}
 
-		return "", ""
+		organization := ctx.Input.Query("organization")
+		if organization != "" {
+			if objOwner != "admin" {
+				return "", ""
+			}
+			objOwner = organization
+		}
+
+		return objOwner, objName
 	} else {
 		body := ctx.Input.RequestBody
 
@@ -95,6 +108,13 @@ func getObject(ctx *context.Context) (string, string) {
 		if err != nil {
 			// panic(err)
 			return "", ""
+		}
+
+		if obj.Organization != "" {
+			if obj.Owner != "admin" {
+				return "", ""
+			}
+			obj.Owner = obj.Organization
 		}
 
 		if path == "/api/delete-resource" {
@@ -164,12 +184,13 @@ func ApiFilter(ctx *context.Context) {
 	if urlPath != "/api/get-app-login" && urlPath != "/api/get-resource" {
 		objOwner, objName = getObject(ctx)
 	}
+	id := ctx.Input.Query("id")
 
 	if strings.HasPrefix(urlPath, "/api/notify-payment") {
 		urlPath = "/api/notify-payment"
 	}
 
-	isAllowed := authz.IsAllowed(subOwner, subName, method, urlPath, objOwner, objName)
+	isAllowed := authz.IsAllowed(subOwner, subName, method, urlPath, objOwner, objName, id)
 
 	result := "deny"
 	if isAllowed {

@@ -5380,11 +5380,11 @@
         }
     },
     "definitions": {
-        "168941.\u003cnil\u003e.string": {
+        "170656.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "288777.\u003cnil\u003e.string": {
+        "288713.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6171,7 +6171,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/168941.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/170656.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6862,7 +6862,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/288777.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/288713.\u003cnil\u003e.string"
                 }
             }
         },

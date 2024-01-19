@@ -39,6 +39,11 @@ func (c *ApiController) GetProducts() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	if limit == "" || page == "" {
 		products, err := object.GetProducts(owner)
 		if err != nil {

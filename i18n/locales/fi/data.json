@@ -49,7 +49,6 @@
     "Phone number is invalid": "Phone number is invalid",
     "Session outdated, please login again": "Session outdated, please login again",
     "The user is forbidden to sign in, please contact the administrator": "The user is forbidden to sign in, please contact the administrator",
-    "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.",
     "Username already exists": "Username already exists",
     "Username cannot be an email address": "Username cannot be an email address",
@@ -59,17 +58,15 @@
     "Username must have at least 2 characters": "Username must have at least 2 characters",
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "You have entered the wrong password or code too many times, please wait for %d minutes and try again",
     "Your region is not allow to signup by phone": "Your region is not allow to signup by phone",
-    "password or code is incorrect": "password or code is incorrect",
-    "password or code is incorrect, you have %d remaining chances": "password or code is incorrect, you have %d remaining chances",
-    "unsupported password type: %s": "unsupported password type: %s",
-    "password must not be same as previous": "password must not be same as previous"
+    "password must not be same as previous": "password must not be same as previous",
+    "unsupported password type: %s": "unsupported password type: %s"
   },
   "general": {
+    "Invalid username or password/code": "Invalid username or password/code",
     "Missing parameter": "Missing parameter",
     "Not implemented": "Not implemented",
     "Please login first": "Please login first",
     "The user: %s doesn't exist": "The user: %s doesn't exist",
-    "Invalid username or password": "Invalid username or password",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "don't support captchaProvider: ",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
@@ -128,9 +125,6 @@
   "user": {
     "Display name cannot be empty": "Display name cannot be empty",
     "New password cannot contain blank space.": "New password cannot contain blank space."
-  },
-  "user_upload": {
-    "Failed to import users": "Failed to import users"
   },
   "util": {
     "No application is found for userId: %s": "No application is found for userId: %s",

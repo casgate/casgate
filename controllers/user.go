@@ -47,6 +47,11 @@ func (c *ApiController) GetGlobalUsers() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
+	if _, res := c.RequireAdmin(); !res {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	if limit == "" || page == "" {
 		maskedUsers, err := object.GetMaskedUsers(object.GetGlobalUsers())
 		if err != nil {

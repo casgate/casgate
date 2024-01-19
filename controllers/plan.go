@@ -38,6 +38,11 @@ func (c *ApiController) GetPlans() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	if limit == "" || page == "" {
 		plans, err := object.GetPlans(owner)
 		if err != nil {

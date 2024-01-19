@@ -40,6 +40,12 @@ func (c *ApiController) GetApplications() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 	organization := c.Input().Get("organization")
+
+	if !c.IsGlobalAdmin() && organization == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	var err error
 	if limit == "" || page == "" {
 		var applications []*object.Application

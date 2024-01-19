@@ -38,6 +38,11 @@ func (c *ApiController) GetSessions() {
 	sortOrder := c.Input().Get("sortOrder")
 	owner := c.Input().Get("owner")
 
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	if limit == "" || page == "" {
 		sessions, err := object.GetSessions(owner)
 		if err != nil {

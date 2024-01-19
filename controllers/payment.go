@@ -38,6 +38,11 @@ func (c *ApiController) GetPayments() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	if limit == "" || page == "" {
 		payments, err := object.GetPayments(owner)
 		if err != nil {

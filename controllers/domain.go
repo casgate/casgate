@@ -38,6 +38,11 @@ func (c *ApiController) GetDomains() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	if limit == "" || page == "" {
 		domains, err := object.GetDomains(c.Ctx.Request.Context(), owner)
 		if err != nil {

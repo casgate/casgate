@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/object"
@@ -39,6 +40,11 @@ func (c *ApiController) GetProviders() {
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
+
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
 
 	ok, isMaskEnabled := c.IsMaskedEnabled()
 	if !ok {

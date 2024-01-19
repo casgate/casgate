@@ -38,6 +38,11 @@ func (c *ApiController) GetSubscriptions() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseError(c.T("auth:Unauthorized operation"))
+		return
+	}
+
 	if limit == "" || page == "" {
 		subscriptions, err := object.GetSubscriptions(owner)
 		if err != nil {
