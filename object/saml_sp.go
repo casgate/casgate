@@ -145,8 +145,13 @@ func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 		return nil, err
 	}
 
+	var issuer = provider.ClientId
+	if issuer == "" {
+		issuer = fmt.Sprintf("%s/api/acs", origin)
+	}
+
 	sp := &saml2.SAMLServiceProvider{
-		ServiceProviderIssuer:       provider.ClientId,
+		ServiceProviderIssuer:       issuer,
 		AssertionConsumerServiceURL: fmt.Sprintf("%s/api/acs", origin),
 		SignAuthnRequests:           false,
 		IDPCertificateStore:         &certStore,
