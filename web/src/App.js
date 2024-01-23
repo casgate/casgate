@@ -97,6 +97,7 @@ const {Header, Footer, Content} = Layout;
 import {setTwoToneColor} from "@ant-design/icons";
 import DomainListPage from "./DomainListPage";
 import DomainEditPage from "./DomainEditPage";
+import * as ApplicationBackend from "./backend/ApplicationBackend";
 
 setTwoToneColor("rgb(87,52,211)");
 
@@ -113,6 +114,7 @@ class App extends Component {
       themeData: Conf.ThemeDefault,
       logo: this.getLogo(Setting.getAlgorithmNames(Conf.ThemeDefault)),
       requiredEnableMfa: false,
+      application: undefined,
     };
 
     Auth.initAuthWithConfig({
@@ -124,6 +126,9 @@ class App extends Component {
   UNSAFE_componentWillMount() {
     this.updateMenuKey();
     this.getAccount();
+    if (!this.isEntryPages()) {
+      this.loadDefaultApplication();
+    }
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -648,7 +653,7 @@ class App extends Component {
           {
             Conf.CustomFooter !== null ? Conf.CustomFooter : (
               <React.Fragment>
-                Powered by Casgate
+                {this.state.application?.footerText}
               </React.Fragment>
             )
           }
@@ -674,6 +679,26 @@ class App extends Component {
         window.location.pathname.startsWith(`${Setting.ServerUrl}/qrcode`) ;
   }
 
+  onUpdateApplication(application) {
+    this.setState({
+      application: application,
+    });
+  }
+
+  loadDefaultApplication() {
+    ApplicationBackend.getApplication("admin", Conf.DefaultApplication)
+      .then((res) => {
+        if (res.status === "error") {
+          Setting.showMessage("error", res.msg);
+          return;
+        }
+
+        this.setState({
+          application: res.data,
+        });
+      });
+  }
+
   renderPage() {
     if (this.isDoorPages()) {
       return (
@@ -689,6 +714,7 @@ class App extends Component {
                     this.getAccount();
                   }}
                   onUpdateAccount={(account) => this.onUpdateAccount(account)}
+                  onUpdateApplication={(application) => this.onUpdateApplication(application)}
                   updataThemeData={this.setTheme}
                 /> :
                 <Switch>
@@ -705,7 +731,6 @@ class App extends Component {
         </Layout>
       );
     }
-
     return (
       <React.Fragment>
         {/* { */}

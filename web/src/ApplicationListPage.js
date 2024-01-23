@@ -62,6 +62,7 @@ class ApplicationListPage extends BaseListPage {
       expireInHours: 24 * 7,
       refreshExpireInHours: 24 * 7,
       formOffset: 2,
+      footerText: "Powered by Casgate",
     };
   }
 

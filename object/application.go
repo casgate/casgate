@@ -74,6 +74,7 @@ type Application struct {
 	TermsOfUse           string     `xorm:"varchar(100)" json:"termsOfUse"`
 	SignupHtml           string     `xorm:"mediumtext" json:"signupHtml"`
 	SigninHtml           string     `xorm:"mediumtext" json:"signinHtml"`
+	FooterText           string     `xorm:"mediumtext" json:"footerText"`
 	ThemeData            *ThemeData `xorm:"json" json:"themeData"`
 	FormCss              string     `xorm:"text" json:"formCss"`
 	FormCssMobile        string     `xorm:"text" json:"formCssMobile"`
