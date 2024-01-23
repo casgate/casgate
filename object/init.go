@@ -195,6 +195,7 @@ func initBuiltInApplication() {
 		RedirectUris:  []string{},
 		ExpireInHours: 168,
 		FormOffset:    2,
+		FooterText:    "Powered by Casgate",
 	}
 	_, err = AddApplication(application)
 	if err != nil {
