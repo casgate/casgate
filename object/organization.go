@@ -17,6 +17,7 @@ package object
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/cred"
@@ -51,22 +52,23 @@ type Organization struct {
 	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
 	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
 
-	DisplayName        string     `xorm:"varchar(100)" json:"displayName"`
-	WebsiteUrl         string     `xorm:"varchar(100)" json:"websiteUrl"`
-	Favicon            string     `xorm:"varchar(100)" json:"favicon"`
-	PasswordType       string     `xorm:"varchar(100)" json:"passwordType"`
-	PasswordSalt       string     `xorm:"varchar(100)" json:"passwordSalt"`
-	PasswordOptions    []string   `xorm:"varchar(100)" json:"passwordOptions"`
-	CountryCodes       []string   `xorm:"varchar(200)"  json:"countryCodes"`
-	DefaultAvatar      string     `xorm:"varchar(200)" json:"defaultAvatar"`
-	DefaultApplication string     `xorm:"varchar(100)" json:"defaultApplication"`
-	Tags               []string   `xorm:"mediumtext" json:"tags"`
-	Languages          []string   `xorm:"varchar(255)" json:"languages"`
-	ThemeData          *ThemeData `xorm:"json" json:"themeData"`
-	MasterPassword     string     `xorm:"varchar(100)" json:"masterPassword"`
-	InitScore          int        `json:"initScore"`
-	EnableSoftDeletion bool       `json:"enableSoftDeletion"`
-	IsProfilePublic    bool       `json:"isProfilePublic"`
+	DisplayName            string     `xorm:"varchar(100)" json:"displayName"`
+	WebsiteUrl             string     `xorm:"varchar(100)" json:"websiteUrl"`
+	Favicon                string     `xorm:"varchar(100)" json:"favicon"`
+	PasswordType           string     `xorm:"varchar(100)" json:"passwordType"`
+	PasswordSalt           string     `xorm:"varchar(100)" json:"passwordSalt"`
+	PasswordOptions        []string   `xorm:"varchar(100)" json:"passwordOptions"`
+	PasswordChangeInterval int        `json:"passwordChangeInterval"`
+	CountryCodes           []string   `xorm:"varchar(200)"  json:"countryCodes"`
+	DefaultAvatar          string     `xorm:"varchar(200)" json:"defaultAvatar"`
+	DefaultApplication     string     `xorm:"varchar(100)" json:"defaultApplication"`
+	Tags                   []string   `xorm:"mediumtext" json:"tags"`
+	Languages              []string   `xorm:"varchar(255)" json:"languages"`
+	ThemeData              *ThemeData `xorm:"json" json:"themeData"`
+	MasterPassword         string     `xorm:"varchar(100)" json:"masterPassword"`
+	InitScore              int        `json:"initScore"`
+	EnableSoftDeletion     bool       `json:"enableSoftDeletion"`
+	IsProfilePublic        bool       `json:"isProfilePublic"`
 
 	MfaItems     []*MfaItem     `xorm:"varchar(300)" json:"mfaItems"`
 	AccountItems []*AccountItem `xorm:"varchar(5000)" json:"accountItems"`
@@ -176,9 +178,11 @@ func GetMaskedOrganizations(organizations []*Organization, errs ...error) ([]*Or
 
 func UpdateOrganization(id string, organization *Organization) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if org, err := getOrganization(owner, name); err != nil {
+	org, err := getOrganization(owner, name)
+	if err != nil {
 		return false, err
-	} else if org == nil {
+	}
+	if org == nil {
 		return false, nil
 	}
 
@@ -188,6 +192,13 @@ func UpdateOrganization(id string, organization *Organization) (bool, error) {
 
 	if name != organization.Name {
 		err := organizationChangeTrigger(name, organization.Name)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	if org.PasswordChangeInterval != organization.PasswordChangeInterval {
+		err := updateOrganizationUsersPasswordChangeTime(organization.Name, org.PasswordChangeInterval, organization.PasswordChangeInterval)
 		if err != nil {
 			return false, err
 		}
@@ -494,4 +505,33 @@ func (org *Organization) GetInitScore() (int, error) {
 	} else {
 		return strconv.Atoi(conf.GetConfigString("initScore"))
 	}
+}
+
+func updateOrganizationUsersPasswordChangeTime(owner string, oldInterval int, newInterval int) error {
+	if newInterval == 0 {
+		bean := make(map[string]interface{})
+		bean["password_change_time"] = nil
+		ormer.Engine.Table("user").Where("password_change_time >= now() and owner = ?", owner).Cols("password_change_time").Update(bean)
+	} else {
+		users := []*User{}
+		err := ormer.Engine.Table("user").Where("password_change_time >= now() or password_change_time is null and owner = ?", owner).Find(&users)
+		if err != nil {
+			return err
+		}
+		for _, user := range users {
+			if user.PasswordChangeTime.IsZero() {
+				user.PasswordChangeTime = getNextPasswordChangeTime(newInterval)
+			} else {
+				user.PasswordChangeTime = user.PasswordChangeTime.
+					Add(-1 * time.Hour * 24 * time.Duration(oldInterval)).
+					Add(time.Hour * 24 * time.Duration(newInterval))
+			}
+
+			_, err := ormer.Engine.ID(core.PK{user.Owner, user.Name}).Cols("password_change_time").Update(user)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
