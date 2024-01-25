@@ -14,7 +14,7 @@
 
 import React from "react";
 import {Button, Card, Checkbox, Col, Input, InputNumber, Row, Select, Switch} from "antd";
-import {LinkOutlined} from "@ant-design/icons";
+import {ClearOutlined, LinkOutlined} from "@ant-design/icons";
 import * as ProviderBackend from "./backend/ProviderBackend";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as CertBackend from "./backend/CertBackend";
@@ -67,6 +67,7 @@ class ProviderEditPage extends React.Component {
           this.setState({
             provider: provider,
           });
+          this.getCerts(res.data.owner);
         } else {
           Setting.showMessage("error", res.msg);
         }
@@ -623,6 +624,22 @@ class ProviderEditPage extends React.Component {
                   <Input value={this.state.provider.customUserInfoUrl} onChange={e => {
                     this.updateProviderField("customUserInfoUrl", e.target.value);
                   }} />
+                </Col>
+              </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("ldap:CA Certificate"), i18next.t("ldap:CA Certificate - Tooltip"))} :
+                </Col>
+                <Col span={21} >
+                  <Select virtual={false} style={{width: "100%"}} value={this.state.provider.cert} onChange={(value => {this.updateProviderField("cert", value);})}>
+                    {
+                      this.state.certs.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
+                    }
+                  </Select>
+                </Col>
+                <Col style={{paddingLeft: "5px"}} span={1} >
+                  <Button icon={<ClearOutlined />} type="text" onClick={() => {this.updateProviderField("cert", "");}} >
+                  </Button>
                 </Col>
               </Row>
               <Row style={{marginTop: "20px"}} >
