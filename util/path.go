@@ -73,6 +73,11 @@ func GetUrlHost(urlString string) string {
 	return fmt.Sprintf("%s://%s", u.Scheme, u.Host)
 }
 
+func GetUrlHostWithoutScheme(urlString string) string {
+	u, _ := url.Parse(urlString)
+	return u.Host
+}
+
 func FilterQuery(urlString string, blackList []string) string {
 	urlData, err := url.Parse(urlString)
 	if err != nil {

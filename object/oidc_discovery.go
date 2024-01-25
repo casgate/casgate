@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
+	"github.com/casdoor/casdoor/util"
 	"gopkg.in/square/go-jose.v2"
 )
 
@@ -61,7 +62,7 @@ func isIpAddress(host string) bool {
 
 func getOriginFromHost(host string) (string, string) {
 	origin := conf.GetConfigString("origin")
-	if origin != "" {
+	if util.GetUrlHostWithoutScheme(origin) == host {
 		return origin, origin
 	}
 
@@ -78,7 +79,11 @@ func getOriginFromHost(host string) (string, string) {
 	if host == "localhost:8000" {
 		return fmt.Sprintf("%s%s", protocol, "localhost:7001"), fmt.Sprintf("%s%s", protocol, "localhost:8000")
 	} else {
-		return fmt.Sprintf("%s%s", protocol, host), fmt.Sprintf("%s%s", protocol, host)
+		originFrontend := fmt.Sprintf("%s%s", protocol, host)
+		if origin != "" {
+			originFrontend = origin
+		}
+		return originFrontend, fmt.Sprintf("%s%s", protocol, host)
 	}
 }
 
