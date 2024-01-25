@@ -15,11 +15,12 @@
 package object
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"fmt"
-
-	"github.com/xorm-io/core"
-
 	"github.com/casdoor/casdoor/util"
+	"github.com/xorm-io/core"
 )
 
 const (
@@ -148,6 +149,23 @@ func getCertByName(name string) (*Cert, error) {
 	} else {
 		return nil, nil
 	}
+}
+
+func GetTlsConfigForCert(name string) (*tls.Config, error) {
+	cert, err := getCertByName(name)
+	if err != nil {
+		return nil, err
+	}
+	if cert == nil {
+		return nil, errors.New(fmt.Sprintf("Certificate %s does not exist", name))
+	}
+
+	ca := x509.NewCertPool()
+	if ok := ca.AppendCertsFromPEM([]byte(cert.Certificate)); !ok {
+		return nil, ErrX509CertsPEMParse
+	}
+
+	return &tls.Config{RootCAs: ca}, nil
 }
 
 func GetCert(id string) (*Cert, error) {

@@ -274,12 +274,26 @@ func (c *ApiController) GetApplicationLogin() {
 	}
 }
 
-func setHttpClient(idProvider idp.IdProvider, providerType string) {
-	if isProxyProviderType(providerType) {
+func setHttpClient(idProvider idp.IdProvider, providerInfo idp.ProviderInfo) error {
+	if isProxyProviderType(providerInfo.Type) {
 		idProvider.SetHttpClient(proxy.ProxyHttpClient)
 	} else {
-		idProvider.SetHttpClient(proxy.DefaultHttpClient)
+		transport := http.Transport{}
+
+		// TODO remake with using idp url when config would be parsed on every login
+		if strings.HasPrefix(providerInfo.TokenURL, "https://") && providerInfo.Cert != "" {
+			tlsConf, err := object.GetTlsConfigForCert(providerInfo.Cert)
+			if err != nil {
+				return err
+			}
+			transport.TLSClientConfig = tlsConf
+		}
+
+		client := http.Client{Transport: &transport}
+		idProvider.SetHttpClient(&client)
 	}
+
+	return nil
 }
 
 func isProxyProviderType(providerType string) bool {
@@ -510,7 +524,11 @@ func (c *ApiController) Login() {
 				return
 			}
 
-			setHttpClient(idProvider, provider.Type)
+			err = setHttpClient(idProvider, *idpInfo)
+			if err != nil {
+				c.ResponseError(err.Error())
+				return
+			}
 
 			if authForm.State != conf.GetConfigString("authState") && authForm.State != application.Name {
 				c.ResponseError(fmt.Sprintf(c.T("auth:State expected: %s, but got: %s"), conf.GetConfigString("authState"), authForm.State))
