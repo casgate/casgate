@@ -16,6 +16,7 @@ package form
 
 type AuthForm struct {
 	Type string `json:"type"`
+	SigninMethod string `json:"signinMethod"`
 
 	Organization   string `json:"organization"`
 	Id             string `json:"id"` // filled only for invited user

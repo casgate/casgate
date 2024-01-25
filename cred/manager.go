@@ -15,8 +15,8 @@
 package cred
 
 type CredManager interface {
-	GetHashedPassword(password string, passwordSalt string) string
-	IsPasswordCorrect(password string, passwordHash string, passwordSalt string) bool
+	GetHashedPassword(password string, userSalt string, organizationSalt string) string
+	IsPasswordCorrect(password string, passwordHash string, userSalt string, organizationSalt string) bool
 }
 
 func GetCredManager(passwordType string) CredManager {
@@ -28,8 +28,6 @@ func GetCredManager(passwordType string) CredManager {
 		return NewMd5UserSaltCredManager()
 	} else if passwordType == "bcrypt" {
 		return NewBcryptCredManager()
-	} else if passwordType == "pbkdf2-salt" {
-		return NewPbkdf2SaltCredManager()
 	} else if passwordType == "argon2id" {
 		return NewArgon2idCredManager()
 	}

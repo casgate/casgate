@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
+	
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/thanhpk/randstr"
 
@@ -107,6 +107,17 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 		return nil, err
 	}
 	return &LdapConn{Conn: conn, IsAD: isAD}, nil
+}
+
+func (l *LdapConn) Close() {
+	if l.Conn == nil {
+		return
+	}
+
+	err := l.Conn.Unbind()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func isMicrosoftAD(Conn *goldap.Conn) (bool, error) {

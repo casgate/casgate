@@ -49,8 +49,7 @@ func (user *User) UpdateUserHash() error {
 func (user *User) UpdateUserPassword(organization *Organization) {
 	credManager := cred.GetCredManager(organization.PasswordType)
 	if credManager != nil {
-		user.PasswordSalt = getRandomString(saltLenth)
-		hashedPassword := credManager.GetHashedPassword(user.Password, user.PasswordSalt)
+		hashedPassword := credManager.GetHashedPassword(user.Password, user.PasswordSalt, organization.PasswordSalt)
 		user.Password = hashedPassword
 		user.PasswordType = organization.PasswordType
 	}

@@ -23,6 +23,7 @@ import (
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
 	"github.com/go-webauthn/webauthn/webauthn"
+	"github.com/xorm-io/builder"
 	"github.com/xorm-io/core"
 )
 
@@ -603,10 +604,10 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 		return 0, err
 	}
 
-	hasImpactOnPolicy := 
+	hasImpactOnPolicy :=
 		(util.InSlice(columns, "groups") && !slices.Equal(oldUser.Groups, user.Groups)) ||
-		(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
-		(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
+			(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
+			(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
 
 	if affected != 0 && hasImpactOnPolicy {
 		oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
@@ -1095,4 +1096,32 @@ func groupUsersByGroups(users []*User) map[string][]*User {
 	}
 
 	return result
+}
+
+func GetGlobalUsersWithFilter(cond builder.Cond) ([]*User, error) {
+	users := []*User{}
+	session := ormer.Engine.Desc("created_time")
+	if cond != nil {
+		session = session.Where(cond)
+	}
+	err := session.Find(&users)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func GetUsersByTagWithFilter(owner string, tag string, cond builder.Cond) ([]*User, error) {
+	users := []*User{}
+	session := ormer.Engine.Desc("created_time")
+	if cond != nil {
+		session = session.Where(cond)
+	}
+	err := session.Find(&users, &User{Owner: owner, Tag: tag})
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }

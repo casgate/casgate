@@ -15,7 +15,6 @@
 package object
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -31,6 +30,9 @@ import (
 const (
 	SigninWrongTimesLimit     = 4
 	LastSignWrongTimeDuration = time.Minute * 5
+
+	DefaultFailedSigninLimit      = 5
+	DefaultFailedSigninFrozenTime = 15
 )
 
 func CheckUserSignup(application *Application, organization *Organization, form *form.AuthForm, lang string) string {
@@ -143,39 +145,52 @@ func CheckUserSignup(application *Application, organization *Organization, form 
 	return ""
 }
 
-func checkSigninErrorTimes(user *User, lang string) string {
-	if user.SigninWrongTimes >= SigninWrongTimesLimit {
+func checkSigninErrorTimes(user *User, lang string) error {
+	failedSigninLimit, failedSigninFrozenTime, err := GetFailedSigninConfigByUser(user)
+	if err != nil {
+		return err
+	}
+
+	if user.SigninWrongTimes >= failedSigninLimit {
 		lastSignWrongTime, _ := time.Parse(time.RFC3339, user.LastSigninWrongTime)
 		passedTime := time.Now().UTC().Sub(lastSignWrongTime)
-		minutes := int(LastSignWrongTimeDuration.Minutes() - passedTime.Minutes())
+		minutes := failedSigninFrozenTime - int(passedTime.Minutes())
 
 		// deny the login if the error times is greater than the limit and the last login time is less than the duration
 		if minutes > 0 {
-			return fmt.Sprintf(i18n.Translate(lang, "check:You have entered the wrong password or code too many times, please wait for %d minutes and try again"), minutes)
+			return fmt.Errorf(i18n.Translate(lang, "check:You have entered the wrong password or code too many times, please wait for %d minutes and try again"), minutes)
 		}
 
 		// reset the error times
 		user.SigninWrongTimes = 0
 
-		UpdateUser(user.GetId(), user, []string{"signin_wrong_times"}, false)
+		_, err := UpdateUser(user.GetId(), user, []string{"signin_wrong_times"}, false)
+		return err
 	}
 
-	return ""
+	return nil
 }
 
-func CheckPassword(user *User, password string, lang string, options ...bool) string {
+func CheckPassword(user *User, password string, lang string, options ...bool) error {
 	enableCaptcha := false
 	if len(options) > 0 {
 		enableCaptcha = options[0]
 	}
+	// check the login error times
+	if !enableCaptcha {
+		err := checkSigninErrorTimes(user, lang)
+		if err != nil {
+			return err
+		}
+	}
 
 	organization, err := GetOrganizationByUser(user)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if organization == nil {
-		return i18n.Translate(lang, "check:Organization does not exist")
+		return fmt.Errorf(i18n.Translate(lang, "check:Organization does not exist"))
 	}
 
 	passwordType := user.PasswordType
@@ -184,43 +199,30 @@ func CheckPassword(user *User, password string, lang string, options ...bool) st
 	}
 	credManager := cred.GetCredManager(passwordType)
 	if credManager != nil {
-		var ok bool
 		if organization.MasterPassword != "" {
-			if credManager.IsPasswordCorrect(password, organization.MasterPassword, organization.PasswordSalt) {
-				ok = true
+			if credManager.IsPasswordCorrect(password, organization.MasterPassword, "", organization.PasswordSalt) {
+				return resetUserSigninErrorTimes(user)
 			}
 		}
 
-		if credManager.IsPasswordCorrect(password, user.Password, user.PasswordSalt) {
-			ok = true
+		if credManager.IsPasswordCorrect(password, user.Password, user.PasswordSalt, organization.PasswordSalt) {
+			return resetUserSigninErrorTimes(user)
 		}
 
-		// check the login error times
-		if !enableCaptcha && ok {
-			if msg := checkSigninErrorTimes(user, lang); msg != "" {
-				return msg
-			}
-			resetUserSigninErrorTimes(user)
-		}
-
-		if ok {
-			return ""
-		}
-
-		return recordSigninErrorInfo(user, lang)
+		return recordSigninErrorInfo(user, lang, enableCaptcha)
 	} else {
-		return fmt.Sprintf(i18n.Translate(lang, "check:unsupported password type: %s"), organization.PasswordType)
+		return fmt.Errorf(i18n.Translate(lang, "check:unsupported password type: %s"), organization.PasswordType)
 	}
 }
 
 func CheckOneTimePassword(user *User, dest, code, lang string) error {
 	// check the login error times
-	if msg := checkSigninErrorTimes(user, lang); msg != "" {
-		return errors.New(msg)
+	if err := checkSigninErrorTimes(user, lang); err != nil {
+		return err
 	}
 	result := CheckVerificationCode(dest, code, lang)
 	if result.Code != VerificationSuccess {
-		return errors.New(recordSigninErrorInfo(user, lang))
+		return recordSigninErrorInfo(user, lang)
 	}
 	resetUserSigninErrorTimes(user)
 	return nil
@@ -236,10 +238,10 @@ func CheckPasswordComplexity(user *User, password string) string {
 	return CheckPasswordComplexityByOrg(organization, password)
 }
 
-func checkLdapUserPassword(user *User, password string, lang string) string {
+func checkLdapUserPassword(user *User, password string, lang string) error {
 	ldaps, err := GetLdaps(user.Owner)
 	if err != nil {
-		return err.Error()
+		return err
 	}
 
 	ldapLoginSuccess := false
@@ -256,66 +258,97 @@ func checkLdapUserPassword(user *User, password string, lang string) string {
 
 		searchResult, err := conn.Conn.Search(searchReq)
 		if err != nil {
-			return err.Error()
+			conn.Close()
+			return err
 		}
 
 		if len(searchResult.Entries) == 0 {
+			conn.Close()
 			continue
 		}
 		if len(searchResult.Entries) > 1 {
-			return i18n.Translate(lang, "check:Multiple accounts with same uid, please check your ldap server")
+			conn.Close()
+			return fmt.Errorf(i18n.Translate(lang, "check:Multiple accounts with same uid, please check your ldap server"))
 		}
 
 		hit = true
 		dn := searchResult.Entries[0].DN
-		if err := conn.Conn.Bind(dn, password); err == nil {
+		if err = conn.Conn.Bind(dn, password); err == nil {
 			ldapLoginSuccess = true
+			conn.Close()
 			break
 		}
+
+		conn.Close()
 	}
 
 	if !ldapLoginSuccess {
 		if !hit {
-			return "user not exist"
+			return fmt.Errorf("user not exist")
 		}
-		return i18n.Translate(lang, "check:LDAP user name or password incorrect")
+		return fmt.Errorf(i18n.Translate(lang, "check:LDAP user name or password incorrect"))
 	}
-	return ""
+	return resetUserSigninErrorTimes(user)
 }
 
-func CheckUserPassword(organization string, username string, password string, lang string, options ...bool) (*User, string) {
+
+func CheckUserPassword(organization string, username string, password string, lang string, options ...bool) (*User, error) {
 	enableCaptcha := false
+	isSigninViaLdap := false
+	isPasswordWithLdapEnabled := false
 	if len(options) > 0 {
 		enableCaptcha = options[0]
+		isSigninViaLdap = options[1]
+		isPasswordWithLdapEnabled = options[2]
 	}
 	user, err := GetUserByFields(organization, username)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if user == nil || user.IsDeleted {
-		return nil, fmt.Sprintf(i18n.Translate(lang, "general:Invalid username or password/code"))
-	}
-
-	if user.Ldap != "" {
-		// ONLY for ldap users
-		if msg := checkLdapUserPassword(user, password, lang); msg != "" {
-			if msg == "user not exist" {
-				return nil, fmt.Sprintf(i18n.Translate(lang, "general:Invalid username or password/code"))
-			}
-			return nil, msg
-		}
-	} else {
-		if msg := CheckPassword(user, password, lang, enableCaptcha); msg != "" {
-			return nil, msg
-		}
+		return nil, fmt.Errorf(i18n.Translate(lang, "general:The user: %s doesn't exist"), util.GetId(organization, username))
 	}
 
 	if user.IsForbidden {
-		return nil, i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator")
+		return nil, fmt.Errorf(i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator"))
 	}
 
-	return user, ""
+	if isSigninViaLdap {
+		if user.Ldap == "" {
+			return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
+		}
+	}
+
+	if user.Ldap != "" {
+		if !isSigninViaLdap && !isPasswordWithLdapEnabled {
+			return nil, fmt.Errorf(i18n.Translate(lang, "check:password or code is incorrect"))
+		}
+
+		// check the login error times
+		if !enableCaptcha {
+			err = checkSigninErrorTimes(user, lang)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// only for LDAP users
+		err = checkLdapUserPassword(user, password, lang)
+		if err != nil {
+			if err.Error() == "user not exist" {
+				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
+			}
+
+			return nil, recordSigninErrorInfo(user, lang, enableCaptcha)
+		}
+	} else {
+		err = CheckPassword(user, password, lang, enableCaptcha)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return user, nil
 }
 
 func CheckUserPermission(requestUserId, userId string, strict bool, lang string) (bool, error) {

@@ -1015,6 +1015,9 @@ class ApplicationEditPage extends React.Component {
     const application = Setting.deepCopy(this.state.application);
     application.providers = application.providers?.filter(provider => this.state.providers.map(provider => provider.name).includes(provider.name));
 
+    this.state.providers.map(provider => provider.name).includes(provider.name);
+    application.signinMethods = application.signinMethods?.filter(signinMethod => ["Password", "Verification code", "WebAuthn", "LDAP"].includes(signinMethod.name));
+
     ApplicationBackend.updateApplication("admin", this.state.applicationName, application)
       .then((res) => {
         if (res.status === "ok") {
