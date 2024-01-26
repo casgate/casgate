@@ -281,10 +281,12 @@ func (c *ApiController) Signup() {
 		return
 	}
 
-	record := object.NewRecord(c.Ctx)
-	record.Organization = application.Organization
-	record.User = user.Name
-	util.SafeGoroutine(func() { object.AddRecord(record) })
+	record := object.NewRecordBuilder(c.Ctx).
+		WithUsername(user.Name).
+		WithOrganization(application.Organization).
+		WithDetail("User signed up").
+		Build()
+	object.SaveOnSuccess(c.Ctx, record)
 
 	userId := user.GetId()
 	util.LogInfo(c.Ctx, "API: [%s] is signed up as new user", userId)

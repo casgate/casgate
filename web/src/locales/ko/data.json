@@ -874,7 +874,9 @@
   "record": {
     "Is triggered": "반응하다",
     "Object": "Object",
-    "Status code": "Status code"
+    "Status code": "Status code",
+    "Response": "Response",
+    "Detail": "Detail"
   },
   "resource": {
     "Copy Link": "링크 복사하기",

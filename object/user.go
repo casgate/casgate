@@ -603,10 +603,10 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 		return 0, err
 	}
 
-	hasImpactOnPolicy := 
+	hasImpactOnPolicy :=
 		(util.InSlice(columns, "groups") && !slices.Equal(oldUser.Groups, user.Groups)) ||
-		(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
-		(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
+			(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
+			(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
 
 	if affected != 0 && hasImpactOnPolicy {
 		oldReachablePermissions, err := reachablePermissionsByUser(oldUser)

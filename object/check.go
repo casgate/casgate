@@ -21,6 +21,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/i18n"
@@ -283,7 +284,58 @@ func checkLdapUserPassword(user *User, password string, lang string) string {
 	return ""
 }
 
-func CheckUserPassword(organization string, username string, password string, lang string, options ...bool) (*User, string) {
+var ErrorUserNotFound = errors.New("user not found")
+var ErrorUserDeleted = errors.New("user deleted")
+var ErrorUserBlocked = errors.New("user deleted")
+var ErrorWrongPassword = errors.New("wrong password")
+var ErrorLDAPError = errors.New("LDAP error")
+var ErrorLDAPUserNotFound = errors.New("LDAP user not found")
+
+func NewCheckUserPasswordError(err error) *CheckUserPasswordError {
+	return &CheckUserPasswordError{
+		err: err,
+	}
+}
+
+type CheckUserPasswordError struct {
+	err      error
+	username string
+	message  string
+}
+
+func (err *CheckUserPasswordError) Err() error {
+	return err.err
+}
+
+func (err *CheckUserPasswordError) Username() string {
+	return err.username
+}
+
+func (err *CheckUserPasswordError) Message() string {
+	return err.message
+}
+
+func (err *CheckUserPasswordError) WithUser(user string) *CheckUserPasswordError {
+	err.username = user
+
+	return err
+}
+
+func (err *CheckUserPasswordError) WithMessage(message string) *CheckUserPasswordError {
+	err.message = message
+
+	return err
+}
+
+func (err *CheckUserPasswordError) Error() string {
+	return err.err.Error()
+}
+
+func (err *CheckUserPasswordError) RealError() error {
+	return err.err
+}
+
+func CheckUserPassword(organization string, username string, password string, lang string, options ...bool) (*User, error) {
 	enableCaptcha := false
 	if len(options) > 0 {
 		enableCaptcha = options[0]
@@ -293,29 +345,81 @@ func CheckUserPassword(organization string, username string, password string, la
 		panic(err)
 	}
 
-	if user == nil || user.IsDeleted {
-		return nil, fmt.Sprintf(i18n.Translate(lang, "general:Invalid username or password/code"))
+	if user == nil {
+		return nil, NewCheckUserPasswordError(ErrorUserNotFound)
+	}
+
+	if user.IsDeleted {
+		return nil, NewCheckUserPasswordError(ErrorUserDeleted)
 	}
 
 	if user.Ldap != "" {
 		// ONLY for ldap users
 		if msg := checkLdapUserPassword(user, password, lang); msg != "" {
 			if msg == "user not exist" {
-				return nil, fmt.Sprintf(i18n.Translate(lang, "general:Invalid username or password/code"))
+				return nil, NewCheckUserPasswordError(ErrorLDAPUserNotFound)
 			}
-			return nil, msg
+			return nil, NewCheckUserPasswordError(ErrorLDAPError).WithMessage(msg)
 		}
 	} else {
 		if msg := CheckPassword(user, password, lang, enableCaptcha); msg != "" {
-			return nil, msg
+			return nil, NewCheckUserPasswordError(ErrorWrongPassword).WithMessage(msg)
 		}
 	}
 
 	if user.IsForbidden {
-		return nil, i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator")
+		return nil, NewCheckUserPasswordError(ErrorUserBlocked)
 	}
 
-	return user, ""
+	return user, nil
+}
+
+func LogRecordCheckPassError(ctx *context.Context, err error) {
+	if extendedErr, ok := err.(*CheckUserPasswordError); ok {
+		switch extendedErr.Err() {
+		case ErrorUserNotFound:
+			record := NewRecordBuilder(ctx).WithDetail("User not found").Build()
+			SaveOnSuccess(ctx, record)
+		case ErrorUserDeleted:
+			record := NewRecordBuilder(ctx).WithDetail("User deleted").Build()
+			SaveOnSuccess(ctx, record)
+		case ErrorUserBlocked:
+			record := NewRecordBuilder(ctx).WithDetail("User blocked").Build()
+			SaveOnSuccess(ctx, record)
+		case ErrorWrongPassword:
+			record := NewRecordBuilder(ctx).WithDetail("Wrong password").Build()
+			SaveOnSuccess(ctx, record)
+		case ErrorLDAPUserNotFound:
+			record := NewRecordBuilder(ctx).WithDetail("LDAP user not found").Build()
+			SaveOnSuccess(ctx, record)
+		case ErrorLDAPError:
+			record := NewRecordBuilder(ctx).WithDetail("LDAP error").Build()
+			SaveOnSuccess(ctx, record)
+		}
+	}
+}
+
+func CheckPassErrorToMessage(err error, lang string) string {
+	if extendedErr, ok := err.(*CheckUserPasswordError); ok {
+		switch extendedErr.Err() {
+		case ErrorUserNotFound:
+			return i18n.Translate(lang, "general:Invalid username or password/code")
+		case ErrorUserDeleted:
+			return i18n.Translate(lang, "general:Invalid username or password/code")
+		case ErrorUserBlocked:
+			return i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator")
+		case ErrorWrongPassword:
+			return extendedErr.Message()
+		case ErrorLDAPUserNotFound:
+			return i18n.Translate(lang, "general:Invalid username or password/code")
+		case ErrorLDAPError:
+			return extendedErr.Message()
+		default:
+			return extendedErr.Error()
+		}
+	}
+
+	return err.Error()
 }
 
 func CheckUserPermission(requestUserId, userId string, strict bool, lang string) (bool, error) {

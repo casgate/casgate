@@ -874,7 +874,9 @@
   "record": {
     "Is triggered": "Est déclenché",
     "Object": "Object",
-    "Status code": "Status code"
+    "Status code": "Status code",
+    "Response": "Response",
+    "Detail": "Detail"
   },
   "resource": {
     "Copy Link": "Copier le lien",
