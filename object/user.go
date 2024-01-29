@@ -1097,6 +1097,19 @@ func groupUsersByGroups(users []*User) map[string][]*User {
 
 	return result
 }
+func GetUsersWithFilter(owner string, cond builder.Cond) ([]*User, error) {
+	users := []*User{}
+	session := ormer.Engine.Desc("created_time")
+	if cond != nil {
+		session = session.Where(cond)
+	}
+	err := session.Find(&users, &User{Owner: owner})
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
 
 func GetGlobalUsersWithFilter(cond builder.Cond) ([]*User, error) {
 	users := []*User{}

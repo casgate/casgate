@@ -395,6 +395,14 @@ export function getCountryCodeOption(country) {
   );
 }
 
+export function isLdapEnabled(application) {
+  if (application) {
+    return application.signinMethods.filter(item => item.name === "LDAP").length > 0;
+  } else {
+    return false;
+  }
+}
+
 export function getCountryImage(country) {
   return <img src={`${StaticBaseUrl}/flag-icons/${country.code}.svg`} alt={country.name} height={20} style={{marginRight: 10}} />;
 }

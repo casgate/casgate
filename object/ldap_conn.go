@@ -110,14 +110,14 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 }
 
 func (l *LdapConn) Close() {
-	if l.Conn == nil {
-		return
-	}
+	// if l.Conn == nil {
+	// 	return
+	// }
 
-	err := l.Conn.Unbind()
-	if err != nil {
-		panic(err)
-	}
+	// err := l.Conn.Unbind()
+	// if err != nil {
+	// 	panic(err)
+	// }
 }
 
 func isMicrosoftAD(Conn *goldap.Conn) (bool, error) {

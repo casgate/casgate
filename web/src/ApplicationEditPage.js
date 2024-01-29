@@ -27,6 +27,7 @@ import LoginPage from "./auth/LoginPage";
 import i18next from "i18next";
 import UrlTable from "./table/UrlTable";
 import ProviderTable from "./table/ProviderTable";
+import SigninTable from "./table/SigninTable";
 import SignupTable from "./table/SignupTable";
 import PromptPage from "./auth/PromptPage";
 import copy from "copy-to-clipboard";
@@ -448,25 +449,19 @@ class ApplicationEditPage extends React.Component {
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
-            {Setting.getLabel(i18next.t("application:Enable code signin"), i18next.t("application:Enable code signin - Tooltip"))} :
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("application:Signin methods"), i18next.t("application:Signin methods - Tooltip"))} :
           </Col>
-          <Col span={1} >
-            <Switch checked={this.state.application.enableCodeSignin} onChange={checked => {
-              this.updateApplicationField("enableCodeSignin", checked);
-            }} />
+          <Col span={22} >
+            <SigninTable
+              title={i18next.t("application:Signin methods")}
+              table={this.state.application.signinMethods}
+              onUpdateTable={(value) => {
+                this.updateApplicationField("signinMethods", value);
+              }}
+            />
           </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
-            {Setting.getLabel(i18next.t("application:Enable WebAuthn signin"), i18next.t("application:Enable WebAuthn signin - Tooltip"))} :
-          </Col>
-          <Col span={1} >
-            <Switch checked={this.state.application.enableWebAuthn} onChange={checked => {
-              this.updateApplicationField("enableWebAuthn", checked);
-            }} />
-          </Col>
-        </Row>
+        </Row>  
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
             {Setting.getLabel(i18next.t("application:Enable Email linking"), i18next.t("application:Enable Email linking - Tooltip"))} :
