@@ -403,5 +403,9 @@ func (user *User) IsAdminUser() bool {
 }
 
 func getNextPasswordChangeTime(passwordChangeInterval int) time.Time {
-	return time.Now().Add(time.Hour * 24 * time.Duration(passwordChangeInterval))
+	return time.Now().Add(getIntervalFromdays(passwordChangeInterval))
+}
+
+func getIntervalFromdays(days int) time.Duration {
+	return time.Hour * 24 * time.Duration(days)
 }

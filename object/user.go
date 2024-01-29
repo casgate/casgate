@@ -226,7 +226,7 @@ type ManagedAccount struct {
 }
 
 func (u *User) PasswordChangeRequired() bool {
-	return u.PasswordChangeTime.Before(time.Now()) && !u.PasswordChangeTime.IsZero()
+	return !u.PasswordChangeTime.IsZero() && u.PasswordChangeTime.Before(time.Now())
 }
 
 func (u *User) checkPasswordChangeRequestAllowed() error {
@@ -751,7 +751,7 @@ func AddUser(user *User) (bool, error) {
 
 	user.PreHash = user.Hash
 
-	if organization.PasswordChangeInterval != 0 && user.PasswordChangeTime.IsZero() {
+	if user.PasswordChangeTime.IsZero() && organization.PasswordChangeInterval != 0 {
 		user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
 	}
 
