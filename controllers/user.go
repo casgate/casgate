@@ -17,6 +17,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/beego/beego/utils/pagination"
@@ -541,7 +542,7 @@ func (c *ApiController) SetPassword() {
 
 	msg = object.CheckPasswordSame(targetUser, newPassword, c.GetAcceptLanguage())
 	if msg != "" {
-		c.ResponseError(msg)
+		c.ResponseErrorWithStatus(http.StatusBadRequest, msg)
 		return
 	}
 
