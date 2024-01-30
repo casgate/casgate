@@ -395,6 +395,30 @@ export function getCountryCodeOption(country) {
   );
 }
 
+export function isPasswordEnabled(application) {
+  if (application) {
+    return application.signinMethods.filter(item => item.name === "Password").length > 0;
+  } else {
+    return false;
+  }
+}
+
+export function isCodeSigninEnabled(application) {
+  if (application) {
+    return application.signinMethods.filter(item => item.name === "Verification code").length > 0;
+  } else {
+    return false;
+  }
+}
+
+export function isWebAuthnEnabled(application) {
+  if (application) {
+    return application.signinMethods.filter(item => item.name === "WebAuthn").length > 0;
+  } else {
+    return false;
+  }
+}
+
 export function isLdapEnabled(application) {
   if (application) {
     return application.signinMethods.filter(item => item.name === "LDAP").length > 0;

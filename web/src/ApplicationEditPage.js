@@ -461,7 +461,7 @@ class ApplicationEditPage extends React.Component {
               }}
             />
           </Col>
-        </Row>  
+        </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
             {Setting.getLabel(i18next.t("application:Enable Email linking"), i18next.t("application:Enable Email linking - Tooltip"))} :
@@ -1009,8 +1009,6 @@ class ApplicationEditPage extends React.Component {
   submitApplicationEdit(willExist) {
     const application = Setting.deepCopy(this.state.application);
     application.providers = application.providers?.filter(provider => this.state.providers.map(provider => provider.name).includes(provider.name));
-
-    this.state.providers.map(provider => provider.name).includes(provider.name);
     application.signinMethods = application.signinMethods?.filter(signinMethod => ["Password", "Verification code", "WebAuthn", "LDAP"].includes(signinMethod.name));
 
     ApplicationBackend.updateApplication("admin", this.state.applicationName, application)
