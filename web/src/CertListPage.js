@@ -141,6 +141,7 @@ class CertListPage extends BaseListPage {
         filters: [
           {text: Setting.CertScopeJWT, value: Setting.CertScopeJWT},
           {text: Setting.CertScopeCACert, value: Setting.CertScopeCACert},
+          {text: Setting.CertScopeSignCert, value: Setting.CertScopeSignCert},
         ],
         width: "110px",
         sorter: true,
@@ -175,6 +176,9 @@ class CertListPage extends BaseListPage {
         width: "130px",
         sorter: true,
         ...this.getColumnSearchProps("bitSize"),
+        render: (text) => {
+          return text === 0 ? "" : text;
+        },
       },
       {
         title: i18next.t("cert:Expire in years"),
@@ -183,6 +187,9 @@ class CertListPage extends BaseListPage {
         width: "170px",
         sorter: true,
         ...this.getColumnSearchProps("expireInYears"),
+        render: (text) => {
+          return text === 0 ? "" : text;
+        },
       },
       {
         title: i18next.t("general:Action"),

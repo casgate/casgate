@@ -34,6 +34,16 @@ export function getGlobleCerts(page = "", pageSize = "", field = "", value = "",
   }).then(res => res.json());
 }
 
+export function getCertsByScope(owner, scope) {
+  return fetch(`${Setting.ServerUrl}/api/get-scope-certs?owner=${owner}&scope=${scope}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Accept-Language": Setting.getAcceptLanguage(),
+    },
+  }).then(res => res.json());
+}
+
 export function getCert(owner, name) {
   return fetch(`${Setting.ServerUrl}/api/get-cert?id=${owner}/${encodeURIComponent(name)}`, {
     method: "GET",

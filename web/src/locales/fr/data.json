@@ -116,6 +116,8 @@
   "cert": {
     "Bit size": "Taille de bit",
     "Bit size - Tooltip": "Longueur de la clé secrète",
+    "CA Certificate": "CA Certificate",
+    "CA Certificate - Tooltip": "Trusted X.509 certification authority (CA) certificate in PEM format. Used to establish a trusted SSL connection with the server",
     "Certificate": "Certificat",
     "Certificate - Tooltip": "Certificat de clé publique, utilisé pour décrypter la signature JWT du jeton d'accès. Ce certificat doit généralement être déployé du côté du SDK Casdoor (c'est-à-dire de l'application) pour analyser le JWT",
     "Certificate copied to clipboard successfully": "Certificat copié avec succès dans le presse-papiers",
@@ -132,6 +134,8 @@
     "Private key": "Clé privée",
     "Private key - Tooltip": "Clé privée correspondant au certificat de clé publique",
     "Private key copied to clipboard successfully": "Clé privée copiée dans le presse-papiers avec succès",
+    "Sign Certificate": "Sign Certificate",
+    "Sign Certificate - Tooltip": "X.509 certificate with private key in PEM format. Used for signature creating",
     "Scope - Tooltip": "Scénarios d'utilisation du certificat",
     "Type - Tooltip": "Type de certificat"
   },
@@ -409,8 +413,6 @@
     "Auto Sync - Tooltip": "Configuration de synchronisation automatique, désactivée à 0",
     "Base DN": "Base DN - DN de base",
     "Base DN - Tooltip": "DN de base lors de la recherche LDAP",
-    "CA Certificate": "CA Certificate",
-    "CA Certificate - Tooltip": "Trusted X.509 certification authority (CA) certificate in PEM format. Used to establish a trusted SSL connection with the LDAP server",
     "CN": "CN",
     "Edit LDAP": "Modifier LDAP",
     "Enable Attribute Mapping": "Enable Attribute Mapping",

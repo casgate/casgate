@@ -106,6 +106,27 @@ func (c *ApiController) GetGlobleCerts() {
 	}
 }
 
+// GetCertsByScope
+// @Title GetCertsByScope
+// @Tag Cert API
+// @Description get certs by scope
+// @Param   owner     query    string  true        "The owner of the cert"
+// @Param   scope     query    string  true        "The scope of the cert"
+// @Success 200 {object} []object.Cert The Response object
+// @router /get-scope-certs [get]
+func (c *ApiController) GetCertsByScope() {
+	owner := c.Input().Get("owner")
+	scope := c.Input().Get("scope")
+
+	certs, err := object.GetMaskedCerts(object.GetCertsByScope(owner, scope))
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk(certs)
+}
+
 // GetCert
 // @Title GetCert
 // @Tag Cert API
