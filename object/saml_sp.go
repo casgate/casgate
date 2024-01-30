@@ -188,6 +188,9 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 		if err != nil {
 			return nil, err
 		}
+		if certificate == nil {
+			return nil, ErrCertDoesNotExist
+		}
 
 		if certificate.Scope != scopeCertSign {
 			return nil, errors.New("certificate with invalid scope was selected")
