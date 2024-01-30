@@ -45,6 +45,8 @@ type Cert struct {
 	PrivateKey  string `xorm:"mediumtext" json:"privateKey"`
 }
 
+var ErrCertDoesNotExist = errors.New(fmt.Sprintf("certificate does not exist"))
+
 func GetMaskedCert(cert *Cert) *Cert {
 	if cert == nil {
 		return nil
@@ -168,7 +170,7 @@ func GetTlsConfigForCert(name string) (*tls.Config, error) {
 		return nil, err
 	}
 	if cert == nil {
-		return nil, errors.New(fmt.Sprintf("Certificate %s does not exist", name))
+		return nil, ErrCertDoesNotExist
 	}
 
 	ca := x509.NewCertPool()
