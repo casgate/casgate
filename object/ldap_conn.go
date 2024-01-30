@@ -16,7 +16,6 @@ package object
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"strings"
@@ -71,24 +70,16 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 	)
 
 	if ldap.EnableSsl {
-		tlsConf := tls.Config{
-			PreferServerCipherSuites: true,
-		}
+		tlsConf := &tls.Config{}
 
 		if len(ldap.Cert) > 0 {
-			rootCACert, err := getCertByName(ldap.Cert)
+			tlsConf, err = GetTlsConfigForCert(ldap.Cert)
 			if err != nil {
 				return nil, err
 			}
-
-			ca := x509.NewCertPool()
-			if ok := ca.AppendCertsFromPEM([]byte(rootCACert.Certificate)); !ok {
-				return nil, ErrX509CertsPEMParse
-			}
-			tlsConf.RootCAs = ca
 		}
 
-		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), &tlsConf)
+		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), tlsConf)
 	} else {
 		conn, err = goldap.Dial("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port))
 	}

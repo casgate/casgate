@@ -45,6 +45,8 @@ type ProviderInfo struct {
 	AuthURL     string
 	UserInfoURL string
 	UserMapping map[string][]string
+
+	Cert string
 }
 
 type IdProvider interface {
