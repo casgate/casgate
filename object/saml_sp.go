@@ -18,6 +18,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -120,7 +121,7 @@ func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method
 		return "", "", err
 	}
 
-	if provider.EnableSignAuthnRequest {
+	if provider.RequestSignature != NotToSign {
 		post, err := sp.BuildAuthBodyPost(relayState)
 		if err != nil {
 			return "", "", err
@@ -145,7 +146,7 @@ func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 		return nil, err
 	}
 
-	var issuer = provider.ClientId
+	issuer := provider.ClientId
 	if issuer == "" {
 		issuer = fmt.Sprintf("%s/api/acs", origin)
 	}
@@ -162,9 +163,9 @@ func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 		sp.IdentityProviderSSOURL = provider.Endpoint
 		sp.IdentityProviderIssuer = provider.IssuerUrl
 	}
-	if provider.EnableSignAuthnRequest {
+	if provider.RequestSignature != NotToSign {
 		sp.SignAuthnRequests = true
-		sp.SPKeyStore, err = buildSpKeyStore()
+		sp.SPKeyStore, err = buildSpKeyStore(provider)
 		if err != nil {
 			return nil, err
 		}
@@ -173,10 +174,34 @@ func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 	return sp, nil
 }
 
-func buildSpKeyStore() (dsig.X509KeyStore, error) {
-	keyPair, err := tls.LoadX509KeyPair("object/token_jwt_key.pem", "object/token_jwt_key.key")
-	if err != nil {
-		return nil, err
+func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
+	var (
+		certificate *Cert
+		keyPair     tls.Certificate
+		err         error
+	)
+	if provider.RequestSignature == SignWithCertificate {
+		if provider.Cert == "" {
+			return nil, errors.New("certificate for request signature was not selected")
+		}
+		certificate, err = GetCert(fmt.Sprintf("%s/%s", provider.Owner, provider.Cert))
+		if err != nil {
+			return nil, err
+		}
+
+		if certificate.Scope != scopeCertSign {
+			return nil, errors.New("certificate with invalid scope was selected")
+		}
+
+		keyPair, err = tls.X509KeyPair([]byte(certificate.Certificate), []byte(certificate.PrivateKey))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		keyPair, err = tls.LoadX509KeyPair("object/token_jwt_key.pem", "object/token_jwt_key.key")
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &dsig.TLSCertKeyStore{
 		PrivateKey:  keyPair.PrivateKey,
