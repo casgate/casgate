@@ -87,6 +87,20 @@ class CertEditPage extends React.Component {
     });
   }
 
+  clearJWTCertFields() {
+    this.updateCertField("type", "");
+    this.updateCertField("cryptoAlgorithm", "");
+    this.updateCertField("bitSize", 0);
+    this.updateCertField("expireInYears", 0);
+  }
+
+  fillJWTCertFieldsByDefault() {
+    this.updateCertField("type", "x509");
+    this.updateCertField("cryptoAlgorithm", "RS256");
+    this.updateCertField("bitSize", 4096);
+    this.updateCertField("expireInYears", 20);
+  }
+
   renderCert() {
     const editorWidth = Setting.isMobile() ? 22 : 9;
     return (
@@ -137,6 +151,11 @@ class CertEditPage extends React.Component {
           </Col>
           <Col span={22} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.cert.scope} onChange={(value => {
+              if (value !== Setting.CertScopeJWT) {
+                this.clearJWTCertFields();
+              } else {
+                this.fillJWTCertFieldsByDefault();
+              }
               this.updateCertField("scope", value);
               this.updateCertField("certificate", "");
               this.updateCertField("privateKey", "");
@@ -145,13 +164,14 @@ class CertEditPage extends React.Component {
                 [
                   {id: Setting.CertScopeJWT, name: Setting.CertScopeJWT},
                   {id: Setting.CertScopeCACert, name: Setting.CertScopeCACert},
+                  {id: Setting.CertScopeSignCert, name: Setting.CertScopeSignCert},
                 ].map((item, index) => <Option key={index} value={item.id}>{item.name}</Option>)
               }
             </Select>
           </Col>
         </Row>
         {
-          this.state.cert.scope !== Setting.CertScopeJWT ? null : (
+          this.state.cert.scope === Setting.CertScopeJWT ? (
             <Row style={{marginTop: "20px"}} >
               <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                 {Setting.getLabel(i18next.t("provider:Type"), i18next.t("cert:Type - Tooltip"))} :
@@ -169,10 +189,10 @@ class CertEditPage extends React.Component {
                 </Select>
               </Col>
             </Row>
-          )
+          ) : null
         }
         {
-          this.state.cert.scope !== Setting.CertScopeJWT ? null : (
+          this.state.cert.scope === Setting.CertScopeJWT ? (
             <Row style={{marginTop: "20px"}} >
               <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                 {Setting.getLabel(i18next.t("cert:Crypto algorithm"), i18next.t("cert:Crypto algorithm - Tooltip"))} :
@@ -189,10 +209,10 @@ class CertEditPage extends React.Component {
                 </Select>
               </Col>
             </Row>
-          )
+          ) : null
         }
         {
-          this.state.cert.scope !== Setting.CertScopeJWT ? null : (
+          this.state.cert.scope === Setting.CertScopeJWT ? (
             <Row style={{marginTop: "20px"}} >
               <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                 {Setting.getLabel(i18next.t("cert:Bit size"), i18next.t("cert:Bit size - Tooltip"))} :
@@ -203,10 +223,10 @@ class CertEditPage extends React.Component {
                 }} />
               </Col>
             </Row>
-          )
+          ) : null
         }
         {
-          this.state.cert.scope !== Setting.CertScopeJWT ? null : (
+          this.state.cert.scope === Setting.CertScopeJWT ? (
             <Row style={{marginTop: "20px"}} >
               <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                 {Setting.getLabel(i18next.t("cert:Expire in years"), i18next.t("cert:Expire in years - Tooltip"))} :
@@ -217,7 +237,7 @@ class CertEditPage extends React.Component {
                 }} />
               </Col>
             </Row>
-          )
+          ) : null
         }
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
@@ -243,19 +263,19 @@ class CertEditPage extends React.Component {
             }} />
           </Col>
           {
-            this.state.cert.scope !== Setting.CertScopeJWT ? null : (
+            this.state.cert.scope === Setting.CertScopeCACert ? null : (
               <Col span={1} />
             )
           }
           {
-            this.state.cert.scope !== Setting.CertScopeJWT ? null : (
+            this.state.cert.scope === Setting.CertScopeCACert ? null : (
               <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                 {Setting.getLabel(i18next.t("cert:Private key"), i18next.t("cert:Private key - Tooltip"))} :
               </Col>
             )
           }
           {
-            this.state.cert.scope !== Setting.CertScopeJWT ? null : (
+            this.state.cert.scope === Setting.CertScopeCACert ? null : (
               <Col span={editorWidth} >
                 <Button style={{marginRight: "10px", marginBottom: "10px"}} onClick={() => {
                   copy(this.state.cert.privateKey);

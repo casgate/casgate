@@ -1347,6 +1347,11 @@ export function builtInObject(obj) {
 
 export const CertScopeJWT = "JWT";
 export const CertScopeCACert = "CA Certificate";
+export const CertScopeSignCert = "Sign Certificate";
+
+export const SamlNoRequestSign = "No sign";
+export const SamlSignRequestWithFile = "Sign with default file";
+export const SamlSignRequestWithCertificate = "Sign with certificate";
 
 export function getCurrencySymbol(currency) {
   if (currency === "USD" || currency === "usd") {
