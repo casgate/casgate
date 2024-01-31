@@ -26,7 +26,7 @@ import (
 const (
 	scopeCertJWT    = "JWT"
 	scopeCertCACert = "CA Certificate"
-	scopeCertSign   = "Sign Certificate"
+	scopeClientCert = "Client Certificate"
 )
 
 type Cert struct {
@@ -74,16 +74,6 @@ func GetCertCount(owner, field, value string) (int64, error) {
 func GetCerts(owner string) ([]*Cert, error) {
 	certs := []*Cert{}
 	err := ormer.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&certs, &Cert{})
-	if err != nil {
-		return certs, err
-	}
-
-	return certs, nil
-}
-
-func GetCertsByScope(owner string, scope string) ([]*Cert, error) {
-	certs := []*Cert{}
-	err := ormer.Engine.Where("owner = ? and scope = ?", owner, scope).Desc("created_time").Find(&certs, &Cert{})
 	if err != nil {
 		return certs, err
 	}

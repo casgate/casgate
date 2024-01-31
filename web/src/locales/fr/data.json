@@ -121,6 +121,8 @@
     "Certificate": "Certificat",
     "Certificate - Tooltip": "Certificat de clé publique, utilisé pour décrypter la signature JWT du jeton d'accès. Ce certificat doit généralement être déployé du côté du SDK Casdoor (c'est-à-dire de l'application) pour analyser le JWT",
     "Certificate copied to clipboard successfully": "Certificat copié avec succès dans le presse-papiers",
+    "Client Certificate": "Client Certificate",
+    "Client Certificate - Tooltip": "X.509 certificate with private key in PEM format",
     "Copy certificate": "Copie du certificat",
     "Copy private key": "Copier la clé privée",
     "Crypto algorithm": "Algorithme de cryptographie",
@@ -134,8 +136,6 @@
     "Private key": "Clé privée",
     "Private key - Tooltip": "Clé privée correspondant au certificat de clé publique",
     "Private key copied to clipboard successfully": "Clé privée copiée dans le presse-papiers avec succès",
-    "Sign Certificate": "Sign Certificate",
-    "Sign Certificate - Tooltip": "X.509 certificate with private key in PEM format. Used for signature creating",
     "Scope - Tooltip": "Scénarios d'utilisation du certificat",
     "Type - Tooltip": "Type de certificat"
   },

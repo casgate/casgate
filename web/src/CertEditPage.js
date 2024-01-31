@@ -164,7 +164,7 @@ class CertEditPage extends React.Component {
                 [
                   {id: Setting.CertScopeJWT, name: Setting.CertScopeJWT},
                   {id: Setting.CertScopeCACert, name: Setting.CertScopeCACert},
-                  {id: Setting.CertScopeSignCert, name: Setting.CertScopeSignCert},
+                  {id: Setting.CertScopeClientCert, name: Setting.CertScopeClientCert},
                 ].map((item, index) => <Option key={index} value={item.id}>{item.name}</Option>)
               }
             </Select>
