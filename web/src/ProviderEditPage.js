@@ -87,7 +87,7 @@ class ProviderEditPage extends React.Component {
   }
 
   getCerts(owner) {
-    CertBackend.getCertsByScope(owner, Setting.CertScopeCACert)
+    CertBackend.getCerts(owner, -1, -1, "scope", Setting.CertScopeCACert, "", "")
       .then((res) => {
         if (res.status === "ok") {
           this.setState({
@@ -95,7 +95,7 @@ class ProviderEditPage extends React.Component {
           });
         }
       });
-    CertBackend.getCertsByScope(owner, Setting.CertScopeSignCert)
+    CertBackend.getCerts(owner, -1, -1, "scope", Setting.CertScopeSignCert, "", "")
       .then((res) => {
         if (res.status === "ok") {
           this.setState({

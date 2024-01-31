@@ -39,7 +39,15 @@ func (c *ApiController) GetCerts() {
 	sortOrder := c.Input().Get("sortOrder")
 
 	if limit == "" || page == "" {
-		maskedCerts, err := object.GetMaskedCerts(object.GetCerts(owner))
+		var (
+			maskedCerts []*object.Cert
+			err         error
+		)
+		if field == "scope" && value != "" {
+			maskedCerts, err = object.GetMaskedCerts(object.GetCertsByScope(owner, value))
+		} else {
+			maskedCerts, err = object.GetMaskedCerts(object.GetCerts(owner))
+		}
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -104,27 +112,6 @@ func (c *ApiController) GetGlobleCerts() {
 
 		c.ResponseOk(certs, paginator.Nums())
 	}
-}
-
-// GetCertsByScope
-// @Title GetCertsByScope
-// @Tag Cert API
-// @Description get certs by scope
-// @Param   owner     query    string  true        "The owner of the cert"
-// @Param   scope     query    string  true        "The scope of the cert"
-// @Success 200 {object} []object.Cert The Response object
-// @router /get-scope-certs [get]
-func (c *ApiController) GetCertsByScope() {
-	owner := c.Input().Get("owner")
-	scope := c.Input().Get("scope")
-
-	certs, err := object.GetMaskedCerts(object.GetCertsByScope(owner, scope))
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
-	}
-
-	c.ResponseOk(certs)
 }
 
 // GetCert
