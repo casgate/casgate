@@ -598,7 +598,7 @@ func (c *ApiController) CheckUserPassword() {
 		c.ResponseOk()
 	} else {
 		msg := object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
-		c.ResponseError(msg)
+		c.ResponseUnauthorized(msg)
 	}
 }
 
