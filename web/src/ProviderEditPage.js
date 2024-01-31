@@ -42,7 +42,7 @@ class ProviderEditPage extends React.Component {
       owner: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
       provider: null,
       caCerts: [],
-      signCerts: [],
+      clientCerts: [],
       organizations: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
     };
@@ -95,11 +95,11 @@ class ProviderEditPage extends React.Component {
           });
         }
       });
-    CertBackend.getCerts(owner, -1, -1, "scope", Setting.CertScopeSignCert, "", "")
+    CertBackend.getCerts(owner, -1, -1, "scope", Setting.CertScopeClientCert, "", "")
       .then((res) => {
         if (res.status === "ok") {
           this.setState({
-            signCerts: res.data || [],
+            clientCerts: res.data || [],
           });
         }
       });
@@ -1138,12 +1138,12 @@ class ProviderEditPage extends React.Component {
                 this.state.provider.requestSignature === Setting.SamlSignRequestWithCertificate ? (
                   <Row style={{marginTop: "20px"}} >
                     <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                      {Setting.getLabel(i18next.t("cert:Sign Certificate"), i18next.t("cert:Sign Certificate - Tooltip"))} :
+                      {Setting.getLabel(i18next.t("cert:Client Certificate"), i18next.t("cert:Client Certificate - Tooltip"))} :
                     </Col>
                     <Col span={21} >
                       <Select virtual={false} style={{width: "100%"}} value={this.state.provider.cert} onChange={(value => {this.updateProviderField("cert", value);})}>
                         {
-                          this.state.signCerts.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
+                          this.state.clientCerts.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
                         }
                       </Select>
                     </Col>

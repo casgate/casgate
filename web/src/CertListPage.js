@@ -141,7 +141,7 @@ class CertListPage extends BaseListPage {
         filters: [
           {text: Setting.CertScopeJWT, value: Setting.CertScopeJWT},
           {text: Setting.CertScopeCACert, value: Setting.CertScopeCACert},
-          {text: Setting.CertScopeSignCert, value: Setting.CertScopeSignCert},
+          {text: Setting.CertScopeClientCert, value: Setting.CertScopeClientCert},
         ],
         width: "110px",
         sorter: true,

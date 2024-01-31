@@ -121,6 +121,8 @@
     "Certificate": "Sertifikat",
     "Certificate - Tooltip": "Sertifikat kunci publik, digunakan untuk mendekripsi tanda tangan JWT pada Access Token. Sertifikat ini biasanya perlu diimplementasikan pada sisi SDK Casdoor (yaitu aplikasi) untuk memecahkan JWT",
     "Certificate copied to clipboard successfully": "Sertifikat berhasil disalin ke clipboard",
+    "Client Certificate": "Client Certificate",
+    "Client Certificate - Tooltip": "X.509 certificate with private key in PEM format",
     "Copy certificate": "Salin sertifikat",
     "Copy private key": "Salin kunci pribadi",
     "Crypto algorithm": "Algoritma kriptografi",
@@ -134,8 +136,6 @@
     "Private key": "Kunci pribadi",
     "Private key - Tooltip": "Kunci pribadi yang sesuai dengan sertifikat kunci publik",
     "Private key copied to clipboard successfully": "Kunci pribadi berhasil disalin ke clipboard",
-    "Sign Certificate": "Sign Certificate",
-    "Sign Certificate - Tooltip": "X.509 certificate with private key in PEM format. Used for signature creating",
     "Scope - Tooltip": "Skema penggunaan sertifikat:",
     "Type - Tooltip": "Jenis sertifikat"
   },
