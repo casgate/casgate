@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/i18n"
@@ -125,7 +126,11 @@ func SetUserField(user *User, field string, value string) (bool, error) {
 		user.UpdateUserPassword(organization)
 		bean[strings.ToLower(field)] = user.Password
 		bean["password_type"] = user.PasswordType
-		bean["password_change_required"] = false
+		bean["password_change_time"] = nil
+		if organization.PasswordChangeInterval != 0 {
+			bean["password_change_time"] = getNextPasswordChangeTime(organization.PasswordChangeInterval)
+		}
+
 		bean["password_salt"] = user.PasswordSalt
 	} else {
 		field = strings.ReplaceAll(field, " ", "")
@@ -356,7 +361,7 @@ func CheckPermissionForUpdateUser(oldUser, newUser *User, isAdmin bool, lang str
 		item := GetAccountItemByName("Is deleted", organization)
 		itemsChanged = append(itemsChanged, item)
 	}
-	if oldUser.PasswordChangeRequired != newUser.PasswordChangeRequired {
+	if oldUser.PasswordChangeTime != newUser.PasswordChangeTime {
 		item := GetAccountItemByName("Password change required", organization)
 		itemsChanged = append(itemsChanged, item)
 	}
@@ -395,4 +400,12 @@ func (user *User) IsAdminUser() bool {
 	}
 
 	return user.IsAdmin || user.IsGlobalAdmin()
+}
+
+func getNextPasswordChangeTime(passwordChangeInterval int) time.Time {
+	return time.Now().Add(getIntervalFromdays(passwordChangeInterval))
+}
+
+func getIntervalFromdays(days int) time.Duration {
+	return time.Hour * 24 * time.Duration(days)
 }

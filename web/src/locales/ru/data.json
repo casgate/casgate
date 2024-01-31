@@ -552,6 +552,8 @@
     "Modify rule": "Изменить правило",
     "New Organization": "Новая организация",
     "Optional": "Optional",
+    "Password change interval": "Password change interval",
+    "Password change interval - Tooltip": "Password change interval - Tooltip",
     "Prompt": "Prompt",
     "Required": "Required",
     "Soft deletion": "Мягкое удаление",

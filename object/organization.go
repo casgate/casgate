@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -51,22 +52,23 @@ type Organization struct {
 	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
 	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
 
-	DisplayName        string     `xorm:"varchar(100)" json:"displayName"`
-	WebsiteUrl         string     `xorm:"varchar(100)" json:"websiteUrl"`
-	Favicon            string     `xorm:"varchar(100)" json:"favicon"`
-	PasswordType       string     `xorm:"varchar(100)" json:"passwordType"`
-	PasswordSalt       string     `xorm:"varchar(100)" json:"passwordSalt"`
-	PasswordOptions    []string   `xorm:"varchar(100)" json:"passwordOptions"`
-	CountryCodes       []string   `xorm:"varchar(200)"  json:"countryCodes"`
-	DefaultAvatar      string     `xorm:"varchar(200)" json:"defaultAvatar"`
-	DefaultApplication string     `xorm:"varchar(100)" json:"defaultApplication"`
-	Tags               []string   `xorm:"mediumtext" json:"tags"`
-	Languages          []string   `xorm:"varchar(255)" json:"languages"`
-	ThemeData          *ThemeData `xorm:"json" json:"themeData"`
-	MasterPassword     string     `xorm:"varchar(100)" json:"masterPassword"`
-	InitScore          int        `json:"initScore"`
-	EnableSoftDeletion bool       `json:"enableSoftDeletion"`
-	IsProfilePublic    bool       `json:"isProfilePublic"`
+	DisplayName            string     `xorm:"varchar(100)" json:"displayName"`
+	WebsiteUrl             string     `xorm:"varchar(100)" json:"websiteUrl"`
+	Favicon                string     `xorm:"varchar(100)" json:"favicon"`
+	PasswordType           string     `xorm:"varchar(100)" json:"passwordType"`
+	PasswordSalt           string     `xorm:"varchar(100)" json:"passwordSalt"`
+	PasswordOptions        []string   `xorm:"varchar(100)" json:"passwordOptions"`
+	PasswordChangeInterval int        `json:"passwordChangeInterval"`
+	CountryCodes           []string   `xorm:"varchar(200)"  json:"countryCodes"`
+	DefaultAvatar          string     `xorm:"varchar(200)" json:"defaultAvatar"`
+	DefaultApplication     string     `xorm:"varchar(100)" json:"defaultApplication"`
+	Tags                   []string   `xorm:"mediumtext" json:"tags"`
+	Languages              []string   `xorm:"varchar(255)" json:"languages"`
+	ThemeData              *ThemeData `xorm:"json" json:"themeData"`
+	MasterPassword         string     `xorm:"varchar(100)" json:"masterPassword"`
+	InitScore              int        `json:"initScore"`
+	EnableSoftDeletion     bool       `json:"enableSoftDeletion"`
+	IsProfilePublic        bool       `json:"isProfilePublic"`
 
 	MfaItems     []*MfaItem     `xorm:"varchar(300)" json:"mfaItems"`
 	AccountItems []*AccountItem `xorm:"varchar(5000)" json:"accountItems"`
@@ -174,43 +176,55 @@ func GetMaskedOrganizations(organizations []*Organization, errs ...error) ([]*Or
 	return organizations, nil
 }
 
-func UpdateOrganization(id string, organization *Organization) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	if org, err := getOrganization(owner, name); err != nil {
-		return false, err
-	} else if org == nil {
-		return false, nil
-	}
-
-	if name == "built-in" {
-		organization.Name = name
-	}
-
-	if name != organization.Name {
-		err := organizationChangeTrigger(name, organization.Name)
+func UpdateOrganization(ctx context.Context, id string, organization *Organization) (bool, error) {
+	var affected int64
+	err := trm.WithTx(ctx, func(ctx context.Context) error {
+		owner, name := util.GetOwnerAndNameFromId(id)
+		org, err := repo.GetOrganization(ctx, owner, name, true)
 		if err != nil {
-			return false, err
+			return err
 		}
-	}
-
-	if organization.MasterPassword != "" && organization.MasterPassword != "***" {
-		credManager := cred.GetCredManager(organization.PasswordType)
-		if credManager != nil {
-			hashedPassword := credManager.GetHashedPassword(organization.MasterPassword, organization.PasswordSalt)
-			organization.MasterPassword = hashedPassword
+		if org == nil {
+			return nil
 		}
-	}
 
-	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
-	if organization.MasterPassword == "***" {
-		session.Omit("master_password")
-	}
-	affected, err := session.Update(organization)
-	if err != nil {
-		return false, err
-	}
+		if name == "built-in" {
+			organization.Name = name
+		}
 
-	return affected != 0, nil
+		if name != organization.Name {
+			err := organizationChangeTrigger(ctx, name, organization.Name)
+			if err != nil {
+				return err
+			}
+		}
+
+		if org.PasswordChangeInterval != organization.PasswordChangeInterval {
+			err = updateOrganizationUsersPasswordChangeTime(ctx, organization.Name, org.PasswordChangeInterval, organization.PasswordChangeInterval)
+			if err != nil {
+				return err
+			}
+		}
+
+		if organization.MasterPassword != "" && organization.MasterPassword != "***" {
+			credManager := cred.GetCredManager(organization.PasswordType)
+			if credManager != nil {
+				hashedPassword := credManager.GetHashedPassword(organization.MasterPassword, organization.PasswordSalt)
+				organization.MasterPassword = hashedPassword
+			}
+		}
+		if organization.MasterPassword == "***" {
+			organization.MasterPassword = org.MasterPassword
+		}
+
+		affected, err = repo.UpdateOrganization(ctx, owner, name, organization)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return affected != 0, err
 }
 
 func AddOrganization(organization *Organization) (bool, error) {
@@ -329,143 +343,166 @@ func GetDefaultApplication(id string) (*Application, error) {
 	return defaultApplication, nil
 }
 
-func organizationChangeTrigger(oldName string, newName string) error {
-	session := ormer.Engine.NewSession()
-	defer session.Close()
-
-	err := session.Begin()
+func organizationChangeTrigger(ctx context.Context, oldName string, newName string) error {
+	err := repo.UpdateEntitiesFieldValue(ctx, "application", "organization", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	application := new(Application)
-	application.Organization = newName
-	_, err = session.Where("organization=?", oldName).Update(application)
+	err = repo.UpdateEntitiesFieldValue(ctx, "user", "owner", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	user := new(User)
-	user.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(user)
+	err = repo.UpdateEntitiesFieldValue(ctx, "group", "owner", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	group := new(Group)
-	group.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(group)
+	roles, err := repo.GetRoles(ctx, oldName)
 	if err != nil {
 		return err
 	}
 
-	role := new(Role)
-	_, err = ormer.Engine.Where("owner=?", oldName).Get(role)
-	if err != nil {
-		return err
-	}
-	for i, u := range role.Users {
-		// u = organization/username
-		owner, name := util.GetOwnerAndNameFromId(u)
-		if name == oldName {
-			role.Users[i] = util.GetId(owner, newName)
+	for _, role := range roles {
+		for i, u := range role.Users {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(u)
+			if owner == oldName {
+				role.Users[i] = util.GetId(newName, name)
+			}
+		}
+		for i, u := range role.Roles {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(u)
+			if owner == oldName {
+				role.Roles[i] = util.GetId(newName, name)
+			}
+		}
+		for i, g := range role.Groups {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(g)
+			if owner == oldName {
+				role.Groups[i] = util.GetId(newName, name)
+			}
+		}
+		for i, d := range role.Domains {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(d)
+			if owner == oldName {
+				role.Domains[i] = util.GetId(newName, name)
+			}
+		}
+
+		role.Owner = newName
+		_, err = repo.UpdateRole(ctx, oldName, role.Name, role)
+		if err != nil {
+			return err
 		}
 	}
-	for i, u := range role.Roles {
-		// u = organization/username
-		owner, name := util.GetOwnerAndNameFromId(u)
-		if name == oldName {
-			role.Roles[i] = util.GetId(owner, newName)
+
+	permissions, err := repo.GetPermissions(ctx, oldName)
+	if err != nil {
+		return err
+	}
+
+	for _, permission := range permissions {
+		for i, u := range permission.Users {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(u)
+			if owner == oldName {
+				permission.Users[i] = util.GetId(newName, name)
+			}
+		}
+		for i, u := range permission.Roles {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(u)
+			if owner == oldName {
+				permission.Roles[i] = util.GetId(newName, name)
+			}
+		}
+		for i, g := range permission.Groups {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(g)
+			if owner == oldName {
+				permission.Groups[i] = util.GetId(newName, name)
+			}
+		}
+		for i, d := range permission.Domains {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(d)
+			if owner == oldName {
+				permission.Domains[i] = util.GetId(newName, name)
+			}
+		}
+		permission.Owner = newName
+		_, err = repo.UpdatePermission(ctx, oldName, permission.Name, permission)
+		if err != nil {
+			return err
 		}
 	}
-	role.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(role)
+
+	domains, err := repo.GetDomains(ctx, oldName)
 	if err != nil {
 		return err
 	}
 
-	permission := new(Permission)
-	_, err = ormer.Engine.Where("owner=?", oldName).Get(permission)
-	if err != nil {
-		return err
-	}
-	for i, u := range permission.Users {
-		// u = organization/username
-		owner, name := util.GetOwnerAndNameFromId(u)
-		if name == oldName {
-			permission.Users[i] = util.GetId(owner, newName)
+	for _, domain := range domains {
+		for i, u := range domain.Domains {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(u)
+			if owner == oldName {
+				domain.Domains[i] = util.GetId(newName, name)
+			}
+		}
+		domain.Owner = newName
+		_, err = repo.UpdateDomain(ctx, oldName, domain.Name, domain)
+		if err != nil {
+			return err
 		}
 	}
-	for i, u := range permission.Roles {
-		// u = organization/username
-		owner, name := util.GetOwnerAndNameFromId(u)
-		if name == oldName {
-			permission.Roles[i] = util.GetId(owner, newName)
-		}
-	}
-	permission.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(permission)
+
+	err = repo.UpdateEntitiesFieldValue(ctx, "adapter", "owner", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	adapter := new(Adapter)
-	adapter.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(adapter)
+	err = repo.UpdateEntitiesFieldValue(ctx, "ldap", "owner", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	ldap := new(Ldap)
-	ldap.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(ldap)
+	err = repo.UpdateEntitiesFieldValue(ctx, "model", "owner", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	model := new(Model)
-	model.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(model)
+	err = repo.UpdateEntitiesFieldValue(ctx, "payment", "owner", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	payment := new(Payment)
-	payment.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(payment)
+	err = repo.UpdateEntitiesFieldValue(ctx, "resource", "owner", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	resource := new(Resource)
-	resource.Owner = newName
-	_, err = session.Where("owner=?", oldName).Update(resource)
+	err = repo.UpdateEntitiesFieldValue(ctx, "syncer", "organization", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	syncer := new(Syncer)
-	syncer.Organization = newName
-	_, err = session.Where("organization=?", oldName).Update(syncer)
+	err = repo.UpdateEntitiesFieldValue(ctx, "token", "organization", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	token := new(Token)
-	token.Organization = newName
-	_, err = session.Where("organization=?", oldName).Update(token)
+	err = repo.UpdateEntitiesFieldValue(ctx, "webhook", "organization", oldName, newName)
 	if err != nil {
 		return err
 	}
 
-	webhook := new(Webhook)
-	webhook.Organization = newName
-	_, err = session.Where("organization=?", oldName).Update(webhook)
-	if err != nil {
-		return err
-	}
-
-	return session.Commit()
+	return nil
 }
 
 func IsNeedPromptMfa(org *Organization, user *User) bool {
@@ -494,4 +531,33 @@ func (org *Organization) GetInitScore() (int, error) {
 	} else {
 		return strconv.Atoi(conf.GetConfigString("initScore"))
 	}
+}
+
+func updateOrganizationUsersPasswordChangeTime(ctx context.Context, owner string, oldInterval int, newInterval int) error {
+	if newInterval == 0 {
+		err := repo.ResetUsersPasswordChangeTime(ctx, owner)
+		if err != nil {
+			return fmt.Errorf("repo.ResetUsersPasswordChangeTime: %w", err)
+		}
+	} else {
+		users, err := repo.GetUsersWithoutRequiredPasswordChange(ctx, owner)
+		if err != nil {
+			return fmt.Errorf("repo.GetUsersWithoutRequiredPasswordChange: %w", err)
+		}
+		for _, user := range users {
+			if user.PasswordChangeTime.IsZero() {
+				user.PasswordChangeTime = getNextPasswordChangeTime(newInterval)
+			} else {
+				user.PasswordChangeTime = user.PasswordChangeTime.
+					Add(-1 * getIntervalFromdays(oldInterval)).
+					Add(getIntervalFromdays(newInterval))
+			}
+
+			err := repo.UpdateUserPasswordChangeTime(ctx, user)
+			if err != nil {
+				return fmt.Errorf("repo.UpdateUserPasswordChangeTime: %w", err)
+			}
+		}
+	}
+	return nil
 }

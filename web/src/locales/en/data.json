@@ -552,6 +552,8 @@
     "Modify rule": "Modify rule",
     "New Organization": "New Organization",
     "Optional": "Optional",
+    "Password change interval": "Password change interval",
+    "Password change interval - Tooltip": "Password change interval in days, 0 for disable",
     "Prompt": "Prompt",
     "Required": "Required",
     "Soft deletion": "Soft deletion",

@@ -92,7 +92,7 @@ p, *, *, GET, /api/get-plan, *, *
 p, *, !anonymous, GET, /api/get-subscriptions, *, *
 p, *, !anonymous, GET, /api/get-subscription, *, *
 p, *, *, GET, /api/get-provider, *, *
-p, *, !anonymous, GET, /api/get-organization-names, *, *
+p, *, *, GET, /api/get-organization-names, *, *
 `
 
 		sa := stringadapter.NewAdapter(ruleText)

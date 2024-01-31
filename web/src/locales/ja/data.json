@@ -552,6 +552,8 @@
     "Modify rule": "ルールを変更する",
     "New Organization": "新しい組織",
     "Optional": "Optional",
+    "Password change interval": "Password change interval",
+    "Password change interval - Tooltip": "Password change interval - Tooltip",
     "Prompt": "Prompt",
     "Required": "Required",
     "Soft deletion": "ソフト削除",

@@ -29,3 +29,7 @@ func (r *Repo) GetDomains(ctx context.Context, owner string) ([]*object.Domain, 
 
 	return domains, nil
 }
+
+func (r *Repo) UpdateDomain(ctx context.Context, owner, name string, domain *object.Domain) (int64, error) {
+	return r.updateEntity(ctx, owner, name, domain)
+}
