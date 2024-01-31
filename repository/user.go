@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/casdoor/casdoor/object"
+	"github.com/xorm-io/core"
 )
 
 func (r *Repo) GetUsers(ctx context.Context, owner string) ([]*object.User, error) {
@@ -28,4 +29,32 @@ func (r *Repo) GetUsers(ctx context.Context, owner string) ([]*object.User, erro
 	}
 
 	return users, nil
+}
+
+func (r *Repo) UpdateUserPasswordChangeTime(ctx context.Context, user *object.User) error {
+	_, err := r.trm.GetEngine(ctx).ID(core.PK{user.Owner, user.Name}).Cols("password_change_time").Update(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repo) GetUsersWithoutRequiredPasswordChange(ctx context.Context, owner string) ([]*object.User, error) {
+	var users []*object.User
+	err := r.trm.GetEngine(ctx).Table("user").Where("password_change_time >= now() or password_change_time is null and owner = ?", owner).Find(&users)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (r *Repo) ResetUsersPasswordChangeTime(ctx context.Context, owner string) error {
+	bean := make(map[string]interface{})
+	bean["password_change_time"] = nil
+	_, err := r.trm.GetEngine(ctx).Table("user").Where("password_change_time >= now() and owner = ?", owner).Cols("password_change_time").Update(bean)
+	if err != nil {
+		return err
+	}
+	return nil
 }

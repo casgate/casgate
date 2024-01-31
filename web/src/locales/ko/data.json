@@ -552,6 +552,8 @@
     "Modify rule": "규칙 수정",
     "New Organization": "새로운 조직",
     "Optional": "Optional",
+    "Password change interval": "Password change interval",
+    "Password change interval - Tooltip": "Password change interval - Tooltip",
     "Prompt": "Prompt",
     "Required": "Required",
     "Soft deletion": "소프트 삭제",

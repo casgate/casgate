@@ -31,3 +31,17 @@ func (r *Repo) GetPermissionsByModelAdapter(ctx context.Context, owner, model, a
 
 	return permissions, nil
 }
+
+func (r *Repo) GetPermissions(ctx context.Context, owner string) ([]*object.Permission, error) {
+	permissions := []*object.Permission{}
+	err := r.trm.GetEngine(ctx).Desc("created_time").Find(&permissions, &object.Permission{Owner: owner})
+	if err != nil {
+		return permissions, err
+	}
+
+	return permissions, nil
+}
+
+func (r *Repo) UpdatePermission(ctx context.Context, owner, name string, permission *object.Permission) (int64, error) {
+	return r.updateEntity(ctx, owner, name, permission)
+}
