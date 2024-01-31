@@ -28,6 +28,8 @@ import (
 // @Description get permissions
 // @Param   owner     query    string  true        "The owner of permissions"
 // @Success 200 {array} object.Permission The Response object
+// @Failure 500 Internal server error
+// @Failure 401 Unauthorized
 // @router /get-permissions [get]
 func (c *ApiController) GetPermissions() {
 	owner := c.Input().Get("owner")
@@ -39,14 +41,14 @@ func (c *ApiController) GetPermissions() {
 	sortOrder := c.Input().Get("sortOrder")
 
 	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseError(c.T("auth:Unauthorized operation"))
+		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
 		return
 	}
 
 	if limit == "" || page == "" {
 		permissions, err := object.GetPermissions(owner)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
@@ -55,14 +57,14 @@ func (c *ApiController) GetPermissions() {
 		limit := util.ParseInt(limit)
 		count, err := object.GetPermissionCount(owner, field, value)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
 		permissions, err := object.GetPaginationPermissions(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
@@ -75,16 +77,19 @@ func (c *ApiController) GetPermissions() {
 // @Tag Permission API
 // @Description get permissions by submitter
 // @Success 200 {array} object.Permission The Response object
+// @Failure 500 Internal server error
+// @Failure 401 Unauthorized
 // @router /get-permissions-by-submitter [get]
 func (c *ApiController) GetPermissionsBySubmitter() {
 	user, ok := c.RequireSignedInUser()
 	if !ok {
+		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
 		return
 	}
 
 	permissions, err := object.GetPermissionsBySubmitter(user.Owner, user.Name)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
@@ -97,12 +102,13 @@ func (c *ApiController) GetPermissionsBySubmitter() {
 // @Description get permissions by role
 // @Param   id     query    string  true        "The id ( owner/name ) of the role"
 // @Success 200 {array} object.Permission The Response object
+// @Failure 500 Internal server error
 // @router /get-permissions-by-role [get]
 func (c *ApiController) GetPermissionsByRole() {
 	id := c.Input().Get("id")
 	permissions, err := object.GetPermissionsByRole(id)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
@@ -115,13 +121,14 @@ func (c *ApiController) GetPermissionsByRole() {
 // @Description get permission
 // @Param   id     query    string  true        "The id ( owner/name ) of the permission"
 // @Success 200 {object} object.Permission The Response object
+// @Failure 500 Internal server error
 // @router /get-permission [get]
 func (c *ApiController) GetPermission() {
 	id := c.Input().Get("id")
 
 	permission, err := object.GetPermission(id)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
@@ -135,6 +142,7 @@ func (c *ApiController) GetPermission() {
 // @Param   id     query    string  true        "The id ( owner/name ) of the permission"
 // @Param   body    body   object.Permission  true        "The details of the permission"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad request
 // @router /update-permission [post]
 func (c *ApiController) UpdatePermission() {
 	id := c.Input().Get("id")
@@ -142,7 +150,7 @@ func (c *ApiController) UpdatePermission() {
 	var permission object.Permission
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &permission)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
 		return
 	}
 
@@ -156,12 +164,13 @@ func (c *ApiController) UpdatePermission() {
 // @Description add permission
 // @Param   body    body   object.Permission  true        "The details of the permission"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad request
 // @router /add-permission [post]
 func (c *ApiController) AddPermission() {
 	var permission object.Permission
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &permission)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
 		return
 	}
 
@@ -175,12 +184,13 @@ func (c *ApiController) AddPermission() {
 // @Description delete permission
 // @Param   body    body   object.Permission  true        "The details of the permission"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad request
 // @router /delete-permission [post]
 func (c *ApiController) DeletePermission() {
 	var permission object.Permission
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &permission)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
 		return
 	}
 

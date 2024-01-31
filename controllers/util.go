@@ -65,6 +65,31 @@ func (c *ApiController) ResponseNotFound(error string) {
 	c.ResponseErrorWithStatus(http.StatusNotFound, error)
 }
 
+// ResponseBadRequest...
+func (c *ApiController) ResponseBadRequest(error string) {
+	c.ResponseErrorWithStatus(http.StatusBadRequest, error)
+}
+
+// ResponseUnauthorized...
+func (c *ApiController) ResponseUnauthorized(error string) {
+	c.ResponseErrorWithStatus(http.StatusUnauthorized, error)
+}
+
+// ResponseForbidden...
+func (c *ApiController) ResponseForbidden(error string) {
+	c.ResponseErrorWithStatus(http.StatusForbidden, error)
+}
+
+// ResponseUnprocessableEntity...
+func (c *ApiController) ResponseUnprocessableEntity(error string) {
+	c.ResponseErrorWithStatus(http.StatusUnprocessableEntity, error)
+}
+
+// ResponseInternalServerError...
+func (c *ApiController) ResponseInternalServerError(error string) {
+	c.ResponseErrorWithStatus(http.StatusInternalServerError, error)
+}
+
 func (c *ApiController) T(error string) string {
 	return i18n.Translate(c.GetAcceptLanguage(), error)
 }
