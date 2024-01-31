@@ -121,6 +121,8 @@
     "Certificate": "证书",
     "Certificate - Tooltip": "公钥证书，用于解密Access Token的JWT签名，该证书通常需要部署到Casdoor SDK测（即应用）来解析JWT",
     "Certificate copied to clipboard successfully": "证书已成功复制到剪贴板",
+    "Client Certificate": "Client Certificate",
+    "Client Certificate - Tooltip": "X.509 certificate with private key in PEM format",
     "Copy certificate": "复制证书",
     "Copy private key": "复制私钥",
     "Crypto algorithm": "加密算法",
@@ -134,8 +136,6 @@
     "Private key": "私钥",
     "Private key - Tooltip": "公钥证书对应的私钥",
     "Private key copied to clipboard successfully": "私钥已成功复制到剪贴板",
-    "Sign Certificate": "Sign Certificate",
-    "Sign Certificate - Tooltip": "X.509 certificate with private key in PEM format. Used for signature creating",
     "Scope - Tooltip": "公钥证书的使用场景",
     "Type - Tooltip": "公钥证书的类型"
   },

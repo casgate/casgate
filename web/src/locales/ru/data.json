@@ -134,8 +134,8 @@
     "Private key": "Частный ключ",
     "Private key - Tooltip": "Приватный ключ, соответствующий сертификату открытого ключа",
     "Private key copied to clipboard successfully": "Приватный ключ успешно скопирован в буфер обмена",
-    "Sign Certificate": "Сертификат подписи",
-    "Sign Certificate - Tooltip": "X.509 сертификат с приватным ключом в PEM формате. Используется для создания подписи",
+    "Client Certificate": "Сертификат клиента",
+    "Client Certificate - Tooltip": "X.509 сертификат с приватным ключом в PEM формате",
     "Scope - Tooltip": "Сценарии использования сертификата",
     "Type - Tooltip": "Тип сертификата"
   },

@@ -121,6 +121,8 @@
     "Certificate": "Giấy chứng nhận",
     "Certificate - Tooltip": "Chứng chỉ khóa công khai, được sử dụng để giải mã chữ ký JWT của Mã Token Truy cập. Chứng chỉ này thường cần được triển khai trên phía SDK Casdoor (tức là ứng dụng) để phân tích cú pháp JWT",
     "Certificate copied to clipboard successfully": "Chứng chỉ đã được sao chép vào bộ nhớ tạm thành công",
+    "Client Certificate": "Client Certificate",
+    "Client Certificate - Tooltip": "X.509 certificate with private key in PEM format",
     "Copy certificate": "Bản sao chứng chỉ",
     "Copy private key": "Sao chép khóa riêng tư",
     "Crypto algorithm": "Thuật toán mật mã",
@@ -134,8 +136,6 @@
     "Private key": "Khóa bí mật",
     "Private key - Tooltip": "Khóa riêng tương ứng với chứng thư khóa công khai",
     "Private key copied to clipboard successfully": "Khóa riêng tư đã được sao chép thành công vào clipboard",
-    "Sign Certificate": "Sign Certificate",
-    "Sign Certificate - Tooltip": "X.509 certificate with private key in PEM format. Used for signature creating",
     "Scope - Tooltip": "Các kịch bản sử dụng của giấy chứng nhận",
     "Type - Tooltip": "Loại chứng chỉ"
   },
