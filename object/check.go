@@ -286,7 +286,7 @@ func checkLdapUserPassword(user *User, password string, lang string) string {
 
 var ErrorUserNotFound = errors.New("user not found")
 var ErrorUserDeleted = errors.New("user deleted")
-var ErrorUserBlocked = errors.New("user deleted")
+var ErrorUserBlocked = errors.New("user blocked")
 var ErrorWrongPassword = errors.New("wrong password")
 var ErrorLDAPError = errors.New("LDAP error")
 var ErrorLDAPUserNotFound = errors.New("LDAP user not found")
