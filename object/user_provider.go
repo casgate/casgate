@@ -6,11 +6,11 @@ type UserProvider struct {
 	UserObj     *User     `xorm:"-" json:"userObj"`
 	ProviderObj *Provider `xorm:"-" json:"providerObj"`
 
-	LastSync      string `xorm:"varchar(100)" json:"lastSync"`
-	UserName      string `xorm:"varchar(100)" json:"userName"`
-	ProviderName  string `xorm:"varchar(100)" json:"providerName"`
-	ProviderLogin string `xorm:"varchar(100)" json:"providerLogin"`
-	Owner         string `xorm:"varchar(100)" json:"owner"`
+	LastSync     string `xorm:"varchar(100)" json:"lastSync"`
+	UserName     string `xorm:"varchar(100)" json:"userName"`
+	ProviderName string `xorm:"varchar(100)" json:"providerName"`
+	UserId       string `xorm:"varchar(100)" json:"userId"`
+	Owner        string `xorm:"varchar(100)" json:"owner"`
 }
 
 func GetAllUserProviders() ([]*UserProvider, error) {
@@ -57,6 +57,17 @@ func GetUserProvidersByOwner(owner string) ([]*UserProvider, error) {
 	return userProviders, nil
 }
 
+func GetUserProvidersByUserId(userId string) ([]*UserProvider, error) {
+	var userProviders []*UserProvider
+
+	err := ormer.Engine.Desc("last_sync").Find(&userProviders, &UserProvider{UserId: userId})
+	if err != nil {
+		return userProviders, err
+	}
+
+	return userProviders, nil
+}
+
 func GetUserProvider(owner string, providerName string, userName string) (*UserProvider, error) {
 	userProvider := UserProvider{
 		Owner:        owner,
@@ -80,9 +91,9 @@ func AddUserProvider(userProvider *UserProvider) (bool, error) {
 	var userProviders []*UserProvider
 
 	err := ormer.Engine.Desc("last_sync").Find(&userProviders, &UserProvider{
-		Owner:         userProvider.Owner,
-		ProviderName:  userProvider.ProviderName,
-		ProviderLogin: userProvider.ProviderLogin,
+		Owner:        userProvider.Owner,
+		ProviderName: userProvider.ProviderName,
+		UserId:       userProvider.UserId,
 	})
 	if err != nil {
 		return false, err

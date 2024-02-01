@@ -2389,6 +2389,25 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.UserProvider'
+  /api/get-user-providers-by-user-id:
+    get:
+      tags:
+      - UserProvider API
+      description: get userProviders by provider name
+      operationId: ApiController.GetUserProvidersByUserId
+      parameters:
+      - in: query
+        name: userId
+        description: The id of the user
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/object.UserProvider'
   /api/get-user-providers-by-user-name:
     get:
       tags:
@@ -5270,12 +5289,12 @@ definitions:
         type: string
       owner:
         type: string
-      providerLogin:
-        type: string
       providerName:
         type: string
       providerObj:
         $ref: '#/definitions/object.Provider'
+      userId:
+        type: string
       userName:
         type: string
       userObj:
