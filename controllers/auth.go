@@ -782,6 +782,15 @@ func (c *ApiController) Login() {
 				resp = &Response{Status: "error", Msg: "Failed to link user account", Data: isLinked}
 			}
 		}
+		userProvider := &object.UserProvider{
+			ProviderName: provider.Name,
+			UserId:       userInfo.Id,
+			Owner:        organization.Name}
+		_, err = object.AddUserProvider(userProvider)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
 	} else if c.getMfaUserSession() != "" {
 		user, err := object.GetUser(c.getMfaUserSession())
 		if err != nil {

@@ -1,5 +1,7 @@
 package object
 
+import "github.com/casdoor/casdoor/util"
+
 type UserProvider struct {
 	UserObj     *User     `xorm:"-" json:"userObj"`
 	ProviderObj *Provider `xorm:"-" json:"providerObj"`
@@ -53,6 +55,7 @@ func AddUserProvider(userProvider *UserProvider) (bool, error) {
 
 	var affected int64
 	if len(userProviders) == 0 {
+		userProvider.LastSync = util.GetCurrentTime()
 		affected, err = ormer.Engine.Insert(userProvider)
 	} else {
 		var emailLinkingEnabled bool
@@ -70,6 +73,7 @@ func AddUserProvider(userProvider *UserProvider) (bool, error) {
 		}
 
 		if emailLinkingEnabled {
+			userProvider.LastSync = util.GetCurrentTime()
 			affected, err = ormer.Engine.Insert(userProvider)
 		}
 	}

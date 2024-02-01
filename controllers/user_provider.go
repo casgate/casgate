@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 )
@@ -103,55 +101,6 @@ func (c *ApiController) GetUserProvidersByProviderName() {
 	}
 
 	c.ResponseOk(userProviders)
-}
-
-// AddUserProvider
-// @Title AddUserProvider
-// @Tag UserProvider API
-// @Description add userProvider
-// @Param body   body   object.UserProvider   true   "The details of the userProvider"
-// @Success 200 {object} controllers.Response The Response object
-// @router /add-user-provider [post]
-func (c *ApiController) AddUserProvider() {
-	if _, res := c.RequireAdmin(); !res {
-		c.ResponseError(c.T("auth:Unauthorized operation"))
-		return
-	}
-
-	var userProvider object.UserProvider
-	err := json.Unmarshal(c.Ctx.Input.RequestBody, &userProvider)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
-	}
-
-	providerId := util.GetId(userProvider.Owner, userProvider.ProviderName)
-	userProvider.ProviderObj, err = object.GetProvider(providerId)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
-	}
-	if userProvider.ProviderObj == nil {
-		c.ResponseError(fmt.Sprintf(c.T("provider:the provider: %s does not exist"), providerId))
-		return
-	}
-
-	userProvider.UserObj, err = object.GetUserByUserId(userProvider.Owner, userProvider.UserId)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
-	}
-	if userProvider.UserObj == nil {
-		c.ResponseError(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), userProvider.UserId))
-		return
-	}
-
-	if userProvider.LastSync == "" {
-		userProvider.LastSync = util.GetCurrentTime()
-	}
-
-	c.Data["json"] = wrapActionResponse(object.AddUserProvider(&userProvider))
-	c.ServeJSON()
 }
 
 func fillUserProviders(userProviders []*object.UserProvider) (err error) {

@@ -168,7 +168,6 @@ func initAPI() {
 	beego.Router("/api/get-user-providers", &controllers.ApiController{}, "GET:GetAllUserProviders")
 	beego.Router("/api/get-user-providers-by-user-id", &controllers.ApiController{}, "GET:GetUserProvidersByUserId")
 	beego.Router("/api/get-user-providers-by-provider-name", &controllers.ApiController{}, "GET:GetUserProvidersByProviderName")
-	beego.Router("/api/add-user-provider", &controllers.ApiController{}, "POST:AddUserProvider")
 
 	beego.Router("/api/get-applications", &controllers.ApiController{}, "GET:GetApplications")
 	beego.Router("/api/get-application", &controllers.ApiController{}, "GET:GetApplication")
