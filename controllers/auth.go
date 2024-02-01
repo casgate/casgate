@@ -783,9 +783,11 @@ func (c *ApiController) Login() {
 			}
 		}
 		userProvider := &object.UserProvider{
-			ProviderName: provider.Name,
-			UserId:       userInfo.Id,
-			Owner:        organization.Name}
+			ProviderName:  provider.Name,
+			ProviderLogin: userInfo.Id,
+			UserName:      userInfo.Username,
+			Owner:         organization.Name,
+		}
 		_, err = object.AddUserProvider(userProvider)
 		if err != nil {
 			c.ResponseError(err.Error())

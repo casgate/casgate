@@ -6,10 +6,11 @@ type UserProvider struct {
 	UserObj     *User     `xorm:"-" json:"userObj"`
 	ProviderObj *Provider `xorm:"-" json:"providerObj"`
 
-	LastSync     string `xorm:"varchar(100)" json:"lastSync"`
-	UserId       string `xorm:"varchar(100)" json:"userId"`
-	ProviderName string `xorm:"varchar(100)" json:"providerName"`
-	Owner        string `xorm:"varchar(100)" json:"owner"`
+	LastSync      string `xorm:"varchar(100)" json:"lastSync"`
+	UserName      string `xorm:"varchar(100)" json:"userName"`
+	ProviderName  string `xorm:"varchar(100)" json:"providerName"`
+	ProviderLogin string `xorm:"varchar(100)" json:"providerLogin"`
+	Owner         string `xorm:"varchar(100)" json:"owner"`
 }
 
 func GetAllUserProviders() ([]*UserProvider, error) {
@@ -23,10 +24,10 @@ func GetAllUserProviders() ([]*UserProvider, error) {
 	return userProviders, nil
 }
 
-func GetUserProvidersByUserId(userId string) ([]*UserProvider, error) {
+func GetUserProvidersByUserName(userName string) ([]*UserProvider, error) {
 	var userProviders []*UserProvider
 
-	err := ormer.Engine.Desc("last_sync").Find(&userProviders, &UserProvider{UserId: userId})
+	err := ormer.Engine.Desc("last_sync").Find(&userProviders, &UserProvider{UserName: userName})
 	if err != nil {
 		return userProviders, err
 	}
@@ -45,10 +46,44 @@ func GetUserProvidersByProviderName(name string) ([]*UserProvider, error) {
 	return userProviders, nil
 }
 
+func GetUserProvidersByOwner(owner string) ([]*UserProvider, error) {
+	var userProviders []*UserProvider
+
+	err := ormer.Engine.Desc("last_sync").Find(&userProviders, &UserProvider{Owner: owner})
+	if err != nil {
+		return userProviders, err
+	}
+
+	return userProviders, nil
+}
+
+func GetUserProvider(owner string, providerName string, userName string) (*UserProvider, error) {
+	userProvider := UserProvider{
+		Owner:        owner,
+		UserName:     userName,
+		ProviderName: providerName,
+	}
+
+	existed, err := ormer.Engine.Get(&userProvider)
+	if err != nil {
+		return nil, err
+	}
+
+	if existed {
+		return &userProvider, nil
+	} else {
+		return nil, nil
+	}
+}
+
 func AddUserProvider(userProvider *UserProvider) (bool, error) {
 	var userProviders []*UserProvider
 
-	err := ormer.Engine.Desc("last_sync").Find(&userProviders, &UserProvider{UserId: userProvider.UserId})
+	err := ormer.Engine.Desc("last_sync").Find(&userProviders, &UserProvider{
+		Owner:         userProvider.Owner,
+		ProviderName:  userProvider.ProviderName,
+		ProviderLogin: userProvider.ProviderLogin,
+	})
 	if err != nil {
 		return false, err
 	}
