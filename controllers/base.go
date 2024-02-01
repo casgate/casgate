@@ -260,6 +260,6 @@ func (c *ApiController) Finish() {
 }
 
 type Error struct {
-	Code     int         `json:"code,omitempty"`
-	Message  string      `json:"message"`
+	Code    int    `json:"code,omitempty"`
+	Message string `json:"message"`
 }
