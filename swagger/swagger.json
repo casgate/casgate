@@ -5527,11 +5527,11 @@
         }
     },
     "definitions": {
-        "170656.\u003cnil\u003e.string": {
+        "170751.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "288713.\u003cnil\u003e.string": {
+        "288808.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -5768,6 +5768,9 @@
                 "expireInHours": {
                     "type": "integer",
                     "format": "int64"
+                },
+                "footerText": {
+                    "type": "string"
                 },
                 "forgetUrl": {
                     "type": "string"
@@ -6318,7 +6321,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/170656.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/170751.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -7009,7 +7012,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/288713.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/288808.\u003cnil\u003e.string"
                 }
             }
         },

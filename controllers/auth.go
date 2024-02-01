@@ -456,7 +456,7 @@ func (c *ApiController) Login() {
 				return
 			}
 
-			if user.PasswordChangeRequired {
+			if user.PasswordChangeRequired() {
 				c.setChangePasswordUserSession(user.GetId())
 				c.ResponseOk(object.NextChangePasswordForm)
 				return
@@ -838,7 +838,7 @@ func (c *ApiController) Login() {
 			return
 		}
 
-		if user.PasswordChangeRequired {
+		if user.PasswordChangeRequired() {
 			c.setChangePasswordUserSession(user.GetId())
 			c.setMfaUserSession("")
 			c.ResponseOk(object.NextChangePasswordForm)
@@ -863,7 +863,7 @@ func (c *ApiController) Login() {
 			return
 		}
 
-		if user.PasswordChangeRequired {
+		if user.PasswordChangeRequired() {
 			c.ResponseOk(object.NextChangePasswordForm)
 			return
 		}

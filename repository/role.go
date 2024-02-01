@@ -29,3 +29,7 @@ func (r *Repo) GetRoles(ctx context.Context, owner string) ([]*object.Role, erro
 
 	return roles, nil
 }
+
+func (r *Repo) UpdateRole(ctx context.Context, owner, name string, role *object.Role) (int64, error) {
+	return r.updateEntity(ctx, owner, name, role)
+}

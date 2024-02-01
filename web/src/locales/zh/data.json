@@ -552,6 +552,8 @@
     "Modify rule": "修改规则",
     "New Organization": "添加组织",
     "Optional": "可选",
+    "Password change interval": "Password change interval",
+    "Password change interval - Tooltip": "Password change interval - Tooltip",
     "Prompt": "提示",
     "Required": "必须",
     "Soft deletion": "软删除",

@@ -19,6 +19,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
@@ -52,42 +53,42 @@ type User struct {
 	CreatedTime string `xorm:"varchar(100) index" json:"createdTime"`
 	UpdatedTime string `xorm:"varchar(100)" json:"updatedTime"`
 
-	Id                     string   `xorm:"varchar(100) index" json:"id"`
-	Type                   string   `xorm:"varchar(100)" json:"type"`
-	Password               string   `xorm:"varchar(100)" json:"password"`
-	PasswordChangeRequired bool     `xorm:"varchar(100)" json:"passwordChangeRequired"`
-	PasswordSalt           string   `xorm:"varchar(100)" json:"passwordSalt"`
-	PasswordType           string   `xorm:"varchar(100)" json:"passwordType"`
-	DisplayName            string   `xorm:"varchar(100)" json:"displayName"`
-	FirstName              string   `xorm:"varchar(100)" json:"firstName"`
-	LastName               string   `xorm:"varchar(100)" json:"lastName"`
-	Avatar                 string   `xorm:"varchar(500)" json:"avatar"`
-	AvatarType             string   `xorm:"varchar(100)" json:"avatarType"`
-	PermanentAvatar        string   `xorm:"varchar(500)" json:"permanentAvatar"`
-	Email                  string   `xorm:"varchar(255) index" json:"email"`
-	EmailVerified          bool     `json:"emailVerified"`
-	Phone                  string   `xorm:"varchar(20) index" json:"phone"`
-	CountryCode            string   `xorm:"varchar(6)" json:"countryCode"`
-	Region                 string   `xorm:"varchar(100)" json:"region"`
-	Location               string   `xorm:"varchar(100)" json:"location"`
-	Address                []string `json:"address"`
-	Affiliation            string   `xorm:"varchar(100)" json:"affiliation"`
-	Title                  string   `xorm:"varchar(100)" json:"title"`
-	IdCardType             string   `xorm:"varchar(100)" json:"idCardType"`
-	IdCard                 string   `xorm:"varchar(100) index" json:"idCard"`
-	Homepage               string   `xorm:"varchar(100)" json:"homepage"`
-	Bio                    string   `xorm:"varchar(1024)" json:"bio"`
-	Tag                    string   `xorm:"varchar(100)" json:"tag"`
-	Language               string   `xorm:"varchar(100)" json:"language"`
-	Gender                 string   `xorm:"varchar(100)" json:"gender"`
-	Birthday               string   `xorm:"varchar(100)" json:"birthday"`
-	Education              string   `xorm:"varchar(100)" json:"education"`
-	Score                  int      `json:"score"`
-	Karma                  int      `json:"karma"`
-	Ranking                int      `json:"ranking"`
-	IsDefaultAvatar        bool     `json:"isDefaultAvatar"`
-	IsOnline               bool     `json:"isOnline"`
-	IsAdmin                bool     `json:"isAdmin"`
+	Id                 string    `xorm:"varchar(100) index" json:"id"`
+	Type               string    `xorm:"varchar(100)" json:"type"`
+	Password           string    `xorm:"varchar(100)" json:"password"`
+	PasswordChangeTime time.Time `json:"passwordChangeTime"`
+	PasswordSalt       string    `xorm:"varchar(100)" json:"passwordSalt"`
+	PasswordType       string    `xorm:"varchar(100)" json:"passwordType"`
+	DisplayName        string    `xorm:"varchar(100)" json:"displayName"`
+	FirstName          string    `xorm:"varchar(100)" json:"firstName"`
+	LastName           string    `xorm:"varchar(100)" json:"lastName"`
+	Avatar             string    `xorm:"varchar(500)" json:"avatar"`
+	AvatarType         string    `xorm:"varchar(100)" json:"avatarType"`
+	PermanentAvatar    string    `xorm:"varchar(500)" json:"permanentAvatar"`
+	Email              string    `xorm:"varchar(255) index" json:"email"`
+	EmailVerified      bool      `json:"emailVerified"`
+	Phone              string    `xorm:"varchar(20) index" json:"phone"`
+	CountryCode        string    `xorm:"varchar(6)" json:"countryCode"`
+	Region             string    `xorm:"varchar(100)" json:"region"`
+	Location           string    `xorm:"varchar(100)" json:"location"`
+	Address            []string  `json:"address"`
+	Affiliation        string    `xorm:"varchar(100)" json:"affiliation"`
+	Title              string    `xorm:"varchar(100)" json:"title"`
+	IdCardType         string    `xorm:"varchar(100)" json:"idCardType"`
+	IdCard             string    `xorm:"varchar(100) index" json:"idCard"`
+	Homepage           string    `xorm:"varchar(100)" json:"homepage"`
+	Bio                string    `xorm:"varchar(1024)" json:"bio"`
+	Tag                string    `xorm:"varchar(100)" json:"tag"`
+	Language           string    `xorm:"varchar(100)" json:"language"`
+	Gender             string    `xorm:"varchar(100)" json:"gender"`
+	Birthday           string    `xorm:"varchar(100)" json:"birthday"`
+	Education          string    `xorm:"varchar(100)" json:"education"`
+	Score              int       `json:"score"`
+	Karma              int       `json:"karma"`
+	Ranking            int       `json:"ranking"`
+	IsDefaultAvatar    bool      `json:"isDefaultAvatar"`
+	IsOnline           bool      `json:"isOnline"`
+	IsAdmin            bool      `json:"isAdmin"`
 
 	IsForbidden       bool   `json:"isForbidden"`
 	IsDeleted         bool   `json:"isDeleted"`
@@ -224,8 +225,12 @@ type ManagedAccount struct {
 	SigninUrl   string `xorm:"varchar(200)" json:"signinUrl"`
 }
 
+func (u *User) PasswordChangeRequired() bool {
+	return !u.PasswordChangeTime.IsZero() && u.PasswordChangeTime.Before(time.Now())
+}
+
 func (u *User) checkPasswordChangeRequestAllowed() error {
-	if !u.isPasswordChangeRequestAllowed() && u.PasswordChangeRequired {
+	if !u.isPasswordChangeRequestAllowed() && !u.PasswordChangeTime.IsZero() {
 		return fmt.Errorf("PasswordChangeRequired is not supported to be enabled for users from LDAP or Keycloak")
 	}
 	return nil
@@ -551,7 +556,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 		columns = []string{
 			"owner", "display_name", "avatar",
 			"location", "address", "country_code", "region", "language", "affiliation", "title", "homepage", "bio", "tag", "language", "gender", "birthday", "education", "score", "karma", "ranking", "signup_application",
-			"is_admin", "is_forbidden", "is_deleted", "password_change_required", "hash", "is_default_avatar", "properties", "webauthnCredentials", "managedAccounts",
+			"is_admin", "is_forbidden", "is_deleted", "password_change_time", "hash", "is_default_avatar", "properties", "webauthnCredentials", "managedAccounts",
 			"signin_wrong_times", "last_signin_wrong_time", "groups", "access_key", "access_secret",
 			"github", "google", "qq", "wechat", "facebook", "dingtalk", "weibo", "gitee", "linkedin", "wecom", "lark", "gitlab", "adfs",
 			"baidu", "alipay", "casdoor", "infoflow", "apple", "azuread", "slack", "steam", "bilibili", "okta", "douyin", "line", "amazon",
@@ -564,6 +569,17 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 	}
 	if isAdmin {
 		columns = append(columns, "name", "email", "phone", "country_code", "type")
+	}
+
+	if util.ContainsString(columns, "password_change_time") {
+		organization, err := GetOrganization(util.GetId("admin", user.Owner))
+		if err != nil {
+			return false, err
+		}
+
+		if organization.PasswordChangeInterval != 0 && user.PasswordChangeTime.IsZero() {
+			user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
+		}
 	}
 
 	if util.ContainsString(columns, "groups") {
@@ -603,10 +619,10 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 		return 0, err
 	}
 
-	hasImpactOnPolicy := 
+	hasImpactOnPolicy :=
 		(util.InSlice(columns, "groups") && !slices.Equal(oldUser.Groups, user.Groups)) ||
-		(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
-		(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
+			(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
+			(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
 
 	if affected != 0 && hasImpactOnPolicy {
 		oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
@@ -652,6 +668,14 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 	err = user.UpdateUserHash()
 	if err != nil {
 		return false, err
+	}
+
+	organization, err := GetOrganization(util.GetId("admin", owner))
+	if err != nil {
+		return false, err
+	}
+	if organization.PasswordChangeInterval != 0 && user.PasswordChangeTime.IsZero() {
+		user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
 	}
 
 	if user.Avatar != oldUser.Avatar && user.Avatar != "" {
@@ -726,6 +750,10 @@ func AddUser(user *User) (bool, error) {
 	}
 
 	user.PreHash = user.Hash
+
+	if user.PasswordChangeTime.IsZero() && organization.PasswordChangeInterval != 0 {
+		user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
+	}
 
 	updated, err := user.refreshAvatar()
 	if err != nil {

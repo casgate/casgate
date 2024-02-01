@@ -3612,10 +3612,10 @@ paths:
           schema:
             $ref: '#/definitions/object.TokenError'
 definitions:
-  170656.<nil>.string:
+  170751.<nil>.string:
     title: string
     type: object
-  288713.<nil>.string:
+  288808.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -3779,6 +3779,8 @@ definitions:
       expireInHours:
         type: integer
         format: int64
+      footerText:
+        type: string
       forgetUrl:
         type: string
       formBackgroundUrl:
@@ -4150,7 +4152,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/170656.<nil>.string'
+          $ref: '#/definitions/170751.<nil>.string'
       description:
         type: string
       displayName:
@@ -4613,7 +4615,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/288713.<nil>.string'
+        $ref: '#/definitions/288808.<nil>.string'
   object.ProviderItem:
     title: ProviderItem
     type: object
