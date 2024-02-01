@@ -2311,6 +2311,103 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Payment'
+  /api/get-user-provider:
+    get:
+      tags:
+      - UserProvider API
+      description: get userProvider
+      operationId: ApiController.GetUserProvider
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of the provider
+        required: true
+        type: string
+      - in: query
+        name: providerName
+        description: The name of the provider
+        required: true
+        type: string
+      - in: query
+        name: userName
+        description: The name of the user
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.UserProvider'
+  /api/get-user-providers:
+    get:
+      tags:
+      - UserProvider API
+      description: get userProviders
+      operationId: ApiController.GetAllUserProviders
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/object.UserProvider'
+  /api/get-user-providers-by-owner:
+    get:
+      tags:
+      - UserProvider API
+      description: get userProviders by owner
+      operationId: ApiController.GetUserProvidersByOwner
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of the provider
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/object.UserProvider'
+  /api/get-user-providers-by-provider-name:
+    get:
+      tags:
+      - UserProvider API
+      description: get userProviders by provider name
+      operationId: ApiController.GetUserProvidersByProviderName
+      parameters:
+      - in: query
+        name: providerName
+        description: The name of the provider
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/object.UserProvider'
+  /api/get-user-providers-by-user-name:
+    get:
+      tags:
+      - UserProvider API
+      description: get userProviders by username
+      operationId: ApiController.GetUserProvidersByUserName
+      parameters:
+      - in: query
+        name: userName
+        description: The name of the user
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/object.UserProvider'
   /api/get-users:
     get:
       tags:
@@ -5163,6 +5260,24 @@ definitions:
         type: string
       zoom:
         type: string
+  object.UserProvider:
+    title: UserProvider
+    type: object
+    properties:
+      lastSync:
+        type: string
+      owner:
+        type: string
+      providerLogin:
+        type: string
+      providerName:
+        type: string
+      providerObj:
+        $ref: '#/definitions/object.Provider'
+      userName:
+        type: string
+      userObj:
+        $ref: '#/definitions/object.User'
   object.Userinfo:
     title: Userinfo
     type: object
