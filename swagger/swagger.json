@@ -1481,6 +1481,15 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "409": {
+                        "description": "Conflict"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -6521,6 +6530,10 @@
                 "owner": {
                     "type": "string"
                 },
+                "passwordChangeInterval": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "passwordOptions": {
                     "type": "array",
                     "items": {
@@ -7843,8 +7856,9 @@
                 "password": {
                     "type": "string"
                 },
-                "passwordChangeRequired": {
-                    "type": "boolean"
+                "passwordChangeTime": {
+                    "type": "string",
+                    "format": "datetime"
                 },
                 "passwordSalt": {
                     "type": "string"
