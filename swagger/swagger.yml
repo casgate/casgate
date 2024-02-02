@@ -2329,8 +2329,8 @@ paths:
         required: true
         type: string
       - in: query
-        name: userName
-        description: The name of the user
+        name: userProviderName
+        description: The name of the user in the provider
         required: true
         type: string
       responses:
@@ -2343,81 +2343,11 @@ paths:
       tags:
       - UserProvider API
       description: get userProviders
-      operationId: ApiController.GetAllUserProviders
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.UserProvider'
-  /api/get-user-providers-by-owner:
-    get:
-      tags:
-      - UserProvider API
-      description: get userProviders by owner
-      operationId: ApiController.GetUserProvidersByOwner
+      operationId: ApiController.GetUserProviders
       parameters:
       - in: query
         name: owner
-        description: The owner of the provider
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.UserProvider'
-  /api/get-user-providers-by-provider-name:
-    get:
-      tags:
-      - UserProvider API
-      description: get userProviders by provider name
-      operationId: ApiController.GetUserProvidersByProviderName
-      parameters:
-      - in: query
-        name: providerName
-        description: The name of the provider
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.UserProvider'
-  /api/get-user-providers-by-user-id:
-    get:
-      tags:
-      - UserProvider API
-      description: get userProviders by provider name
-      operationId: ApiController.GetUserProvidersByUserId
-      parameters:
-      - in: query
-        name: userId
-        description: The id of the user
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.UserProvider'
-  /api/get-user-providers-by-user-name:
-    get:
-      tags:
-      - UserProvider API
-      description: get userProviders by username
-      operationId: ApiController.GetUserProvidersByUserName
-      parameters:
-      - in: query
-        name: userName
-        description: The name of the user
+        description: The owner of userProviders
         required: true
         type: string
       responses:
@@ -5295,10 +5225,10 @@ definitions:
         $ref: '#/definitions/object.Provider'
       userId:
         type: string
-      userName:
-        type: string
       userObj:
         $ref: '#/definitions/object.User'
+      userProviderName:
+        type: string
   object.Userinfo:
     title: Userinfo
     type: object
