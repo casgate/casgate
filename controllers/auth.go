@@ -427,7 +427,9 @@ func (c *ApiController) Login() {
 			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha)
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
-				object.LogRecordCheckPassError(c.Ctx, err)
+
+				record := object.NewRecordBuilder(c.Ctx).WithDetail("User not found").Build()
+				object.SaveOnSuccess(c.Ctx, record)
 			}
 		}
 

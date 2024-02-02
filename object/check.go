@@ -21,7 +21,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/i18n"
@@ -372,31 +371,6 @@ func CheckUserPassword(organization string, username string, password string, la
 	}
 
 	return user, nil
-}
-
-func LogRecordCheckPassError(ctx *context.Context, err error) {
-	if extendedErr, ok := err.(*CheckUserPasswordError); ok {
-		switch extendedErr.Err() {
-		case ErrorUserNotFound:
-			record := NewRecordBuilder(ctx).WithDetail("User not found").Build()
-			SaveOnSuccess(ctx, record)
-		case ErrorUserDeleted:
-			record := NewRecordBuilder(ctx).WithDetail("User deleted").Build()
-			SaveOnSuccess(ctx, record)
-		case ErrorUserBlocked:
-			record := NewRecordBuilder(ctx).WithDetail("User blocked").Build()
-			SaveOnSuccess(ctx, record)
-		case ErrorWrongPassword:
-			record := NewRecordBuilder(ctx).WithDetail("Wrong password").Build()
-			SaveOnSuccess(ctx, record)
-		case ErrorLDAPUserNotFound:
-			record := NewRecordBuilder(ctx).WithDetail("LDAP user not found").Build()
-			SaveOnSuccess(ctx, record)
-		case ErrorLDAPError:
-			record := NewRecordBuilder(ctx).WithDetail("LDAP error").Build()
-			SaveOnSuccess(ctx, record)
-		}
-	}
 }
 
 func CheckPassErrorToMessage(err error, lang string) string {
