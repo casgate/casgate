@@ -53,7 +53,7 @@ func (c *ApiController) ResponseError(error string, data ...interface{}) {
 // ResponseErrorWithStatus ...
 func (c *ApiController) ResponseErrorWithStatus(status int, error string) {
 	resp := &Error{Code: status, Message: error}
-		
+
 	c.Ctx.Output.Status = status
 
 	c.Data["json"] = resp
@@ -63,6 +63,21 @@ func (c *ApiController) ResponseErrorWithStatus(status int, error string) {
 // ResponseNotFound ...
 func (c *ApiController) ResponseNotFound(error string) {
 	c.ResponseErrorWithStatus(http.StatusNotFound, error)
+}
+
+// ResponseBadRequest...
+func (c *ApiController) ResponseBadRequest(error string) {
+	c.ResponseErrorWithStatus(http.StatusBadRequest, error)
+}
+
+// ResponseInternalServerError...
+func (c *ApiController) ResponseInternalServerError(error string) {
+	c.ResponseErrorWithStatus(http.StatusInternalServerError, error)
+}
+
+// ResponseConflict...
+func (c *ApiController) ResponseConflict(error string) {
+	c.ResponseErrorWithStatus(http.StatusConflict, error)
 }
 
 func (c *ApiController) T(error string) string {

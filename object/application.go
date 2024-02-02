@@ -103,6 +103,16 @@ func GetApplications(owner string) ([]*Application, error) {
 	return applications, nil
 }
 
+func CountApplicatoinsByProvider(providerName string) ([]*Application, error) {
+	applications := []*Application{}
+	err := ormer.Engine.Where("providers like ?", "%\"name\":\""+providerName+"\"%").Find(&applications, &Application{})
+	if err != nil {
+		return applications, err
+	}
+
+	return applications, nil
+}
+
 func GetOrganizationApplications(owner string, organization string) ([]*Application, error) {
 	applications := []*Application{}
 	err := ormer.Engine.Desc("created_time").Find(&applications, &Application{Organization: organization})
