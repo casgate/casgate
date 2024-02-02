@@ -21,7 +21,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/i18n"
