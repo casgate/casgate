@@ -65,6 +65,21 @@ func (c *ApiController) ResponseNotFound(error string) {
 	c.ResponseErrorWithStatus(http.StatusNotFound, error)
 }
 
+// ResponseBadRequest...
+func (c *ApiController) ResponseBadRequest(error string) {
+	c.ResponseErrorWithStatus(http.StatusBadRequest, error)
+}
+
+// ResponseInternalServerError...
+func (c *ApiController) ResponseInternalServerError(error string) {
+	c.ResponseErrorWithStatus(http.StatusInternalServerError, error)
+}
+
+// ResponseConflict...
+func (c *ApiController) ResponseConflict(error string) {
+	c.ResponseErrorWithStatus(http.StatusConflict, error)
+}
+
 func (c *ApiController) T(error string) string {
 	return i18n.Translate(c.GetAcceptLanguage(), error)
 }
