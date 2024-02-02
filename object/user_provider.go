@@ -1,6 +1,8 @@
 package object
 
-import "github.com/casdoor/casdoor/util"
+import (
+	"context"
+)
 
 type UserProvider struct {
 	UserObj     *User     `xorm:"-" json:"userObj"`
@@ -25,12 +27,20 @@ func GetUserProviders(owner string) ([]*UserProvider, error) {
 }
 
 func GetUserProviderCount(owner, field, value string) (int64, error) {
-	session := GetSession("", -1, -1, field, value, "", "")
+	session := GetSession("", -1, -1, field, value, "last_sync", "desc")
 	return session.Where("owner = ? or owner = ? ", "admin", owner).Count(&UserProvider{})
 }
 
 func GetPaginationUserProviders(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*UserProvider, error) {
 	var userProviders []*UserProvider
+
+	if sortField == "" {
+		sortField = "last_sync"
+	}
+	if sortOrder == "" {
+		sortOrder = "desc"
+	}
+
 	session := GetSession("", offset, limit, field, value, sortField, sortOrder)
 	err := session.Where("owner = ? or owner = ? ", "admin", owner).Find(&userProviders)
 	if err != nil {
@@ -59,46 +69,23 @@ func GetUserProvider(owner string, providerName string, userProviderName string)
 	}
 }
 
-func AddUserProvider(userProvider *UserProvider) (bool, error) {
-	var userProviders []*UserProvider
-
-	err := ormer.Engine.Desc("last_sync").Find(&userProviders, &UserProvider{
-		Owner:        userProvider.Owner,
-		ProviderName: userProvider.ProviderName,
-		UserId:       userProvider.UserId,
-	})
-	if err != nil {
-		return false, err
-	}
-
+func AddUserProvider(ctx context.Context, userProvider *UserProvider) (bool, error) {
 	var affected int64
-	if len(userProviders) == 0 {
-		userProvider.LastSync = util.GetCurrentTime()
-		affected, err = ormer.Engine.Insert(userProvider)
-	} else {
-		var emailLinkingEnabled bool
-
-		applications, err := GetOrganizationApplications("", userProvider.Owner)
+	err := trm.WithTx(ctx, func(ctx context.Context) error {
+		existedUserProvider, err := repo.GetUserProvider(ctx, userProvider.Owner, userProvider.ProviderName, userProvider.UserProviderName, false)
 		if err != nil {
-			return false, err
+			return err
 		}
-		for i := range applications {
-			for _, provider := range applications[i].Providers {
-				if provider.Name == userProvider.ProviderName {
-					emailLinkingEnabled = applications[i].EnableLinkWithEmail
-				}
-			}
+		if existedUserProvider != nil {
+			return nil
 		}
 
-		if emailLinkingEnabled {
-			userProvider.LastSync = util.GetCurrentTime()
-			affected, err = ormer.Engine.Insert(userProvider)
+		affected, err = repo.InsertUserProvider(ctx, userProvider)
+		if err != nil {
+			return err
 		}
-	}
+		return nil
+	})
 
-	if err != nil {
-		return false, err
-	}
-
-	return affected != 0, nil
+	return affected != 0, err
 }

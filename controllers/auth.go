@@ -711,6 +711,18 @@ func (c *ApiController) Login() {
 					return
 				}
 
+				_, err = object.AddUserProvider(c.Ctx.Request.Context(), &object.UserProvider{
+					ProviderName:     provider.Name,
+					UserId:           user.Id,
+					UserProviderName: userInfo.Username,
+					Owner:            organization.Name,
+					LastSync:         util.GetCurrentTime(),
+				})
+				if err != nil {
+					c.ResponseError(err.Error())
+					return
+				}
+
 				if provider.EnableRoleMapping {
 					mapper, err := role_mapper.NewRoleMapper(provider.Category, provider.RoleMappingItems, authData)
 					if err != nil {
@@ -781,17 +793,6 @@ func (c *ApiController) Login() {
 			} else {
 				resp = &Response{Status: "error", Msg: "Failed to link user account", Data: isLinked}
 			}
-		}
-		userProvider := &object.UserProvider{
-			ProviderName:     provider.Name,
-			UserId:           userInfo.Id,
-			UserProviderName: userInfo.Username,
-			Owner:            organization.Name,
-		}
-		_, err = object.AddUserProvider(userProvider)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
 		}
 	} else if c.getMfaUserSession() != "" {
 		user, err := object.GetUser(c.getMfaUserSession())

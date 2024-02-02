@@ -27,3 +27,13 @@ func (r *Repo) updateEntity(ctx context.Context, owner, name string, entity any)
 
 	return affected, nil
 }
+
+func (r *Repo) insertEntity(ctx context.Context, entity any) (int64, error) {
+	query := r.trm.GetEngine(ctx).AllCols()
+	affected, err := query.Insert(entity)
+	if err != nil {
+		return affected, err
+	}
+
+	return affected, nil
+}
