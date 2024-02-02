@@ -26,6 +26,12 @@ import (
 	"github.com/xorm-io/core"
 )
 
+const (
+	NotToSign           = "No sign"
+	SignWithFile        = "Sign with default file"
+	SignWithCertificate = "Sign with certificate"
+)
+
 type Provider struct {
 	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
 	Name        string `xorm:"varchar(100) notnull pk unique" json:"name"`
@@ -70,10 +76,10 @@ type Provider struct {
 	Bucket           string `xorm:"varchar(100)" json:"bucket"`
 	PathPrefix       string `xorm:"varchar(100)" json:"pathPrefix"`
 
-	Metadata               string `xorm:"mediumtext" json:"metadata"`
-	IdP                    string `xorm:"mediumtext" json:"idP"`
-	IssuerUrl              string `xorm:"varchar(100)" json:"issuerUrl"`
-	EnableSignAuthnRequest bool   `json:"enableSignAuthnRequest"`
+	Metadata         string `xorm:"mediumtext" json:"metadata"`
+	IdP              string `xorm:"mediumtext" json:"idP"`
+	IssuerUrl        string `xorm:"varchar(100)" json:"issuerUrl"`
+	RequestSignature string `xorm:"varchar(100)" json:"requestSignature"`
 
 	ProviderUrl string `xorm:"varchar(200)" json:"providerUrl"`
 }
