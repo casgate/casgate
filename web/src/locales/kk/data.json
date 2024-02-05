@@ -878,7 +878,9 @@
   "record": {
     "Is triggered": "Is triggered",
     "Object": "Object",
-    "Status code": "Status code"
+    "Status code": "Status code",
+    "Response": "Response",
+    "Detail": "Detail"
   },
   "resource": {
     "Copy Link": "Copy Link",

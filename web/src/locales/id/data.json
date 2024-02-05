@@ -878,7 +878,9 @@
   "record": {
     "Is triggered": "Ditimbulkan",
     "Object": "Object",
-    "Status code": "Status code"
+    "Status code": "Status code",
+    "Response": "Response",
+    "Detail": "Detail"
   },
   "resource": {
     "Copy Link": "Salin Tautan",
