@@ -6367,7 +6367,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/170972.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/176525.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -7062,7 +7062,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/289182.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/297200.\u003cnil\u003e.string"
                 }
             }
         },

@@ -4648,7 +4648,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/289182.<nil>.string'
+        $ref: '#/definitions/297200.<nil>.string'
   object.ProviderItem:
     title: ProviderItem
     type: object
