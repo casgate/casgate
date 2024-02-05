@@ -5573,11 +5573,11 @@
         }
     },
     "definitions": {
-        "170972.\u003cnil\u003e.string": {
+        "176525.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "289182.\u003cnil\u003e.string": {
+        "297200.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6985,9 +6985,6 @@
                 "enableRoleMapping": {
                     "type": "boolean"
                 },
-                "enableSignAuthnRequest": {
-                    "type": "boolean"
-                },
                 "endpoint": {
                     "type": "string"
                 },
@@ -7035,6 +7032,9 @@
                     "type": "string"
                 },
                 "regionId": {
+                    "type": "string"
+                },
+                "requestSignature": {
                     "type": "string"
                 },
                 "roleMappingItems": {
@@ -7112,6 +7112,9 @@
                 "createdTime": {
                     "type": "string"
                 },
+                "detail": {
+                    "type": "string"
+                },
                 "extendedUser": {
                     "$ref": "#/definitions/object.User"
                 },
@@ -7138,6 +7141,9 @@
                     "type": "string"
                 },
                 "requestUri": {
+                    "type": "string"
+                },
+                "response": {
                     "type": "string"
                 },
                 "statusCode": {
