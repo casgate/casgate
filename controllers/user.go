@@ -17,7 +17,6 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/beego/beego/utils/pagination"
