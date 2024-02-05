@@ -194,6 +194,11 @@ func (c *ApiController) GetUser() {
 	if !organization.IsProfilePublic {
 		requestUserId := c.GetSessionUsername()
 		hasPermission, err := object.CheckUserPermission(requestUserId, id, false, c.GetAcceptLanguage())
+		if _, ok := err.(*object.NotFoundError); ok {
+			c.ResponseNotFound(err.Error())
+			return
+		}
+
 		if !hasPermission {
 			c.ResponseError(err.Error())
 			return
