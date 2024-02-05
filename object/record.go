@@ -49,6 +49,8 @@ type Record struct {
 	StatusCode   string `xorm:"varchar(5)" json:"statusCode"`
 
 	Object       string `xorm:"text" json:"object"`
+	Response     string `xorm:"text" json:"response"`
+	Detail       string `xorm:"text" json:"detail"`
 	ExtendedUser *User  `xorm:"-" json:"extendedUser"`
 
 	IsTriggered bool `json:"isTriggered"`

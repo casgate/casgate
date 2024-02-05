@@ -177,6 +177,28 @@ class RecordListPage extends BaseListPage {
         },
       },
       {
+        title: i18next.t("record:Response"),
+        dataIndex: "response",
+        key: "response",
+        width: "200px",
+        sorter: true,
+        ...this.getColumnSearchProps("response"),
+        render: (text, record, index) => {
+          return text;
+        },
+      },
+      {
+        title: i18next.t("record:Detail"),
+        dataIndex: "detail",
+        key: "detail",
+        width: "200px",
+        sorter: true,
+        ...this.getColumnSearchProps("detail"),
+        render: (text, record, index) => {
+          return text;
+        },
+      },
+      {
         title: i18next.t("record:Is triggered"),
         dataIndex: "isTriggered",
         key: "isTriggered",

@@ -878,7 +878,9 @@
   "record": {
     "Is triggered": "Bị kích hoạt",
     "Object": "Object",
-    "Status code": "Status code"
+    "Status code": "Status code",
+    "Response": "Response",
+    "Detail": "Detail"
   },
   "resource": {
     "Copy Link": "Sao chép liên kết",

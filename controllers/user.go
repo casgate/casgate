@@ -593,11 +593,12 @@ func (c *ApiController) CheckUserPassword() {
 		return
 	}
 
-	_, msg := object.CheckUserPassword(user.Owner, user.Name, user.Password, c.GetAcceptLanguage())
-	if msg == "" {
+	_, err = object.CheckUserPassword(user.Owner, user.Name, user.Password, c.GetAcceptLanguage())
+	if err == nil {
 		c.ResponseOk()
 	} else {
-		c.ResponseUnauthorized(msg)
+		msg := object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
+		c.ResponseError(msg)
 	}
 }
 
