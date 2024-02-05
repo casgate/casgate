@@ -15,7 +15,7 @@ import (
 // @router /get-user-providers [get]
 func (c *ApiController) GetUserProviders() {
 	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
+	limitParam := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 	field := c.Input().Get("field")
 	value := c.Input().Get("value")
@@ -27,43 +27,33 @@ func (c *ApiController) GetUserProviders() {
 		return
 	}
 
-	if limit == "" || page == "" {
-		userProviders, err := object.GetUserProviders(owner)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		err = fillUserProviders(userProviders)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(userProviders)
+	var limit int
+	if limitParam == "" || page == "" {
+		limit = -1
 	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetUserProviderCount(owner, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		paginationUserProviders, err := object.GetPaginationUserProviders(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		err = fillUserProviders(paginationUserProviders)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(paginationUserProviders, paginator.Nums())
+		limit = util.ParseInt(limitParam)
 	}
+
+	count, err := object.GetUserProviderCount(owner, field, value)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	paginator := pagination.SetPaginator(c.Ctx, limit, count)
+	paginationUserProviders, err := object.GetPaginationUserProviders(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	err = fillUserProviders(paginationUserProviders)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk(paginationUserProviders, paginator.Nums())
 }
 
 // GetUserProvider
