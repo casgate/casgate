@@ -90,7 +90,8 @@
   },
   "provider": {
     "Invalid application id": "无效的应用ID",
-    "the provider: %s does not exist": "提供商: %s不存在"
+    "the provider: %s does not exist": "提供商: %s不存在",
+    "Can't delete provider due to using in applications: [%s]": "Can't delete provider due to using in applications: [%s]"
   },
   "resource": {
     "User is nil for tag: avatar": "上传头像时用户为空",

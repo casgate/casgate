@@ -18,8 +18,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/beego/beego/utils/pagination"
+	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
@@ -214,17 +216,44 @@ func (c *ApiController) AddProvider() {
 // @Description delete provider
 // @Param   body    body   object.Provider  true        "The details of the provider"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad request
+// @Failure 409 Conflict
+// @Failure 500 Internal server error
 // @router /delete-provider [post]
 func (c *ApiController) DeleteProvider() {
 	var provider object.Provider
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &provider)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
+		return
+	}
+
+	applications, err := object.CountApplicatoinsByProvider(provider.Name)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	if len(applications) > 0 {
+		msg := c.makeDeleteProviderErrorMessage(applications, c.GetAcceptLanguage())
+		c.ResponseConflict(msg)
 		return
 	}
 
 	c.Data["json"] = wrapActionResponse(object.DeleteProvider(&provider))
 	c.ServeJSON()
+}
+
+func (c *ApiController) makeDeleteProviderErrorMessage(applications []*object.Application, lang string) string {
+	appNames := make([]string, 0, len(applications))
+
+	for _, app := range applications {
+		appNames = append(appNames, app.Name)
+	}
+
+	apps := strings.Join(appNames, ", ")
+
+	return fmt.Sprintf(i18n.Translate(lang, "provider:Can't delete provider due to using in applications: [%s]"), apps)
 }
 
 // TestProviderConnection

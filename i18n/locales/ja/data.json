@@ -90,7 +90,8 @@
   },
   "provider": {
     "Invalid application id": "アプリケーションIDが無効です",
-    "the provider: %s does not exist": "プロバイダー%sは存在しません"
+    "the provider: %s does not exist": "プロバイダー%sは存在しません",
+    "Can't delete provider due to using in applications: [%s]": "Can't delete provider due to using in applications: [%s]"
   },
   "resource": {
     "User is nil for tag: avatar": "ユーザーはタグ「アバター」に対してnilです",

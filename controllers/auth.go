@@ -356,6 +356,9 @@ func (c *ApiController) Login() {
 		var msg string
 
 		if authForm.Password == "" {
+			record := object.NewRecordBuilder(c.Ctx).WithUsername(authForm.Username).WithDetail("Empty password").Build()
+			object.SaveOnSuccess(c.Ctx, record)
+
 			if user, err = object.GetUserByFields(authForm.Organization, authForm.Username); err != nil {
 				c.ResponseError(err.Error(), nil)
 				return
@@ -421,7 +424,13 @@ func (c *ApiController) Login() {
 			}
 
 			password := authForm.Password
-			user, msg = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha)
+			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha)
+			if err != nil {
+				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
+
+				record := object.NewRecordBuilder(c.Ctx).WithDetail("User not found").Build()
+				object.SaveOnSuccess(c.Ctx, record)
+			}
 		}
 
 		if msg != "" {
@@ -464,10 +473,12 @@ func (c *ApiController) Login() {
 
 			resp = c.HandleLoggedIn(application, user, &authForm)
 
-			record := object.NewRecord(c.Ctx)
-			record.Organization = application.Organization
-			record.User = user.Name
-			util.SafeGoroutine(func() { object.AddRecord(record) })
+			record := object.NewRecordBuilder(c.Ctx).
+				WithUsername(user.Name).
+				WithOrganization(application.Organization).
+				WithDetail("User logged in").
+				Build()
+			object.SaveOnSuccess(c.Ctx, record)
 		}
 	} else if authForm.Provider != "" {
 		var application *object.Application
@@ -586,10 +597,12 @@ func (c *ApiController) Login() {
 
 				resp = c.HandleLoggedIn(application, user, &authForm)
 
-				record := object.NewRecord(c.Ctx)
-				record.Organization = application.Organization
-				record.User = user.Name
-				util.SafeGoroutine(func() { object.AddRecord(record) })
+				record := object.NewRecordBuilder(c.Ctx).
+					WithUsername(user.Name).
+					WithOrganization(application.Organization).
+					WithDetail("User logged in").
+					Build()
+				object.SaveOnSuccess(c.Ctx, record)
 			} else if provider.Category == "OAuth" || provider.Category == "Web3" || provider.Category == "SAML" {
 				// Sign up via OAuth/Web3/SAML
 				if application.EnableLinkWithEmail {
@@ -740,16 +753,20 @@ func (c *ApiController) Login() {
 
 				resp = c.HandleLoggedIn(application, user, &authForm)
 
-				record := object.NewRecord(c.Ctx)
-				record.Organization = application.Organization
-				record.User = user.Name
-				util.SafeGoroutine(func() { object.AddRecord(record) })
+				record := object.NewRecordBuilder(c.Ctx).
+					WithUsername(user.Name).
+					WithOrganization(application.Organization).
+					WithDetail("User logged in").
+					Build()
+				object.SaveOnSuccess(c.Ctx, record)
 
-				record2 := object.NewRecord(c.Ctx)
-				record2.Action = "signup"
-				record2.Organization = application.Organization
-				record2.User = user.Name
-				util.SafeGoroutine(func() { object.AddRecord(record2) })
+				record2 := object.NewRecordBuilder(c.Ctx).
+					WithAction("signup").
+					WithUsername(user.Name).
+					WithOrganization(application.Organization).
+					WithDetail("User logged in").
+					Build()
+				object.SaveOnSuccess(c.Ctx, record2)
 			}
 		} else { // authForm.Method != "signup"
 			userId := c.GetSessionUsername()
@@ -814,6 +831,9 @@ func (c *ApiController) Login() {
 
 			err = mfaUtil.Verify(authForm.Passcode)
 			if err != nil {
+				record := object.NewRecordBuilder(c.Ctx).WithDetail("OTP was wrong").Build()
+				object.SaveOnSuccess(c.Ctx, record)
+
 				c.ResponseError(err.Error())
 				return
 			}
@@ -849,10 +869,12 @@ func (c *ApiController) Login() {
 		resp = c.HandleLoggedIn(application, user, &authForm)
 		c.setMfaUserSession("")
 
-		record := object.NewRecord(c.Ctx)
-		record.Organization = application.Organization
-		record.User = user.Name
-		util.SafeGoroutine(func() { object.AddRecord(record) })
+		record := object.NewRecordBuilder(c.Ctx).
+			WithOrganization(application.Organization).
+			WithUsername(user.Name).
+			WithDetail("MFA success").
+			Build()
+		object.SaveOnSuccess(c.Ctx, record)
 	} else if c.getChangePasswordUserSession() != "" {
 		user, err := object.GetUser(c.getChangePasswordUserSession())
 		if err != nil {
@@ -883,10 +905,12 @@ func (c *ApiController) Login() {
 		resp = c.HandleLoggedIn(application, user, &authForm)
 		c.setChangePasswordUserSession("")
 
-		record := object.NewRecord(c.Ctx)
-		record.Organization = application.Organization
-		record.User = user.Name
-		util.SafeGoroutine(func() { object.AddRecord(record) })
+		record := object.NewRecordBuilder(c.Ctx).
+			WithOrganization(application.Organization).
+			WithUsername(user.Name).
+			WithDetail("Changed password").
+			Build()
+		object.SaveOnSuccess(c.Ctx, record)
 	} else {
 		if c.GetSessionUsername() != "" {
 			// user already signed in to Casdoor, so let the user click the avatar button to do the quick sign-in
@@ -904,10 +928,12 @@ func (c *ApiController) Login() {
 			user := c.getCurrentUser()
 			resp = c.HandleLoggedIn(application, user, &authForm)
 
-			record := object.NewRecord(c.Ctx)
-			record.Organization = application.Organization
-			record.User = user.Name
-			util.SafeGoroutine(func() { object.AddRecord(record) })
+			record := object.NewRecordBuilder(c.Ctx).
+				WithOrganization(application.Organization).
+				WithUsername(user.Name).
+				WithDetail("Quick sign in").
+				Build()
+			object.SaveOnSuccess(c.Ctx, record)
 		} else {
 			c.ResponseError(fmt.Sprintf(c.T("auth:Unknown authentication type (not password or provider), form = %s"), util.StructToJson(authForm)))
 			return

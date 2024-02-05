@@ -90,7 +90,8 @@
   },
   "provider": {
     "Invalid application id": "Identifiant d'application invalide",
-    "the provider: %s does not exist": "Le fournisseur : %s n'existe pas"
+    "the provider: %s does not exist": "Le fournisseur : %s n'existe pas",
+    "Can't delete provider due to using in applications: [%s]": "Can't delete provider due to using in applications: [%s]"
   },
   "resource": {
     "User is nil for tag: avatar": "L'utilisateur est nul pour la balise : avatar",

@@ -116,6 +116,8 @@
   "cert": {
     "Bit size": "Размер бита",
     "Bit size - Tooltip": "Длина секретного ключа",
+    "CA Certificate": "Сертификат УЦ",
+    "CA Certificate - Tooltip": "Доверенный X.509 сертификат удостоверяющего центра (УЦ) в PEM-формате. Используется для устновки доверенного SSL-соединения с сервером",
     "Certificate": "Сертификат",
     "Certificate - Tooltip": "Сертификат открытого ключа в PEM-формате. Используется для проверки подписи JWT токена доступа или в качестве Cертификат удостоверяющего центра (УЦ)",
     "Certificate copied to clipboard successfully": "Сертификат успешно скопирован в буфер обмена",
@@ -132,6 +134,8 @@
     "Private key": "Частный ключ",
     "Private key - Tooltip": "Приватный ключ, соответствующий сертификату открытого ключа",
     "Private key copied to clipboard successfully": "Приватный ключ успешно скопирован в буфер обмена",
+    "Client Certificate": "Сертификат клиента",
+    "Client Certificate - Tooltip": "X.509 сертификат с приватным ключом в PEM формате",
     "Scope - Tooltip": "Сценарии использования сертификата",
     "Type - Tooltip": "Тип сертификата"
   },
@@ -409,8 +413,6 @@
     "Auto Sync - Tooltip": "Автоматическая синхронизация настроек отключена при значении 0",
     "Base DN": "Базовый DN",
     "Base DN - Tooltip": "Базовый DN во время поиска LDAP",
-    "CA Certificate": "Сертификат УЦ",
-    "CA Certificate - Tooltip": "Доверенный X.509 сертификат удостоверяющего центра (УЦ) в PEM-формате. Используется для устновки доверенного SSL-соединения с сервером LDAP",
     "CN": "CN",
     "Edit LDAP": "Изменить LDAP",
     "Enable Attribute Mapping": "Enable Attribute Mapping",
@@ -876,7 +878,9 @@
   "record": {
     "Is triggered": "Сработало",
     "Object": "Object",
-    "Status code": "Status code"
+    "Status code": "Status code",
+    "Response": "Response",
+    "Detail": "Подробности"
   },
   "resource": {
     "Copy Link": "Копировать ссылку",

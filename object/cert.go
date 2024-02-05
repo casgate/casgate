@@ -26,6 +26,7 @@ import (
 const (
 	scopeCertJWT    = "JWT"
 	scopeCertCACert = "CA Certificate"
+	scopeClientCert = "Client Certificate"
 )
 
 type Cert struct {
@@ -43,6 +44,8 @@ type Cert struct {
 	Certificate string `xorm:"mediumtext" json:"certificate"`
 	PrivateKey  string `xorm:"mediumtext" json:"privateKey"`
 }
+
+var ErrCertDoesNotExist = errors.New(fmt.Sprintf("certificate does not exist"))
 
 func GetMaskedCert(cert *Cert) *Cert {
 	if cert == nil {
@@ -157,7 +160,7 @@ func GetTlsConfigForCert(name string) (*tls.Config, error) {
 		return nil, err
 	}
 	if cert == nil {
-		return nil, errors.New(fmt.Sprintf("Certificate %s does not exist", name))
+		return nil, ErrCertDoesNotExist
 	}
 
 	ca := x509.NewCertPool()

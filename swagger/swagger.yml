@@ -929,6 +929,12 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
+        "409":
+          description: Conflict
+        "500":
+          description: Internal server error
   /api/delete-resource:
     post:
       tags:
@@ -3561,10 +3567,10 @@ paths:
           schema:
             $ref: '#/definitions/object.TokenError'
 definitions:
-  170751.<nil>.string:
+  174086.<nil>.string:
     title: string
     type: object
-  288808.<nil>.string:
+  294622.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -4101,7 +4107,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/170751.<nil>.string'
+          $ref: '#/definitions/174086.<nil>.string'
       description:
         type: string
       displayName:
@@ -4209,6 +4215,9 @@ definitions:
         type: string
       owner:
         type: string
+      passwordChangeInterval:
+        type: integer
+        format: int64
       passwordOptions:
         type: array
         items:
@@ -4564,7 +4573,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/288808.<nil>.string'
+        $ref: '#/definitions/294622.<nil>.string'
   object.ProviderItem:
     title: ProviderItem
     type: object
@@ -5099,8 +5108,9 @@ definitions:
         type: string
       password:
         type: string
-      passwordChangeRequired:
-        type: boolean
+      passwordChangeTime:
+        type: string
+        format: datetime
       passwordSalt:
         type: string
       passwordType:
