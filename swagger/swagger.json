@@ -295,6 +295,15 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -351,6 +360,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -546,6 +558,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -694,6 +709,15 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -703,7 +727,15 @@
                 "tags": [
                     "User API"
                 ],
-                "operationId": "ApiController.AddUserkeys"
+                "operationId": "ApiController.AddUserkeys",
+                "responses": {
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
             }
         },
         "/api/add-webhook": {
@@ -999,7 +1031,15 @@
                 "tags": [
                     "User API"
                 ],
-                "operationId": "ApiController.CheckUserPassword"
+                "operationId": "ApiController.CheckUserPassword",
+                "responses": {
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
             }
         },
         "/api/delete-adapter": {
@@ -1267,6 +1307,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -1323,6 +1366,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -1499,6 +1545,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -1640,6 +1689,12 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     }
                 }
             }
@@ -1993,6 +2048,9 @@
                         "schema": {
                             "$ref": "#/definitions/Response"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2081,6 +2139,15 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2184,6 +2251,12 @@
                                 "$ref": "#/definitions/object.User"
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthoized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2411,6 +2484,9 @@
                         "schema": {
                             "$ref": "#/definitions/object.Organization"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2469,6 +2545,9 @@
                                 "$ref": "#/definitions/object.Organization"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2498,6 +2577,9 @@
                                 "$ref": "#/definitions/object.Organization"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2579,6 +2661,9 @@
                         "schema": {
                             "$ref": "#/definitions/object.Permission"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2608,6 +2693,12 @@
                                 "$ref": "#/definitions/object.Permission"
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2637,6 +2728,9 @@
                                 "$ref": "#/definitions/object.Permission"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2657,6 +2751,12 @@
                                 "$ref": "#/definitions/object.Permission"
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3086,6 +3186,9 @@
                         "schema": {
                             "$ref": "#/definitions/object.Role"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3115,6 +3218,9 @@
                                 "$ref": "#/definitions/object.Role"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3215,6 +3321,9 @@
                                 "$ref": "#/definitions/object.User"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3467,8 +3576,14 @@
                             "$ref": "#/definitions/object.User"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3524,6 +3639,9 @@
                 "responses": {
                     "200": {
                         "description": "{int} int The count of filtered users for an organization"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3601,6 +3719,9 @@
                                 "$ref": "#/definitions/object.User"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -4100,6 +4221,19 @@
                 }
             }
         },
+        "/api/remove-user-from-group": {
+            "post": {
+                "tags": [
+                    "User API"
+                ],
+                "operationId": "ApiController.RemoveUserFromGroup",
+                "responses": {
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
         "/api/run-syncer": {
             "get": {
                 "tags": [
@@ -4133,7 +4267,18 @@
                 "tags": [
                     "User API"
                 ],
-                "operationId": "ApiController.SendInvite"
+                "operationId": "ApiController.SendInvite",
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
             }
         },
         "/api/send-verification-code": {
@@ -4187,6 +4332,21 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -4634,6 +4794,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -4704,6 +4867,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -4914,6 +5080,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -5083,6 +5252,21 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -5409,11 +5593,11 @@
         }
     },
     "definitions": {
-        "174086.\u003cnil\u003e.string": {
+        "176525.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "294622.\u003cnil\u003e.string": {
+        "297200.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6203,7 +6387,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/174086.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/176525.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6821,9 +7005,6 @@
                 "enableRoleMapping": {
                     "type": "boolean"
                 },
-                "enableSignAuthnRequest": {
-                    "type": "boolean"
-                },
                 "endpoint": {
                     "type": "string"
                 },
@@ -6873,6 +7054,9 @@
                 "regionId": {
                     "type": "string"
                 },
+                "requestSignature": {
+                    "type": "string"
+                },
                 "roleMappingItems": {
                     "type": "array",
                     "items": {
@@ -6898,7 +7082,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/294622.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/297200.\u003cnil\u003e.string"
                 }
             }
         },
@@ -6948,6 +7132,9 @@
                 "createdTime": {
                     "type": "string"
                 },
+                "detail": {
+                    "type": "string"
+                },
                 "extendedUser": {
                     "$ref": "#/definitions/object.User"
                 },
@@ -6974,6 +7161,9 @@
                     "type": "string"
                 },
                 "requestUri": {
+                    "type": "string"
+                },
+                "response": {
                     "type": "string"
                 },
                 "statusCode": {

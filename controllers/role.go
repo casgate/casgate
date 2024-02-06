@@ -28,6 +28,7 @@ import (
 // @Description get roles
 // @Param   owner     query    string  true        "The owner of roles"
 // @Success 200 {array} object.Role The Response object
+// @Failure 500 Internal server error
 // @router /get-roles [get]
 func (c *ApiController) GetRoles() {
 	owner := c.Input().Get("owner")
@@ -41,7 +42,7 @@ func (c *ApiController) GetRoles() {
 	if limit == "" || page == "" {
 		roles, err := object.GetRoles(owner)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
@@ -50,14 +51,14 @@ func (c *ApiController) GetRoles() {
 		limit := util.ParseInt(limit)
 		count, err := object.GetRoleCount(owner, field, value)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
 		roles, err := object.GetPaginationRoles(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
@@ -71,13 +72,14 @@ func (c *ApiController) GetRoles() {
 // @Description get role
 // @Param   id     query    string  true        "The id ( owner/name ) of the role"
 // @Success 200 {object} object.Role The Response object
+// @Failure 500 Internal server error
 // @router /get-role [get]
 func (c *ApiController) GetRole() {
 	id := c.Input().Get("id")
 
 	role, err := object.GetRole(id)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
@@ -91,6 +93,7 @@ func (c *ApiController) GetRole() {
 // @Param   id     query    string  true        "The id ( owner/name ) of the role"
 // @Param   body    body   object.Role  true        "The details of the role"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad request
 // @router /update-role [post]
 func (c *ApiController) UpdateRole() {
 	id := c.Input().Get("id")
@@ -98,7 +101,7 @@ func (c *ApiController) UpdateRole() {
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
 		return
 	}
 
@@ -112,12 +115,13 @@ func (c *ApiController) UpdateRole() {
 // @Description add role
 // @Param   body    body   object.Role  true        "The details of the role"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad request
 // @router /add-role [post]
 func (c *ApiController) AddRole() {
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
 		return
 	}
 
@@ -131,12 +135,13 @@ func (c *ApiController) AddRole() {
 // @Description delete role
 // @Param   body    body   object.Role  true        "The details of the role"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad request
 // @router /delete-role [post]
 func (c *ApiController) DeleteRole() {
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
 		return
 	}
 
