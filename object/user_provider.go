@@ -5,20 +5,22 @@ import (
 )
 
 type UserProvider struct {
-	UserObj     *User     `xorm:"-" json:"userObj"`
-	ProviderObj *Provider `xorm:"-" json:"providerObj"`
+	UserObj             *User     `xorm:"-" json:"userObj"`
+	ProviderObj         *Provider `xorm:"-" json:"providerObj"`
+	ProviderDisplayName string    `xorm:"-" json:"providerDisplayName"`
 
-	LastSync         string `xorm:"varchar(100)" json:"lastSync"`
-	UserProviderName string `xorm:"varchar(100)" json:"userProviderName"`
-	ProviderName     string `xorm:"varchar(100)" json:"providerName"`
-	UserId           string `xorm:"varchar(100)" json:"userId"`
-	Owner            string `xorm:"varchar(100)" json:"owner"`
+	CreatedTime     string `xorm:"varchar(100)" json:"createdTime"`
+	LastSignInTime  string `xorm:"varchar(100)" json:"lastSignInTime"`
+	UsernameFromIdp string `xorm:"varchar(100)" json:"usernameFromIdp"`
+	ProviderName    string `xorm:"varchar(100)" json:"providerName"`
+	UserId          string `xorm:"varchar(100)" json:"userId"`
+	Owner           string `xorm:"varchar(100)" json:"owner"`
 }
 
 func GetUserProviders(owner string) ([]*UserProvider, error) {
 	var userProviders []*UserProvider
 
-	err := ormer.Engine.Where("owner = ? or owner = ?", "admin", owner).Desc("last_sync").Find(&userProviders, &UserProvider{})
+	err := ormer.Engine.Where("owner = ? or owner = ?", "admin", owner).Desc("last_sign_in_time").Find(&userProviders, &UserProvider{})
 	if err != nil {
 		return userProviders, err
 	}
@@ -27,7 +29,7 @@ func GetUserProviders(owner string) ([]*UserProvider, error) {
 }
 
 func GetUserProviderCount(owner, field, value string) (int64, error) {
-	session := GetSession("", -1, -1, field, value, "last_sync", "desc")
+	session := GetSession("", -1, -1, field, value, "last_sign_in_time", "desc")
 	return session.Where("owner = ? or owner = ? ", "admin", owner).Count(&UserProvider{})
 }
 
@@ -35,7 +37,7 @@ func GetPaginationUserProviders(owner string, offset, limit int, field, value, s
 	var userProviders []*UserProvider
 
 	if sortField == "" {
-		sortField = "last_sync"
+		sortField = "last_sign_in_time"
 	}
 	if sortOrder == "" {
 		sortOrder = "desc"
@@ -50,11 +52,11 @@ func GetPaginationUserProviders(owner string, offset, limit int, field, value, s
 	return userProviders, nil
 }
 
-func GetUserProvider(owner string, providerName string, userProviderName string) (*UserProvider, error) {
+func GetUserProvider(owner, providerName, usernameFromIdp string) (*UserProvider, error) {
 	userProvider := UserProvider{
-		Owner:            owner,
-		UserProviderName: userProviderName,
-		ProviderName:     providerName,
+		Owner:           owner,
+		UsernameFromIdp: usernameFromIdp,
+		ProviderName:    providerName,
 	}
 
 	existed, err := ormer.Engine.Get(&userProvider)
@@ -72,7 +74,7 @@ func GetUserProvider(owner string, providerName string, userProviderName string)
 func AddUserProvider(ctx context.Context, userProvider *UserProvider) (bool, error) {
 	var affected int64
 	err := trm.WithTx(ctx, func(ctx context.Context) error {
-		existedUserProvider, err := repo.GetUserProvider(ctx, userProvider.Owner, userProvider.ProviderName, userProvider.UserProviderName, false)
+		existedUserProvider, err := repo.GetUserProvider(ctx, userProvider.Owner, userProvider.ProviderName, userProvider.UsernameFromIdp, false)
 		if err != nil {
 			return err
 		}
@@ -88,4 +90,16 @@ func AddUserProvider(ctx context.Context, userProvider *UserProvider) (bool, err
 	})
 
 	return affected != 0, err
+}
+
+func UpdateUserProvider(ctx context.Context, userProvider *UserProvider) error {
+	err := trm.WithTx(ctx, func(ctx context.Context) error {
+		err := repo.UpdateUserProvider(ctx, userProvider)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return err
 }

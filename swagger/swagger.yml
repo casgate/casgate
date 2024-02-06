@@ -2317,52 +2317,6 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Payment'
-  /api/get-user-provider:
-    get:
-      tags:
-      - UserProvider API
-      description: get userProvider
-      operationId: ApiController.GetUserProvider
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of the provider
-        required: true
-        type: string
-      - in: query
-        name: providerName
-        description: The name of the provider
-        required: true
-        type: string
-      - in: query
-        name: userProviderName
-        description: The name of the user in the provider
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.UserProvider'
-  /api/get-user-providers:
-    get:
-      tags:
-      - UserProvider API
-      description: get userProviders
-      operationId: ApiController.GetUserProviders
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of userProviders
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.UserProvider'
   /api/get-users:
     get:
       tags:
@@ -5225,9 +5179,13 @@ definitions:
     title: UserProvider
     type: object
     properties:
-      lastSync:
+      createdTime:
+        type: string
+      lastSignInTime:
         type: string
       owner:
+        type: string
+      providerDisplayName:
         type: string
       providerName:
         type: string
@@ -5237,7 +5195,7 @@ definitions:
         type: string
       userObj:
         $ref: '#/definitions/object.User'
-      userProviderName:
+      usernameFromIdp:
         type: string
   object.Userinfo:
     title: Userinfo
