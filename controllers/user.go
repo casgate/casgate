@@ -38,123 +38,130 @@ type GetEmailAndPhoneResp struct {
 // @Title GetGlobalUsers
 // @Tag User API
 // @Description get global users
+// @Param   fillUserProvider query    bool    false       "Should fill userProvider"
 // @Success 200 {array} object.User The Response object
 // @router /get-global-users [get]
 func (c *ApiController) GetGlobalUsers() {
-	limit := c.Input().Get("pageSize")
+	limitParam := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 	field := c.Input().Get("field")
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
+	fillUserProvider := util.ParseBool(c.Input().Get("fillUserProvider"))
 
 	if _, res := c.RequireAdmin(); !res {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
 
-	if limit == "" || page == "" {
-		maskedUsers, err := object.GetMaskedUsers(object.GetGlobalUsers())
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(maskedUsers)
+	var limit int
+	if limitParam == "" || page == "" {
+		limit = -1
 	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetGlobalUserCount(field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		users, err := object.GetPaginationGlobalUsers(paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		users, err = object.GetMaskedUsers(users)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(users, paginator.Nums())
+		limit = util.ParseInt(limitParam)
 	}
+
+	count, err := object.GetGlobalUserCount(field, value)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	paginator := pagination.SetPaginator(c.Ctx, limit, count)
+	users, err := object.GetPaginationGlobalUsers(paginator.Offset(), limit, field, value, sortField, sortOrder)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	users, err = object.GetMaskedUsers(users)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if fillUserProvider {
+		userProviders, err := object.GetGlobalUserProviders()
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+
+		fillUserProviders(users, userProviders)
+	}
+
+	c.ResponseOk(users, paginator.Nums())
 }
 
 // GetUsers
 // @Title GetUsers
 // @Tag User API
 // @Description
-// @Param   owner     query    string  true        "The owner of users"
+// @Param   owner     		 query    string  true        "The owner of users"
+// @Param   fillUserProvider query    bool    false       "Should fill userProvider"
 // @Success 200 {array} object.User The Response object
 // @router /get-users [get]
 func (c *ApiController) GetUsers() {
 	owner := c.Input().Get("owner")
 	groupName := c.Input().Get("groupName")
-	limit := c.Input().Get("pageSize")
+	limitParam := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 	field := c.Input().Get("field")
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
+	fillUserProvider := util.ParseBool(c.Input().Get("fillUserProvider"))
 
-	if limit == "" || page == "" {
-		if groupName != "" {
-			maskedUsers, err := object.GetMaskedUsers(object.GetGroupUsers(util.GetId(owner, groupName)))
-			if err != nil {
-				c.ResponseError(err.Error())
-				return
-			}
-			c.ResponseOk(maskedUsers)
-			return
-		}
-
-		maskedUsers, err := object.GetMaskedUsers(object.GetUsers(owner))
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(maskedUsers)
+	var limit int
+	if limitParam == "" || page == "" {
+		limit = -1
 	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetUserCount(owner, field, value, groupName)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		users, err := object.GetPaginationUsers(owner, paginator.Offset(), limit, field, value, sortField, sortOrder, groupName)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		users, err = object.GetMaskedUsers(users)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(users, paginator.Nums())
+		limit = util.ParseInt(limitParam)
 	}
+
+	count, err := object.GetUserCount(owner, field, value, groupName)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	paginator := pagination.SetPaginator(c.Ctx, limit, count)
+	users, err := object.GetPaginationUsers(owner, paginator.Offset(), limit, field, value, sortField, sortOrder, groupName)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	users, err = object.GetMaskedUsers(users)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if fillUserProvider {
+		userProviders, err := object.GetUserProviders(owner)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+
+		fillUserProviders(users, userProviders)
+	}
+
+	c.ResponseOk(users, paginator.Nums())
 }
 
 // GetUser
 // @Title GetUser
 // @Tag User API
 // @Description get user
-// @Param   id     query    string  false        "The id ( owner/name ) of the user"
-// @Param   owner  query    string  false        "The owner of the user"
-// @Param   email  query    string  false 	     "The email of the user"
-// @Param   phone  query    string  false 	     "The phone of the user"
-// @Param   userId query    string  false 	     "The userId of the user"
+// @Param   id               query    string  false        "The id ( owner/name ) of the user"
+// @Param   owner            query    string  false        "The owner of the user"
+// @Param   email            query    string  false 	   "The email of the user"
+// @Param   phone            query    string  false 	   "The phone of the user"
+// @Param   userId           query    string  false 	   "The userId of the user"
+// @Param   fillUserProvider query    bool    false        "Should fill userProvider"
 // @Success 200 {object} object.User The Response object
 // @Failure 404 Not found
 // @router /get-user [get]
@@ -164,6 +171,8 @@ func (c *ApiController) GetUser() {
 	phone := c.Input().Get("phone")
 	userId := c.Input().Get("userId")
 	owner := c.Input().Get("owner")
+	fillUserProvider := util.ParseBool(c.Input().Get("fillUserProvider"))
+
 	var err error
 	var userFromUserId *object.User
 	if userId != "" && owner != "" {
@@ -232,6 +241,16 @@ func (c *ApiController) GetUser() {
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
+	}
+
+	if fillUserProvider {
+		userProviders, err := object.GetUserProviders(util.GetOwnerFromId(id))
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+
+		fillUserProviders([]*object.User{maskedUser}, userProviders)
 	}
 
 	c.ResponseOk(maskedUser)
@@ -757,4 +776,17 @@ func (c *ApiController) SendInvite() {
 	}
 
 	c.ResponseOk()
+}
+
+func fillUserProviders(users []*object.User, userProviders []*object.UserProvider) {
+	userProviderMap := make(map[string]*object.UserProvider)
+	for i := range userProviders {
+		userProviderMap[userProviders[i].UserId] = userProviders[i]
+	}
+
+	for i := range users {
+		if userProvider, ok := userProviderMap[users[i].Id]; ok {
+			users[i].UserProvider = userProvider
+		}
+	}
 }

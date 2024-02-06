@@ -2167,6 +2167,14 @@
                 ],
                 "description": "get global users",
                 "operationId": "ApiController.GetGlobalUsers",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "fillUserProvider",
+                        "description": "Should fill userProvider",
+                        "type": "boolean"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "The Response object",
@@ -3444,6 +3452,12 @@
                         "name": "userId",
                         "description": "The userId of the user",
                         "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "fillUserProvider",
+                        "description": "Should fill userProvider",
+                        "type": "boolean"
                     }
                 ],
                 "responses": {
@@ -3570,6 +3584,12 @@
                         "description": "The owner of users",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "fillUserProvider",
+                        "description": "Should fill userProvider",
+                        "type": "boolean"
                     }
                 ],
                 "responses": {
@@ -7801,6 +7821,9 @@
                 "updatedTime": {
                     "type": "string"
                 },
+                "userProvider": {
+                    "$ref": "#/definitions/object.UserProvider"
+                },
                 "vk": {
                     "type": "string"
                 },
@@ -7861,14 +7884,8 @@
                 "providerName": {
                     "type": "string"
                 },
-                "providerObj": {
-                    "$ref": "#/definitions/object.Provider"
-                },
                 "userId": {
                     "type": "string"
-                },
-                "userObj": {
-                    "$ref": "#/definitions/object.User"
                 },
                 "usernameFromIdp": {
                     "type": "string"
