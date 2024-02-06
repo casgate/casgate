@@ -7,13 +7,21 @@ import (
 	"github.com/xorm-io/core"
 )
 
-func (r *Repo) UpdateEntitiesFieldValue(ctx context.Context, entityName, fieldName, oldValue, newValue string) error {
+func (r *Repo) UpdateEntitiesFieldValue(ctx context.Context, entityName, fieldName, newValue string, findConditions map[string]interface{}) error {
 	bean := make(map[string]interface{})
 	bean[fieldName] = newValue
 
-	_, err := r.trm.GetEngine(ctx).Table(entityName).Where(builder.Eq{fieldName: oldValue}).Update(bean)
+	whereCond := builder.Eq{}
+	for field, value := range findConditions {
+		whereCond[field] = value
+	}
+
+	affected, err := r.trm.GetEngine(ctx).Table(entityName).Where(whereCond).Update(bean)
 	if err != nil {
 		return err
+	}
+	if affected != 0 {
+		return nil
 	}
 	return nil
 }

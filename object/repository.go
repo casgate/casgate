@@ -31,5 +31,5 @@ type Repository interface {
 	InsertUserProvider(ctx context.Context, organization *UserProvider) (int64, error)
 	UpdateUserProvider(ctx context.Context, userProvider *UserProvider) error
 
-	UpdateEntitiesFieldValue(ctx context.Context, entityName string, fieldName, oldValue, newValue string) error
+	UpdateEntitiesFieldValue(ctx context.Context, entityName string, fieldName, newValue string, findConditions map[string]interface{}) error
 }
