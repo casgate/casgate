@@ -193,6 +193,12 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal server error
   /api/add-payment:
     post:
       tags:
@@ -229,6 +235,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
   /api/add-plan:
     post:
       tags:
@@ -354,6 +362,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
   /api/add-session:
     post:
       tags:
@@ -450,11 +460,22 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal server error
   /api/add-user-keys:
     post:
       tags:
       - User API
       operationId: ApiController.AddUserkeys
+      responses:
+        "400":
+          description: Bad request
+        "500":
+          description: Internal server error
   /api/add-webhook:
     post:
       tags:
@@ -648,6 +669,11 @@ paths:
       tags:
       - User API
       operationId: ApiController.CheckUserPassword
+      responses:
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
   /api/delete-adapter:
     post:
       tags:
@@ -821,6 +847,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
   /api/delete-payment:
     post:
       tags:
@@ -857,6 +885,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
   /api/delete-plan:
     post:
       tags:
@@ -970,6 +1000,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
   /api/delete-session:
     post:
       tags:
@@ -1061,6 +1093,10 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
+        "403":
+          description: Forbidden
   /api/delete-webhook:
     post:
       tags:
@@ -1293,6 +1329,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/Response'
+        "500":
+          description: Internal server error
   /api/get-domain:
     get:
       tags:
@@ -1351,6 +1389,12 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "404":
+          description: Not found
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal server error
   /api/get-enforcer:
     get:
       tags:
@@ -1413,6 +1457,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.User'
+        "401":
+          description: Unauthoized
+        "500":
+          description: Internal server error
   /api/get-globle-certs:
     get:
       tags:
@@ -1561,6 +1609,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Organization'
+        "500":
+          description: Internal server error
   /api/get-organization-applications:
     get:
       tags:
@@ -1599,6 +1649,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Organization'
+        "500":
+          description: Internal server error
   /api/get-organizations:
     get:
       tags:
@@ -1618,6 +1670,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Organization'
+        "500":
+          description: Internal server error
   /api/get-payment:
     get:
       tags:
@@ -1671,6 +1725,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Permission'
+        "500":
+          description: Internal server error
   /api/get-permissions:
     get:
       tags:
@@ -1690,6 +1746,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Permission'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal server error
   /api/get-permissions-by-role:
     get:
       tags:
@@ -1709,6 +1769,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Permission'
+        "500":
+          description: Internal server error
   /api/get-permissions-by-submitter:
     get:
       tags:
@@ -1722,6 +1784,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Permission'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal server error
   /api/get-plan:
     get:
       tags:
@@ -2004,6 +2070,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Role'
+        "500":
+          description: Internal server error
   /api/get-roles:
     get:
       tags:
@@ -2023,6 +2091,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Role'
+        "500":
+          description: Internal server error
   /api/get-session:
     get:
       tags:
@@ -2089,6 +2159,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.User'
+        "500":
+          description: Internal server error
   /api/get-subscription:
     get:
       tags:
@@ -2250,8 +2322,12 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.User'
+        "401":
+          description: Unauthorized
         "404":
           description: Not found
+        "500":
+          description: Internal server error
   /api/get-user-application:
     get:
       tags:
@@ -2288,6 +2364,8 @@ paths:
       responses:
         "200":
           description: '{int} int The count of filtered users for an organization'
+        "500":
+          description: Internal server error
   /api/get-user-payments:
     get:
       tags:
@@ -2335,6 +2413,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.User'
+        "500":
+          description: Internal server error
   /api/get-version-info:
     get:
       tags:
@@ -2661,6 +2741,14 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/remove-user-from-group:
+    post:
+      tags:
+      - User API
+      operationId: ApiController.RemoveUserFromGroup
+      responses:
+        "500":
+          description: Internal server error
   /api/run-syncer:
     get:
       tags:
@@ -2684,6 +2772,13 @@ paths:
       tags:
       - User API
       operationId: ApiController.SendInvite
+      responses:
+        "401":
+          description: Unauthorized
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal server error
   /api/send-verification-code:
     post:
       tags:
@@ -2721,6 +2816,16 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal server error
   /api/set-preferred-mfa:
     post:
       tags:
@@ -3013,6 +3118,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
   /api/update-payment:
     post:
       tags:
@@ -3059,6 +3166,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
   /api/update-plan:
     post:
       tags:
@@ -3197,6 +3306,8 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
   /api/update-session:
     post:
       tags:
@@ -3308,6 +3419,16 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal server error
   /api/update-webhook:
     post:
       tags:
@@ -3521,10 +3642,10 @@ paths:
           schema:
             $ref: '#/definitions/object.TokenError'
 definitions:
-  174086.<nil>.string:
+  176525.<nil>.string:
     title: string
     type: object
-  294622.<nil>.string:
+  297200.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -4061,7 +4182,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/174086.<nil>.string'
+          $ref: '#/definitions/176525.<nil>.string'
       description:
         type: string
       displayName:
@@ -4475,8 +4596,6 @@ definitions:
         type: string
       enableRoleMapping:
         type: boolean
-      enableSignAuthnRequest:
-        type: boolean
       endpoint:
         type: string
       host:
@@ -4510,6 +4629,8 @@ definitions:
         type: string
       regionId:
         type: string
+      requestSignature:
+        type: string
       roleMappingItems:
         type: array
         items:
@@ -4527,7 +4648,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/294622.<nil>.string'
+        $ref: '#/definitions/297200.<nil>.string'
   object.ProviderItem:
     title: ProviderItem
     type: object
@@ -4560,6 +4681,8 @@ definitions:
         type: string
       createdTime:
         type: string
+      detail:
+        type: string
       extendedUser:
         $ref: '#/definitions/object.User'
       id:
@@ -4578,6 +4701,8 @@ definitions:
       owner:
         type: string
       requestUri:
+        type: string
+      response:
         type: string
       statusCode:
         type: string

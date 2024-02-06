@@ -28,6 +28,7 @@ import (
 // @Description get organizations
 // @Param   owner     query    string  true        "owner"
 // @Success 200 {array} object.Organization The Response object
+// @Failure 500 Internal server error
 // @router /get-organizations [get]
 func (c *ApiController) GetOrganizations() {
 	owner := c.Input().Get("owner")
@@ -51,7 +52,7 @@ func (c *ApiController) GetOrganizations() {
 		}
 
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
@@ -60,7 +61,7 @@ func (c *ApiController) GetOrganizations() {
 		if !isGlobalAdmin {
 			maskedOrganizations, err := object.GetMaskedOrganizations(object.GetOrganizations(owner, c.getCurrentUser().Owner))
 			if err != nil {
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError(err.Error())
 				return
 			}
 			c.ResponseOk(maskedOrganizations)
@@ -68,14 +69,14 @@ func (c *ApiController) GetOrganizations() {
 			limit := util.ParseInt(limit)
 			count, err := object.GetOrganizationCount(owner, field, value)
 			if err != nil {
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError(err.Error())
 				return
 			}
 
 			paginator := pagination.SetPaginator(c.Ctx, limit, count)
 			organizations, err := object.GetMaskedOrganizations(object.GetPaginationOrganizations(owner, organizationName, paginator.Offset(), limit, field, value, sortField, sortOrder))
 			if err != nil {
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError(err.Error())
 				return
 			}
 
@@ -90,12 +91,13 @@ func (c *ApiController) GetOrganizations() {
 // @Description get organization
 // @Param   id     query    string  true        "organization id"
 // @Success 200 {object} object.Organization The Response object
+// @Failure 500 Internal server error
 // @router /get-organization [get]
 func (c *ApiController) GetOrganization() {
 	id := c.Input().Get("id")
 	maskedOrganization, err := object.GetMaskedOrganization(object.GetOrganization(id))
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
@@ -109,6 +111,7 @@ func (c *ApiController) GetOrganization() {
 // @Param   id     query    string  true        "The id ( owner/name ) of the organization"
 // @Param   body    body   object.Organization  true        "The details of the organization"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad request
 // @router /update-organization [post]
 func (c *ApiController) UpdateOrganization() {
 	id := c.Input().Get("id")
@@ -116,7 +119,7 @@ func (c *ApiController) UpdateOrganization() {
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
 		return
 	}
 
@@ -130,23 +133,26 @@ func (c *ApiController) UpdateOrganization() {
 // @Description add organization
 // @Param   body    body   object.Organization  true        "The details of the organization"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad request
+// @Failure 422 Unprocessable entity
+// @Failure 500 Internal server error
 // @router /add-organization [post]
 func (c *ApiController) AddOrganization() {
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
 		return
 	}
 
 	count, err := object.GetOrganizationCount("", "", "")
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
 	if err = checkQuotaForOrganization(int(count)); err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseUnprocessableEntity(err.Error())
 		return
 	}
 
@@ -160,12 +166,13 @@ func (c *ApiController) AddOrganization() {
 // @Description delete organization
 // @Param   body    body   object.Organization  true        "The details of the organization"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad request
 // @router /delete-organization [post]
 func (c *ApiController) DeleteOrganization() {
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
 		return
 	}
 
@@ -179,6 +186,7 @@ func (c *ApiController) DeleteOrganization() {
 // @Description get default application
 // @Param   id     query    string  true        "organization id"
 // @Success 200 {object}  Response The Response object
+// @Failure 500 Internal server error
 // @router /get-default-application [get]
 func (c *ApiController) GetDefaultApplication() {
 	userId := c.GetSessionUsername()
@@ -186,7 +194,7 @@ func (c *ApiController) GetDefaultApplication() {
 
 	application, err := object.GetDefaultApplication(id)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
@@ -200,12 +208,13 @@ func (c *ApiController) GetDefaultApplication() {
 // @Param   owner     query    string    true   "owner"
 // @Description get all organization name and displayName
 // @Success 200 {array} object.Organization The Response object
+// @Failure 500 Internal server error
 // @router /get-organization-names [get]
 func (c *ApiController) GetOrganizationNames() {
 	owner := c.Input().Get("owner")
 	organizationNames, err := object.GetOrganizationsByFields(owner, []string{"name", "display_name"}...)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
