@@ -17,16 +17,24 @@ type UserIdProvider struct {
 
 func GetGlobalUserIdProviders() ([]*UserIdProvider, error) {
 	var userIdProviders []*UserIdProvider
+	var providers []*Provider
 
 	err := ormer.Engine.Asc("last_sign_in_time").Find(&userIdProviders, &UserIdProvider{})
 	if err != nil {
 		return userIdProviders, err
 	}
 
-	for _, userIdProvider := range userIdProviders {
-		err := fillProviderDisplayName(userIdProvider)
-		if err != nil {
-			return userIdProviders, err
+	err = ormer.Engine.Find(&providers, &Provider{})
+	if err != nil {
+		return userIdProviders, err
+	}
+
+	for i := range userIdProviders {
+		for _, provider := range providers {
+			if userIdProviders[i].ProviderName == provider.Name {
+				userIdProviders[i].ProviderDisplayName = provider.DisplayName
+				continue
+			}
 		}
 	}
 
@@ -35,16 +43,24 @@ func GetGlobalUserIdProviders() ([]*UserIdProvider, error) {
 
 func GetUserIdProviders(owner string) ([]*UserIdProvider, error) {
 	var userIdProviders []*UserIdProvider
+	var providers []*Provider
 
 	err := ormer.Engine.Where("owner = ? or owner = ?", "admin", owner).Asc("last_sign_in_time").Find(&userIdProviders, &UserIdProvider{})
 	if err != nil {
 		return userIdProviders, err
 	}
 
-	for _, userIdProvider := range userIdProviders {
-		err := fillProviderDisplayName(userIdProvider)
-		if err != nil {
-			return userIdProviders, err
+	err = ormer.Engine.Find(&providers, &Provider{})
+	if err != nil {
+		return userIdProviders, err
+	}
+
+	for i := range userIdProviders {
+		for _, provider := range providers {
+			if userIdProviders[i].ProviderName == provider.Name {
+				userIdProviders[i].ProviderDisplayName = provider.DisplayName
+				continue
+			}
 		}
 	}
 
@@ -74,13 +90,4 @@ func UpdateUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) e
 	return trm.WithTx(ctx, func(ctx context.Context) error {
 		return repo.UpdateUserIdProvider(ctx, userIdProvider)
 	})
-}
-
-func fillProviderDisplayName(userIdProvider *UserIdProvider) error {
-	provider, err := getProvider(userIdProvider.Owner, userIdProvider.ProviderName)
-	if err != nil {
-		return err
-	}
-	userIdProvider.ProviderDisplayName = provider.DisplayName
-	return nil
 }
