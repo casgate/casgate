@@ -67,7 +67,6 @@
     "Not implemented": "Not implemented",
     "Please login first": "Vui lòng đăng nhập trước",
     "The user: %s doesn't exist": "Người dùng: %s không tồn tại",
-    "The userProvider doesn't exist": "The userProvider doesn't exist",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "không hỗ trợ captchaProvider: ",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
@@ -90,8 +89,7 @@
   },
   "provider": {
     "Invalid application id": "Sai ID ứng dụng",
-    "the provider: %s does not exist": "Nhà cung cấp: %s không tồn tại",
-    "Can't delete provider due to using in applications: [%s]": "Can't delete provider due to using in applications: [%s]"
+    "the provider: %s does not exist": "Nhà cung cấp: %s không tồn tại"
   },
   "resource": {
     "User is nil for tag: avatar": "Người dùng không có giá trị cho thẻ: hình đại diện",

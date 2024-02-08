@@ -67,7 +67,6 @@
     "Not implemented": "Not implemented",
     "Please login first": "Silahkan login terlebih dahulu",
     "The user: %s doesn't exist": "Pengguna: %s tidak ada",
-    "The userProvider doesn't exist": "The userProvider doesn't exist",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "Jangan mendukung captchaProvider:",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
@@ -90,8 +89,7 @@
   },
   "provider": {
     "Invalid application id": "ID aplikasi tidak valid",
-    "the provider: %s does not exist": "provider: %s tidak ada",
-    "Can't delete provider due to using in applications: [%s]": "Can't delete provider due to using in applications: [%s]"
+    "the provider: %s does not exist": "provider: %s tidak ada"
   },
   "resource": {
     "User is nil for tag: avatar": "Pengguna kosong untuk tag: avatar",

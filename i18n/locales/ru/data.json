@@ -67,7 +67,6 @@
     "Not implemented": "Not implemented",
     "Please login first": "Пожалуйста, сначала войдите в систему",
     "The user: %s doesn't exist": "Пользователь %s не существует",
-    "The userProvider doesn't exist": "The userProvider doesn't exist",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "не поддерживайте captchaProvider:",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
@@ -90,8 +89,7 @@
   },
   "provider": {
     "Invalid application id": "Неверный идентификатор приложения",
-    "the provider: %s does not exist": "провайдер: %s не существует",
-    "Can't delete provider due to using in applications: [%s]": "Не могу удалить провайдер тк он используется в приложениях: [%s]"
+    "the provider: %s does not exist": "провайдер: %s не существует"
   },
   "resource": {
     "User is nil for tag: avatar": "Пользователь равен нулю для тега: аватар",

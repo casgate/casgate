@@ -67,7 +67,6 @@
     "Not implemented": "Not implemented",
     "Please login first": "Please login first",
     "The user: %s doesn't exist": "The user: %s doesn't exist",
-    "The userProvider doesn't exist": "The userProvider doesn't exist",
     "Unexpected status code %s": "Unexpected status code %s",
     "don't support captchaProvider: ": "don't support captchaProvider: ",
     "this operation is not allowed in demo mode": "this operation is not allowed in demo mode"
@@ -90,8 +89,7 @@
   },
   "provider": {
     "Invalid application id": "Invalid application id",
-    "the provider: %s does not exist": "the provider: %s does not exist",
-    "Can't delete provider due to using in applications: [%s]": "Can't delete provider due to using in applications: [%s]"
+    "the provider: %s does not exist": "the provider: %s does not exist"
   },
   "resource": {
     "User is nil for tag: avatar": "User is nil for tag: avatar",
