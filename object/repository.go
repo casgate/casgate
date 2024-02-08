@@ -27,7 +27,7 @@ type Repository interface {
 
 	GetModel(ctx context.Context, owner string, name string, forUpdate bool) (*Model, error)
 
-	GetUserProvider(ctx context.Context, owner, providerName, usernameFromIdp string, forUpdate bool) (*UserProvider, error)
+	GetUserProvider(ctx context.Context, owner, providerName, usernameFromIdp string) (*UserProvider, error)
 	InsertUserProvider(ctx context.Context, organization *UserProvider) (int64, error)
 	UpdateUserProvider(ctx context.Context, userProvider *UserProvider) error
 

@@ -26,11 +26,11 @@ func GetGlobalUserProviders() ([]*UserProvider, error) {
 	for _, userProvider := range userProviders {
 		err := fillProviderDisplayName(userProvider)
 		if err != nil {
-			return nil, err
+			return userProviders, err
 		}
 	}
 
-	return userProviders, nil
+	return userProviders, err
 }
 
 func GetUserProviders(owner string) ([]*UserProvider, error) {
@@ -44,27 +44,25 @@ func GetUserProviders(owner string) ([]*UserProvider, error) {
 	for _, userProvider := range userProviders {
 		err := fillProviderDisplayName(userProvider)
 		if err != nil {
-			return nil, err
+			return userProviders, err
 		}
 	}
 
-	return userProviders, nil
+	return userProviders, err
 }
 
 func AddUserProvider(ctx context.Context, userProvider *UserProvider) (bool, error) {
 	var affected int64
 	err := trm.WithTx(ctx, func(ctx context.Context) error {
-		existedUserProvider, err := repo.GetUserProvider(ctx, userProvider.Owner, userProvider.ProviderName, userProvider.UsernameFromIdp, false)
+		existedUserProvider, err := repo.GetUserProvider(ctx, userProvider.Owner, userProvider.ProviderName, userProvider.UsernameFromIdp)
 		if err != nil {
 			return err
 		}
-		if existedUserProvider != nil {
-			return nil
-		}
-
-		affected, err = repo.InsertUserProvider(ctx, userProvider)
-		if err != nil {
-			return err
+		if existedUserProvider == nil {
+			affected, err = repo.InsertUserProvider(ctx, userProvider)
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	})
@@ -73,15 +71,9 @@ func AddUserProvider(ctx context.Context, userProvider *UserProvider) (bool, err
 }
 
 func UpdateUserProvider(ctx context.Context, userProvider *UserProvider) error {
-	err := trm.WithTx(ctx, func(ctx context.Context) error {
-		err := repo.UpdateUserProvider(ctx, userProvider)
-		if err != nil {
-			return err
-		}
-		return nil
+	return trm.WithTx(ctx, func(ctx context.Context) error {
+		return repo.UpdateUserProvider(ctx, userProvider)
 	})
-
-	return err
 }
 
 func fillProviderDisplayName(userProvider *UserProvider) error {

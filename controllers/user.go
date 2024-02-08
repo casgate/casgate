@@ -37,7 +37,7 @@ type GetEmailAndPhoneResp struct {
 // @Title GetGlobalUsers
 // @Tag User API
 // @Description get global users
-// @Param   fillUserProvider query    bool    false       "Should fill userProvider"
+// @Param fillUserProvider query bool false "Should fill userProvider"
 // @Success 200 {array} object.User The Response object
 // @Failure 401 Unauthoized
 // @Failure 500 Internal server error
@@ -60,7 +60,7 @@ func (c *ApiController) GetGlobalUsers() {
 	if limitParam == "" || page == "" {
 		limit = -1
 	} else {
-		limit = util.ParseInt(limitParam)
+		limit = max(100, util.ParseInt(limitParam))
 	}
 
 	count, err := object.GetGlobalUserCount(field, value)
@@ -99,8 +99,8 @@ func (c *ApiController) GetGlobalUsers() {
 // @Title GetUsers
 // @Tag User API
 // @Description
-// @Param   owner     		 query    string  true        "The owner of users"
-// @Param   fillUserProvider query    bool    false       "Should fill userProvider"
+// @Param owner query string true "The owner of users"
+// @Param fillUserProvider query bool false "Should fill userProvider"
 // @Success 200 {array} object.User The Response object
 // @Failure 500 Internal server error
 // @router /get-users [get]
@@ -119,7 +119,7 @@ func (c *ApiController) GetUsers() {
 	if limitParam == "" || page == "" {
 		limit = -1
 	} else {
-		limit = util.ParseInt(limitParam)
+		limit = max(100, util.ParseInt(limitParam))
 	}
 
 	count, err := object.GetUserCount(owner, field, value, groupName)
@@ -144,7 +144,7 @@ func (c *ApiController) GetUsers() {
 	if fillUserProvider {
 		userProviders, err := object.GetUserProviders(owner)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
@@ -250,7 +250,7 @@ func (c *ApiController) GetUser() {
 	if fillUserProvider {
 		userProviders, err := object.GetUserProviders(util.GetOwnerFromId(id))
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError(err.Error())
 			return
 		}
 

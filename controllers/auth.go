@@ -611,7 +611,7 @@ func (c *ApiController) Login() {
 					LastSignInTime:  util.GetCurrentTime(),
 				})
 				if err != nil {
-					c.ResponseError(err.Error())
+					c.ResponseInternalServerError(err.Error())
 					return
 				}
 			} else if provider.Category == "OAuth" || provider.Category == "Web3" || provider.Category == "SAML" {
