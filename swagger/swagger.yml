@@ -494,128 +494,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
-  /api/api/Callback:
-    post:
-      tags:
-      - Callback API
-      description: Get Login Error Counts
-      operationId: ApiController.Callback
-  /api/api/get-captcha:
-    get:
-      tags:
-      - Login API
-      operationId: ApiController.GetCaptcha
-  /api/api/get-captcha-status:
-    get:
-      tags:
-      - Token API
-      description: Get Login Error Counts
-      operationId: ApiController.GetCaptchaStatus
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of user
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/api/get-webhook-event:
-    get:
-      tags:
-      - GetWebhookEventType API
-      operationId: ApiController.GetWebhookEventType
-  /api/api/reset-email-or-phone:
-    post:
-      tags:
-      - Account API
-      operationId: ApiController.ResetEmailOrPhone
-  /api/api/send-email:
-    post:
-      tags:
-      - Service API
-      description: This API is not for Casdoor frontend to call, it is for Casdoor SDKs.
-      operationId: ApiController.SendEmail
-      parameters:
-      - in: query
-        name: clientId
-        description: The clientId of the application
-        required: true
-        type: string
-      - in: query
-        name: clientSecret
-        description: The clientSecret of the application
-        required: true
-        type: string
-      - in: body
-        name: from
-        description: Details of the email request
-        required: true
-        schema:
-          $ref: '#/definitions/controllers.EmailForm'
-      responses:
-        "200":
-          description: object
-          schema:
-            $ref: '#/definitions/Response'
-  /api/api/send-notification:
-    post:
-      tags:
-      - Service API
-      description: This API is not for Casdoor frontend to call, it is for Casdoor SDKs.
-      operationId: ApiController.SendNotification
-      parameters:
-      - in: body
-        name: from
-        description: Details of the notification request
-        required: true
-        schema:
-          $ref: '#/definitions/controllers.NotificationForm'
-      responses:
-        "200":
-          description: object
-          schema:
-            $ref: '#/definitions/Response'
-  /api/api/send-sms:
-    post:
-      tags:
-      - Service API
-      description: This API is not for Casdoor frontend to call, it is for Casdoor SDKs.
-      operationId: ApiController.SendSms
-      parameters:
-      - in: query
-        name: clientId
-        description: The clientId of the application
-        required: true
-        type: string
-      - in: query
-        name: clientSecret
-        description: The clientSecret of the application
-        required: true
-        type: string
-      - in: body
-        name: from
-        description: Details of the sms request
-        required: true
-        schema:
-          $ref: '#/definitions/controllers.SmsForm'
-      responses:
-        "200":
-          description: object
-          schema:
-            $ref: '#/definitions/Response'
-  /api/api/verify-code:
-    post:
-      tags:
-      - Verification API
-      operationId: ApiController.VerifyCode
-  /api/api/webhook:
-    post:
-      tags:
-      - HandleOfficialAccountEvent API
-      operationId: ApiController.HandleOfficialAccountEvent
   /api/batch-enforce:
     post:
       tags:
@@ -664,6 +542,12 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/callback:
+    post:
+      tags:
+      - Callback API
+      description: Get Login Error Counts
+      operationId: ApiController.Callback
   /api/check-user-password:
     post:
       tags:
@@ -1265,6 +1149,28 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Application'
+  /api/get-captcha:
+    get:
+      tags:
+      - Login API
+      operationId: ApiController.GetCaptcha
+  /api/get-captcha-status:
+    get:
+      tags:
+      - Token API
+      description: Get Login Error Counts
+      operationId: ApiController.GetCaptchaStatus
+      parameters:
+      - in: query
+        name: id
+        description: The id ( owner/name ) of user
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/get-cert:
     get:
       tags:
@@ -2444,6 +2350,11 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Webhook'
+  /api/get-webhook-event:
+    get:
+      tags:
+      - GetWebhookEventType API
+      operationId: ApiController.GetWebhookEventType
   /api/get-webhooks:
     get:
       tags:
@@ -2571,6 +2482,46 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/login/oauth/access_token:
+    post:
+      tags:
+      - Token API
+      description: get OAuth access token
+      operationId: ApiController.GetOAuthToken
+      parameters:
+      - in: query
+        name: grant_type
+        description: OAuth grant type
+        required: true
+        type: string
+      - in: query
+        name: client_id
+        description: OAuth client id
+        required: true
+        type: string
+      - in: query
+        name: client_secret
+        description: OAuth client secret
+        required: true
+        type: string
+      - in: query
+        name: code
+        description: OAuth code
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.TokenWrapper'
+        "400":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.TokenError'
+        "401":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.TokenError'
   /api/login/oauth/introspect:
     post:
       description: The introspection endpoint is an OAuth 2.0 endpoint that takes a
@@ -2749,6 +2700,11 @@ paths:
       responses:
         "500":
           description: Internal server error
+  /api/reset-email-or-phone:
+    post:
+      tags:
+      - Account API
+      operationId: ApiController.ResetEmailOrPhone
   /api/run-syncer:
     get:
       tags:
@@ -2767,6 +2723,34 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/send-email:
+    post:
+      tags:
+      - Service API
+      description: This API is not for Casdoor frontend to call, it is for Casdoor SDKs.
+      operationId: ApiController.SendEmail
+      parameters:
+      - in: query
+        name: clientId
+        description: The clientId of the application
+        required: true
+        type: string
+      - in: query
+        name: clientSecret
+        description: The clientSecret of the application
+        required: true
+        type: string
+      - in: body
+        name: from
+        description: Details of the email request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.EmailForm'
+      responses:
+        "200":
+          description: object
+          schema:
+            $ref: '#/definitions/Response'
   /api/send-invite:
     post:
       tags:
@@ -2779,6 +2763,52 @@ paths:
           description: Unprocessable entity
         "500":
           description: Internal server error
+  /api/send-notification:
+    post:
+      tags:
+      - Service API
+      description: This API is not for Casdoor frontend to call, it is for Casdoor SDKs.
+      operationId: ApiController.SendNotification
+      parameters:
+      - in: body
+        name: from
+        description: Details of the notification request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.NotificationForm'
+      responses:
+        "200":
+          description: object
+          schema:
+            $ref: '#/definitions/Response'
+  /api/send-sms:
+    post:
+      tags:
+      - Service API
+      description: This API is not for Casdoor frontend to call, it is for Casdoor SDKs.
+      operationId: ApiController.SendSms
+      parameters:
+      - in: query
+        name: clientId
+        description: The clientId of the application
+        required: true
+        type: string
+      - in: query
+        name: clientSecret
+        description: The clientSecret of the application
+        required: true
+        type: string
+      - in: body
+        name: from
+        description: Details of the sms request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.SmsForm'
+      responses:
+        "200":
+          description: object
+          schema:
+            $ref: '#/definitions/Response'
   /api/send-verification-code:
     post:
       tags:
@@ -3532,6 +3562,11 @@ paths:
       tags:
       - Verification API
       operationId: ApiController.VerifyCaptcha
+  /api/verify-code:
+    post:
+      tags:
+      - Verification API
+      operationId: ApiController.VerifyCode
   /api/webauthn/signin/begin:
     get:
       tags:
@@ -3601,46 +3636,11 @@ paths:
           description: '"The Response object"'
           schema:
             $ref: '#/definitions/controllers.Response'
-  /apiapi/login/oauth/access_token:
+  /api/webhook:
     post:
       tags:
-      - Token API
-      description: get OAuth access token
-      operationId: ApiController.GetOAuthToken
-      parameters:
-      - in: query
-        name: grant_type
-        description: OAuth grant type
-        required: true
-        type: string
-      - in: query
-        name: client_id
-        description: OAuth client id
-        required: true
-        type: string
-      - in: query
-        name: client_secret
-        description: OAuth client secret
-        required: true
-        type: string
-      - in: query
-        name: code
-        description: OAuth code
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.TokenWrapper'
-        "400":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.TokenError'
-        "401":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.TokenError'
+      - HandleOfficialAccountEvent API
+      operationId: ApiController.HandleOfficialAccountEvent
 definitions:
   176525.<nil>.string:
     title: string

@@ -512,7 +512,7 @@ func (c *ApiController) GetUserinfo2() {
 // GetCaptcha ...
 // @Tag Login API
 // @Title GetCaptcha
-// @router /api/get-captcha [get]
+// @router /get-captcha [get]
 func (c *ApiController) GetCaptcha() {
 	applicationId := c.Input().Get("applicationId")
 	isCurrentProvider := c.Input().Get("isCurrentProvider")
