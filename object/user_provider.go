@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-type UserProvider struct {
+type UserIdProvider struct {
 	ProviderDisplayName string `xorm:"-" json:"providerDisplayName"`
 
 	CreatedTime     string `xorm:"varchar(100)" json:"createdTime"`
@@ -15,51 +15,51 @@ type UserProvider struct {
 	Owner           string `xorm:"varchar(100)" json:"owner"`
 }
 
-func GetGlobalUserProviders() ([]*UserProvider, error) {
-	var userProviders []*UserProvider
+func GetGlobalUserIdProviders() ([]*UserIdProvider, error) {
+	var userIdProviders []*UserIdProvider
 
-	err := ormer.Engine.Asc("last_sign_in_time").Find(&userProviders, &UserProvider{})
+	err := ormer.Engine.Asc("last_sign_in_time").Find(&userIdProviders, &UserIdProvider{})
 	if err != nil {
-		return userProviders, err
+		return userIdProviders, err
 	}
 
-	for _, userProvider := range userProviders {
-		err := fillProviderDisplayName(userProvider)
+	for _, userIdProvider := range userIdProviders {
+		err := fillProviderDisplayName(userIdProvider)
 		if err != nil {
-			return userProviders, err
+			return userIdProviders, err
 		}
 	}
 
-	return userProviders, err
+	return userIdProviders, err
 }
 
-func GetUserProviders(owner string) ([]*UserProvider, error) {
-	var userProviders []*UserProvider
+func GetUserIdProviders(owner string) ([]*UserIdProvider, error) {
+	var userIdProviders []*UserIdProvider
 
-	err := ormer.Engine.Where("owner = ? or owner = ?", "admin", owner).Asc("last_sign_in_time").Find(&userProviders, &UserProvider{})
+	err := ormer.Engine.Where("owner = ? or owner = ?", "admin", owner).Asc("last_sign_in_time").Find(&userIdProviders, &UserIdProvider{})
 	if err != nil {
-		return userProviders, err
+		return userIdProviders, err
 	}
 
-	for _, userProvider := range userProviders {
-		err := fillProviderDisplayName(userProvider)
+	for _, userIdProvider := range userIdProviders {
+		err := fillProviderDisplayName(userIdProvider)
 		if err != nil {
-			return userProviders, err
+			return userIdProviders, err
 		}
 	}
 
-	return userProviders, err
+	return userIdProviders, err
 }
 
-func AddUserProvider(ctx context.Context, userProvider *UserProvider) (bool, error) {
+func AddUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) (bool, error) {
 	var affected int64
 	err := trm.WithTx(ctx, func(ctx context.Context) error {
-		existedUserProvider, err := repo.GetUserProvider(ctx, userProvider.Owner, userProvider.ProviderName, userProvider.UsernameFromIdp)
+		existedUserIdProvider, err := repo.GetUserIdProvider(ctx, userIdProvider.Owner, userIdProvider.ProviderName, userIdProvider.UsernameFromIdp)
 		if err != nil {
 			return err
 		}
-		if existedUserProvider == nil {
-			affected, err = repo.InsertUserProvider(ctx, userProvider)
+		if existedUserIdProvider == nil {
+			affected, err = repo.InsertUserIdProvider(ctx, userIdProvider)
 			if err != nil {
 				return err
 			}
@@ -70,17 +70,17 @@ func AddUserProvider(ctx context.Context, userProvider *UserProvider) (bool, err
 	return affected != 0, err
 }
 
-func UpdateUserProvider(ctx context.Context, userProvider *UserProvider) error {
+func UpdateUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) error {
 	return trm.WithTx(ctx, func(ctx context.Context) error {
-		return repo.UpdateUserProvider(ctx, userProvider)
+		return repo.UpdateUserIdProvider(ctx, userIdProvider)
 	})
 }
 
-func fillProviderDisplayName(userProvider *UserProvider) error {
-	provider, err := getProvider(userProvider.Owner, userProvider.ProviderName)
+func fillProviderDisplayName(userIdProvider *UserIdProvider) error {
+	provider, err := getProvider(userIdProvider.Owner, userIdProvider.ProviderName)
 	if err != nil {
 		return err
 	}
-	userProvider.ProviderDisplayName = provider.DisplayName
+	userIdProvider.ProviderDisplayName = provider.DisplayName
 	return nil
 }

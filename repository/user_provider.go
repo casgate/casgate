@@ -6,35 +6,35 @@ import (
 	"github.com/casdoor/casdoor/object"
 )
 
-func (r *Repo) GetUserProvider(ctx context.Context, owner, providerName, usernameFromIdp string) (*object.UserProvider, error) {
+func (r *Repo) GetUserIdProvider(ctx context.Context, owner, providerName, usernameFromIdp string) (*object.UserIdProvider, error) {
 	if owner == "" || providerName == "" || usernameFromIdp == "" {
 		return nil, nil
 	}
 
 	query := r.trm.GetEngine(ctx).Where("owner = ? and provider_name = ? and username_from_idp = ?", owner, providerName, usernameFromIdp)
 
-	userProvider := object.UserProvider{Owner: owner, ProviderName: providerName, UsernameFromIdp: usernameFromIdp}
-	existed, err := query.Get(&userProvider)
+	userIdProvider := object.UserIdProvider{Owner: owner, ProviderName: providerName, UsernameFromIdp: usernameFromIdp}
+	existed, err := query.Get(&userIdProvider)
 	if err != nil {
 		return nil, err
 	}
 
 	if existed {
-		return &userProvider, nil
+		return &userIdProvider, nil
 	}
 
 	return nil, nil
 }
 
-func (r *Repo) InsertUserProvider(ctx context.Context, userProvider *object.UserProvider) (int64, error) {
-	return r.insertEntity(ctx, userProvider)
+func (r *Repo) InsertUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider) (int64, error) {
+	return r.insertEntity(ctx, userIdProvider)
 }
 
-func (r *Repo) UpdateUserProvider(ctx context.Context, userProvider *object.UserProvider) error {
-	return r.UpdateEntitiesFieldValue(ctx, "user_provider", "last_sign_in_time", userProvider.LastSignInTime,
+func (r *Repo) UpdateUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider) error {
+	return r.UpdateEntitiesFieldValue(ctx, "user_id_provider", "last_sign_in_time", userIdProvider.LastSignInTime,
 		map[string]interface{}{
-			"owner":             userProvider.Owner,
-			"provider_name":     userProvider.ProviderName,
-			"username_from_idp": userProvider.UsernameFromIdp,
+			"owner":             userIdProvider.Owner,
+			"provider_name":     userIdProvider.ProviderName,
+			"username_from_idp": userIdProvider.UsernameFromIdp,
 		})
 }

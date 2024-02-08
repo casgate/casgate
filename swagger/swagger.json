@@ -2237,8 +2237,8 @@
                 "parameters": [
                     {
                         "in": "query",
-                        "name": "fillUserProvider",
-                        "description": "Should fill userProvider",
+                        "name": "fillUserIdProvider",
+                        "description": "Should fill userIdProvider",
                         "type": "boolean"
                     }
                 ],
@@ -3564,8 +3564,8 @@
                     },
                     {
                         "in": "query",
-                        "name": "fillUserProvider",
-                        "description": "Should fill userProvider",
+                        "name": "fillUserIdProvider",
+                        "description": "Should fill userIdProvider",
                         "type": "boolean"
                     }
                 ],
@@ -3705,8 +3705,8 @@
                     },
                     {
                         "in": "query",
-                        "name": "fillUserProvider",
-                        "description": "Should fill userProvider",
+                        "name": "fillUserIdProvider",
+                        "description": "Should fill userIdProvider",
                         "type": "boolean"
                     }
                 ],
@@ -8011,8 +8011,8 @@
                 "updatedTime": {
                     "type": "string"
                 },
-                "userProvider": {
-                    "$ref": "#/definitions/object.UserProvider"
+                "userIdProvider": {
+                    "$ref": "#/definitions/object.UserIdProvider"
                 },
                 "vk": {
                     "type": "string"
@@ -8055,8 +8055,8 @@
                 }
             }
         },
-        "object.UserProvider": {
-            "title": "UserProvider",
+        "object.UserIdProvider": {
+            "title": "UserIdProvider",
             "type": "object",
             "properties": {
                 "createdTime": {

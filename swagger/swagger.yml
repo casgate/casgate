@@ -1452,8 +1452,8 @@ paths:
       operationId: ApiController.GetGlobalUsers
       parameters:
       - in: query
-        name: fillUserProvider
-        description: Should fill userProvider
+        name: fillUserIdProvider
+        description: Should fill userIdProvider
         type: boolean
       responses:
         "200":
@@ -2323,8 +2323,8 @@ paths:
         description: The userId of the user
         type: string
       - in: query
-        name: fillUserProvider
-        description: Should fill userProvider
+        name: fillUserIdProvider
+        description: Should fill userIdProvider
         type: boolean
       responses:
         "200":
@@ -2416,8 +2416,8 @@ paths:
         required: true
         type: string
       - in: query
-        name: fillUserProvider
-        description: Should fill userProvider
+        name: fillUserIdProvider
+        description: Should fill userIdProvider
         type: boolean
       responses:
         "200":
@@ -5287,8 +5287,8 @@ definitions:
         type: string
       updatedTime:
         type: string
-      userProvider:
-        $ref: '#/definitions/object.UserProvider'
+      userIdProvider:
+        $ref: '#/definitions/object.UserIdProvider'
       vk:
         type: string
       web3onboard:
@@ -5315,8 +5315,8 @@ definitions:
         type: string
       zoom:
         type: string
-  object.UserProvider:
-    title: UserProvider
+  object.UserIdProvider:
+    title: UserIdProvider
     type: object
     properties:
       createdTime:

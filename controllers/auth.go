@@ -604,7 +604,7 @@ func (c *ApiController) Login() {
 					Build()
 				object.SaveOnSuccess(c.Ctx, record)
 
-				err = object.UpdateUserProvider(c.Ctx.Request.Context(), &object.UserProvider{
+				err = object.UpdateUserIdProvider(c.Ctx.Request.Context(), &object.UserIdProvider{
 					Owner:           organization.Name,
 					ProviderName:    provider.Name,
 					UsernameFromIdp: userInfo.Username,
@@ -735,7 +735,7 @@ func (c *ApiController) Login() {
 					return
 				}
 
-				_, err = object.AddUserProvider(c.Ctx.Request.Context(), &object.UserProvider{
+				_, err = object.AddUserIdProvider(c.Ctx.Request.Context(), &object.UserIdProvider{
 					ProviderName:    provider.Name,
 					UserId:          user.Id,
 					UsernameFromIdp: userInfo.Username,

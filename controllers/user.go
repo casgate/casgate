@@ -37,7 +37,7 @@ type GetEmailAndPhoneResp struct {
 // @Title GetGlobalUsers
 // @Tag User API
 // @Description get global users
-// @Param fillUserProvider query bool false "Should fill userProvider"
+// @Param fillUserIdProvider query bool false "Should fill userIdProvider"
 // @Success 200 {array} object.User The Response object
 // @Failure 401 Unauthoized
 // @Failure 500 Internal server error
@@ -49,7 +49,7 @@ func (c *ApiController) GetGlobalUsers() {
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
-	fillUserProvider := util.ParseBool(c.Input().Get("fillUserProvider"))
+	fillUserIdProvider := util.ParseBool(c.Input().Get("fillUserIdProvider"))
 
 	if _, res := c.RequireAdmin(); !res {
 		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
@@ -82,14 +82,14 @@ func (c *ApiController) GetGlobalUsers() {
 		return
 	}
 
-	if fillUserProvider {
-		userProviders, err := object.GetGlobalUserProviders()
+	if fillUserIdProvider {
+		userIdProviders, err := object.GetGlobalUserIdProviders()
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
-		fillUserProviders(users, userProviders)
+		fillUserIdProviders(users, userIdProviders)
 	}
 
 	c.ResponseOk(users, paginator.Nums())
@@ -100,7 +100,7 @@ func (c *ApiController) GetGlobalUsers() {
 // @Tag User API
 // @Description
 // @Param owner query string true "The owner of users"
-// @Param fillUserProvider query bool false "Should fill userProvider"
+// @Param fillUserIdProvider query bool false "Should fill userIdProvider"
 // @Success 200 {array} object.User The Response object
 // @Failure 500 Internal server error
 // @router /get-users [get]
@@ -113,7 +113,7 @@ func (c *ApiController) GetUsers() {
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
-	fillUserProvider := util.ParseBool(c.Input().Get("fillUserProvider"))
+	fillUserIdProvider := util.ParseBool(c.Input().Get("fillUserIdProvider"))
 
 	var limit int
 	if limitParam == "" || page == "" {
@@ -141,14 +141,14 @@ func (c *ApiController) GetUsers() {
 		return
 	}
 
-	if fillUserProvider {
-		userProviders, err := object.GetUserProviders(owner)
+	if fillUserIdProvider {
+		userIdProviders, err := object.GetUserIdProviders(owner)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
-		fillUserProviders(users, userProviders)
+		fillUserIdProviders(users, userIdProviders)
 	}
 
 	c.ResponseOk(users, paginator.Nums())
@@ -163,7 +163,7 @@ func (c *ApiController) GetUsers() {
 // @Param   email            query    string  false 	   "The email of the user"
 // @Param   phone            query    string  false 	   "The phone of the user"
 // @Param   userId           query    string  false 	   "The userId of the user"
-// @Param   fillUserProvider query    bool    false        "Should fill userProvider"
+// @Param   fillUserIdProvider query    bool    false        "Should fill userIdProvider"
 // @Success 200 {object} object.User The Response object
 // @Failure 401 Unauthorized
 // @Failure 404 Not found
@@ -175,7 +175,7 @@ func (c *ApiController) GetUser() {
 	phone := c.Input().Get("phone")
 	userId := c.Input().Get("userId")
 	owner := c.Input().Get("owner")
-	fillUserProvider := util.ParseBool(c.Input().Get("fillUserProvider"))
+	fillUserIdProvider := util.ParseBool(c.Input().Get("fillUserIdProvider"))
 
 	var err error
 	var userFromUserId *object.User
@@ -247,14 +247,14 @@ func (c *ApiController) GetUser() {
 		return
 	}
 
-	if fillUserProvider {
-		userProviders, err := object.GetUserProviders(util.GetOwnerFromId(id))
+	if fillUserIdProvider {
+		userIdProviders, err := object.GetUserIdProviders(util.GetOwnerFromId(id))
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
-		fillUserProviders([]*object.User{maskedUser}, userProviders)
+		fillUserIdProviders([]*object.User{maskedUser}, userIdProviders)
 	}
 
 	c.ResponseOk(maskedUser)
@@ -815,15 +815,15 @@ func (c *ApiController) SendInvite() {
 	c.ResponseOk()
 }
 
-func fillUserProviders(users []*object.User, userProviders []*object.UserProvider) {
-	userProviderMap := make(map[string]*object.UserProvider)
-	for i := range userProviders {
-		userProviderMap[userProviders[i].UserId] = userProviders[i]
+func fillUserIdProviders(users []*object.User, userIdProviders []*object.UserIdProvider) {
+	userIdProviderMap := make(map[string]*object.UserIdProvider)
+	for i := range userIdProviders {
+		userIdProviderMap[userIdProviders[i].UserId] = userIdProviders[i]
 	}
 
 	for i := range users {
-		if userProvider, ok := userProviderMap[users[i].Id]; ok {
-			users[i].UserProvider = userProvider
+		if userIdProvider, ok := userIdProviderMap[users[i].Id]; ok {
+			users[i].UserIdProvider = userIdProvider
 		}
 	}
 }
