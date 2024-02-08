@@ -603,6 +603,17 @@ func (c *ApiController) Login() {
 					WithDetail("User logged in").
 					Build()
 				object.SaveOnSuccess(c.Ctx, record)
+
+				err = object.UpdateUserIdProvider(c.Ctx.Request.Context(), &object.UserIdProvider{
+					Owner:           organization.Name,
+					ProviderName:    provider.Name,
+					UsernameFromIdp: userInfo.Username,
+					LastSignInTime:  util.GetCurrentTime(),
+				})
+				if err != nil {
+					c.ResponseInternalServerError(err.Error())
+					return
+				}
 			} else if provider.Category == "OAuth" || provider.Category == "Web3" || provider.Category == "SAML" {
 				// Sign up via OAuth/Web3/SAML
 				if application.EnableLinkWithEmail {
@@ -719,6 +730,19 @@ func (c *ApiController) Login() {
 				}
 
 				_, err = object.LinkUserAccount(user, provider.Type, userInfo.Id)
+				if err != nil {
+					c.ResponseError(err.Error())
+					return
+				}
+
+				_, err = object.AddUserIdProvider(c.Ctx.Request.Context(), &object.UserIdProvider{
+					ProviderName:    provider.Name,
+					UserId:          user.Id,
+					UsernameFromIdp: userInfo.Username,
+					Owner:           organization.Name,
+					LastSignInTime:  util.GetCurrentTime(),
+					CreatedTime:     util.GetCurrentTime(),
+				})
 				if err != nil {
 					c.ResponseError(err.Error())
 					return

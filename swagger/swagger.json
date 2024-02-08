@@ -2234,6 +2234,14 @@
                 ],
                 "description": "get global users",
                 "operationId": "ApiController.GetGlobalUsers",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "fillUserIdProvider",
+                        "description": "Should fill userIdProvider",
+                        "type": "boolean"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "The Response object",
@@ -3553,6 +3561,12 @@
                         "name": "userId",
                         "description": "The userId of the user",
                         "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "fillUserIdProvider",
+                        "description": "Should fill userIdProvider",
+                        "type": "boolean"
                     }
                 ],
                 "responses": {
@@ -3688,6 +3702,12 @@
                         "description": "The owner of users",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "fillUserIdProvider",
+                        "description": "Should fill userIdProvider",
+                        "type": "boolean"
                     }
                 ],
                 "responses": {
@@ -7991,6 +8011,9 @@
                 "updatedTime": {
                     "type": "string"
                 },
+                "userIdProvider": {
+                    "$ref": "#/definitions/object.UserIdProvider"
+                },
                 "vk": {
                     "type": "string"
                 },
@@ -8028,6 +8051,33 @@
                     "type": "string"
                 },
                 "zoom": {
+                    "type": "string"
+                }
+            }
+        },
+        "object.UserIdProvider": {
+            "title": "UserIdProvider",
+            "type": "object",
+            "properties": {
+                "createdTime": {
+                    "type": "string"
+                },
+                "lastSignInTime": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "string"
+                },
+                "providerDisplayName": {
+                    "type": "string"
+                },
+                "providerName": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                },
+                "usernameFromIdp": {
                     "type": "string"
                 }
             }

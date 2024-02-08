@@ -344,17 +344,17 @@ func GetDefaultApplication(id string) (*Application, error) {
 }
 
 func organizationChangeTrigger(ctx context.Context, oldName string, newName string) error {
-	err := repo.UpdateEntitiesFieldValue(ctx, "application", "organization", oldName, newName)
+	err := repo.UpdateEntitiesFieldValue(ctx, "application", "organization", newName, map[string]interface{}{"organization": oldName})
 	if err != nil {
 		return err
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "user", "owner", oldName, newName)
+	err = repo.UpdateEntitiesFieldValue(ctx, "user", "owner", newName, map[string]interface{}{"owner": oldName})
 	if err != nil {
 		return err
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "group", "owner", oldName, newName)
+	err = repo.UpdateEntitiesFieldValue(ctx, "group", "owner", newName, map[string]interface{}{"owner": oldName})
 	if err != nil {
 		return err
 	}
@@ -462,42 +462,42 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 		}
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "adapter", "owner", oldName, newName)
+	err = repo.UpdateEntitiesFieldValue(ctx, "adapter", "owner", newName, map[string]interface{}{"owner": oldName})
 	if err != nil {
 		return err
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "ldap", "owner", oldName, newName)
+	err = repo.UpdateEntitiesFieldValue(ctx, "ldap", "owner", newName, map[string]interface{}{"owner": oldName})
 	if err != nil {
 		return err
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "model", "owner", oldName, newName)
+	err = repo.UpdateEntitiesFieldValue(ctx, "model", "owner", newName, map[string]interface{}{"owner": oldName})
 	if err != nil {
 		return err
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "payment", "owner", oldName, newName)
+	err = repo.UpdateEntitiesFieldValue(ctx, "payment", "owner", newName, map[string]interface{}{"owner": oldName})
 	if err != nil {
 		return err
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "resource", "owner", oldName, newName)
+	err = repo.UpdateEntitiesFieldValue(ctx, "resource", "owner", newName, map[string]interface{}{"owner": oldName})
 	if err != nil {
 		return err
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "syncer", "organization", oldName, newName)
+	err = repo.UpdateEntitiesFieldValue(ctx, "syncer", "organization", newName, map[string]interface{}{"organization": oldName})
 	if err != nil {
 		return err
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "token", "organization", oldName, newName)
+	err = repo.UpdateEntitiesFieldValue(ctx, "token", "organization", newName, map[string]interface{}{"organization": oldName})
 	if err != nil {
 		return err
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "webhook", "organization", oldName, newName)
+	err = repo.UpdateEntitiesFieldValue(ctx, "webhook", "organization", newName, map[string]interface{}{"organization": oldName})
 	if err != nil {
 		return err
 	}

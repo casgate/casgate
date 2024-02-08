@@ -89,8 +89,7 @@
   },
   "provider": {
     "Invalid application id": "ID aplikasi tidak valid",
-    "the provider: %s does not exist": "provider: %s tidak ada",
-    "Can't delete provider due to using in applications: [%s]": "Can't delete provider due to using in applications: [%s]"
+    "the provider: %s does not exist": "provider: %s tidak ada"
   },
   "resource": {
     "User is nil for tag: avatar": "Pengguna kosong untuk tag: avatar",
