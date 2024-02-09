@@ -414,7 +414,7 @@ func CheckUserPermission(requestUserId, userId string, strict bool, lang string)
 				return true, nil
 			}
 
-			return false, fmt.Errorf(i18n.Translate(lang, "general:The user: %s doesn't exist"), userId)
+			return false, &NotFoundError{fmt.Sprintf(i18n.Translate(lang, "general:The user: %s doesn't exist"), userId)}
 		}
 
 		userOwner = targetUser.Owner
