@@ -249,7 +249,7 @@ func (c *ApiController) VerifyCaptcha() {
 // ResetEmailOrPhone ...
 // @Tag Account API
 // @Title ResetEmailOrPhone
-// @router /api/reset-email-or-phone [post]
+// @router /reset-email-or-phone [post]
 func (c *ApiController) ResetEmailOrPhone() {
 	user, ok := c.RequireSignedInUser()
 	if !ok {
@@ -343,7 +343,7 @@ func (c *ApiController) ResetEmailOrPhone() {
 // VerifyCode
 // @Tag Verification API
 // @Title VerifyCode
-// @router /api/verify-code [post]
+// @router /verify-code [post]
 func (c *ApiController) VerifyCode() {
 	var authForm form.AuthForm
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &authForm)
