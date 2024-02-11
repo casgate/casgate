@@ -501,8 +501,6 @@ func (user *User) getFieldFromLdapAttribute(attribute string) string {
 		return user.Name
 	case "sAMAccountName":
 		return user.Name
-	case "cn":
-		return user.Name
 	case "mail":
 		return user.Email
 	case "mobile":
