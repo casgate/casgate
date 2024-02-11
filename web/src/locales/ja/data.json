@@ -786,6 +786,8 @@
     "Metadata": "メタデータ",
     "Metadata - Tooltip": "SAMLのメタデータ",
     "Method - Tooltip": "ログイン方法、QRコードまたはサイレントログイン",
+    "Name ID Format": "Name ID Format",
+    "Name ID Format - Tooltip": "Name identifier formats control how the users at identity providers are mapped to users at service providers during single sign-on",
     "New Provider": "新しい提供者",
     "Normal": "Normal",
     "Parameter": "Parameter",

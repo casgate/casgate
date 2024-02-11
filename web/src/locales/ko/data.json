@@ -786,6 +786,8 @@
     "Metadata": "메타 데이터",
     "Metadata - Tooltip": "SAML 메타데이터",
     "Method - Tooltip": "로그인 방법, QR 코드 또는 음성 로그인",
+    "Name ID Format": "Name ID Format",
+    "Name ID Format - Tooltip": "Name identifier formats control how the users at identity providers are mapped to users at service providers during single sign-on",
     "New Provider": "새로운 공급 업체",
     "Normal": "Normal",
     "Parameter": "Parameter",

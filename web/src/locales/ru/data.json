@@ -786,6 +786,8 @@
     "Metadata": "Метаданные",
     "Metadata - Tooltip": "Метаданные SAML",
     "Method - Tooltip": "Метод входа, QR-код или беззвучный вход",
+    "Name ID Format": "Формат идентификатора имени",
+    "Name ID Format - Tooltip": "Форматы идентификаторов имен управляют тем, как пользователи IdP сопоставляются с пользователями SP во время единого входа",
     "New Provider": "Новый провайдер",
     "Normal": "Normal",
     "Parameter": "Parameter",

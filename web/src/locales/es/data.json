@@ -786,6 +786,8 @@
     "Metadata": "Metadatos",
     "Metadata - Tooltip": "Metadatos SAML",
     "Method - Tooltip": "Método de inicio de sesión, código QR o inicio de sesión silencioso",
+    "Name ID Format": "Name ID Format",
+    "Name ID Format - Tooltip": "Name identifier formats control how the users at identity providers are mapped to users at service providers during single sign-on",
     "New Provider": "Nuevo proveedor",
     "Normal": "Normal",
     "Parameter": "Parameter",

@@ -35,7 +35,19 @@ const (
 	defaultFirstNameOid = "urn:oid:2.5.4.42"
 	defaultLastNameOid  = "urn:oid:2.5.4.4"
 	defaultEmailOid     = "urn:oid:1.2.840.113549.1.9.1"
+
+	nameIdFormatAliasPersistent   = "Persistent"
+	nameIdFormatAliasTransient    = "Transient"
+	nameIdFormatAliasEmailAddress = "Email"
+	nameIdFormatAliasUnspecified  = "Unspecified"
 )
+
+var nameIdFormats = map[string]string{
+	nameIdFormatAliasPersistent:   saml2.NameIdFormatPersistent,
+	nameIdFormatAliasTransient:    saml2.NameIdFormatTransient,
+	nameIdFormatAliasEmailAddress: saml2.NameIdFormatEmailAddress,
+	nameIdFormatAliasUnspecified:  saml2.NameIdFormatUnspecified,
+}
 
 func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*idp.UserInfo, map[string]any, error) {
 	samlResponse, _ = url.QueryUnescape(samlResponse)
@@ -151,12 +163,18 @@ func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 		issuer = fmt.Sprintf("%s/api/acs", origin)
 	}
 
+	nameIdFormat, err := getFullNameIdFormat(provider.NameIdFormat)
+	if err != nil {
+		return nil, err
+	}
+
 	sp := &saml2.SAMLServiceProvider{
 		ServiceProviderIssuer:       issuer,
 		AssertionConsumerServiceURL: fmt.Sprintf("%s/api/acs", origin),
 		SignAuthnRequests:           false,
 		IDPCertificateStore:         &certStore,
 		SPKeyStore:                  dsig.RandomKeyStoreForTest(),
+		NameIdFormat:                nameIdFormat,
 	}
 
 	if provider.Endpoint != "" {
@@ -200,12 +218,15 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else {
+	} else if provider.RequestSignature == SignWithFile {
 		keyPair, err = tls.LoadX509KeyPair("object/token_jwt_key.pem", "object/token_jwt_key.key")
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		return nil, errors.New(fmt.Sprintf("unknown request signature type: %s", provider.RequestSignature))
 	}
+
 	return &dsig.TLSCertKeyStore{
 		PrivateKey:  keyPair.PrivateKey,
 		Certificate: keyPair.Certificate,
@@ -253,4 +274,11 @@ func getCertificateFromSamlResponse(samlResponse string, providerType string) (s
 	expression := fmt.Sprintf("<%s:X509Certificate>([\\s\\S]*?)</%s:X509Certificate>", tag, tag)
 	res := regexp.MustCompile(expression).FindStringSubmatch(deStr)
 	return res[1], nil
+}
+
+func getFullNameIdFormat(nameIdFormat string) (string, error) {
+	if result, ok := nameIdFormats[nameIdFormat]; ok {
+		return result, nil
+	}
+	return "", errors.New(fmt.Sprintf("Unknown Name ID Format: %s", nameIdFormat))
 }

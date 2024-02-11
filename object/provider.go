@@ -80,6 +80,7 @@ type Provider struct {
 	IdP              string `xorm:"mediumtext" json:"idP"`
 	IssuerUrl        string `xorm:"varchar(100)" json:"issuerUrl"`
 	RequestSignature string `xorm:"varchar(100)" json:"requestSignature"`
+	NameIdFormat     string `xorm:"varchar(100)" json:"nameIdFormat"`
 
 	ProviderUrl string `xorm:"varchar(200)" json:"providerUrl"`
 }

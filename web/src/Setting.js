@@ -1353,6 +1353,11 @@ export const SamlNoRequestSign = "No sign";
 export const SamlSignRequestWithFile = "Sign with default file";
 export const SamlSignRequestWithCertificate = "Sign with certificate";
 
+export const SamlNameIdFormatPersistent = "Persistent";
+export const SamlNameIdFormatTransient = "Transient";
+export const SamlNameIdFormatEmailAddress = "Email";
+export const SamlNameIdFormatUnspecified = "Unspecified";
+
 export function getCurrencySymbol(currency) {
   if (currency === "USD" || currency === "usd") {
     return "$";

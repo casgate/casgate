@@ -786,6 +786,8 @@
     "Metadata": "Siêu dữ liệu",
     "Metadata - Tooltip": "SAML metadata: siêu dữ liệu SAML",
     "Method - Tooltip": "Phương thức đăng nhập, mã QR hoặc đăng nhập im lặng",
+    "Name ID Format": "Name ID Format",
+    "Name ID Format - Tooltip": "Name identifier formats control how the users at identity providers are mapped to users at service providers during single sign-on",
     "New Provider": "Nhà cung cấp mới",
     "Normal": "Normal",
     "Parameter": "Parameter",

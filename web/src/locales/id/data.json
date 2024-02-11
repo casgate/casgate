@@ -786,6 +786,8 @@
     "Metadata": "Metadata: data yang menjelaskan atau memberikan informasi tentang data atau informasi digital lainnya, seperti informasi mengenai sumber data, format, waktu pembuatan, penulis, dan informasi lainnya yang dapat membantu dalam pengelolaan dan pemrosesan data",
     "Metadata - Tooltip": "Metadata SAML",
     "Method - Tooltip": "Metode login, kode QR atau login tanpa suara",
+    "Name ID Format": "Name ID Format",
+    "Name ID Format - Tooltip": "Name identifier formats control how the users at identity providers are mapped to users at service providers during single sign-on",
     "New Provider": "Penyedia Baru",
     "Normal": "Normal",
     "Parameter": "Parameter",

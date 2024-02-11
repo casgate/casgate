@@ -786,6 +786,8 @@
     "Metadata": "元数据",
     "Metadata - Tooltip": "SAML元数据",
     "Method - Tooltip": "登录方法，二维码或者静默授权登录",
+    "Name ID Format": "Name ID Format",
+    "Name ID Format - Tooltip": "Name identifier formats control how the users at identity providers are mapped to users at service providers during single sign-on",
     "New Provider": "添加提供商",
     "Normal": "标准",
     "Parameter": "Parameter",
