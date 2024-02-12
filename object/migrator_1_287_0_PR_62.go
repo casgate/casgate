@@ -17,8 +17,10 @@ package object
 import (
 	"time"
 
+	"github.com/beego/beego/logs"
 	"github.com/xorm-io/xorm"
 	"github.com/xorm-io/xorm/migrate"
+	"github.com/xorm-io/xorm/schemas"
 )
 
 type Migrator_1_287_0_PR_62 struct{}
@@ -82,7 +84,13 @@ func (*Migrator_1_287_0_PR_62) DoMigration() *migrate.Migration {
 				}
 			}
 
-			dropColumnSql := `ALTER TABLE "user" DROP COLUMN "password_change_required";`
+			dbType := engine.Dialect().URI().DBType
+			if dbType != schemas.POSTGRES && dbType != schemas.MYSQL {
+				logs.Warn("You must delete 'password_change_required' field from 'user' table manualy	(migration: 20231013UserMappingTransform)")
+				return nil
+			}
+
+			dropColumnSql := "ALTER TABLE `user` DROP COLUMN `password_change_required`";
 			if _, err = tx.Query(dropColumnSql); err != nil {
 				return err
 			}
