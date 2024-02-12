@@ -770,7 +770,7 @@ func (c *ApiController) SendInvite() {
 		return
 	}
 
-	application, err := object.GetApplication(util.GetId("admin", user.SignupApplication))
+	application, err := object.GetApplicationByUser(user)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
