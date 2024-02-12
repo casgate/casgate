@@ -76,11 +76,13 @@ type Provider struct {
 	Bucket           string `xorm:"varchar(100)" json:"bucket"`
 	PathPrefix       string `xorm:"varchar(100)" json:"pathPrefix"`
 
-	Metadata         string `xorm:"mediumtext" json:"metadata"`
-	IdP              string `xorm:"mediumtext" json:"idP"`
-	IssuerUrl        string `xorm:"varchar(100)" json:"issuerUrl"`
-	RequestSignature string `xorm:"varchar(100)" json:"requestSignature"`
-	NameIdFormat     string `xorm:"varchar(100)" json:"nameIdFormat"`
+	Metadata             string `xorm:"mediumtext" json:"metadata"`
+	IdP                  string `xorm:"mediumtext" json:"idP"`
+	IssuerUrl            string `xorm:"varchar(100)" json:"issuerUrl"`
+	RequestSignature     string `xorm:"varchar(100)" json:"requestSignature"`
+	SignatureAlgorithm   string `xorm:"varchar(100)" json:"signatureAlgorithm"`
+	NameIdFormat         string `xorm:"varchar(100)" json:"nameIdFormat"`
+	ValidateIdpSignature bool   `json:"validateIdPSignature"`
 
 	ProviderUrl string `xorm:"varchar(200)" json:"providerUrl"`
 }

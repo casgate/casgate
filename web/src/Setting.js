@@ -1349,14 +1349,18 @@ export const CertScopeJWT = "JWT";
 export const CertScopeCACert = "CA Certificate";
 export const CertScopeClientCert = "Client Certificate";
 
-export const SamlNoRequestSign = "No sign";
-export const SamlSignRequestWithFile = "Sign with default file";
-export const SamlSignRequestWithCertificate = "Sign with certificate";
-
 export const SamlNameIdFormatPersistent = "Persistent";
 export const SamlNameIdFormatTransient = "Transient";
 export const SamlNameIdFormatEmailAddress = "Email";
 export const SamlNameIdFormatUnspecified = "Unspecified";
+
+export const SamlNoRequestSign = "No sign";
+export const SamlSignRequestWithFile = "Sign with default file";
+export const SamlSignRequestWithCertificate = "Sign with certificate";
+
+export const RSA_SHA_1 = "RSA-SHA1";
+export const RSA_SHA_256 = "RSA-SHA256";
+export const RSA_SHA_512 = "RSA-SHA512";
 
 export function getCurrencySymbol(currency) {
   if (currency === "USD" || currency === "usd") {

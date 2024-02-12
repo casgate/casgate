@@ -51,6 +51,7 @@ class ProviderListPage extends BaseListPage {
       enableSignUp: true,
       requestSignature: Setting.SamlNoRequestSign,
       nameIdFormat: Setting.SamlNameIdFormatPersistent,
+      signatureAlgorithm: Setting.RSA_SHA_256,
       host: "",
       port: 0,
       providerUrl: "https://github.com/organizations/xxx/settings/applications/1234567",

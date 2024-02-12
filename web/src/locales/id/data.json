@@ -846,6 +846,8 @@
     "Sign Name - Tooltip": "Nama tanda tangan yang akan digunakan",
     "Sign request": "Permintaan tanda tangan",
     "Sign request - Tooltip": "Apakah permintaan ini memerlukan tanda tangan?",
+    "Signature algorithm": "Signature algorithm",
+    "Signature algorithm - Tooltip": "Crypto algorithm with that request will be signed before sending it to the IdP",
     "Signin HTML": "Login HTML",
     "Signin HTML - Edit": "Masuk HTML - Edit",
     "Signin HTML - Tooltip": "HTML kustom untuk mengganti gaya halaman sign-in default",
@@ -873,6 +875,8 @@
     "UserInfo URL": "URL UserInfo",
     "UserInfo URL - Tooltip": "URL Informasi Pengguna",
     "Username - Tooltip": "Username - Tooltip",
+    "Validate IdP signature": "Validate IdP signature",
+    "Validate IdP signature - Tooltip": "Validate Identity Provider signature",
     "Wallets": "Wallets",
     "Wallets - Tooltip": "Wallets - Tooltip",
     "admin (Shared)": "Admin (Berbagi)"

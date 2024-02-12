@@ -846,6 +846,8 @@
     "Sign Name - Tooltip": "Tên chữ ký sẽ được sử dụng",
     "Sign request": "Yêu cầu ký tên",
     "Sign request - Tooltip": "Có yêu cầu cần ký tên không?",
+    "Signature algorithm": "Signature algorithm",
+    "Signature algorithm - Tooltip": "Crypto algorithm with that request will be signed before sending it to the IdP",
     "Signin HTML": "Đăng nhập HTML",
     "Signin HTML - Edit": "Đăng nhập HTML - Chỉnh sửa",
     "Signin HTML - Tooltip": "HTML tùy chỉnh để thay thế phong cách trang đăng nhập mặc định",
@@ -873,6 +875,8 @@
     "UserInfo URL": "Đường dẫn UserInfo",
     "UserInfo URL - Tooltip": "Địa chỉ URL của Thông tin người dùng",
     "Username - Tooltip": "Username - Tooltip",
+    "Validate IdP signature": "Validate IdP signature",
+    "Validate IdP signature - Tooltip": "Validate Identity Provider signature",
     "Wallets": "Wallets",
     "Wallets - Tooltip": "Wallets - Tooltip",
     "admin (Shared)": "quản trị viên (Chung)"

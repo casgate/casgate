@@ -40,6 +40,10 @@ const (
 	nameIdFormatAliasTransient    = "Transient"
 	nameIdFormatAliasEmailAddress = "Email"
 	nameIdFormatAliasUnspecified  = "Unspecified"
+
+	sha1CryptoAlgorithm   = "RSA-SHA1"
+	sha256CryptoAlgorithm = "RSA-SHA256"
+	sha512CryptoAlgorithm = "RSA-SHA512"
 )
 
 var nameIdFormats = map[string]string{
@@ -47,6 +51,12 @@ var nameIdFormats = map[string]string{
 	nameIdFormatAliasTransient:    saml2.NameIdFormatTransient,
 	nameIdFormatAliasEmailAddress: saml2.NameIdFormatEmailAddress,
 	nameIdFormatAliasUnspecified:  saml2.NameIdFormatUnspecified,
+}
+
+var signatureAlgorithms = map[string]string{
+	sha1CryptoAlgorithm:   dsig.RSASHA1SignatureMethod,
+	sha256CryptoAlgorithm: dsig.RSASHA256SignatureMethod,
+	sha512CryptoAlgorithm: dsig.RSASHA512SignatureMethod,
 }
 
 func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*idp.UserInfo, map[string]any, error) {
@@ -153,11 +163,6 @@ func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method
 func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLServiceProvider, error) {
 	_, origin := getOriginFromHost(host)
 
-	certStore, err := buildSpCertificateStore(provider, samlResponse)
-	if err != nil {
-		return nil, err
-	}
-
 	issuer := provider.ClientId
 	if issuer == "" {
 		issuer = fmt.Sprintf("%s/api/acs", origin)
@@ -171,10 +176,10 @@ func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 	sp := &saml2.SAMLServiceProvider{
 		ServiceProviderIssuer:       issuer,
 		AssertionConsumerServiceURL: fmt.Sprintf("%s/api/acs", origin),
-		SignAuthnRequests:           false,
-		IDPCertificateStore:         &certStore,
-		SPKeyStore:                  dsig.RandomKeyStoreForTest(),
 		NameIdFormat:                nameIdFormat,
+		SignAuthnRequests:           false,
+		SPKeyStore:                  dsig.RandomKeyStoreForTest(),
+		SkipSignatureValidation:     !provider.ValidateIdpSignature,
 	}
 
 	if provider.Endpoint != "" {
@@ -183,7 +188,17 @@ func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 	}
 	if provider.RequestSignature != NotToSign {
 		sp.SignAuthnRequests = true
+		sp.SignAuthnRequestsAlgorithm, err = getFullSignatureAlgorithm(provider.SignatureAlgorithm)
+		if err != nil {
+			return nil, err
+		}
 		sp.SPKeyStore, err = buildSpKeyStore(provider)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if provider.ValidateIdpSignature {
+		sp.IDPCertificateStore, err = buildIdPCertificateStore(provider, samlResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -233,27 +248,28 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 	}, nil
 }
 
-func buildSpCertificateStore(provider *Provider, samlResponse string) (certStore dsig.MemoryX509CertificateStore, err error) {
+func buildIdPCertificateStore(provider *Provider, samlResponse string) (certStore *dsig.MemoryX509CertificateStore, err error) {
 	certEncodedData := ""
 	if samlResponse != "" {
 		certEncodedData, err = getCertificateFromSamlResponse(samlResponse, provider.Type)
 		if err != nil {
 			return
 		}
+		// TODO remove because saml response contain signature certificate itself
 	} else if provider.IdP != "" {
 		certEncodedData = provider.IdP
 	}
 
 	certData, err := base64.StdEncoding.DecodeString(certEncodedData)
 	if err != nil {
-		return dsig.MemoryX509CertificateStore{}, err
+		return &dsig.MemoryX509CertificateStore{}, err
 	}
 	idpCert, err := x509.ParseCertificate(certData)
 	if err != nil {
-		return dsig.MemoryX509CertificateStore{}, err
+		return &dsig.MemoryX509CertificateStore{}, err
 	}
 
-	certStore = dsig.MemoryX509CertificateStore{
+	certStore = &dsig.MemoryX509CertificateStore{
 		Roots: []*x509.Certificate{idpCert},
 	}
 	return certStore, nil
@@ -273,6 +289,10 @@ func getCertificateFromSamlResponse(samlResponse string, providerType string) (s
 	tag := tagMap[providerType]
 	expression := fmt.Sprintf("<%s:X509Certificate>([\\s\\S]*?)</%s:X509Certificate>", tag, tag)
 	res := regexp.MustCompile(expression).FindStringSubmatch(deStr)
+	if res == nil {
+		return "", errors.New("could not obtain signature certificate from SAML response")
+	}
+
 	return res[1], nil
 }
 
@@ -281,4 +301,11 @@ func getFullNameIdFormat(nameIdFormat string) (string, error) {
 		return result, nil
 	}
 	return "", errors.New(fmt.Sprintf("Unknown Name ID Format: %s", nameIdFormat))
+}
+
+func getFullSignatureAlgorithm(signatureAlgorithm string) (string, error) {
+	if result, ok := signatureAlgorithms[signatureAlgorithm]; ok {
+		return result, nil
+	}
+	return "", errors.New(fmt.Sprintf("Unknown signature algorithm: %s", signatureAlgorithm))
 }

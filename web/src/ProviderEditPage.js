@@ -1154,6 +1154,28 @@ class ProviderEditPage extends React.Component {
                 </Col>
               </Row>
               {
+                this.state.provider.requestSignature !== Setting.SamlNoRequestSign ? (
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("provider:Signature algorithm"), i18next.t("provider:Signature algorithm - Tooltip"))} :
+                    </Col>
+                    <Col span={22} >
+                      <Select virtual={false} style={{width: "100%"}} value={this.state.provider.signatureAlgorithm} onChange={(value => {
+                        this.updateProviderField("signatureAlgorithm", value);
+                      })}>
+                        {
+                          [
+                            {id: Setting.RSA_SHA_1, name: Setting.RSA_SHA_1},
+                            {id: Setting.RSA_SHA_256, name: Setting.RSA_SHA_256},
+                            {id: Setting.RSA_SHA_512, name: Setting.RSA_SHA_512},
+                          ].map((item, index) => <Option key={index} value={item.id}>{item.name}</Option>)
+                        }
+                      </Select>
+                    </Col>
+                  </Row>
+                ) : null
+              }
+              {
                 this.state.provider.requestSignature === Setting.SamlSignRequestWithCertificate ? (
                   <Row style={{marginTop: "20px"}} >
                     <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
@@ -1210,14 +1232,27 @@ class ProviderEditPage extends React.Component {
               </Row>
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("provider:IdP"), i18next.t("provider:IdP certificate"))} :
+                  {Setting.getLabel(i18next.t("provider:Validate IdP signature"), i18next.t("provider:Validate IdP signature - Tooltip"))} :
                 </Col>
                 <Col span={22} >
-                  <Input value={this.state.provider.idP} onChange={e => {
-                    this.updateProviderField("idP", e.target.value);
+                  <Switch checked={this.state.provider.validateIdPSignature} onChange={checked => {
+                    this.updateProviderField("validateIdPSignature", checked);
                   }} />
                 </Col>
               </Row>
+              {
+                this.state.provider.validateIdPSignature &&
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("provider:IdP"), i18next.t("provider:IdP certificate"))} :
+                    </Col>
+                    <Col span={22} >
+                      <Input value={this.state.provider.idP} onChange={e => {
+                        this.updateProviderField("idP", e.target.value);
+                      }} />
+                    </Col>
+                  </Row>
+              }
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                   {Setting.getLabel(i18next.t("provider:Issuer URL"), i18next.t("provider:Issuer URL - Tooltip"))} :

@@ -846,6 +846,8 @@
     "Sign Name - Tooltip": "Nome da assinatura a ser usada",
     "Sign request": "Solicitação de assinatura",
     "Sign request - Tooltip": "Se a solicitação requer uma assinatura",
+    "Signature algorithm": "Signature algorithm",
+    "Signature algorithm - Tooltip": "Crypto algorithm with that request will be signed before sending it to the IdP",
     "Signin HTML": "HTML de login",
     "Signin HTML - Edit": "Editar HTML de login",
     "Signin HTML - Tooltip": "HTML personalizado para substituir o estilo padrão da página de login",
@@ -873,6 +875,8 @@
     "UserInfo URL": "URL do UserInfo",
     "UserInfo URL - Tooltip": "URL do UserInfo",
     "Username - Tooltip": "Username - Tooltip",
+    "Validate IdP signature": "Validate IdP signature",
+    "Validate IdP signature - Tooltip": "Validate Identity Provider signature",
     "Wallets": "Wallets",
     "Wallets - Tooltip": "Wallets - Tooltip",
     "admin (Shared)": "admin (Compartilhado)"

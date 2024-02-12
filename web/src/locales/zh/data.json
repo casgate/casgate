@@ -846,6 +846,8 @@
     "Sign Name - Tooltip": "签名名称",
     "Sign request": "签名请求",
     "Sign request - Tooltip": "是否需要对请求签名",
+    "Signature algorithm": "Signature algorithm",
+    "Signature algorithm - Tooltip": "Crypto algorithm with that request will be signed before sending it to the IdP",
     "Signin HTML": "登录页面HTML",
     "Signin HTML - Edit": "登录页面 - 编辑",
     "Signin HTML - Tooltip": "自定义HTML，用于替换默认的登录页面样式",
@@ -873,6 +875,8 @@
     "UserInfo URL": "UserInfo URL",
     "UserInfo URL - Tooltip": "自定义OAuth的UserInfo URL",
     "Username - Tooltip": "Username - Tooltip",
+    "Validate IdP signature": "Validate IdP signature",
+    "Validate IdP signature - Tooltip": "Validate Identity Provider signature",
     "Wallets": "Wallets",
     "Wallets - Tooltip": "Wallets - Tooltip",
     "admin (Shared)": "admin（共享）"

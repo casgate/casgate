@@ -846,6 +846,8 @@
     "Sign Name - Tooltip": "사용할 서명의 이름",
     "Sign request": "표지 요청",
     "Sign request - Tooltip": "요청에 서명이 필요한지 여부",
+    "Signature algorithm": "Signature algorithm",
+    "Signature algorithm - Tooltip": "Crypto algorithm with that request will be signed before sending it to the IdP",
     "Signin HTML": "로그인 HTML",
     "Signin HTML - Edit": "로그인 HTML - 편집하기",
     "Signin HTML - Tooltip": "기본 로그인 페이지 스타일 대체를 위한 사용자 정의 HTML",
@@ -873,6 +875,8 @@
     "UserInfo URL": "사용자 정보 URL",
     "UserInfo URL - Tooltip": "UserInfo URL: 사용자 정보 URL",
     "Username - Tooltip": "Username - Tooltip",
+    "Validate IdP signature": "Validate IdP signature",
+    "Validate IdP signature - Tooltip": "Validate Identity Provider signature",
     "Wallets": "Wallets",
     "Wallets - Tooltip": "Wallets - Tooltip",
     "admin (Shared)": "관리자 (공유)"

@@ -846,6 +846,8 @@
     "Sign Name - Tooltip": "使用する署名の名前",
     "Sign request": "サインリクエスト",
     "Sign request - Tooltip": "リクエストに署名が必要かどうか",
+    "Signature algorithm": "Signature algorithm",
+    "Signature algorithm - Tooltip": "Crypto algorithm with that request will be signed before sending it to the IdP",
     "Signin HTML": "サインインHTML",
     "Signin HTML - Edit": "サインイン HTML - 編集",
     "Signin HTML - Tooltip": "デフォルトのログインページスタイルを置き換えるためのカスタムHTML",
@@ -873,6 +875,8 @@
     "UserInfo URL": "UserInfo URLを日本語に翻訳すると、「ユーザー情報のURL」となります",
     "UserInfo URL - Tooltip": "ユーザー情報URL",
     "Username - Tooltip": "Username - Tooltip",
+    "Validate IdP signature": "Validate IdP signature",
+    "Validate IdP signature - Tooltip": "Validate Identity Provider signature",
     "Wallets": "Wallets",
     "Wallets - Tooltip": "Wallets - Tooltip",
     "admin (Shared)": "管理者（共有）"
