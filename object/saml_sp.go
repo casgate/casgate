@@ -197,7 +197,7 @@ func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 			return nil, err
 		}
 	}
-	if provider.ValidateIdpSignature {
+	if provider.ValidateIdpSignature && samlResponse != "" {
 		sp.IDPCertificateStore, err = buildIdPCertificateStore(provider, samlResponse)
 		if err != nil {
 			return nil, err
@@ -249,17 +249,10 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 }
 
 func buildIdPCertificateStore(provider *Provider, samlResponse string) (certStore *dsig.MemoryX509CertificateStore, err error) {
-	certEncodedData := ""
-	if samlResponse != "" {
-		certEncodedData, err = getCertificateFromSamlResponse(samlResponse, provider.Type)
-		if err != nil {
-			return
-		}
-		// TODO remove because saml response contain signature certificate itself
-	} else if provider.IdP != "" {
-		certEncodedData = provider.IdP
+	certEncodedData, err := getCertificateFromSamlResponse(samlResponse, provider.Type)
+	if err != nil {
+		return &dsig.MemoryX509CertificateStore{}, err
 	}
-
 	certData, err := base64.StdEncoding.DecodeString(certEncodedData)
 	if err != nil {
 		return &dsig.MemoryX509CertificateStore{}, err
