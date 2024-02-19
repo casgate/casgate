@@ -72,11 +72,35 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 	if ldap.EnableSsl {
 		tlsConf := &tls.Config{}
 
-		if len(ldap.Cert) > 0 {
+		if ldap.Cert != "" {
 			tlsConf, err = GetTlsConfigForCert(ldap.Cert)
 			if err != nil {
 				return nil, err
 			}
+		}
+
+		if ldap.EnableMutualTls {
+			var clientCerts []tls.Certificate
+			if ldap.ClientCert != "" {
+				cert, err := getCertByName(ldap.ClientCert)
+				if err != nil {
+					return nil, err
+				}
+				if cert == nil {
+					return nil, ErrCertDoesNotExist
+				}
+				if cert.Scope != scopeClientCert {
+					return nil, ErrCertInvalidScope
+				}
+				clientCert, err := tls.X509KeyPair([]byte(""), []byte(""))
+				if err != nil {
+					return nil, err
+				}
+
+				clientCerts = []tls.Certificate{clientCert}
+			}
+			tlsConf.Certificates = clientCerts
+			tlsConf.ClientAuth = tls.RequireAndVerifyClientCert
 		}
 
 		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), tlsConf)

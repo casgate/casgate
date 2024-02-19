@@ -46,6 +46,7 @@ type Cert struct {
 }
 
 var ErrCertDoesNotExist = errors.New(fmt.Sprintf("certificate does not exist"))
+var ErrCertInvalidScope = errors.New(fmt.Sprintf("invalid certificate scope"))
 
 func GetMaskedCert(cert *Cert) *Cert {
 	if cert == nil {

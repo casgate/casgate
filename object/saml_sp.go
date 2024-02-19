@@ -226,7 +226,7 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 		}
 
 		if certificate.Scope != scopeClientCert {
-			return nil, errors.New("certificate with invalid scope was selected")
+			return nil, ErrCertInvalidScope
 		}
 
 		keyPair, err = tls.X509KeyPair([]byte(certificate.Certificate), []byte(certificate.PrivateKey))
