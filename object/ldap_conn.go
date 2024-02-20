@@ -92,7 +92,7 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 				if cert.Scope != scopeClientCert {
 					return nil, ErrCertInvalidScope
 				}
-				clientCert, err := tls.X509KeyPair([]byte(""), []byte(""))
+				clientCert, err := tls.X509KeyPair([]byte(cert.Certificate), []byte(cert.PrivateKey))
 				if err != nil {
 					return nil, err
 				}
@@ -100,7 +100,6 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 				clientCerts = []tls.Certificate{clientCert}
 			}
 			tlsConf.Certificates = clientCerts
-			tlsConf.ClientAuth = tls.RequireAndVerifyClientCert
 		}
 
 		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), tlsConf)
