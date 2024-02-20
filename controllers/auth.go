@@ -278,19 +278,11 @@ func setHttpClient(idProvider idp.IdProvider, providerInfo idp.ProviderInfo) err
 	if isProxyProviderType(providerInfo.Type) {
 		idProvider.SetHttpClient(proxy.ProxyHttpClient)
 	} else {
-		transport := http.Transport{}
-
-		// TODO remake with using idp url when config would be parsed on every login
-		if strings.HasPrefix(providerInfo.TokenURL, "https://") && providerInfo.Cert != "" {
-			tlsConf, err := object.GetTlsConfigForCert(providerInfo.Cert)
-			if err != nil {
-				return err
-			}
-			transport.TLSClientConfig = tlsConf
+		client, err := object.GetProviderHttpClient(providerInfo)
+		if err != nil {
+			return err
 		}
-
-		client := http.Client{Transport: &transport}
-		idProvider.SetHttpClient(&client)
+		idProvider.SetHttpClient(client)
 	}
 
 	return nil

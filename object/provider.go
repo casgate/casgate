@@ -16,7 +16,9 @@ package object
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/i18n"
@@ -47,6 +49,7 @@ type Provider struct {
 	ClientId2         string              `xorm:"varchar(100)" json:"clientId2"`
 	ClientSecret2     string              `xorm:"varchar(100)" json:"clientSecret2"`
 	Cert              string              `xorm:"varchar(100)" json:"cert"`
+	CustomConfUrl     string              `xorm:"varchar(200)" json:"customConfUrl"`
 	CustomAuthUrl     string              `xorm:"varchar(200)" json:"customAuthUrl"`
 	CustomTokenUrl    string              `xorm:"varchar(200)" json:"customTokenUrl"`
 	CustomUserInfoUrl string              `xorm:"varchar(200)" json:"customUserInfoUrl"`
@@ -423,6 +426,7 @@ func FromProviderToIdpInfo(ctx *context.Context, provider *Provider) *idp.Provid
 		ClientSecret: provider.ClientSecret,
 		AppId:        provider.AppId,
 		HostUrl:      provider.Host,
+		ConfURL:      provider.CustomConfUrl,
 		TokenURL:     provider.CustomTokenUrl,
 		AuthURL:      provider.CustomAuthUrl,
 		UserInfoURL:  provider.CustomUserInfoUrl,
@@ -440,4 +444,20 @@ func FromProviderToIdpInfo(ctx *context.Context, provider *Provider) *idp.Provid
 	}
 
 	return providerInfo
+}
+
+func GetProviderHttpClient(providerInfo idp.ProviderInfo) (*http.Client, error) {
+	transport := http.Transport{}
+
+	if (strings.HasPrefix(providerInfo.ConfURL, "https://") ||
+		strings.HasPrefix(providerInfo.TokenURL, "https://")) &&
+		providerInfo.Cert != "" {
+		tlsConf, err := GetTlsConfigForCert(providerInfo.Cert)
+		if err != nil {
+			return nil, err
+		}
+		transport.TLSClientConfig = tlsConf
+	}
+
+	return &http.Client{Transport: &transport, Timeout: time.Second}, nil
 }

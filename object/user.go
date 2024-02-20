@@ -179,6 +179,7 @@ type User struct {
 	MetaMask        string `xorm:"metamask varchar(100)" json:"metamask"`
 	Web3Onboard     string `xorm:"web3onboard varchar(100)" json:"web3onboard"`
 	Custom          string `xorm:"custom varchar(100)" json:"custom"`
+	OpenID          string `xorm:"openid varchar(100)" json:"openid"`
 
 	// SAML Types
 	Keycloak    string `xorm:"keycloak varchar(100)" json:"keycloak"`

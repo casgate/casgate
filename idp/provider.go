@@ -41,6 +41,7 @@ type ProviderInfo struct {
 	HostUrl      string
 	RedirectUrl  string
 
+	ConfURL     string
 	TokenURL    string
 	AuthURL     string
 	UserInfoURL string
@@ -103,6 +104,8 @@ func GetIdProvider(idpInfo *ProviderInfo, redirectUrl string) IdProvider {
 		return NewAlipayIdProvider(idpInfo.ClientId, idpInfo.ClientSecret, redirectUrl)
 	case "Custom":
 		return NewCustomIdProvider(idpInfo, redirectUrl)
+	case "OpenID":
+		return NewOpenIdProvider(idpInfo, redirectUrl)
 	case "Infoflow":
 		if idpInfo.SubType == "Internal" {
 			return NewInfoflowInternalIdProvider(idpInfo.ClientId, idpInfo.ClientSecret, idpInfo.AppId, redirectUrl)

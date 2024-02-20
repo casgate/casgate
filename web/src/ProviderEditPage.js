@@ -593,28 +593,54 @@ class ProviderEditPage extends React.Component {
           )
         }
         {
-          this.state.provider.type !== "Custom" ? null : (
+          this.state.provider.type !== "Custom" && this.state.provider.type !== "OpenID" ? null : (
             <React.Fragment>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("provider:Auth URL"), i18next.t("provider:Auth URL - Tooltip"))}
-                </Col>
-                <Col span={22} >
-                  <Input value={this.state.provider.customAuthUrl} onChange={e => {
-                    this.updateProviderField("customAuthUrl", e.target.value);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("provider:Token URL"), i18next.t("provider:Token URL - Tooltip"))}
-                </Col>
-                <Col span={22} >
-                  <Input value={this.state.provider.customTokenUrl} onChange={e => {
-                    this.updateProviderField("customTokenUrl", e.target.value);
-                  }} />
-                </Col>
-              </Row>
+              {this.state.provider.type !== "Custom" ? (
+                // openid
+                <Row style={{marginTop: "20px"}} >
+                  <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                    {Setting.getLabel(i18next.t("provider:OpenID Configuration URL"), i18next.t("provider:OpenID Configuration URL - Tooltip"))}
+                  </Col>
+                  <Col span={22} >
+                    <Input value={this.state.provider.customConfUrl} onChange={e => {
+                      this.updateProviderField("customConfUrl", e.target.value);
+                    }} />
+                  </Col>
+                </Row>
+              ) : (
+                <React.Fragment>
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("provider:Auth URL"), i18next.t("provider:Auth URL - Tooltip"))}
+                    </Col>
+                    <Col span={22} >
+                      <Input value={this.state.provider.customAuthUrl} onChange={e => {
+                        this.updateProviderField("customAuthUrl", e.target.value);
+                      }} />
+                    </Col>
+                  </Row>
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("provider:Token URL"), i18next.t("provider:Token URL - Tooltip"))}
+                    </Col>
+                    <Col span={22} >
+                      <Input value={this.state.provider.customTokenUrl} onChange={e => {
+                        this.updateProviderField("customTokenUrl", e.target.value);
+                      }} />
+                    </Col>
+                  </Row>
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("provider:UserInfo URL"), i18next.t("provider:UserInfo URL - Tooltip"))}
+                    </Col>
+                    <Col span={22} >
+                      <Input value={this.state.provider.customUserInfoUrl} onChange={e => {
+                        this.updateProviderField("customUserInfoUrl", e.target.value);
+                      }} />
+                    </Col>
+                  </Row>
+                </React.Fragment>
+              )}
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                   {Setting.getLabel(i18next.t("provider:Scope"), i18next.t("provider:Scope - Tooltip"))}
@@ -622,16 +648,6 @@ class ProviderEditPage extends React.Component {
                 <Col span={22} >
                   <Input value={this.state.provider.scopes} onChange={e => {
                     this.updateProviderField("scopes", e.target.value);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("provider:UserInfo URL"), i18next.t("provider:UserInfo URL - Tooltip"))}
-                </Col>
-                <Col span={22} >
-                  <Input value={this.state.provider.customUserInfoUrl} onChange={e => {
-                    this.updateProviderField("customUserInfoUrl", e.target.value);
                   }} />
                 </Col>
               </Row>
