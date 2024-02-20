@@ -5593,11 +5593,11 @@
         }
     },
     "definitions": {
-        "176525.\u003cnil\u003e.string": {
+        "176565.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "297200.\u003cnil\u003e.string": {
+        "297708.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6387,7 +6387,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/176525.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/176565.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -7035,6 +7035,9 @@
                 "name": {
                     "type": "string"
                 },
+                "nameIdFormat": {
+                    "type": "string"
+                },
                 "owner": {
                     "type": "string"
                 },
@@ -7069,6 +7072,9 @@
                 "signName": {
                     "type": "string"
                 },
+                "signatureAlgorithm": {
+                    "type": "string"
+                },
                 "subType": {
                     "type": "string"
                 },
@@ -7082,7 +7088,10 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/297200.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/297708.\u003cnil\u003e.string"
+                },
+                "validateIdPSignature": {
+                    "type": "boolean"
                 }
             }
         },
@@ -8222,12 +8231,14 @@
             "title": "VersionInfo",
             "type": "object",
             "properties": {
+                "buildTime": {
+                    "type": "string"
+                },
                 "commitId": {
                     "type": "string"
                 },
                 "commitOffset": {
-                    "type": "integer",
-                    "format": "int64"
+                    "type": "string"
                 },
                 "version": {
                     "type": "string"

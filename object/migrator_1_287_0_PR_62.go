@@ -24,21 +24,21 @@ import (
 type Migrator_1_287_0_PR_62 struct{}
 
 func (*Migrator_1_287_0_PR_62) IsMigrationNeeded() bool {
-    metas, err := ormer.Engine.DBMetas()
-    if err != nil {
-        return false
-    }
-    for _, meta := range metas {
-        if meta.Name == "user" {
-            for _, col := range meta.Columns() {
-                if col.Name == "password_change_required" {
-                    return true
-                }
-            }
-            return false
-        }
-    }
-    return false
+	metas, err := ormer.Engine.DBMetas()
+	if err != nil {
+		return false
+	}
+	for _, meta := range metas {
+		if meta.Name == "user" {
+			for _, col := range meta.Columns() {
+				if col.Name == "password_change_required" {
+					return true
+				}
+			}
+			return false
+		}
+	}
+	return false
 }
 
 func (*Migrator_1_287_0_PR_62) DoMigration() *migrate.Migration {
