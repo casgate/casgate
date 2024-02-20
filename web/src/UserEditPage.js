@@ -39,8 +39,6 @@ import {DeleteMfa} from "./backend/MfaBackend";
 import {CheckCircleOutlined, HolderOutlined, UsergroupAddOutlined} from "@ant-design/icons";
 import * as MfaBackend from "./backend/MfaBackend";
 import AccountAvatar from "./account/AccountAvatar";
-import moment from "moment/moment";
-import dayjs from "dayjs";
 
 const {Option} = Select;
 
@@ -908,12 +906,8 @@ class UserEditPage extends React.Component {
             {Setting.getLabel(i18next.t("forget:Password change required"), i18next.t("user:Password change required - Tooltip"))} :
           </Col>
           <Col span={(Setting.isMobile()) ? 22 : 2} >
-            <Switch checked={this.state.user.passwordChangeTime !== "0001-01-01T00:00:00Z" && dayjs(this.state.user.passwordChangeTime).isBefore(dayjs())} onChange={checked => {
-              if (checked) {
-                this.updateUserField("passwordChangeTime", moment().format());
-              } else {
-                this.updateUserField("passwordChangeTime", null);
-              }
+            <Switch checked={this.state.user.passwordChangeRequired} onChange={checked => {
+              this.updateUserField("passwordChangeRequired", checked);
             }} />
           </Col>
         </Row>
