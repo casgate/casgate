@@ -1,6 +1,5 @@
 package object
 
-
 type NotFoundError struct {
 	Err string
 }

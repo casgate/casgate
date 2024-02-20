@@ -129,11 +129,19 @@ class SystemInfo extends React.Component {
       <PrometheusInfoTable prometheusInfo={this.state.prometheusInfo} table={"latency"} />;
     const throughputUi = this.state.prometheusInfo.apiThroughput === null || this.state.prometheusInfo.apiThroughput?.length <= 0 ? <Spin size="large" /> :
       <PrometheusInfoTable prometheusInfo={this.state.prometheusInfo} table={"throughput"} />;
-    const link = this.state.versionInfo?.version !== "" ? `https://github.com/casdoor/casdoor/releases/tag/${this.state.versionInfo?.version}` : "";
+
+    const link = this.state.versionInfo?.version !== "" ?
+      `https://github.com/casdoor/casdoor/releases/tag/${this.state.versionInfo?.version}` :
+      "https://github.com/casgate/casgate/tags";
     let versionText = this.state.versionInfo?.version !== "" ? this.state.versionInfo?.version : i18next.t("system:Unknown version");
-    if (this.state.versionInfo?.commitOffset > 0) {
+    if (this.state.versionInfo?.version !== "" && this.state.versionInfo?.commitOffset > 0) {
       versionText += ` (ahead+${this.state.versionInfo?.commitOffset})`;
     }
+
+    const buildTime = this.state.versionInfo?.buildTime !== "" ? this.state.versionInfo?.buildTime : "N/A";
+    const gitCommitId = this.state.versionInfo?.commitId !== "" ? this.state.versionInfo?.commitId : "N/A";
+    const gitCommitOffset = this.state.versionInfo?.commitOffset !== "" ? this.state.versionInfo?.commitOffset : "N/A";
+    const gitTag = this.state.versionInfo?.version !== "" ? this.state.versionInfo?.version : "N/A";
 
     if (!Setting.isMobile()) {
       return (
@@ -169,6 +177,14 @@ class SystemInfo extends React.Component {
                 GitHub: <a target="_blank" rel="noreferrer" href="https://github.com/casdoor/casdoor">Casdoor</a>
                 <br />
                 {i18next.t("system:Version")}: <a target="_blank" rel="noreferrer" href={link}>{versionText}</a>
+                <br />
+                Git Tag: {gitTag}
+                <br />
+                Build Time: {buildTime}
+                <br />
+                Git Commit Id: {gitCommitId}
+                <br />
+                Git Offset: {gitCommitOffset}
                 <br />
                 {i18next.t("system:Official website")}: <a target="_blank" rel="noreferrer" href="https://casdoor.org">https://casdoor.org</a>
                 <br />
@@ -209,6 +225,14 @@ class SystemInfo extends React.Component {
               GitHub: <a target="_blank" rel="noreferrer" href="https://github.com/casdoor/casdoor">Casdoor</a>
               <br />
               {i18next.t("system:Version")}: <a target="_blank" rel="noreferrer" href={link}>{versionText}</a>
+              <br />
+              Git Tag: {gitTag}
+              <br />
+              Build Time: {buildTime}
+              <br />
+              Git Commit Id: {gitCommitId}
+              <br />
+              Git Offset: {gitCommitOffset}
               <br />
               {i18next.t("system:Official website")}: <a target="_blank" rel="noreferrer" href="https://casdoor.org">https://casdoor.org</a>
               <br />
