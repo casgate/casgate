@@ -199,7 +199,7 @@ func UpdateCert(id string, cert *Cert) (bool, error) {
 }
 
 func AddCert(cert *Cert) (bool, error) {
-	if cert.Certificate == "" || cert.PrivateKey == "" {
+	if cert.Scope == scopeCertJWT && (cert.Certificate == "" || cert.PrivateKey == "") {
 		certificate, privateKey := generateRsaKeys(cert.BitSize, cert.ExpireInYears, cert.Name, cert.Owner)
 		cert.Certificate = certificate
 		cert.PrivateKey = privateKey
