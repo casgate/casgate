@@ -28,15 +28,16 @@ type Ldap struct {
 	Owner       string `xorm:"varchar(100)" json:"owner"`
 	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
 
-	ServerName   string   `xorm:"varchar(100)" json:"serverName"`
-	Host         string   `xorm:"varchar(100)" json:"host"`
-	Port         int      `xorm:"int" json:"port"`
-	EnableSsl    bool     `xorm:"bool" json:"enableSsl"`
-	Username     string   `xorm:"varchar(100)" json:"username"`
-	Password     string   `xorm:"varchar(100)" json:"password"`
-	BaseDn       string   `xorm:"varchar(100)" json:"baseDn"`
-	Filter       string   `xorm:"varchar(200)" json:"filter"`
-	FilterFields []string `xorm:"varchar(100)" json:"filterFields"`
+	ServerName      string   `xorm:"varchar(100)" json:"serverName"`
+	Host            string   `xorm:"varchar(100)" json:"host"`
+	Port            int      `xorm:"int" json:"port"`
+	EnableSsl       bool     `xorm:"bool" json:"enableSsl"`
+	EnableMutualTls bool     `xorm:"bool" json:"enableMutualTls"`
+	Username        string   `xorm:"varchar(100)" json:"username"`
+	Password        string   `xorm:"varchar(100)" json:"password"`
+	BaseDn          string   `xorm:"varchar(100)" json:"baseDn"`
+	Filter          string   `xorm:"varchar(200)" json:"filter"`
+	FilterFields    []string `xorm:"varchar(100)" json:"filterFields"`
 
 	EnableRoleMapping bool               `xorm:"bool" json:"enableRoleMapping"`
 	RoleMappingItems  []*RoleMappingItem `xorm:"text" json:"roleMappingItems"`
@@ -44,7 +45,8 @@ type Ldap struct {
 	AutoSync int    `json:"autoSync"`
 	LastSync string `xorm:"varchar(100)" json:"lastSync"`
 
-	Cert string `xorm:"varchar(100)" json:"cert"`
+	Cert       string `xorm:"varchar(100)" json:"cert"`
+	ClientCert string `xorm:"varchar(100)" json:"clientCert"`
 
 	EnableAttributeMapping bool                    `xorm:"bool" json:"enableAttributeMapping"`
 	AttributeMappingItems  []*AttributeMappingItem `xorm:"text" json:"attributeMappingItems"`
@@ -162,7 +164,8 @@ func UpdateLdap(ldap *Ldap) (bool, error) {
 
 	affected, err := ormer.Engine.ID(ldap.Id).Cols("owner", "server_name", "host", "cert",
 		"port", "enable_ssl", "username", "password", "base_dn", "filter", "filter_fields", "auto_sync",
-		"role_mapping_items", "enable_role_mapping", "attribute_mapping_items", "enable_attribute_mapping").Update(ldap)
+		"role_mapping_items", "enable_role_mapping", "attribute_mapping_items", "enable_attribute_mapping",
+		"enable_mutual_tls", "client_cert").Update(ldap)
 	if err != nil {
 		return false, nil
 	}

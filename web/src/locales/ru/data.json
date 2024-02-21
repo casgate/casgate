@@ -417,6 +417,8 @@
     "Edit LDAP": "Изменить LDAP",
     "Enable Attribute Mapping": "Enable Attribute Mapping",
     "Enable Attribute Mapping - Tooltip": "Enable Attribute Mapping - Tooltip",
+    "Enable mTLS": "Включить mTLS",
+    "Enable mTLS - Tooltip": "Дополнительная аутентификация клиента с помощью сертификата",
     "Enable Role Mapping": "Включить сопоставление ролей",
     "Enable Role Mapping - Tooltip": "Включить сопоставление ролей",
     "Enable SSL": "Включить SSL",

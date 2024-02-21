@@ -417,6 +417,8 @@
     "Edit LDAP": "Chỉnh sửa LDAP",
     "Enable Attribute Mapping": "Enable Attribute Mapping",
     "Enable Attribute Mapping - Tooltip": "Enable Attribute Mapping - Tooltip",
+    "Enable mTLS": "Enable mTLS",
+    "Enable mTLS - Tooltip": "Ensure that the parties at each end of a network connection are who they claim to be by verifying that they both have the correct private key",
     "Enable Role Mapping": "Enable Role Mapping",
     "Enable Role Mapping - Tooltip": "Enable Role Mapping - Tooltip",
     "Enable SSL": "Kích hoạt SSL",
