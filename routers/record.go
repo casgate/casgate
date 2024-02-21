@@ -63,7 +63,6 @@ func RecordMessage(ctx *context.Context) {
 		record := defaultRecordLog(ctx)
 		// TODO need to extract real response
 		record.Response = "Response"
-		record.Detail = "Record middleware"
 		records = append(records, record)
 	}
 
@@ -71,7 +70,6 @@ func RecordMessage(ctx *context.Context) {
 		record := record
 		// TODO need to extract real response
 		record.Response = "Response"
-		record.Detail = "Record middleware"
 		util.SafeGoroutine(func() { object.AddRecord(record) })
 	}
 }
