@@ -46,6 +46,10 @@ func GetRoleCount(owner, field, value string) (int64, error) {
 }
 
 func GetRolesByIds(roleIds []string) ([]*Role, error) {
+	if len(roleIds) == 0 {
+		return nil, nil
+	}
+
 	condBuilder := builder.NewCond()
 	for _, roleId := range roleIds {
 		owner, name := util.GetOwnerAndNameFromIdNoCheck(roleId)
