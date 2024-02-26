@@ -36,30 +36,31 @@ type Application struct {
 	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
 	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
 
-	DisplayName         string          `xorm:"varchar(100)" json:"displayName"`
-	Logo                string          `xorm:"varchar(200)" json:"logo"`
-	HomepageUrl         string          `xorm:"varchar(100)" json:"homepageUrl"`
-	Description         string          `xorm:"varchar(100)" json:"description"`
-	Organization        string          `xorm:"varchar(100)" json:"organization"`
-	Cert                string          `xorm:"varchar(100)" json:"cert"`
-	EnablePassword      bool            `json:"enablePassword"`
-	EnableSignUp        bool            `json:"enableSignUp"`
-	EnableSigninSession bool            `json:"enableSigninSession"`
-	EnableAutoSignin    bool            `json:"enableAutoSignin"`
-	EnableCodeSignin    bool            `json:"enableCodeSignin"`
-	EnableSamlCompress  bool            `json:"enableSamlCompress"`
-	EnableWebAuthn      bool            `json:"enableWebAuthn"`
-	EnableLinkWithEmail bool            `json:"enableLinkWithEmail"`
-	OrgChoiceMode       string          `json:"orgChoiceMode"`
-	SamlReplyUrl        string          `xorm:"varchar(100)" json:"samlReplyUrl"`
-	Providers           []*ProviderItem `xorm:"mediumtext" json:"providers"`
-	SignupItems         []*SignupItem   `xorm:"varchar(1000)" json:"signupItems"`
-	GrantTypes          []string        `xorm:"varchar(1000)" json:"grantTypes"`
-	OrganizationObj     *Organization   `xorm:"-" json:"organizationObj"`
-	CertPublicKey       string          `xorm:"-" json:"certPublicKey"`
-	Tags                []string        `xorm:"mediumtext" json:"tags"`
-	InvitationCodes     []string        `xorm:"varchar(200)" json:"invitationCodes"`
-	IsPublic            bool            `xorm:"bool" json:"isPublic"`
+	DisplayName            string          `xorm:"varchar(100)" json:"displayName"`
+	Logo                   string          `xorm:"varchar(200)" json:"logo"`
+	HomepageUrl            string          `xorm:"varchar(100)" json:"homepageUrl"`
+	Description            string          `xorm:"varchar(100)" json:"description"`
+	Organization           string          `xorm:"varchar(100)" json:"organization"`
+	Cert                   string          `xorm:"varchar(100)" json:"cert"`
+	EnablePassword         bool            `json:"enablePassword"`
+	EnablePasswordRecovery bool            `json:"enablePasswordRecovery"`
+	EnableSignUp           bool            `json:"enableSignUp"`
+	EnableSigninSession    bool            `json:"enableSigninSession"`
+	EnableAutoSignin       bool            `json:"enableAutoSignin"`
+	EnableCodeSignin       bool            `json:"enableCodeSignin"`
+	EnableSamlCompress     bool            `json:"enableSamlCompress"`
+	EnableWebAuthn         bool            `json:"enableWebAuthn"`
+	EnableLinkWithEmail    bool            `json:"enableLinkWithEmail"`
+	OrgChoiceMode          string          `json:"orgChoiceMode"`
+	SamlReplyUrl           string          `xorm:"varchar(100)" json:"samlReplyUrl"`
+	Providers              []*ProviderItem `xorm:"mediumtext" json:"providers"`
+	SignupItems            []*SignupItem   `xorm:"varchar(1000)" json:"signupItems"`
+	GrantTypes             []string        `xorm:"varchar(1000)" json:"grantTypes"`
+	OrganizationObj        *Organization   `xorm:"-" json:"organizationObj"`
+	CertPublicKey          string          `xorm:"-" json:"certPublicKey"`
+	Tags                   []string        `xorm:"mediumtext" json:"tags"`
+	InvitationCodes        []string        `xorm:"varchar(200)" json:"invitationCodes"`
+	IsPublic               bool            `xorm:"bool" json:"isPublic"`
 
 	ClientId             string     `xorm:"varchar(100)" json:"clientId"`
 	ClientSecret         string     `xorm:"varchar(100)" json:"clientSecret"`
