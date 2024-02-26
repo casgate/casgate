@@ -32,7 +32,7 @@ import (
 // @router /get-records [get]
 func (c *ApiController) GetRecords() {
 	user, ok := c.RequireSignedInUser()
-	if !ok || !user.IsAdmin {
+	if !ok || (!user.IsAdmin && !user.IsGlobalAdmin()) {
 		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
 		return
 	}
