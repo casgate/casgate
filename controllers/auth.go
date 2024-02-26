@@ -363,6 +363,9 @@ func (c *ApiController) Login() {
 				c.ResponseError(err.Error(), nil)
 				return
 			} else if user == nil {
+				record := object.NewRecordBuilder(c.Ctx).WithUsername(authForm.Username).WithDetail("user not found").Build()
+				object.SaveOnSuccess(c.Ctx, record)
+
 				c.ResponseError(fmt.Sprintf(c.T("general:Invalid username or password/code"), util.GetId(authForm.Organization, authForm.Username)))
 				return
 			}
@@ -428,7 +431,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
 
-				record := object.NewRecordBuilder(c.Ctx).WithDetail("User not found").Build()
+				record := object.NewRecordBuilder(c.Ctx).WithDetail(err.Error()).Build()
 				object.SaveOnSuccess(c.Ctx, record)
 			}
 		}
@@ -764,13 +767,6 @@ func (c *ApiController) Login() {
 				}
 
 				resp = c.HandleLoggedIn(application, user, &authForm)
-
-				record := object.NewRecordBuilder(c.Ctx).
-					WithUsername(user.Name).
-					WithOrganization(application.Organization).
-					WithDetail("User logged in").
-					Build()
-				object.SaveOnSuccess(c.Ctx, record)
 
 				record2 := object.NewRecordBuilder(c.Ctx).
 					WithAction("signup").

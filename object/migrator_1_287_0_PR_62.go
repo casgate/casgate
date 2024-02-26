@@ -90,7 +90,7 @@ func (*Migrator_1_287_0_PR_62) DoMigration() *migrate.Migration {
 				return nil
 			}
 
-			dropColumnSql := "ALTER TABLE `user` DROP COLUMN `password_change_required`";
+			dropColumnSql := "ALTER TABLE `user` DROP COLUMN `password_change_required`"
 			if _, err = tx.Query(dropColumnSql); err != nil {
 				return err
 			}

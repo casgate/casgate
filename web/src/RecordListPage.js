@@ -268,11 +268,12 @@ class RecordListPage extends BaseListPage {
             searchedColumn: params.searchedColumn,
           });
         } else {
-          if (res.data.includes("Please login first")) {
+          if (Setting.isResponseDenied(res)) {
             this.setState({
-              loading: false,
               isAuthorized: false,
             });
+          } else {
+            Setting.showMessage("error", res.msg);
           }
         }
       });

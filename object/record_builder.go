@@ -21,13 +21,21 @@ import (
 )
 
 func NewRecordBuilder(ctx *context.Context) *RecordBuilder {
-	return &RecordBuilder{
+	rb := &RecordBuilder{
 		record: NewRecord(ctx),
 	}
+
+	rb.setDefaultFieldValues()
+
+	return rb
 }
 
 type RecordBuilder struct {
 	record *Record
+}
+
+func (rb *RecordBuilder) setDefaultFieldValues() {
+	rb.WithOrganization("built-in")
 }
 
 func (rb *RecordBuilder) WithOrganization(organization string) *RecordBuilder {
