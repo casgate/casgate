@@ -636,11 +636,11 @@ class LoginPage extends React.Component {
               </Form.Item>
             </div>
             {AgreementModal.isAgreementRequired(application) ? AgreementModal.renderAgreementFormItem(application, true, {}, this) : null}
-            <div style={{paddingTop: "24px"}}>
+            {this.props.application?.enablePasswordRecovery && <div style={{paddingTop: "24px"}}>
               {
                 Setting.renderForgetLink(application, i18next.t("login:Forgot password?"))
               }
-            </div>
+            </div>}
             <div style={{display: "flex", justifyContent: "center", marginBottom: "unset", marginTop: 24}}>
               {
                 this.renderAuthProviders(application)
