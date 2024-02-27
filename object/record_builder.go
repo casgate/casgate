@@ -15,6 +15,7 @@
 package object
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/beego/beego/context"
@@ -68,8 +69,10 @@ func (rb *RecordBuilder) AddDetail(detail string) *RecordBuilder {
 	return rb
 }
 
-func (rb *RecordBuilder) AddReason(reason string) *RecordBuilder {
-	rb.record.Detail += fmt.Sprintln("reason: ", reason)
+func (rb *RecordBuilder) AddOldObject(object interface{}) *RecordBuilder {
+	if jsonObj, err := json.Marshal(object); err == nil {
+		rb.record.Detail += fmt.Sprintln("old object: ", string(jsonObj))
+	}
 
 	return rb
 }

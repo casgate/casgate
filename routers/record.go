@@ -69,8 +69,8 @@ func RecordMessage(ctx *context.Context) {
 	}
 
 	if resp, ok := ctx.Input.Data()["json"]; ok {
-		if strResp, err := json.Marshal(resp); err == nil {
-			record.Response = string(strResp)
+		if jsonResp, err := json.Marshal(resp); err == nil {
+			record.Response = string(jsonResp)
 		}
 	}
 
