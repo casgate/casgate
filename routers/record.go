@@ -15,6 +15,8 @@
 package routers
 
 import (
+	"encoding/json"
+
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 
@@ -57,21 +59,22 @@ func getUserByClientIdSecret(ctx *context.Context) string {
 }
 
 func RecordMessage(ctx *context.Context) {
-	records := object.ExtractRecords(ctx)
+	rb := object.ExtractRecord(ctx)
+	var record *object.Record
 
-	if len(records) == 0 {
-		record := defaultRecordLog(ctx)
-		// TODO need to extract real response
-		record.Response = "Response"
-		records = append(records, record)
+	if rb == nil {
+		record = defaultRecordLog(ctx)
+	} else {
+		record = rb.Build()
 	}
 
-	for _, record := range records {
-		record := record
-		// TODO need to extract real response
-		record.Response = "Response"
-		util.SafeGoroutine(func() { object.AddRecord(record) })
+	if resp, ok := ctx.Input.Data()["json"]; ok {
+		if strResp, err := json.Marshal(resp); err == nil {
+			record.Response = string(strResp)
+		}
 	}
+
+	util.SafeGoroutine(func() { object.AddRecord(record) })
 }
 
 func defaultRecordLog(ctx *context.Context) *object.Record {
