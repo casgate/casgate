@@ -16,11 +16,11 @@ package object
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/beego/beego/context"
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
 )
@@ -106,7 +106,7 @@ func AddRecord(record *Record) bool {
 	if errWebhook == nil {
 		record.IsTriggered = true
 	} else {
-		fmt.Println(errWebhook)
+		logs.Error("webhook: ", errWebhook)
 	}
 
 	affected, err := ormer.Engine.Insert(record)
@@ -122,9 +122,9 @@ func GetRecordCount(field, value string, filterRecord *Record) (int64, error) {
 	return session.Count(filterRecord)
 }
 
-func GetRecords() ([]*Record, error) {
+func GetRecords(filterRecord *Record) ([]*Record, error) {
 	records := []*Record{}
-	err := ormer.Engine.Desc("id").Find(&records)
+	err := ormer.Engine.Desc("id").Find(&records, filterRecord)
 	if err != nil {
 		return records, err
 	}
