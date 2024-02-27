@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -177,11 +178,38 @@ func extendApplicationWithProviders(application *Application) (err error) {
 
 	for _, providerItem := range application.Providers {
 		if provider, ok := m[providerItem.Name]; ok {
+			if provider.Type == "OpenID" {
+				err := updateOpenIDWithUrls(provider)
+				if err != nil {
+					logs.Error("failed updateOpenIDWithUrls for provider %s: %s", provider.Name, err.Error())
+				}
+			}
 			providerItem.Provider = provider
 		}
 	}
 
 	return
+}
+
+func updateOpenIDWithUrls(provider *Provider) error {
+	idpInfo := FromProviderToIdpInfo(nil, provider)
+	openIDProvider := idp.NewOpenIdProvider(idpInfo, idpInfo.RedirectUrl)
+
+	client, err := GetProviderHttpClient(*idpInfo)
+	if err != nil {
+		return fmt.Errorf("failed to GetProviderHttpClient for provider %s", provider.Name)
+	}
+	openIDProvider.SetHttpClient(client)
+	err = openIDProvider.EnrichOauthURLs()
+	if err != nil {
+		return fmt.Errorf("failed to EnrichOauthURLs for provider %s", provider.Name)
+	}
+
+	provider.CustomTokenUrl = openIDProvider.TokenURL
+	provider.CustomAuthUrl = openIDProvider.AuthURL
+	provider.CustomUserInfoUrl = openIDProvider.UserInfoURL
+
+	return nil
 }
 
 func extendApplicationWithOrg(application *Application) (err error) {

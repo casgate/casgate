@@ -867,6 +867,9 @@ export function getProviderLogoURL(provider) {
     if (provider.type === "Custom" && provider.customLogo) {
       return provider.customLogo;
     }
+    if (provider.type === "OpenID") {
+      return "https://upload.wikimedia.org/wikipedia/commons/6/68/Social_icons-openid-22x22.png";
+    }
     return `${StaticBaseUrl}/img/social_${provider.type.toLowerCase()}.png`;
   } else {
     const info = OtherProviderInfo[provider.category][provider.type];
@@ -965,6 +968,7 @@ export function getProviderTypeOptions(category) {
         {id: "Yandex", name: "Yandex"},
         {id: "Zoom", name: "Zoom"},
         {id: "Custom", name: "Custom"},
+        {id: "OpenID", name: "OpenID"},
       ]
     );
   } else if (category === "Email") {
