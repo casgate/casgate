@@ -235,9 +235,26 @@ func (c *ApiController) DeleteProvider() {
 	}
 
 	if len(applications) > 0 {
-		msg := c.makeDeleteProviderErrorMessage(applications, c.GetAcceptLanguage())
-		c.ResponseConflict(msg)
-		return
+		if !provider.RemoveFromApps {
+			msg := c.makeDeleteProviderErrorMessage(applications, c.GetAcceptLanguage())
+			c.ResponseConflict(msg)
+			return
+		}
+		for _, app := range applications {
+			providers := make([]*object.ProviderItem, 0, len(app.Providers))
+			for _, providerItem := range app.Providers {
+				if providerItem.Name != provider.Name {
+					providers = append(providers, providerItem)
+				}
+			}
+			app.Providers = providers
+
+			_, err = object.UpdateApplication(app.GetId(), app)
+			if err != nil {
+				c.ResponseInternalServerError(err.Error())
+				return
+			}
+		}
 	}
 
 	c.Data["json"] = wrapActionResponse(object.DeleteProvider(&provider))
