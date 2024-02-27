@@ -88,6 +88,8 @@ type Provider struct {
 	ValidateIdpSignature bool   `json:"validateIdPSignature"`
 
 	ProviderUrl string `xorm:"varchar(200)" json:"providerUrl"`
+
+	RemoveFromApps bool `xorm:"-" json:"removeFromApps"`
 }
 
 type RoleMappingItem struct {
