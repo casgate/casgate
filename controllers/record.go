@@ -43,12 +43,6 @@ func (c *ApiController) GetRecords() {
 		return
 	}
 
-	isAdmin := user.IsAdmin || user.IsGlobalAdmin()
-	if !isAdmin {
-		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
-		return
-	}
-
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 	field := c.Input().Get("field")
