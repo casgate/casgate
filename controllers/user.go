@@ -296,6 +296,7 @@ func (c *ApiController) UpdateUser() {
 			return
 		}
 	}
+
 	oldUser, err := object.GetUser(id)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
@@ -348,6 +349,9 @@ func (c *ApiController) UpdateUser() {
 			return
 		}
 	}
+
+
+	object.GetRecord(c.Ctx).AddOldObject(oldUser).AddDetail("update user")
 
 	c.Data["json"] = wrapActionResponse(affected)
 	c.ServeJSON()

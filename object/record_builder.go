@@ -15,6 +15,7 @@
 package object
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/beego/beego/context"
@@ -35,7 +36,7 @@ type RecordBuilder struct {
 }
 
 func (rb *RecordBuilder) setDefaultFieldValues() {
-	rb.WithOrganization("built-in")
+	rb.record.Organization = "built-in"
 }
 
 func (rb *RecordBuilder) WithOrganization(organization string) *RecordBuilder {
@@ -62,14 +63,16 @@ func (rb *RecordBuilder) WithResponse(response string) *RecordBuilder {
 	return rb
 }
 
-func (rb *RecordBuilder) WithDetail(detail string) *RecordBuilder {
-	rb.record.Detail = detail
+func (rb *RecordBuilder) AddDetail(detail string) *RecordBuilder {
+	rb.record.Detail += fmt.Sprintln("detail: ", detail)
 
 	return rb
 }
 
-func (rb *RecordBuilder) WithReason(reason string) *RecordBuilder {
-	rb.record.Detail += fmt.Sprintln("reason: ", reason)
+func (rb *RecordBuilder) AddOldObject(object interface{}) *RecordBuilder {
+	if jsonObj, err := json.Marshal(object); err == nil {
+		rb.record.Detail += fmt.Sprintln("old object: ", string(jsonObj))
+	}
 
 	return rb
 }
@@ -82,23 +85,27 @@ type recordDataKey string
 
 const dataKey recordDataKey = "recordsStore"
 
-func SaveOnSuccess(ctx *context.Context, record *Record) {
-	records := ExtractRecords(ctx)
-	records = append(records, record)
+func ExtractRecord(ctx *context.Context) *RecordBuilder {
+	values := ctx.Input.GetData(dataKey)
 
-	ctx.Input.SetData(dataKey, records)
+	if values == nil {
+		return nil
+	}
+
+	rb, ok := values.(*RecordBuilder)
+	if !ok {
+		return nil
+	}
+
+	return rb
 }
 
-func ExtractRecords(ctx *context.Context) []*Record {
-	values := ctx.Input.GetData(dataKey)
-	if values == nil {
-		return make([]*Record, 0)
+func GetRecord(ctx *context.Context) *RecordBuilder {
+	rb := ExtractRecord(ctx)
+	if rb == nil {
+		rb = NewRecordBuilder(ctx)
+		ctx.Input.SetData(dataKey, rb)
 	}
 
-	recordData, ok := values.([]*Record)
-	if !ok {
-		return make([]*Record, 0)
-	}
-
-	return recordData
+	return rb
 }
