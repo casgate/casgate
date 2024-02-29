@@ -350,7 +350,6 @@ func (c *ApiController) UpdateUser() {
 		}
 	}
 
-
 	object.GetRecord(c.Ctx).AddOldObject(oldUser).AddDetail("update user")
 
 	c.Data["json"] = wrapActionResponse(affected)

@@ -48,12 +48,25 @@ type Record struct {
 	Action       string `xorm:"varchar(1000)" json:"action"`
 	StatusCode   string `xorm:"varchar(5)" json:"statusCode"`
 
-	Object       string `xorm:"text" json:"object"`
-	Response     string `xorm:"text" json:"response"`
-	Detail       string `xorm:"text" json:"detail"`
-	ExtendedUser *User  `xorm:"-" json:"extendedUser"`
+	Object       string        `xorm:"text" json:"object"`
+	Response     string        `xorm:"text" json:"response"`
+	Detail       *RecordDetail `xorm:"text" json:"detail"`
+	ExtendedUser *User         `xorm:"-" json:"extendedUser"`
 
 	IsTriggered bool `json:"isTriggered"`
+}
+
+type RecordDetail struct {
+	Reason    []string    `json:"reason,omitempty"`
+	OldObject interface{} `json:"oldObject,omitempty"`
+}
+
+func (rd *RecordDetail) FromDB(bytes []byte) error {
+	return json.Unmarshal(bytes, rd)
+}
+
+func (rd *RecordDetail) ToDB() ([]byte, error) {
+	return json.Marshal(rd)
 }
 
 func NewRecord(ctx *context.Context) *Record {

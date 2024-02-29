@@ -195,7 +195,7 @@ class RecordListPage extends BaseListPage {
         sorter: true,
         ...this.getColumnSearchProps("detail"),
         render: (text, record, index) => {
-          return text;
+          return (<div>{JSON.stringify(text, null, 2)}</div>);
         },
       },
       {
