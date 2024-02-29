@@ -151,6 +151,7 @@ class ProviderListPage extends BaseListPage {
           {text: "SMS", value: "SMS"},
           {text: "Storage", value: "Storage"},
           {text: "Web3", value: "Web3"},
+          {text: "LDAP", value: "LDAP"},
         ],
         width: "110px",
         sorter: true,
@@ -172,6 +173,7 @@ class ProviderListPage extends BaseListPage {
           {text: "SMS", value: "SMS", children: Setting.getProviderTypeOptions("SMS").map((o) => {return {text: o.id, value: o.name};})},
           {text: "Storage", value: "Storage", children: Setting.getProviderTypeOptions("Storage").map((o) => {return {text: o.id, value: o.name};})},
           {text: "Web3", value: "Web3", children: Setting.getProviderTypeOptions("Web3").map((o) => {return {text: o.id, value: o.name};})},
+          {text: "LDAP", value: "LDAP", children: Setting.getProviderTypeOptions("LDAP").map((o) => {return {text: o.id, value: o.name};})},
         ],
         sorter: true,
         render: (text, record, index) => {
