@@ -15,9 +15,6 @@
 package object
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/beego/beego/context"
 )
 
@@ -37,6 +34,7 @@ type RecordBuilder struct {
 
 func (rb *RecordBuilder) setDefaultFieldValues() {
 	rb.record.Organization = "built-in"
+	rb.record.Detail = &RecordDetail{}
 }
 
 func (rb *RecordBuilder) WithOrganization(organization string) *RecordBuilder {
@@ -64,15 +62,13 @@ func (rb *RecordBuilder) WithResponse(response string) *RecordBuilder {
 }
 
 func (rb *RecordBuilder) AddDetail(detail string) *RecordBuilder {
-	rb.record.Detail += fmt.Sprintln("detail: ", detail)
+	rb.record.Detail.Reason = append(rb.record.Detail.Reason, detail)
 
 	return rb
 }
 
 func (rb *RecordBuilder) AddOldObject(object interface{}) *RecordBuilder {
-	if jsonObj, err := json.Marshal(object); err == nil {
-		rb.record.Detail += fmt.Sprintln("old object: ", string(jsonObj))
-	}
+	rb.record.Detail.OldObject = object
 
 	return rb
 }
