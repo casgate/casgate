@@ -18,6 +18,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -34,7 +35,29 @@ const (
 	defaultFirstNameOid = "urn:oid:2.5.4.42"
 	defaultLastNameOid  = "urn:oid:2.5.4.4"
 	defaultEmailOid     = "urn:oid:1.2.840.113549.1.9.1"
+
+	nameIdFormatAliasPersistent   = "Persistent"
+	nameIdFormatAliasTransient    = "Transient"
+	nameIdFormatAliasEmailAddress = "Email"
+	nameIdFormatAliasUnspecified  = "Unspecified"
+
+	sha1CryptoAlgorithm   = "RSA-SHA1"
+	sha256CryptoAlgorithm = "RSA-SHA256"
+	sha512CryptoAlgorithm = "RSA-SHA512"
 )
+
+var nameIdFormats = map[string]string{
+	nameIdFormatAliasPersistent:   saml2.NameIdFormatPersistent,
+	nameIdFormatAliasTransient:    saml2.NameIdFormatTransient,
+	nameIdFormatAliasEmailAddress: saml2.NameIdFormatEmailAddress,
+	nameIdFormatAliasUnspecified:  saml2.NameIdFormatUnspecified,
+}
+
+var signatureAlgorithms = map[string]string{
+	sha1CryptoAlgorithm:   dsig.RSASHA1SignatureMethod,
+	sha256CryptoAlgorithm: dsig.RSASHA256SignatureMethod,
+	sha512CryptoAlgorithm: dsig.RSASHA512SignatureMethod,
+}
 
 func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*idp.UserInfo, map[string]any, error) {
 	samlResponse, _ = url.QueryUnescape(samlResponse)
@@ -120,7 +143,7 @@ func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method
 		return "", "", err
 	}
 
-	if provider.EnableSignAuthnRequest {
+	if provider.RequestSignature != NotToSign {
 		post, err := sp.BuildAuthBodyPost(relayState)
 		if err != nil {
 			return "", "", err
@@ -140,31 +163,42 @@ func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method
 func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLServiceProvider, error) {
 	_, origin := getOriginFromHost(host)
 
-	certStore, err := buildSpCertificateStore(provider, samlResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	var issuer = provider.ClientId
+	issuer := provider.ClientId
 	if issuer == "" {
 		issuer = fmt.Sprintf("%s/api/acs", origin)
+	}
+
+	nameIdFormat, err := getFullNameIdFormat(provider.NameIdFormat)
+	if err != nil {
+		return nil, err
 	}
 
 	sp := &saml2.SAMLServiceProvider{
 		ServiceProviderIssuer:       issuer,
 		AssertionConsumerServiceURL: fmt.Sprintf("%s/api/acs", origin),
+		NameIdFormat:                nameIdFormat,
 		SignAuthnRequests:           false,
-		IDPCertificateStore:         &certStore,
 		SPKeyStore:                  dsig.RandomKeyStoreForTest(),
+		SkipSignatureValidation:     !provider.ValidateIdpSignature,
 	}
 
 	if provider.Endpoint != "" {
 		sp.IdentityProviderSSOURL = provider.Endpoint
 		sp.IdentityProviderIssuer = provider.IssuerUrl
 	}
-	if provider.EnableSignAuthnRequest {
+	if provider.RequestSignature != NotToSign {
 		sp.SignAuthnRequests = true
-		sp.SPKeyStore, err = buildSpKeyStore()
+		sp.SignAuthnRequestsAlgorithm, err = getFullSignatureAlgorithm(provider.SignatureAlgorithm)
+		if err != nil {
+			return nil, err
+		}
+		sp.SPKeyStore, err = buildSpKeyStore(provider)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if provider.ValidateIdpSignature && samlResponse != "" {
+		sp.IDPCertificateStore, err = buildIdPCertificateStore(provider, samlResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -173,38 +207,62 @@ func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 	return sp, nil
 }
 
-func buildSpKeyStore() (dsig.X509KeyStore, error) {
-	keyPair, err := tls.LoadX509KeyPair("object/token_jwt_key.pem", "object/token_jwt_key.key")
-	if err != nil {
-		return nil, err
+func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
+	var (
+		certificate *Cert
+		keyPair     tls.Certificate
+		err         error
+	)
+	if provider.RequestSignature == SignWithCertificate {
+		if provider.Cert == "" {
+			return nil, errors.New("certificate for request signature was not selected")
+		}
+		certificate, err = GetCert(fmt.Sprintf("%s/%s", provider.Owner, provider.Cert))
+		if err != nil {
+			return nil, err
+		}
+		if certificate == nil {
+			return nil, ErrCertDoesNotExist
+		}
+
+		if certificate.Scope != scopeClientCert {
+			return nil, ErrCertInvalidScope
+		}
+
+		keyPair, err = tls.X509KeyPair([]byte(certificate.Certificate), []byte(certificate.PrivateKey))
+		if err != nil {
+			return nil, err
+		}
+	} else if provider.RequestSignature == SignWithFile {
+		keyPair, err = tls.LoadX509KeyPair("object/token_jwt_key.pem", "object/token_jwt_key.key")
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, errors.New(fmt.Sprintf("unknown request signature type: %s", provider.RequestSignature))
 	}
+
 	return &dsig.TLSCertKeyStore{
 		PrivateKey:  keyPair.PrivateKey,
 		Certificate: keyPair.Certificate,
 	}, nil
 }
 
-func buildSpCertificateStore(provider *Provider, samlResponse string) (certStore dsig.MemoryX509CertificateStore, err error) {
-	certEncodedData := ""
-	if samlResponse != "" {
-		certEncodedData, err = getCertificateFromSamlResponse(samlResponse, provider.Type)
-		if err != nil {
-			return
-		}
-	} else if provider.IdP != "" {
-		certEncodedData = provider.IdP
+func buildIdPCertificateStore(provider *Provider, samlResponse string) (certStore *dsig.MemoryX509CertificateStore, err error) {
+	certEncodedData, err := getCertificateFromSamlResponse(samlResponse, provider.Type)
+	if err != nil {
+		return &dsig.MemoryX509CertificateStore{}, err
 	}
-
 	certData, err := base64.StdEncoding.DecodeString(certEncodedData)
 	if err != nil {
-		return dsig.MemoryX509CertificateStore{}, err
+		return &dsig.MemoryX509CertificateStore{}, err
 	}
 	idpCert, err := x509.ParseCertificate(certData)
 	if err != nil {
-		return dsig.MemoryX509CertificateStore{}, err
+		return &dsig.MemoryX509CertificateStore{}, err
 	}
 
-	certStore = dsig.MemoryX509CertificateStore{
+	certStore = &dsig.MemoryX509CertificateStore{
 		Roots: []*x509.Certificate{idpCert},
 	}
 	return certStore, nil
@@ -224,5 +282,23 @@ func getCertificateFromSamlResponse(samlResponse string, providerType string) (s
 	tag := tagMap[providerType]
 	expression := fmt.Sprintf("<%s:X509Certificate>([\\s\\S]*?)</%s:X509Certificate>", tag, tag)
 	res := regexp.MustCompile(expression).FindStringSubmatch(deStr)
+	if res == nil {
+		return "", errors.New("could not obtain signature certificate from SAML response")
+	}
+
 	return res[1], nil
+}
+
+func getFullNameIdFormat(nameIdFormat string) (string, error) {
+	if result, ok := nameIdFormats[nameIdFormat]; ok {
+		return result, nil
+	}
+	return "", errors.New(fmt.Sprintf("Unknown Name ID Format: %s", nameIdFormat))
+}
+
+func getFullSignatureAlgorithm(signatureAlgorithm string) (string, error) {
+	if result, ok := signatureAlgorithms[signatureAlgorithm]; ok {
+		return result, nil
+	}
+	return "", errors.New(fmt.Sprintf("Unknown signature algorithm: %s", signatureAlgorithm))
 }

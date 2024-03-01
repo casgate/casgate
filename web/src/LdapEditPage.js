@@ -33,7 +33,8 @@ class LdapEditPage extends React.Component {
       organizationName: props.match.params.organizationName,
       ldap: null,
       organizations: [],
-      certs: [],
+      caCerts: [],
+      clientCerts: [],
     };
   }
 
@@ -42,11 +43,20 @@ class LdapEditPage extends React.Component {
     this.getOrganizations();
   }
 
-  getCerts(owner) {
+  getCACerts(owner) {
     CertBackend.getCerts(owner, -1, -1, "scope", Setting.CertScopeCACert, "", "")
       .then((res) => {
         this.setState({
-          certs: (res.status === "ok") ? res.data : [],
+          caCerts: (res.status === "ok") ? res.data : [],
+        });
+      });
+  }
+
+  getClientCerts(owner) {
+    CertBackend.getCerts(owner, -1, -1, "scope", Setting.CertScopeClientCert, "", "")
+      .then((res) => {
+        this.setState({
+          clientCerts: (res.status === "ok") ? res.data : [],
         });
       });
   }
@@ -58,7 +68,8 @@ class LdapEditPage extends React.Component {
           this.setState({
             ldap: res.data,
           });
-          this.getCerts(res.data.owner);
+          this.getCACerts(res.data.owner);
+          this.getClientCerts(res.data.owner);
         } else {
           Setting.showMessage("error", res.msg);
         }
@@ -170,22 +181,60 @@ class LdapEditPage extends React.Component {
             }} />
           </Col>
         </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
-            {Setting.getLabel(i18next.t("ldap:CA Certificate"), i18next.t("ldap:CA Certificate - Tooltip"))} :
-          </Col>
-          <Col span={19} >
-            <Select virtual={false} style={{width: "100%"}} value={this.state.ldap.cert} onChange={(value => {this.updateLdapField("cert", value);})}>
-              {
-                this.state.certs.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
-              }
-            </Select>
-          </Col>
-          <Col style={{paddingLeft: "5px"}} span={1} >
-            <Button icon={<ClearOutlined />} type="text" onClick={() => {this.updateLdapField("cert", "");}} >
-            </Button>
-          </Col>
-        </Row>
+        {
+          this.state.ldap.enableSsl ? (
+            <Row style={{marginTop: "20px"}} >
+              <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+                {Setting.getLabel(i18next.t("cert:CA Certificate"), i18next.t("cert:CA Certificate - Tooltip"))} :
+              </Col>
+              <Col span={19} >
+                <Select virtual={false} style={{width: "100%"}} value={this.state.ldap.cert} onChange={(value => {this.updateLdapField("cert", value);})}>
+                  {
+                    this.state.caCerts.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
+                  }
+                </Select>
+              </Col>
+              <Col style={{paddingLeft: "5px"}} span={1} >
+                <Button icon={<ClearOutlined />} type="text" onClick={() => {this.updateLdapField("cert", "");}} >
+                </Button>
+              </Col>
+            </Row>
+          ) : null
+        }
+        {
+          this.state.ldap.enableSsl ? (
+            <Row style={{marginTop: "20px"}} >
+              <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+                {Setting.getLabel(i18next.t("ldap:Enable mTLS"), i18next.t("ldap:Enable mTLS - Tooltip"))} :
+              </Col>
+              <Col span={20} >
+                <Switch checked={this.state.ldap.enableMutualTls} onChange={checked => {
+                  this.updateLdapField("enableMutualTls", checked);
+                }} />
+              </Col>
+            </Row>
+          ) : null
+        }
+        {
+          this.state.ldap.enableSsl && this.state.ldap.enableMutualTls ? (
+            <Row style={{marginTop: "20px"}} >
+              <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+                {Setting.getLabel(i18next.t("cert:Client Certificate"), i18next.t("cert:Client Certificate - Tooltip"))} :
+              </Col>
+              <Col span={19} >
+                <Select virtual={false} style={{width: "100%"}} value={this.state.ldap.clientCert} onChange={(value => {this.updateLdapField("clientCert", value);})}>
+                  {
+                    this.state.clientCerts.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
+                  }
+                </Select>
+              </Col>
+              <Col style={{paddingLeft: "5px"}} span={1} >
+                <Button icon={<ClearOutlined />} type="text" onClick={() => {this.updateLdapField("clientCert", "");}} >
+                </Button>
+              </Col>
+            </Row>
+          ) : null
+        }
         <Row style={{marginTop: "20px"}}>
           <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Base DN"), i18next.t("ldap:Base DN - Tooltip"))} :

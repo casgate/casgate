@@ -351,6 +351,29 @@ func CheckUserPassword(organization string, username string, password string, la
 	return user, nil
 }
 
+func CheckPassErrorToMessage(err error, lang string) string {
+	if extendedErr, ok := err.(*CheckUserPasswordError); ok {
+		switch extendedErr.Err() {
+		case ErrorUserNotFound:
+			return i18n.Translate(lang, "general:Invalid username or password/code")
+		case ErrorUserDeleted:
+			return i18n.Translate(lang, "general:Invalid username or password/code")
+		case ErrorUserBlocked:
+			return i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator")
+		case ErrorWrongPassword:
+			return extendedErr.Message()
+		case ErrorLDAPUserNotFound:
+			return i18n.Translate(lang, "general:Invalid username or password/code")
+		case ErrorLDAPError:
+			return extendedErr.Message()
+		default:
+			return extendedErr.Error()
+		}
+	}
+
+	return err.Error()
+}
+
 func CheckUserPermission(requestUserId, userId string, strict bool, lang string) (bool, error) {
 	if requestUserId == "" {
 		return false, fmt.Errorf(i18n.Translate(lang, "general:Please login first"))
@@ -369,7 +392,7 @@ func CheckUserPermission(requestUserId, userId string, strict bool, lang string)
 				return true, nil
 			}
 
-			return false, fmt.Errorf(i18n.Translate(lang, "general:The user: %s doesn't exist"), userId)
+			return false, &NotFoundError{fmt.Sprintf(i18n.Translate(lang, "general:The user: %s doesn't exist"), userId)}
 		}
 
 		userOwner = targetUser.Owner

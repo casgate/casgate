@@ -79,7 +79,8 @@ func AutoSigninFilter(ctx *context.Context) {
 		owner, name := util.GetOwnerAndNameFromId(userId)
 		_, err := object.CheckUserPassword(owner, name, password, "en")
 		if err != nil {
-			responseError(ctx, err.Error())
+			msg := object.CheckPassErrorToMessage(err, "en")
+			responseError(ctx, msg)
 			return
 		}
 

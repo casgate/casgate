@@ -295,6 +295,15 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -351,6 +360,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -546,6 +558,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -694,6 +709,15 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -703,7 +727,15 @@
                 "tags": [
                     "User API"
                 ],
-                "operationId": "ApiController.AddUserkeys"
+                "operationId": "ApiController.AddUserkeys",
+                "responses": {
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
             }
         },
         "/api/add-webhook": {
@@ -732,193 +764,6 @@
                         }
                     }
                 }
-            }
-        },
-        "/api/api/Callback": {
-            "post": {
-                "tags": [
-                    "Callback API"
-                ],
-                "description": "Get Login Error Counts",
-                "operationId": "ApiController.Callback"
-            }
-        },
-        "/api/api/get-captcha": {
-            "get": {
-                "tags": [
-                    "Login API"
-                ],
-                "operationId": "ApiController.GetCaptcha"
-            }
-        },
-        "/api/api/get-captcha-status": {
-            "get": {
-                "tags": [
-                    "Token API"
-                ],
-                "description": "Get Login Error Counts",
-                "operationId": "ApiController.GetCaptchaStatus",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "id",
-                        "description": "The id ( owner/name ) of user",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/api/get-webhook-event": {
-            "get": {
-                "tags": [
-                    "GetWebhookEventType API"
-                ],
-                "operationId": "ApiController.GetWebhookEventType"
-            }
-        },
-        "/api/api/reset-email-or-phone": {
-            "post": {
-                "tags": [
-                    "Account API"
-                ],
-                "operationId": "ApiController.ResetEmailOrPhone"
-            }
-        },
-        "/api/api/send-email": {
-            "post": {
-                "tags": [
-                    "Service API"
-                ],
-                "description": "This API is not for Casdoor frontend to call, it is for Casdoor SDKs.",
-                "operationId": "ApiController.SendEmail",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "clientId",
-                        "description": "The clientId of the application",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "clientSecret",
-                        "description": "The clientSecret of the application",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "from",
-                        "description": "Details of the email request",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.EmailForm"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "object",
-                        "schema": {
-                            "$ref": "#/definitions/Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/api/send-notification": {
-            "post": {
-                "tags": [
-                    "Service API"
-                ],
-                "description": "This API is not for Casdoor frontend to call, it is for Casdoor SDKs.",
-                "operationId": "ApiController.SendNotification",
-                "parameters": [
-                    {
-                        "in": "body",
-                        "name": "from",
-                        "description": "Details of the notification request",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.NotificationForm"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "object",
-                        "schema": {
-                            "$ref": "#/definitions/Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/api/send-sms": {
-            "post": {
-                "tags": [
-                    "Service API"
-                ],
-                "description": "This API is not for Casdoor frontend to call, it is for Casdoor SDKs.",
-                "operationId": "ApiController.SendSms",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "clientId",
-                        "description": "The clientId of the application",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "clientSecret",
-                        "description": "The clientSecret of the application",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "body",
-                        "name": "from",
-                        "description": "Details of the sms request",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.SmsForm"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "object",
-                        "schema": {
-                            "$ref": "#/definitions/Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/api/verify-code": {
-            "post": {
-                "tags": [
-                    "Verification API"
-                ],
-                "operationId": "ApiController.VerifyCode"
-            }
-        },
-        "/api/api/webhook": {
-            "post": {
-                "tags": [
-                    "HandleOfficialAccountEvent API"
-                ],
-                "operationId": "ApiController.HandleOfficialAccountEvent"
             }
         },
         "/api/batch-enforce": {
@@ -994,12 +839,29 @@
                 }
             }
         },
+        "/api/callback": {
+            "post": {
+                "tags": [
+                    "Callback API"
+                ],
+                "description": "Get Login Error Counts",
+                "operationId": "ApiController.Callback"
+            }
+        },
         "/api/check-user-password": {
             "post": {
                 "tags": [
                     "User API"
                 ],
-                "operationId": "ApiController.CheckUserPassword"
+                "operationId": "ApiController.CheckUserPassword",
+                "responses": {
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
             }
         },
         "/api/delete-adapter": {
@@ -1267,6 +1129,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -1323,6 +1188,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -1435,6 +1303,15 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "409": {
+                        "description": "Conflict"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -1490,6 +1367,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -1631,6 +1511,12 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     }
                 }
             }
@@ -1890,6 +1776,40 @@
                 }
             }
         },
+        "/api/get-captcha": {
+            "get": {
+                "tags": [
+                    "Login API"
+                ],
+                "operationId": "ApiController.GetCaptcha"
+            }
+        },
+        "/api/get-captcha-status": {
+            "get": {
+                "tags": [
+                    "Token API"
+                ],
+                "description": "Get Login Error Counts",
+                "operationId": "ApiController.GetCaptchaStatus",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "description": "The id ( owner/name ) of user",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/get-cert": {
             "get": {
                 "tags": [
@@ -1984,6 +1904,9 @@
                         "schema": {
                             "$ref": "#/definitions/Response"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2072,6 +1995,15 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2158,6 +2090,14 @@
                 ],
                 "description": "get global users",
                 "operationId": "ApiController.GetGlobalUsers",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "fillUserIdProvider",
+                        "description": "Should fill userIdProvider",
+                        "type": "boolean"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "The Response object",
@@ -2167,6 +2107,12 @@
                                 "$ref": "#/definitions/object.User"
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthoized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2394,6 +2340,9 @@
                         "schema": {
                             "$ref": "#/definitions/object.Organization"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2452,6 +2401,9 @@
                                 "$ref": "#/definitions/object.Organization"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2481,6 +2433,9 @@
                                 "$ref": "#/definitions/object.Organization"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2562,6 +2517,9 @@
                         "schema": {
                             "$ref": "#/definitions/object.Permission"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2591,6 +2549,12 @@
                                 "$ref": "#/definitions/object.Permission"
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2620,6 +2584,9 @@
                                 "$ref": "#/definitions/object.Permission"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -2640,6 +2607,12 @@
                                 "$ref": "#/definitions/object.Permission"
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3069,6 +3042,9 @@
                         "schema": {
                             "$ref": "#/definitions/object.Role"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3098,6 +3074,9 @@
                                 "$ref": "#/definitions/object.Role"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3198,6 +3177,9 @@
                                 "$ref": "#/definitions/object.User"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3435,6 +3417,12 @@
                         "name": "userId",
                         "description": "The userId of the user",
                         "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "fillUserIdProvider",
+                        "description": "Should fill userIdProvider",
+                        "type": "boolean"
                     }
                 ],
                 "responses": {
@@ -3444,8 +3432,14 @@
                             "$ref": "#/definitions/object.User"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3501,6 +3495,9 @@
                 "responses": {
                     "200": {
                         "description": "{int} int The count of filtered users for an organization"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3561,6 +3558,12 @@
                         "description": "The owner of users",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "fillUserIdProvider",
+                        "description": "Should fill userIdProvider",
+                        "type": "boolean"
                     }
                 ],
                 "responses": {
@@ -3572,6 +3575,9 @@
                                 "$ref": "#/definitions/object.User"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -3618,6 +3624,14 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/get-webhook-event": {
+            "get": {
+                "tags": [
+                    "GetWebhookEventType API"
+                ],
+                "operationId": "ApiController.GetWebhookEventType"
             }
         },
         "/api/get-webhooks": {
@@ -3808,6 +3822,65 @@
                         "description": "The Response object",
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/login/oauth/access_token": {
+            "post": {
+                "tags": [
+                    "Token API"
+                ],
+                "description": "get OAuth access token",
+                "operationId": "ApiController.GetOAuthToken",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "grant_type",
+                        "description": "OAuth grant type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "client_id",
+                        "description": "OAuth client id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "client_secret",
+                        "description": "OAuth client secret",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "code",
+                        "description": "OAuth code",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/object.TokenWrapper"
+                        }
+                    },
+                    "400": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/object.TokenError"
+                        }
+                    },
+                    "401": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/object.TokenError"
                         }
                     }
                 }
@@ -4071,6 +4144,27 @@
                 }
             }
         },
+        "/api/remove-user-from-group": {
+            "post": {
+                "tags": [
+                    "User API"
+                ],
+                "operationId": "ApiController.RemoveUserFromGroup",
+                "responses": {
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/api/reset-email-or-phone": {
+            "post": {
+                "tags": [
+                    "Account API"
+                ],
+                "operationId": "ApiController.ResetEmailOrPhone"
+            }
+        },
         "/api/run-syncer": {
             "get": {
                 "tags": [
@@ -4099,12 +4193,135 @@
                 }
             }
         },
+        "/api/send-email": {
+            "post": {
+                "tags": [
+                    "Service API"
+                ],
+                "description": "This API is not for Casdoor frontend to call, it is for Casdoor SDKs.",
+                "operationId": "ApiController.SendEmail",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "clientId",
+                        "description": "The clientId of the application",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "clientSecret",
+                        "description": "The clientSecret of the application",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "from",
+                        "description": "Details of the email request",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.EmailForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "object",
+                        "schema": {
+                            "$ref": "#/definitions/Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/send-invite": {
             "post": {
                 "tags": [
                     "User API"
                 ],
-                "operationId": "ApiController.SendInvite"
+                "operationId": "ApiController.SendInvite",
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/api/send-notification": {
+            "post": {
+                "tags": [
+                    "Service API"
+                ],
+                "description": "This API is not for Casdoor frontend to call, it is for Casdoor SDKs.",
+                "operationId": "ApiController.SendNotification",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "from",
+                        "description": "Details of the notification request",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.NotificationForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "object",
+                        "schema": {
+                            "$ref": "#/definitions/Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/send-sms": {
+            "post": {
+                "tags": [
+                    "Service API"
+                ],
+                "description": "This API is not for Casdoor frontend to call, it is for Casdoor SDKs.",
+                "operationId": "ApiController.SendSms",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "clientId",
+                        "description": "The clientId of the application",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "clientSecret",
+                        "description": "The clientSecret of the application",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "from",
+                        "description": "Details of the sms request",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.SmsForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "object",
+                        "schema": {
+                            "$ref": "#/definitions/Response"
+                        }
+                    }
+                }
             }
         },
         "/api/send-verification-code": {
@@ -4158,6 +4375,21 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -4605,6 +4837,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -4675,6 +4910,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -4885,6 +5123,9 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
                     }
                 }
             }
@@ -5054,6 +5295,21 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -5213,6 +5469,14 @@
                 "operationId": "ApiController.VerifyCaptcha"
             }
         },
+        "/api/verify-code": {
+            "post": {
+                "tags": [
+                    "Verification API"
+                ],
+                "operationId": "ApiController.VerifyCode"
+            }
+        },
         "/api/webauthn/signin/begin": {
             "get": {
                 "tags": [
@@ -5319,72 +5583,21 @@
                 }
             }
         },
-        "/apiapi/login/oauth/access_token": {
+        "/api/webhook": {
             "post": {
                 "tags": [
-                    "Token API"
+                    "HandleOfficialAccountEvent API"
                 ],
-                "description": "get OAuth access token",
-                "operationId": "ApiController.GetOAuthToken",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "grant_type",
-                        "description": "OAuth grant type",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "client_id",
-                        "description": "OAuth client id",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "client_secret",
-                        "description": "OAuth client secret",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "code",
-                        "description": "OAuth code",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/object.TokenWrapper"
-                        }
-                    },
-                    "400": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/object.TokenError"
-                        }
-                    },
-                    "401": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/object.TokenError"
-                        }
-                    }
-                }
+                "operationId": "ApiController.HandleOfficialAccountEvent"
             }
         }
     },
     "definitions": {
-        "170656.\u003cnil\u003e.string": {
+        "176565.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "288713.\u003cnil\u003e.string": {
+        "297708.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -5621,6 +5834,9 @@
                 "expireInHours": {
                     "type": "integer",
                     "format": "int64"
+                },
+                "footerText": {
+                    "type": "string"
                 },
                 "forgetUrl": {
                     "type": "string"
@@ -6171,7 +6387,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/170656.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/176565.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6333,6 +6549,10 @@
                 },
                 "owner": {
                     "type": "string"
+                },
+                "passwordChangeInterval": {
+                    "type": "integer",
+                    "format": "int64"
                 },
                 "passwordOptions": {
                     "type": "array",
@@ -6785,9 +7005,6 @@
                 "enableRoleMapping": {
                     "type": "boolean"
                 },
-                "enableSignAuthnRequest": {
-                    "type": "boolean"
-                },
                 "endpoint": {
                     "type": "string"
                 },
@@ -6818,6 +7035,9 @@
                 "name": {
                     "type": "string"
                 },
+                "nameIdFormat": {
+                    "type": "string"
+                },
                 "owner": {
                     "type": "string"
                 },
@@ -6837,6 +7057,9 @@
                 "regionId": {
                     "type": "string"
                 },
+                "requestSignature": {
+                    "type": "string"
+                },
                 "roleMappingItems": {
                     "type": "array",
                     "items": {
@@ -6847,6 +7070,9 @@
                     "type": "string"
                 },
                 "signName": {
+                    "type": "string"
+                },
+                "signatureAlgorithm": {
                     "type": "string"
                 },
                 "subType": {
@@ -6862,7 +7088,10 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/288713.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/297708.\u003cnil\u003e.string"
+                },
+                "validateIdPSignature": {
+                    "type": "boolean"
                 }
             }
         },
@@ -6912,6 +7141,9 @@
                 "createdTime": {
                     "type": "string"
                 },
+                "detail": {
+                    "type": "string"
+                },
                 "extendedUser": {
                     "$ref": "#/definitions/object.User"
                 },
@@ -6938,6 +7170,9 @@
                     "type": "string"
                 },
                 "requestUri": {
+                    "type": "string"
+                },
+                "response": {
                     "type": "string"
                 },
                 "statusCode": {
@@ -7656,8 +7891,9 @@
                 "password": {
                     "type": "string"
                 },
-                "passwordChangeRequired": {
-                    "type": "boolean"
+                "passwordChangeTime": {
+                    "type": "string",
+                    "format": "datetime"
                 },
                 "passwordSalt": {
                     "type": "string"
@@ -7784,6 +8020,9 @@
                 "updatedTime": {
                     "type": "string"
                 },
+                "userIdProvider": {
+                    "$ref": "#/definitions/object.UserIdProvider"
+                },
                 "vk": {
                     "type": "string"
                 },
@@ -7821,6 +8060,33 @@
                     "type": "string"
                 },
                 "zoom": {
+                    "type": "string"
+                }
+            }
+        },
+        "object.UserIdProvider": {
+            "title": "UserIdProvider",
+            "type": "object",
+            "properties": {
+                "createdTime": {
+                    "type": "string"
+                },
+                "lastSignInTime": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "string"
+                },
+                "providerDisplayName": {
+                    "type": "string"
+                },
+                "providerName": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                },
+                "usernameFromIdp": {
                     "type": "string"
                 }
             }
@@ -7965,12 +8231,14 @@
             "title": "VersionInfo",
             "type": "object",
             "properties": {
+                "buildTime": {
+                    "type": "string"
+                },
                 "commitId": {
                     "type": "string"
                 },
                 "commitOffset": {
-                    "type": "integer",
-                    "format": "int64"
+                    "type": "string"
                 },
                 "version": {
                     "type": "string"

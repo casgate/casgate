@@ -31,38 +31,34 @@ import (
 // @router /get-certs [get]
 func (c *ApiController) GetCerts() {
 	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
+	limitParam := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 	field := c.Input().Get("field")
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
-	if limit == "" || page == "" {
-		maskedCerts, err := object.GetMaskedCerts(object.GetCerts(owner))
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(maskedCerts)
+	var limit int
+	if limitParam == "" || page == "" {
+		limit = -1
 	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetCertCount(owner, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		certs, err := object.GetMaskedCerts(object.GetPaginationCerts(owner, paginator.Offset(), limit, field, value, sortField, sortOrder))
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(certs, paginator.Nums())
+		limit = util.ParseInt(limitParam)
 	}
+
+	count, err := object.GetCertCount(owner, field, value)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	paginator := pagination.SetPaginator(c.Ctx, limit, count)
+	certs, err := object.GetMaskedCerts(object.GetPaginationCerts(owner, paginator.Offset(), limit, field, value, sortField, sortOrder))
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk(certs, paginator.Nums())
 }
 
 // GetGlobleCerts

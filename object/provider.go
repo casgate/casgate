@@ -16,7 +16,9 @@ package object
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/i18n"
@@ -24,6 +26,12 @@ import (
 	"github.com/casdoor/casdoor/pp"
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
+)
+
+const (
+	NotToSign           = "No sign"
+	SignWithFile        = "Sign with default file"
+	SignWithCertificate = "Sign with certificate"
 )
 
 type Provider struct {
@@ -41,6 +49,7 @@ type Provider struct {
 	ClientId2         string              `xorm:"varchar(100)" json:"clientId2"`
 	ClientSecret2     string              `xorm:"varchar(100)" json:"clientSecret2"`
 	Cert              string              `xorm:"varchar(100)" json:"cert"`
+	CustomConfUrl     string              `xorm:"varchar(200)" json:"customConfUrl"`
 	CustomAuthUrl     string              `xorm:"varchar(200)" json:"customAuthUrl"`
 	CustomTokenUrl    string              `xorm:"varchar(200)" json:"customTokenUrl"`
 	CustomUserInfoUrl string              `xorm:"varchar(200)" json:"customUserInfoUrl"`
@@ -70,10 +79,13 @@ type Provider struct {
 	Bucket           string `xorm:"varchar(100)" json:"bucket"`
 	PathPrefix       string `xorm:"varchar(100)" json:"pathPrefix"`
 
-	Metadata               string `xorm:"mediumtext" json:"metadata"`
-	IdP                    string `xorm:"mediumtext" json:"idP"`
-	IssuerUrl              string `xorm:"varchar(100)" json:"issuerUrl"`
-	EnableSignAuthnRequest bool   `json:"enableSignAuthnRequest"`
+	Metadata             string `xorm:"mediumtext" json:"metadata"`
+	IdP                  string `xorm:"mediumtext" json:"idP"`
+	IssuerUrl            string `xorm:"varchar(100)" json:"issuerUrl"`
+	RequestSignature     string `xorm:"varchar(100)" json:"requestSignature"`
+	SignatureAlgorithm   string `xorm:"varchar(100)" json:"signatureAlgorithm"`
+	NameIdFormat         string `xorm:"varchar(100)" json:"nameIdFormat"`
+	ValidateIdpSignature bool   `json:"validateIdPSignature"`
 
 
 	Username     string   `xorm:"varchar(100)" json:"username"`
@@ -87,6 +99,8 @@ type Provider struct {
 	AttributeMappingItems  []*AttributeMappingItem `xorm:"text" json:"attributeMappingItems"`
 
 	ProviderUrl string `xorm:"varchar(200)" json:"providerUrl"`
+
+	RemoveFromApps bool `xorm:"-" json:"removeFromApps"`
 }
 
 type RoleMappingItem struct {
@@ -425,6 +439,7 @@ func FromProviderToIdpInfo(ctx *context.Context, provider *Provider) *idp.Provid
 		ClientSecret: provider.ClientSecret,
 		AppId:        provider.AppId,
 		HostUrl:      provider.Host,
+		ConfURL:      provider.CustomConfUrl,
 		TokenURL:     provider.CustomTokenUrl,
 		AuthURL:      provider.CustomAuthUrl,
 		UserInfoURL:  provider.CustomUserInfoUrl,
@@ -442,4 +457,20 @@ func FromProviderToIdpInfo(ctx *context.Context, provider *Provider) *idp.Provid
 	}
 
 	return providerInfo
+}
+
+func GetProviderHttpClient(providerInfo idp.ProviderInfo) (*http.Client, error) {
+	transport := http.Transport{}
+
+	if (strings.HasPrefix(providerInfo.ConfURL, "https://") ||
+		strings.HasPrefix(providerInfo.TokenURL, "https://")) &&
+		providerInfo.Cert != "" {
+		tlsConf, err := GetTlsConfigForCert(providerInfo.Cert)
+		if err != nil {
+			return nil, err
+		}
+		transport.TLSClientConfig = tlsConf
+	}
+
+	return &http.Client{Transport: &transport, Timeout: time.Second}, nil
 }

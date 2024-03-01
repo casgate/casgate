@@ -899,6 +899,9 @@ export function getProviderLogoURL(provider) {
     if (provider.type === "Custom" && provider.customLogo) {
       return provider.customLogo;
     }
+    if (provider.type === "OpenID") {
+      return "https://upload.wikimedia.org/wikipedia/commons/6/68/Social_icons-openid-22x22.png";
+    }
     return `${StaticBaseUrl}/img/social_${provider.type.toLowerCase()}.png`;
   } else {
     const info = OtherProviderInfo[provider.category][provider.type];
@@ -997,6 +1000,7 @@ export function getProviderTypeOptions(category) {
         {id: "Yandex", name: "Yandex"},
         {id: "Zoom", name: "Zoom"},
         {id: "Custom", name: "Custom"},
+        {id: "OpenID", name: "OpenID"},
       ]
     );
   } else if (category === "Email") {
@@ -1379,6 +1383,20 @@ export function builtInObject(obj) {
 
 export const CertScopeJWT = "JWT";
 export const CertScopeCACert = "CA Certificate";
+export const CertScopeClientCert = "Client Certificate";
+
+export const SamlNameIdFormatPersistent = "Persistent";
+export const SamlNameIdFormatTransient = "Transient";
+export const SamlNameIdFormatEmailAddress = "Email";
+export const SamlNameIdFormatUnspecified = "Unspecified";
+
+export const SamlNoRequestSign = "No sign";
+export const SamlSignRequestWithFile = "Sign with default file";
+export const SamlSignRequestWithCertificate = "Sign with certificate";
+
+export const RSA_SHA_1 = "RSA-SHA1";
+export const RSA_SHA_256 = "RSA-SHA256";
+export const RSA_SHA_512 = "RSA-SHA512";
 
 export function getCurrencySymbol(currency) {
   if (currency === "USD" || currency === "usd") {

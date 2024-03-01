@@ -16,11 +16,11 @@ package object
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/beego/beego/context"
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
 )
@@ -48,10 +48,25 @@ type Record struct {
 	Action       string `xorm:"varchar(1000)" json:"action"`
 	StatusCode   string `xorm:"varchar(5)" json:"statusCode"`
 
-	Object       string `xorm:"text" json:"object"`
-	ExtendedUser *User  `xorm:"-" json:"extendedUser"`
+	Object       string        `xorm:"text" json:"object"`
+	Response     string        `xorm:"text" json:"response"`
+	Detail       *RecordDetail `xorm:"text" json:"detail"`
+	ExtendedUser *User         `xorm:"-" json:"extendedUser"`
 
 	IsTriggered bool `json:"isTriggered"`
+}
+
+type RecordDetail struct {
+	Reason    []string    `json:"reason,omitempty"`
+	OldObject interface{} `json:"oldObject,omitempty"`
+}
+
+func (rd *RecordDetail) FromDB(bytes []byte) error {
+	return json.Unmarshal(bytes, rd)
+}
+
+func (rd *RecordDetail) ToDB() ([]byte, error) {
+	return json.Marshal(rd)
 }
 
 func NewRecord(ctx *context.Context) *Record {
@@ -104,7 +119,7 @@ func AddRecord(record *Record) bool {
 	if errWebhook == nil {
 		record.IsTriggered = true
 	} else {
-		fmt.Println(errWebhook)
+		logs.Error("webhook: ", errWebhook)
 	}
 
 	affected, err := ormer.Engine.Insert(record)
@@ -120,9 +135,9 @@ func GetRecordCount(field, value string, filterRecord *Record) (int64, error) {
 	return session.Count(filterRecord)
 }
 
-func GetRecords() ([]*Record, error) {
+func GetRecords(filterRecord *Record) ([]*Record, error) {
 	records := []*Record{}
-	err := ormer.Engine.Desc("id").Find(&records)
+	err := ormer.Engine.Desc("id").Find(&records, filterRecord)
 	if err != nil {
 		return records, err
 	}

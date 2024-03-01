@@ -278,19 +278,11 @@ func setHttpClient(idProvider idp.IdProvider, providerInfo idp.ProviderInfo) err
 	if isProxyProviderType(providerInfo.Type) {
 		idProvider.SetHttpClient(proxy.ProxyHttpClient)
 	} else {
-		transport := http.Transport{}
-
-		// TODO remake with using idp url when config would be parsed on every login
-		if strings.HasPrefix(providerInfo.TokenURL, "https://") && providerInfo.Cert != "" {
-			tlsConf, err := object.GetTlsConfigForCert(providerInfo.Cert)
-			if err != nil {
-				return err
-			}
-			transport.TLSClientConfig = tlsConf
+		client, err := object.GetProviderHttpClient(providerInfo)
+		if err != nil {
+			return err
 		}
-
-		client := http.Client{Transport: &transport}
-		idProvider.SetHttpClient(&client)
+		idProvider.SetHttpClient(client)
 	}
 
 	return nil
@@ -356,10 +348,14 @@ func (c *ApiController) Login() {
 		var msg string
 
 		if authForm.Password == "" {
+			object.GetRecord(c.Ctx).WithUsername(authForm.Username).AddDetail("Empty password")
+
 			if user, err = object.GetUserByFields(authForm.Organization, authForm.Username); err != nil {
 				c.ResponseError(err.Error(), nil)
 				return
 			} else if user == nil {
+				object.GetRecord(c.Ctx).WithUsername(authForm.Username).AddDetail("user not found")
+
 				c.ResponseError(fmt.Sprintf(c.T("general:Invalid username or password/code"), util.GetId(authForm.Organization, authForm.Username)))
 				return
 			}
@@ -433,6 +429,11 @@ func (c *ApiController) Login() {
 				isPasswordWithLdapEnabled = false
 			}
 			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
+			if err != nil {
+				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
+
+				object.GetRecord(c.Ctx).AddDetail(err.Error())
+			}
 		}
 
 		if msg != "" {
@@ -467,7 +468,7 @@ func (c *ApiController) Login() {
 				return
 			}
 
-			if user.PasswordChangeRequired {
+			if user.IsPasswordChangeRequired() {
 				c.setChangePasswordUserSession(user.GetId())
 				c.ResponseOk(object.NextChangePasswordForm)
 				return
@@ -475,10 +476,7 @@ func (c *ApiController) Login() {
 
 			resp = c.HandleLoggedIn(application, user, &authForm)
 
-			record := object.NewRecord(c.Ctx)
-			record.Organization = application.Organization
-			record.User = user.Name
-			util.SafeGoroutine(func() { object.AddRecord(record) })
+			object.GetRecord(c.Ctx).WithUsername(user.Name).WithOrganization(application.Organization).AddDetail("User logged in")
 		}
 	} else if authForm.Provider != "" {
 		var application *object.Application
@@ -597,10 +595,18 @@ func (c *ApiController) Login() {
 
 				resp = c.HandleLoggedIn(application, user, &authForm)
 
-				record := object.NewRecord(c.Ctx)
-				record.Organization = application.Organization
-				record.User = user.Name
-				util.SafeGoroutine(func() { object.AddRecord(record) })
+				object.GetRecord(c.Ctx).WithUsername(user.Name).WithOrganization(application.Organization).AddDetail("User logged in")
+
+				err = object.UpdateUserIdProvider(c.Ctx.Request.Context(), &object.UserIdProvider{
+					Owner:           organization.Name,
+					ProviderName:    provider.Name,
+					UsernameFromIdp: userInfo.Username,
+					LastSignInTime:  util.GetCurrentTime(),
+				})
+				if err != nil {
+					c.ResponseInternalServerError(err.Error())
+					return
+				}
 			} else if provider.Category == "OAuth" || provider.Category == "Web3" || provider.Category == "SAML" {
 				// Sign up via OAuth/Web3/SAML
 				if application.EnableLinkWithEmail {
@@ -722,6 +728,19 @@ func (c *ApiController) Login() {
 					return
 				}
 
+				_, err = object.AddUserIdProvider(c.Ctx.Request.Context(), &object.UserIdProvider{
+					ProviderName:    provider.Name,
+					UserId:          user.Id,
+					UsernameFromIdp: userInfo.Username,
+					Owner:           organization.Name,
+					LastSignInTime:  util.GetCurrentTime(),
+					CreatedTime:     util.GetCurrentTime(),
+				})
+				if err != nil {
+					c.ResponseError(err.Error())
+					return
+				}
+
 				if provider.EnableRoleMapping {
 					mapper, err := role_mapper.NewRoleMapper(provider.Category, provider.RoleMappingItems, authData)
 					if err != nil {
@@ -739,16 +758,7 @@ func (c *ApiController) Login() {
 
 				resp = c.HandleLoggedIn(application, user, &authForm)
 
-				record := object.NewRecord(c.Ctx)
-				record.Organization = application.Organization
-				record.User = user.Name
-				util.SafeGoroutine(func() { object.AddRecord(record) })
-
-				record2 := object.NewRecord(c.Ctx)
-				record2.Action = "signup"
-				record2.Organization = application.Organization
-				record2.User = user.Name
-				util.SafeGoroutine(func() { object.AddRecord(record2) })
+				object.GetRecord(c.Ctx).WithAction("signup").WithUsername(user.Name).WithOrganization(application.Organization).AddDetail("User logged in")
 			}
 		} else { // authForm.Method != "signup"
 			userId := c.GetSessionUsername()
@@ -813,6 +823,8 @@ func (c *ApiController) Login() {
 
 			err = mfaUtil.Verify(authForm.Passcode)
 			if err != nil {
+				object.GetRecord(c.Ctx).AddDetail("OTP was wrong")
+
 				c.ResponseError(err.Error())
 				return
 			}
@@ -838,7 +850,7 @@ func (c *ApiController) Login() {
 			return
 		}
 
-		if user.PasswordChangeRequired {
+		if user.IsPasswordChangeRequired() {
 			c.setChangePasswordUserSession(user.GetId())
 			c.setMfaUserSession("")
 			c.ResponseOk(object.NextChangePasswordForm)
@@ -848,10 +860,7 @@ func (c *ApiController) Login() {
 		resp = c.HandleLoggedIn(application, user, &authForm)
 		c.setMfaUserSession("")
 
-		record := object.NewRecord(c.Ctx)
-		record.Organization = application.Organization
-		record.User = user.Name
-		util.SafeGoroutine(func() { object.AddRecord(record) })
+		object.GetRecord(c.Ctx).WithOrganization(application.Organization).WithUsername(user.Name).AddDetail("MFA success")
 	} else if c.getChangePasswordUserSession() != "" {
 		user, err := object.GetUser(c.getChangePasswordUserSession())
 		if err != nil {
@@ -863,7 +872,7 @@ func (c *ApiController) Login() {
 			return
 		}
 
-		if user.PasswordChangeRequired {
+		if user.IsPasswordChangeRequired() {
 			c.ResponseOk(object.NextChangePasswordForm)
 			return
 		}
@@ -882,10 +891,7 @@ func (c *ApiController) Login() {
 		resp = c.HandleLoggedIn(application, user, &authForm)
 		c.setChangePasswordUserSession("")
 
-		record := object.NewRecord(c.Ctx)
-		record.Organization = application.Organization
-		record.User = user.Name
-		util.SafeGoroutine(func() { object.AddRecord(record) })
+		object.GetRecord(c.Ctx).WithOrganization(application.Organization).WithUsername(user.Name).AddDetail("Changed password")
 	} else {
 		if c.GetSessionUsername() != "" {
 			// user already signed in to Casdoor, so let the user click the avatar button to do the quick sign-in
@@ -903,10 +909,7 @@ func (c *ApiController) Login() {
 			user := c.getCurrentUser()
 			resp = c.HandleLoggedIn(application, user, &authForm)
 
-			record := object.NewRecord(c.Ctx)
-			record.Organization = application.Organization
-			record.User = user.Name
-			util.SafeGoroutine(func() { object.AddRecord(record) })
+			object.GetRecord(c.Ctx).WithOrganization(application.Organization).WithUsername(user.Name).AddDetail("Quick sign in")
 		} else {
 			c.ResponseError(fmt.Sprintf(c.T("auth:Unknown authentication type (not password or provider), form = %s"), util.StructToJson(authForm)))
 			return
@@ -945,7 +948,7 @@ func (c *ApiController) HandleSamlLogin() {
 // HandleOfficialAccountEvent ...
 // @Tag HandleOfficialAccountEvent API
 // @Title HandleOfficialAccountEvent
-// @router /api/webhook [POST]
+// @router /webhook [POST]
 func (c *ApiController) HandleOfficialAccountEvent() {
 	respBytes, err := ioutil.ReadAll(c.Ctx.Request.Body)
 	if err != nil {
@@ -975,7 +978,7 @@ func (c *ApiController) HandleOfficialAccountEvent() {
 // GetWebhookEventType ...
 // @Tag GetWebhookEventType API
 // @Title GetWebhookEventType
-// @router /api/get-webhook-event [GET]
+// @router /get-webhook-event [GET]
 func (c *ApiController) GetWebhookEventType() {
 	lock.Lock()
 	defer lock.Unlock()
@@ -995,7 +998,7 @@ func (c *ApiController) GetWebhookEventType() {
 // @Description Get Login Error Counts
 // @Param   id     query    string  true        "The id ( owner/name ) of user"
 // @Success 200 {object} controllers.Response The Response object
-// @router /api/get-captcha-status [get]
+// @router /get-captcha-status [get]
 func (c *ApiController) GetCaptchaStatus() {
 	organization := c.Input().Get("organization")
 	userId := c.Input().Get("user_id")
@@ -1016,7 +1019,7 @@ func (c *ApiController) GetCaptchaStatus() {
 // @Title Callback
 // @Tag Callback API
 // @Description Get Login Error Counts
-// @router /api/Callback [post]
+// @router /callback [post]
 func (c *ApiController) Callback() {
 	code := c.GetString("code")
 	state := c.GetString("state")

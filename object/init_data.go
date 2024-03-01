@@ -32,6 +32,7 @@ type InitData struct {
 	Products      []*Product      `json:"products"`
 	Resources     []*Resource     `json:"resources"`
 	Roles         []*Role         `json:"roles"`
+	Domains       []*Domain       `json:"domains"`
 	Syncers       []*Syncer       `json:"syncers"`
 	Tokens        []*Token        `json:"tokens"`
 	Webhooks      []*Webhook      `json:"webhooks"`
@@ -85,6 +86,9 @@ func InitFromFile() {
 		for _, role := range initData.Roles {
 			initDefinedRole(role)
 		}
+		for _, domain := range initData.Domains {
+			initDefinedDomain(domain)
+		}
 		for _, syncer := range initData.Syncers {
 			initDefinedSyncer(syncer)
 		}
@@ -117,6 +121,7 @@ func readInitDataFromFile(filePath string) (*InitData, error) {
 		Products:      []*Product{},
 		Resources:     []*Resource{},
 		Roles:         []*Role{},
+		Domains:       []*Domain{},
 		Syncers:       []*Syncer{},
 		Tokens:        []*Token{},
 		Webhooks:      []*Webhook{},
@@ -182,6 +187,14 @@ func readInitDataFromFile(filePath string) (*InitData, error) {
 		}
 		if webhook.Headers == nil {
 			webhook.Headers = []*Header{}
+		}
+	}
+	for _, domain := range data.Domains {
+		if domain.Tags == nil {
+			domain.Tags = []string{}
+		}
+		if domain.Domains == nil {
+			domain.Domains = []string{}
 		}
 	}
 
@@ -376,6 +389,22 @@ func initDefinedRole(role *Role) {
 	}
 	role.CreatedTime = util.GetCurrentTime()
 	_, err = AddRole(role)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func initDefinedDomain(domain *Domain) {
+	existed, err := GetDomain(domain.GetId())
+	if err != nil {
+		panic(err)
+	}
+
+	if existed != nil {
+		return
+	}
+	domain.CreatedTime = util.GetCurrentTime()
+	_, err = AddDomain(domain)
 	if err != nil {
 		panic(err)
 	}

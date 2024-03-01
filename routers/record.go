@@ -15,9 +15,12 @@
 package routers
 
 import (
-	"github.com/beego/beego/context"
+	"encoding/json"
+
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+
+	"github.com/beego/beego/context"
 )
 
 func getUser(ctx *context.Context) (username string) {
@@ -56,19 +59,35 @@ func getUserByClientIdSecret(ctx *context.Context) string {
 }
 
 func RecordMessage(ctx *context.Context) {
-	if ctx.Request.URL.Path == "/api/login" || ctx.Request.URL.Path == "/api/signup" {
-		return
+	rb := object.ExtractRecord(ctx)
+	var record *object.Record
+
+	if rb == nil {
+		record = defaultRecordLog(ctx)
+	} else {
+		record = rb.Build()
 	}
 
+	if resp, ok := ctx.Input.Data()["json"]; ok {
+		if jsonResp, err := json.Marshal(resp); err == nil {
+			record.Response = string(jsonResp)
+		}
+	}
+
+	util.SafeGoroutine(func() { object.AddRecord(record) })
+}
+
+func defaultRecordLog(ctx *context.Context) *object.Record {
 	record := object.NewRecord(ctx)
 
 	userId := getUser(ctx)
 	if ctx.Request.URL.Path == "/api/logout" {
 		userId, _ = ctx.Input.GetData("user").(string)
 	}
+
 	if userId != "" {
 		record.Organization, record.User = util.GetOwnerAndNameFromId(userId)
 	}
 
-	util.SafeGoroutine(func() { object.AddRecord(record) })
+	return record
 }

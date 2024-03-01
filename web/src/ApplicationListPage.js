@@ -39,6 +39,7 @@ class ApplicationListPage extends BaseListPage {
       displayName: `New Application - ${randomName}`,
       logo: `${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256.png`,
       enablePassword: true,
+      enablePasswordRecovery: true,
       enableSignUp: true,
       enableSigninSession: false,
       enableCodeSignin: false,

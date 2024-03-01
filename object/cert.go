@@ -26,6 +26,7 @@ import (
 const (
 	scopeCertJWT    = "JWT"
 	scopeCertCACert = "CA Certificate"
+	scopeClientCert = "Client Certificate"
 )
 
 type Cert struct {
@@ -43,6 +44,9 @@ type Cert struct {
 	Certificate string `xorm:"mediumtext" json:"certificate"`
 	PrivateKey  string `xorm:"mediumtext" json:"privateKey"`
 }
+
+var ErrCertDoesNotExist = errors.New(fmt.Sprintf("certificate does not exist"))
+var ErrCertInvalidScope = errors.New(fmt.Sprintf("invalid certificate scope"))
 
 func GetMaskedCert(cert *Cert) *Cert {
 	if cert == nil {
@@ -157,7 +161,7 @@ func GetTlsConfigForCert(name string) (*tls.Config, error) {
 		return nil, err
 	}
 	if cert == nil {
-		return nil, errors.New(fmt.Sprintf("Certificate %s does not exist", name))
+		return nil, ErrCertDoesNotExist
 	}
 
 	ca := x509.NewCertPool()
@@ -196,7 +200,7 @@ func UpdateCert(id string, cert *Cert) (bool, error) {
 }
 
 func AddCert(cert *Cert) (bool, error) {
-	if cert.Certificate == "" || cert.PrivateKey == "" {
+	if cert.Scope == scopeCertJWT && (cert.Certificate == "" || cert.PrivateKey == "") {
 		certificate, privateKey := generateRsaKeys(cert.BitSize, cert.ExpireInYears, cert.Name, cert.Owner)
 		cert.Certificate = certificate
 		cert.PrivateKey = privateKey

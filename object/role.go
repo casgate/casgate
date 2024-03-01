@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/xorm-io/builder"
 
@@ -46,6 +47,10 @@ func GetRoleCount(owner, field, value string) (int64, error) {
 }
 
 func GetRolesByIds(roleIds []string) ([]*Role, error) {
+	if len(roleIds) == 0 {
+		return nil, nil
+	}
+
 	condBuilder := builder.NewCond()
 	for _, roleId := range roleIds {
 		owner, name := util.GetOwnerAndNameFromIdNoCheck(roleId)
@@ -417,6 +422,11 @@ func makeAncestorRolesTreeMap(roles []*Role) map[string]*TreeNode[*Role] {
 
 	for _, role := range roles {
 		for _, subrole := range role.Roles {
+			if _, ok := roleMap[subrole]; !ok {
+				// if role has subrole that doesn't exist - skip subrole
+				logs.Error("role %s has subroles that doesn't exist: %s", role.GetId(), subrole)
+				continue
+			}
 			roleMap[subrole].ancestors = append(roleMap[subrole].ancestors, roleMap[role.GetId()])
 			roleMap[role.GetId()].children = append(roleMap[role.GetId()].children, roleMap[subrole])
 		}

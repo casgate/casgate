@@ -31,8 +31,15 @@ import (
 // @Success 200 {object} object.Record The Response object
 // @router /get-records [get]
 func (c *ApiController) GetRecords() {
-	organization, ok := c.RequireAdmin()
+	user, ok := c.RequireSignedInUser()
 	if !ok {
+		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	isAdmin := user.IsAdmin || user.IsGlobalAdmin()
+	if !isAdmin {
+		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
 		return
 	}
 
@@ -44,8 +51,14 @@ func (c *ApiController) GetRecords() {
 	sortOrder := c.Input().Get("sortOrder")
 	organizationName := c.Input().Get("organizationName")
 
+	filterRecord := &object.Record{Organization: user.Owner}
+
+	if c.IsGlobalAdmin() && organizationName != "" {
+		filterRecord.Organization = organizationName
+	}
+
 	if limit == "" || page == "" {
-		records, err := object.GetRecords()
+		records, err := object.GetRecords(filterRecord)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -54,10 +67,7 @@ func (c *ApiController) GetRecords() {
 		c.ResponseOk(records)
 	} else {
 		limit := util.ParseInt(limit)
-		if c.IsGlobalAdmin() && organizationName != "" {
-			organization = organizationName
-		}
-		filterRecord := &object.Record{Organization: organization}
+
 		count, err := object.GetRecordCount(field, value, filterRecord)
 		if err != nil {
 			c.ResponseError(err.Error())

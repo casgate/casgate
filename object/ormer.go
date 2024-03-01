@@ -383,4 +383,9 @@ func (a *Ormer) createTable() {
 	if err != nil {
 		panic(err)
 	}
+
+	err = a.Engine.Sync2(new(UserIdProvider))
+	if err != nil {
+		panic(err)
+	}
 }

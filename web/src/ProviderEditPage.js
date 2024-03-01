@@ -41,7 +41,8 @@ class ProviderEditPage extends React.Component {
       providerName: props.match.params.providerName,
       owner: props.organizationName !== undefined ? props.organizationName : props.match.params.organizationName,
       provider: null,
-      certs: [],
+      caCerts: [],
+      clientCerts: [],
       organizations: [],
       mode: props.location.mode !== undefined ? props.location.mode : "edit",
     };
@@ -86,11 +87,19 @@ class ProviderEditPage extends React.Component {
   }
 
   getCerts(owner) {
-    CertBackend.getCerts(owner)
+    CertBackend.getCerts(owner, -1, -1, "scope", Setting.CertScopeCACert, "", "")
       .then((res) => {
         if (res.status === "ok") {
           this.setState({
-            certs: res.data || [],
+            caCerts: res.data || [],
+          });
+        }
+      });
+    CertBackend.getCerts(owner, -1, -1, "scope", Setting.CertScopeClientCert, "", "")
+      .then((res) => {
+        if (res.status === "ok") {
+          this.setState({
+            clientCerts: res.data || [],
           });
         }
       });
@@ -587,28 +596,54 @@ class ProviderEditPage extends React.Component {
           )
         }
         {
-          this.state.provider.type !== "Custom" ? null : (
+          this.state.provider.type !== "Custom" && this.state.provider.type !== "OpenID" ? null : (
             <React.Fragment>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("provider:Auth URL"), i18next.t("provider:Auth URL - Tooltip"))}
-                </Col>
-                <Col span={22} >
-                  <Input value={this.state.provider.customAuthUrl} onChange={e => {
-                    this.updateProviderField("customAuthUrl", e.target.value);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("provider:Token URL"), i18next.t("provider:Token URL - Tooltip"))}
-                </Col>
-                <Col span={22} >
-                  <Input value={this.state.provider.customTokenUrl} onChange={e => {
-                    this.updateProviderField("customTokenUrl", e.target.value);
-                  }} />
-                </Col>
-              </Row>
+              {this.state.provider.type !== "Custom" ? (
+                // openid
+                <Row style={{marginTop: "20px"}} >
+                  <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                    {Setting.getLabel(i18next.t("provider:OpenID Configuration URL"), i18next.t("provider:OpenID Configuration URL - Tooltip"))}
+                  </Col>
+                  <Col span={22} >
+                    <Input value={this.state.provider.customConfUrl} onChange={e => {
+                      this.updateProviderField("customConfUrl", e.target.value);
+                    }} />
+                  </Col>
+                </Row>
+              ) : (
+                <React.Fragment>
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("provider:Auth URL"), i18next.t("provider:Auth URL - Tooltip"))}
+                    </Col>
+                    <Col span={22} >
+                      <Input value={this.state.provider.customAuthUrl} onChange={e => {
+                        this.updateProviderField("customAuthUrl", e.target.value);
+                      }} />
+                    </Col>
+                  </Row>
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("provider:Token URL"), i18next.t("provider:Token URL - Tooltip"))}
+                    </Col>
+                    <Col span={22} >
+                      <Input value={this.state.provider.customTokenUrl} onChange={e => {
+                        this.updateProviderField("customTokenUrl", e.target.value);
+                      }} />
+                    </Col>
+                  </Row>
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("provider:UserInfo URL"), i18next.t("provider:UserInfo URL - Tooltip"))}
+                    </Col>
+                    <Col span={22} >
+                      <Input value={this.state.provider.customUserInfoUrl} onChange={e => {
+                        this.updateProviderField("customUserInfoUrl", e.target.value);
+                      }} />
+                    </Col>
+                  </Row>
+                </React.Fragment>
+              )}
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                   {Setting.getLabel(i18next.t("provider:Scope"), i18next.t("provider:Scope - Tooltip"))}
@@ -621,22 +656,12 @@ class ProviderEditPage extends React.Component {
               </Row>
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("provider:UserInfo URL"), i18next.t("provider:UserInfo URL - Tooltip"))}
-                </Col>
-                <Col span={22} >
-                  <Input value={this.state.provider.customUserInfoUrl} onChange={e => {
-                    this.updateProviderField("customUserInfoUrl", e.target.value);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:CA Certificate"), i18next.t("ldap:CA Certificate - Tooltip"))} :
+                  {Setting.getLabel(i18next.t("cert:CA Certificate"), i18next.t("cert:CA Certificate - Tooltip"))} :
                 </Col>
                 <Col span={21} >
                   <Select virtual={false} style={{width: "100%"}} value={this.state.provider.cert} onChange={(value => {this.updateProviderField("cert", value);})}>
                     {
-                      this.state.certs.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
+                      this.state.caCerts.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
                     }
                   </Select>
                 </Col>
@@ -1113,14 +1138,83 @@ class ProviderEditPage extends React.Component {
             <React.Fragment>
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("provider:Name ID Format"), i18next.t("provider:Name ID Format - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <Select virtual={false} style={{width: "100%"}} value={this.state.provider.nameIdFormat} onChange={(value => {
+                    this.updateProviderField("nameIdFormat", value);
+                  })}>
+                    {
+                      [
+                        {id: Setting.SamlNameIdFormatPersistent, name: Setting.SamlNameIdFormatPersistent},
+                        {id: Setting.SamlNameIdFormatTransient, name: Setting.SamlNameIdFormatTransient},
+                        {id: Setting.SamlNameIdFormatEmailAddress, name: Setting.SamlNameIdFormatEmailAddress},
+                        {id: Setting.SamlNameIdFormatUnspecified, name: Setting.SamlNameIdFormatUnspecified},
+                      ].map((item, index) => <Option key={index} value={item.id}>{item.name}</Option>)
+                    }
+                  </Select>
+                </Col>
+              </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                   {Setting.getLabel(i18next.t("provider:Sign request"), i18next.t("provider:Sign request - Tooltip"))} :
                 </Col>
                 <Col span={22} >
-                  <Switch checked={this.state.provider.enableSignAuthnRequest} onChange={checked => {
-                    this.updateProviderField("enableSignAuthnRequest", checked);
-                  }} />
+                  <Select virtual={false} style={{width: "100%"}} value={this.state.provider.requestSignature} onChange={(value => {
+                    this.updateProviderField("requestSignature", value);
+                  })}>
+                    {
+                      [
+                        {id: Setting.SamlNoRequestSign, name: Setting.SamlNoRequestSign},
+                        {id: Setting.SamlSignRequestWithFile, name: Setting.SamlSignRequestWithFile},
+                        {id: Setting.SamlSignRequestWithCertificate, name: Setting.SamlSignRequestWithCertificate},
+                      ].map((item, index) => <Option key={index} value={item.id}>{item.name}</Option>)
+                    }
+                  </Select>
                 </Col>
               </Row>
+              {
+                this.state.provider.requestSignature !== Setting.SamlNoRequestSign ? (
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("provider:Signature algorithm"), i18next.t("provider:Signature algorithm - Tooltip"))} :
+                    </Col>
+                    <Col span={22} >
+                      <Select virtual={false} style={{width: "100%"}} value={this.state.provider.signatureAlgorithm} onChange={(value => {
+                        this.updateProviderField("signatureAlgorithm", value);
+                      })}>
+                        {
+                          [
+                            {id: Setting.RSA_SHA_1, name: Setting.RSA_SHA_1},
+                            {id: Setting.RSA_SHA_256, name: Setting.RSA_SHA_256},
+                            {id: Setting.RSA_SHA_512, name: Setting.RSA_SHA_512},
+                          ].map((item, index) => <Option key={index} value={item.id}>{item.name}</Option>)
+                        }
+                      </Select>
+                    </Col>
+                  </Row>
+                ) : null
+              }
+              {
+                this.state.provider.requestSignature === Setting.SamlSignRequestWithCertificate ? (
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("cert:Client Certificate"), i18next.t("cert:Client Certificate - Tooltip"))} :
+                    </Col>
+                    <Col span={21} >
+                      <Select virtual={false} style={{width: "100%"}} value={this.state.provider.cert} onChange={(value => {this.updateProviderField("cert", value);})}>
+                        {
+                          this.state.clientCerts.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
+                        }
+                      </Select>
+                    </Col>
+                    <Col style={{paddingLeft: "5px"}} span={1} >
+                      <Button icon={<ClearOutlined />} type="text" onClick={() => {this.updateProviderField("cert", "");}} >
+                      </Button>
+                    </Col>
+                  </Row>
+                ) : null
+              }
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                   {Setting.getLabel(i18next.t("provider:Metadata"), i18next.t("provider:Metadata - Tooltip"))} :
@@ -1158,14 +1252,27 @@ class ProviderEditPage extends React.Component {
               </Row>
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("provider:IdP"), i18next.t("provider:IdP certificate"))} :
+                  {Setting.getLabel(i18next.t("provider:Validate IdP signature"), i18next.t("provider:Validate IdP signature - Tooltip"))} :
                 </Col>
                 <Col span={22} >
-                  <Input value={this.state.provider.idP} onChange={e => {
-                    this.updateProviderField("idP", e.target.value);
+                  <Switch checked={this.state.provider.validateIdPSignature} onChange={checked => {
+                    this.updateProviderField("validateIdPSignature", checked);
                   }} />
                 </Col>
               </Row>
+              {
+                this.state.provider.validateIdPSignature &&
+                  <Row style={{marginTop: "20px"}} >
+                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                      {Setting.getLabel(i18next.t("provider:IdP"), i18next.t("provider:IdP certificate"))} :
+                    </Col>
+                    <Col span={22} >
+                      <Input value={this.state.provider.idP} onChange={e => {
+                        this.updateProviderField("idP", e.target.value);
+                      }} />
+                    </Col>
+                  </Row>
+              }
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                   {Setting.getLabel(i18next.t("provider:Issuer URL"), i18next.t("provider:Issuer URL - Tooltip"))} :

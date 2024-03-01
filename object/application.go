@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -52,31 +53,31 @@ type Application struct {
 	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
 	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
 
-	DisplayName         string          `xorm:"varchar(100)" json:"displayName"`
-	Logo                string          `xorm:"varchar(200)" json:"logo"`
-	HomepageUrl         string          `xorm:"varchar(100)" json:"homepageUrl"`
-	Description         string          `xorm:"varchar(100)" json:"description"`
-	Organization        string          `xorm:"varchar(100)" json:"organization"`
-	Cert                string          `xorm:"varchar(100)" json:"cert"`
-	EnablePassword      bool            `json:"enablePassword"`
-	EnableSignUp        bool            `json:"enableSignUp"`
-	EnableSigninSession bool            `json:"enableSigninSession"`
-	EnableAutoSignin    bool            `json:"enableAutoSignin"`
-	EnableCodeSignin    bool            `json:"enableCodeSignin"`
-	EnableSamlCompress  bool            `json:"enableSamlCompress"`
-	EnableSamlC14n10    bool            `json:"enableSamlC14n10"`
-	EnableWebAuthn      bool            `json:"enableWebAuthn"`
-	EnableLinkWithEmail bool            `json:"enableLinkWithEmail"`
-	OrgChoiceMode       string          `json:"orgChoiceMode"`
-	SamlReplyUrl        string          `xorm:"varchar(100)" json:"samlReplyUrl"`
-	Providers           []*ProviderItem `xorm:"mediumtext" json:"providers"`
-	SigninMethods       []*SigninMethod `xorm:"varchar(2000)" json:"signinMethods"`
-	SignupItems         []*SignupItem   `xorm:"varchar(2000)" json:"signupItems"`
-	GrantTypes          []string        `xorm:"varchar(1000)" json:"grantTypes"`
-	OrganizationObj     *Organization   `xorm:"-" json:"organizationObj"`
-	CertPublicKey       string          `xorm:"-" json:"certPublicKey"`
-	Tags                []string        `xorm:"mediumtext" json:"tags"`
-	InvitationCodes     []string        `xorm:"varchar(200)" json:"invitationCodes"`
+	DisplayName            string          `xorm:"varchar(100)" json:"displayName"`
+	Logo                   string          `xorm:"varchar(200)" json:"logo"`
+	HomepageUrl            string          `xorm:"varchar(100)" json:"homepageUrl"`
+	Description            string          `xorm:"varchar(100)" json:"description"`
+	Organization           string          `xorm:"varchar(100)" json:"organization"`
+	Cert                   string          `xorm:"varchar(100)" json:"cert"`
+	EnablePassword         bool            `json:"enablePassword"`
+	EnablePasswordRecovery bool            `json:"enablePasswordRecovery"`
+	EnableSignUp           bool            `json:"enableSignUp"`
+	EnableSigninSession    bool            `json:"enableSigninSession"`
+	EnableAutoSignin       bool            `json:"enableAutoSignin"`
+	EnableCodeSignin       bool            `json:"enableCodeSignin"`
+	EnableSamlCompress     bool            `json:"enableSamlCompress"`
+	EnableWebAuthn         bool            `json:"enableWebAuthn"`
+	EnableLinkWithEmail    bool            `json:"enableLinkWithEmail"`
+	OrgChoiceMode          string          `json:"orgChoiceMode"`
+	SamlReplyUrl           string          `xorm:"varchar(100)" json:"samlReplyUrl"`
+	Providers              []*ProviderItem `xorm:"mediumtext" json:"providers"`
+	SignupItems            []*SignupItem   `xorm:"varchar(1000)" json:"signupItems"`
+	GrantTypes             []string        `xorm:"varchar(1000)" json:"grantTypes"`
+	OrganizationObj        *Organization   `xorm:"-" json:"organizationObj"`
+	CertPublicKey          string          `xorm:"-" json:"certPublicKey"`
+	Tags                   []string        `xorm:"mediumtext" json:"tags"`
+	InvitationCodes        []string        `xorm:"varchar(200)" json:"invitationCodes"`
+	IsPublic               bool            `xorm:"bool" json:"isPublic"`
 	SamlAttributes      []*SamlItem     `xorm:"varchar(1000)" json:"samlAttributes"`
 
 	ClientId             string     `xorm:"varchar(100)" json:"clientId"`
@@ -118,6 +119,16 @@ func GetOrganizationApplicationCount(owner, Organization, field, value string) (
 func GetApplications(owner string) ([]*Application, error) {
 	applications := []*Application{}
 	err := ormer.Engine.Desc("created_time").Find(&applications, &Application{Owner: owner})
+	if err != nil {
+		return applications, err
+	}
+
+	return applications, nil
+}
+
+func CountApplicatoinsByProvider(providerName string) ([]*Application, error) {
+	applications := []*Application{}
+	err := ormer.Engine.Where("providers like ?", "%\"name\":\""+providerName+"\"%").Find(&applications, &Application{})
 	if err != nil {
 		return applications, err
 	}
@@ -188,11 +199,38 @@ func extendApplicationWithProviders(application *Application) (err error) {
 
 	for _, providerItem := range application.Providers {
 		if provider, ok := m[providerItem.Name]; ok {
+			if provider.Type == "OpenID" {
+				err := updateOpenIDWithUrls(provider)
+				if err != nil {
+					logs.Error("failed updateOpenIDWithUrls for provider %s: %s", provider.Name, err.Error())
+				}
+			}
 			providerItem.Provider = provider
 		}
 	}
 
 	return
+}
+
+func updateOpenIDWithUrls(provider *Provider) error {
+	idpInfo := FromProviderToIdpInfo(nil, provider)
+	openIDProvider := idp.NewOpenIdProvider(idpInfo, idpInfo.RedirectUrl)
+
+	client, err := GetProviderHttpClient(*idpInfo)
+	if err != nil {
+		return fmt.Errorf("failed to GetProviderHttpClient for provider %s", provider.Name)
+	}
+	openIDProvider.SetHttpClient(client)
+	err = openIDProvider.EnrichOauthURLs()
+	if err != nil {
+		return fmt.Errorf("failed to EnrichOauthURLs for provider %s", provider.Name)
+	}
+
+	provider.CustomTokenUrl = openIDProvider.TokenURL
+	provider.CustomAuthUrl = openIDProvider.AuthURL
+	provider.CustomUserInfoUrl = openIDProvider.UserInfoURL
+
+	return nil
 }
 
 func extendApplicationWithOrg(application *Application) (err error) {
