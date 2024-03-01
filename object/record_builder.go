@@ -61,7 +61,7 @@ func (rb *RecordBuilder) WithResponse(response string) *RecordBuilder {
 	return rb
 }
 
-func (rb *RecordBuilder) AddDetail(detail string) *RecordBuilder {
+func (rb *RecordBuilder) AddReason(detail string) *RecordBuilder {
 	rb.record.Detail.Reason = append(rb.record.Detail.Reason, detail)
 
 	return rb

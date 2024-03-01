@@ -176,7 +176,15 @@ func (c *ApiController) UpdateProvider() {
 		}
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateProvider(id, &provider))
+	affected, err := object.UpdateProvider(id, &provider)
+	if err != nil {
+		detail := fmt.Sprintf("Update provider error: Owner: %s, Name: %s, Type: %s", provider.Owner, provider.Name, provider.Type)
+		object.GetRecord(c.Ctx).AddReason(detail)
+	} else {
+		object.GetRecord(c.Ctx).AddReason("Update provider success")
+	}
+
+	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 }
 
@@ -249,7 +257,7 @@ func (c *ApiController) DeleteProvider() {
 			}
 			app.Providers = providers
 
-			_, err = object.UpdateApplication(app.GetId(), app)
+			_, err = object.UpdateApplication(c.Ctx, app.GetId(), app)
 			if err != nil {
 				c.ResponseInternalServerError(err.Error())
 				return

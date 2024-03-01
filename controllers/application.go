@@ -219,7 +219,7 @@ func (c *ApiController) UpdateApplication() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateApplication(id, &application))
+	c.Data["json"] = wrapActionResponse(object.UpdateApplication(c.Ctx, id, &application))
 	c.ServeJSON()
 }
 

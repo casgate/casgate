@@ -344,7 +344,7 @@ func (c *ApiController) UploadResource() {
 		}
 
 		applicationObj.TermsOfUse = fileUrl
-		_, err = object.UpdateApplication(applicationId, applicationObj)
+		_, err = object.UpdateApplication(c.Ctx, applicationId, applicationObj)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return

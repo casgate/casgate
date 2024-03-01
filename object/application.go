@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/beego/beego/context"
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/util"
@@ -444,35 +445,7 @@ func GetMaskedApplications(applications []*Application, userId string) []*Applic
 	return applications
 }
 
-func GetAllowedApplications(applications []*Application, userId string) ([]*Application, error) {
-	if userId == "" || isUserIdGlobalAdmin(userId) {
-		return applications, nil
-	}
-
-	user, err := GetUser(userId)
-	if err != nil {
-		return nil, err
-	}
-	if user != nil && user.IsAdmin {
-		return applications, nil
-	}
-
-	res := []*Application{}
-	for _, application := range applications {
-		var allowed bool
-		allowed, err = CheckLoginPermission(userId, application)
-		if err != nil {
-			return nil, err
-		}
-
-		if allowed {
-			res = append(res, application)
-		}
-	}
-	return res, nil
-}
-
-func UpdateApplication(id string, application *Application) (bool, error) {
+func UpdateApplication(ctx *context.Context, id string, application *Application) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
 	oldApplication, err := getApplication(owner, name)
 	if oldApplication == nil {
@@ -499,7 +472,10 @@ func UpdateApplication(id string, application *Application) (bool, error) {
 		return false, err
 	}
 
+	record := GetRecord(ctx)
 	for _, providerItem := range application.Providers {
+		record.AddReason(fmt.Sprintf("Added provider: %s", providerItem.Name))
+
 		providerItem.Provider = nil
 	}
 
