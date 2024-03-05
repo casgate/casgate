@@ -428,12 +428,20 @@ func (c *ApiController) Login() {
 			} else {
 				isPasswordWithLdapEnabled = false
 			}
+
+			if (isSigninViaLdap) {
+				user, _ := object.GetUserByFields(authForm.Organization,  authForm.Username)
+				if user == nil {
+					object.SyncUserFromLdap(authForm.Organization, authForm.Username, authForm.Password, c.GetAcceptLanguage())				
+				}
+			}
+
 			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
 			if err != nil {
-				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
-
+				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())	
 				object.GetRecord(c.Ctx).AddDetail(err.Error())
 			}
+			
 		}
 
 		if msg != "" {

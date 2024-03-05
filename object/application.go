@@ -71,6 +71,7 @@ type Application struct {
 	OrgChoiceMode          string          `json:"orgChoiceMode"`
 	SamlReplyUrl           string          `xorm:"varchar(100)" json:"samlReplyUrl"`
 	Providers              []*ProviderItem `xorm:"mediumtext" json:"providers"`
+	SigninMethods          []*SigninMethod `xorm:"varchar(2000)" json:"signinMethods"`
 	SignupItems            []*SignupItem   `xorm:"varchar(1000)" json:"signupItems"`
 	GrantTypes             []string        `xorm:"varchar(1000)" json:"grantTypes"`
 	OrganizationObj        *Organization   `xorm:"-" json:"organizationObj"`

@@ -15,6 +15,7 @@
 package object
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -291,6 +292,57 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 	return resetUserSigninErrorTimes(user)
 }
 
+
+var ErrorUserNotFound = errors.New("user not found")
+var ErrorUserDeleted = errors.New("user deleted")
+var ErrorUserBlocked = errors.New("user blocked")
+var ErrorWrongPassword = errors.New("wrong password")
+var ErrorLDAPError = errors.New("LDAP error")
+var ErrorLDAPUserNotFound = errors.New("LDAP user not found")
+
+func NewCheckUserPasswordError(err error) *CheckUserPasswordError {
+	return &CheckUserPasswordError{
+		err: err,
+	}
+}
+
+type CheckUserPasswordError struct {
+	err      error
+	username string
+	message  string
+}
+
+func (err *CheckUserPasswordError) Err() error {
+	return err.err
+}
+
+func (err *CheckUserPasswordError) Username() string {
+	return err.username
+}
+
+func (err *CheckUserPasswordError) Message() string {
+	return err.message
+}
+
+func (err *CheckUserPasswordError) WithUser(user string) *CheckUserPasswordError {
+	err.username = user
+
+	return err
+}
+
+func (err *CheckUserPasswordError) WithMessage(message string) *CheckUserPasswordError {
+	err.message = message
+
+	return err
+}
+
+func (err *CheckUserPasswordError) Error() string {
+	return err.err.Error()
+}
+
+func (err *CheckUserPasswordError) RealError() error {
+	return err.err
+}
 
 func CheckUserPassword(organization string, username string, password string, lang string, options ...bool) (*User, error) {
 	enableCaptcha := false

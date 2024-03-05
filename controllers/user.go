@@ -569,16 +569,16 @@ func (c *ApiController) SetPassword() {
 	isAdmin := c.IsAdmin()
 	if isAdmin {
 		if oldPassword != "" {
-			msg := object.CheckPassword(targetUser, oldPassword, c.GetAcceptLanguage())
-			if msg != "" {
-				c.ResponseUnauthorized(msg)
+			err := object.CheckPassword(targetUser, oldPassword, c.GetAcceptLanguage())
+			if err != nil {
+				c.ResponseUnauthorized(err.Error())
 				return
 			}
 		}
 	} else if code == "" {
-		msg := object.CheckPassword(targetUser, oldPassword, c.GetAcceptLanguage())
-		if msg != "" {
-			c.ResponseUnauthorized(msg)
+		err := object.CheckPassword(targetUser, oldPassword, c.GetAcceptLanguage())
+		if err != nil {
+			c.ResponseUnauthorized(err.Error())
 			return
 		}
 	}

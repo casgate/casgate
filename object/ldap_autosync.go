@@ -105,7 +105,7 @@ func syncUsers(ldap *Ldap) error {
 		return nil
 	}
 
-	users, err := conn.GetLdapUsers(ldap)
+	users, err := conn.GetLdapUsers(ldap, nil)
 	if err != nil {
 		logs.Warning(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
 		return nil
