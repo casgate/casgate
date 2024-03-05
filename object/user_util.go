@@ -99,7 +99,7 @@ func IsPasswordSame(user *User, password string) (bool, error) {
 
 	credManager := cred.GetCredManager(organization.PasswordType)
 
-	return credManager.IsPasswordCorrect(password, user.Password, user.PasswordSalt, organization.PasswordSalt), nil
+	return credManager.IsPasswordCorrect(password, user.Password, user.PasswordSalt), nil
 }
 
 func CheckPasswordSame(user *User, password string, lang string) string {
