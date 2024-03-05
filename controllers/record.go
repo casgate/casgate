@@ -89,7 +89,6 @@ func (c *ApiController) GetRecords() {
 // @Tag Record API
 // @Title GetRecordsByFilter
 // @Description get records by filter
-// @Param   filter  body string     true  "filter Record message"
 // @Success 200 {object} object.Record The Response object
 // @router /get-records-filter [post]
 func (c *ApiController) GetRecordsByFilter() {
