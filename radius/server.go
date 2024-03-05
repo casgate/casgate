@@ -49,12 +49,12 @@ func handlerRadius(w radius.ResponseWriter, r *radius.Request) {
 		log.Printf("radius message, code = %d", r.Code)
 	}
 }
-
 func handleAccessRequest(w radius.ResponseWriter, r *radius.Request) {
 	username := rfc2865.UserName_GetString(r.Packet)
 	password := rfc2865.UserPassword_GetString(r.Packet)
 	organization := rfc2865.Class_GetString(r.Packet)
 	log.Printf("handleAccessRequest() username=%v, org=%v, password=%v", username, organization, password)
+
 	if organization == "" {
 		w.Write(r.Response(radius.CodeAccessReject))
 		return
@@ -64,6 +64,7 @@ func handleAccessRequest(w radius.ResponseWriter, r *radius.Request) {
 		w.Write(r.Response(radius.CodeAccessReject))
 		return
 	}
+
 	w.Write(r.Response(radius.CodeAccessAccept))
 }
 

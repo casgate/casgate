@@ -628,16 +628,16 @@ func GetPasswordToken(application *Application, username string, password string
 			ErrorDescription: "the user does not exist",
 		}, nil
 	}
-	var msg string
+
 	if user.Ldap != "" {
-		msg = checkLdapUserPassword(user, password, "en")
+		err = checkLdapUserPassword(user, password, "en")
 	} else {
-		msg = CheckPassword(user, password, "en")
+		err = CheckPassword(user, password, "en")
 	}
-	if msg != "" {
+	if err != nil {
 		return nil, &TokenError{
 			Error:            InvalidGrant,
-			ErrorDescription: "invalid username or password",
+			ErrorDescription: fmt.Sprintf("invalid username or password: %s", err.Error()),
 		}, nil
 	}
 	if user.IsForbidden {

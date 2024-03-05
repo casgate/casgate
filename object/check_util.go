@@ -36,27 +36,70 @@ func isValidRealName(s string) bool {
 	return reRealName.MatchString(s)
 }
 
-func resetUserSigninErrorTimes(user *User) {
+func resetUserSigninErrorTimes(user *User) error {
 	// if the password is correct and wrong times is not zero, reset the error times
 	if user.SigninWrongTimes == 0 {
-		return
+		return nil
 	}
+
 	user.SigninWrongTimes = 0
-	UpdateUser(user.GetId(), user, []string{"signin_wrong_times", "last_signin_wrong_time"}, false)
+	_, err := UpdateUser(user.GetId(), user, []string{"signin_wrong_times", "last_signin_wrong_time"}, false)
+	return err
 }
 
-func recordSigninErrorInfo(user *User, lang string) string {
+func recordSigninErrorInfo(user *User, lang string, options ...bool) error {
+	enableCaptcha := false
+	if len(options) > 0 {
+		enableCaptcha = options[0]
+	}
+
+	failedSigninLimit, failedSigninFrozenTime, errSignin := GetFailedSigninConfigByUser(user)
+	if errSignin != nil {
+		return errSignin
+	}
+
 	// increase failed login count
-	if user.SigninWrongTimes < SigninWrongTimesLimit {
+	if user.SigninWrongTimes < failedSigninLimit {
 		user.SigninWrongTimes++
 	}
 
-	if user.SigninWrongTimes >= SigninWrongTimesLimit {
+	if user.SigninWrongTimes >= failedSigninLimit {
 		// record the latest failed login time
 		user.LastSigninWrongTime = time.Now().UTC().Format(time.RFC3339)
 	}
 
 	// update user
-	UpdateUser(user.GetId(), user, []string{"signin_wrong_times", "last_signin_wrong_time"}, false)
-	return fmt.Sprint(i18n.Translate(lang, "general:Invalid username or password/code"))
+	_, err := UpdateUser(user.GetId(), user, []string{"signin_wrong_times", "last_signin_wrong_time"}, false)
+	if err != nil {
+		return err
+	}
+
+	leftChances := failedSigninLimit - user.SigninWrongTimes
+	if leftChances == 0 && enableCaptcha {
+		return fmt.Errorf(i18n.Translate(lang, "check:password or code is incorrect"))
+	} else if leftChances >= 0 {
+		return fmt.Errorf(i18n.Translate(lang, "check:password or code is incorrect, you have %d remaining chances"), leftChances)
+	}
+
+	// don't show the chance error message if the user has no chance left
+	return fmt.Errorf(i18n.Translate(lang, "check:You have entered the wrong password or code too many times, please wait for %d minutes and try again"), failedSigninFrozenTime)
+}
+
+func GetFailedSigninConfigByUser(user *User) (int, int, error) {
+	application, err := GetApplicationByUser(user)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	failedSigninLimit := application.FailedSigninLimit
+	if failedSigninLimit == 0 {
+		failedSigninLimit = DefaultFailedSigninLimit
+	}
+
+	failedSigninFrozenTime := application.FailedSigninFrozenTime
+	if failedSigninFrozenTime == 0 {
+		failedSigninFrozenTime = DefaultFailedSigninFrozenTime
+	}
+
+	return failedSigninLimit, failedSigninFrozenTime, nil
 }

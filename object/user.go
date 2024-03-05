@@ -24,6 +24,7 @@ import (
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
 	"github.com/go-webauthn/webauthn/webauthn"
+	"github.com/xorm-io/builder"
 	"github.com/xorm-io/core"
 )
 
@@ -1170,4 +1171,45 @@ func groupUsersByGroups(users []*User) map[string][]*User {
 	}
 
 	return result
+}
+func GetUsersWithFilter(owner string, cond builder.Cond) ([]*User, error) {
+	users := []*User{}
+	session := ormer.Engine.Desc("created_time")
+	if cond != nil {
+		session = session.Where(cond)
+	}
+	err := session.Find(&users, &User{Owner: owner})
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func GetGlobalUsersWithFilter(cond builder.Cond) ([]*User, error) {
+	users := []*User{}
+	session := ormer.Engine.Desc("created_time")
+	if cond != nil {
+		session = session.Where(cond)
+	}
+	err := session.Find(&users)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func GetUsersByTagWithFilter(owner string, tag string, cond builder.Cond) ([]*User, error) {
+	users := []*User{}
+	session := ormer.Engine.Desc("created_time")
+	if cond != nil {
+		session = session.Where(cond)
+	}
+	err := session.Find(&users, &User{Owner: owner, Tag: tag})
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }

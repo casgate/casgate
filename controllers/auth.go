@@ -372,14 +372,14 @@ func (c *ApiController) Login() {
 			}
 
 			// check result through Email or Phone
-			checkResult := object.CheckSigninCode(user, checkDest, authForm.Code, c.GetAcceptLanguage())
-			if len(checkResult) != 0 {
-				c.ResponseError(fmt.Sprintf("%s - %s", verificationCodeType, checkResult))
+			err := object.CheckSigninCode(user, checkDest, authForm.Code, c.GetAcceptLanguage())
+			if err != nil {
+				c.ResponseError(fmt.Sprintf("%s - %s", verificationCodeType, err.Error()))
 				return
 			}
 
 			// disable the verification code
-			err := object.DisableVerificationCode(checkDest)
+			err = object.DisableVerificationCode(checkDest)
 			if err != nil {
 				c.ResponseError(err.Error(), nil)
 				return
@@ -395,8 +395,12 @@ func (c *ApiController) Login() {
 				c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 				return
 			}
-			if !application.EnablePassword {
+			if authForm.SigninMethod == "Password" && !application.EnablePassword {
 				c.ResponseError(c.T("auth:The login method: login with password is not enabled for the application"))
+				return
+			}
+			if authForm.SigninMethod == "LDAP" && !application.IsLdapEnabled() {
+				c.ResponseError(c.T("auth:The login method: login with LDAP is not enabled for the application"))
 				return
 			}
 			var enableCaptcha bool
@@ -417,12 +421,27 @@ func (c *ApiController) Login() {
 			}
 
 			password := authForm.Password
-			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha)
-			if err != nil {
-				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
+			isSigninViaLdap := authForm.SigninMethod == "LDAP"
+			var isPasswordWithLdapEnabled bool
+			if authForm.SigninMethod == "Password" {
+				isPasswordWithLdapEnabled = application.IsPasswordWithLdapEnabled()
+			} else {
+				isPasswordWithLdapEnabled = false
+			}
 
+			if (isSigninViaLdap) {
+				user, _ := object.GetUserByFields(authForm.Organization,  authForm.Username)
+				if user == nil {
+					object.SyncUserFromLdap(authForm.Organization, authForm.Username, authForm.Password, c.GetAcceptLanguage())				
+				}
+			}
+
+			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
+			if err != nil {
+				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())	
 				object.GetRecord(c.Ctx).AddDetail(err.Error())
 			}
+			
 		}
 
 		if msg != "" {

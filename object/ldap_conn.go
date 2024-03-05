@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
+	
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/thanhpk/randstr"
 
@@ -123,6 +123,17 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 	return &LdapConn{Conn: conn, IsAD: isAD}, nil
 }
 
+func (l *LdapConn) Close() {
+	// if l.Conn == nil {
+	// 	return
+	// }
+
+	// err := l.Conn.Unbind()
+	// if err != nil {
+	// 	panic(err)
+	// }
+}
+
 func isMicrosoftAD(Conn *goldap.Conn) (bool, error) {
 	SearchFilter := "(objectClass=*)"
 	SearchAttributes := []string{"vendorname", "vendorversion", "isGlobalCatalogReady", "forestFunctionality"}
@@ -169,7 +180,8 @@ func isMicrosoftAD(Conn *goldap.Conn) (bool, error) {
 	return isMicrosoft, err
 }
 
-func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
+
+func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User) ([]LdapUser, error) {
 	SearchAttributes := []string{
 		"uidNumber", "cn", "sn", "gidNumber", "entryUUID", "displayName", "mail", "email",
 		"emailAddress", "telephoneNumber", "mobile", "mobileTelephoneNumber", "registeredAddress", "postalAddress",
@@ -190,9 +202,14 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap) ([]LdapUser, error) {
 		SearchAttributes = append(SearchAttributes, attributeMappingMap.Keys()...)
 	}
 
+	ldapFilter := ldapServer.Filter
+	if (selectedUser != nil) {
+		ldapFilter = ldapServer.buildAuthFilterString(selectedUser)
+	}
+
 	searchReq := goldap.NewSearchRequest(ldapServer.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases,
 		0, 0, false,
-		ldapServer.Filter, SearchAttributes, nil)
+		ldapFilter, SearchAttributes, nil)
 	searchResult, err := l.Conn.SearchWithPaging(searchReq, 100)
 	if err != nil {
 		return nil, err
@@ -520,4 +537,38 @@ func (user *User) getFieldFromLdapAttribute(attribute string) string {
 	default:
 		return ""
 	}
+}
+
+func SyncUserFromLdap(organization string, userName string, password string, lang string) (*LdapUser, error) {
+	ldaps, err := GetLdaps(organization)
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{
+		Name: userName,	
+	  }
+
+	for _, ldapServer := range ldaps {
+		conn, err := ldapServer.GetLdapConn()
+		if err != nil {
+			continue
+		}
+
+		res, _ := conn.GetLdapUsers(ldapServer, user)
+		if len(res) == 0 {
+			conn.Close()
+			continue
+		}
+
+		err = checkLdapUserPassword(user, password, lang)
+		if err != nil {
+			conn.Close()
+			return nil, err
+		}
+
+		_, _, err = SyncLdapUsers(organization, AutoAdjustLdapUser(res), ldapServer.Id)
+		return &res[0], err
+	}
+	return nil, nil
 }
