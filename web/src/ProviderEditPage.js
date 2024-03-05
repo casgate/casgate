@@ -14,7 +14,7 @@
 
 import React from "react";
 import {Button, Card, Checkbox, Col, Input, InputNumber, Row, Select, Switch} from "antd";
-import {ClearOutlined, EyeInvisibleOutlined, EyeTwoTone, LinkOutlined} from "@ant-design/icons";
+import {ClearOutlined, LinkOutlined} from "@ant-design/icons";
 import * as ProviderBackend from "./backend/ProviderBackend";
 import * as OrganizationBackend from "./backend/OrganizationBackend";
 import * as CertBackend from "./backend/CertBackend";
@@ -502,8 +502,6 @@ class ProviderEditPage extends React.Component {
                 this.updateProviderField("type", "MetaMask");
               } else if (value === "Notification") {
                 this.updateProviderField("type", "Telegram");
-              } else if (value === "LDAP") {
-                this.updateProviderField("type", "OpenLDAP");
               }
             })}>
               {
@@ -517,7 +515,6 @@ class ProviderEditPage extends React.Component {
                   {id: "SMS", name: "SMS"},
                   {id: "Storage", name: "Storage"},
                   {id: "Web3", name: "Web3"},
-                  {id: "LDAP", name: "LDAP"},
                 ]
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((providerCategory, index) => <Option key={index} value={providerCategory.id}>{providerCategory.name}</Option>)
@@ -747,7 +744,6 @@ class ProviderEditPage extends React.Component {
         {
           (this.state.provider.category === "Captcha" && this.state.provider.type === "Default") ||
           (this.state.provider.category === "Web3") ||
-          (this.state.provider.category === "LDAP") ||
           (this.state.provider.category === "Storage" && this.state.provider.type === "Local File System") ||
           (this.state.provider.category === "Notification" && (this.state.provider.type === "Google Chat" || this.state.provider.type === "Custom HTTP")) ? null : (
               <React.Fragment>
@@ -1319,149 +1315,6 @@ class ProviderEditPage extends React.Component {
           ) : null
         }
         {
-          this.state.provider.category === "LDAP" ? (
-            <React.Fragment>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Server name"), i18next.t("ldap:Server name - Tooltip"))} :
-                </Col>
-                <Col span={20}>
-                  <Input value={this.state.provider.name} onChange={e => {
-                    this.updateLdapField("serverName", e.target.value);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}}>
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Server host"), i18next.t("ldap:Server host - Tooltip"))} :
-                </Col>
-                <Col span={20}>
-                  <Input value={this.state.provider.host} onChange={e => {
-                    this.updateLdapField("host", e.target.value);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}}>
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Server port"), i18next.t("ldap:Server port - Tooltip"))} :
-                </Col>
-                <Col span={20}>
-                  <InputNumber min={0} max={65535} formatter={value => value.replace(/\$\s?|(,*)/g, "")}
-                    value={this.state.provider.port} onChange={value => {
-                      this.updateLdapField("port", value);
-                    }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Enable SSL"), i18next.t("ldap:Enable SSL - Tooltip"))} :
-                </Col>
-                <Col span={20} >
-                  <Switch checked={this.state.provider.enableSsl} onChange={checked => {
-                    this.updateLdapField("enableSsl", checked);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:CA Certificate"), i18next.t("ldap:CA Certificate - Tooltip"))} :
-                </Col>
-                <Col span={19} >
-                  <Select virtual={false} style={{width: "100%"}} value={this.state.provider.cert} onChange={(value => {this.updateLdapField("cert", value);})}>
-                    {
-                      this.state.certs.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
-                    }
-                  </Select>
-                </Col>
-                <Col style={{paddingLeft: "5px"}} span={1} >
-                  <Button icon={<ClearOutlined />} type="text" onClick={() => {this.updateLdapField("cert", "");}} >
-                  </Button>
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}}>
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Base DN"), i18next.t("ldap:Base DN - Tooltip"))} :
-                </Col>
-                <Col span={20}>
-                  <Input value={this.state.provider.baseDn} onChange={e => {
-                    this.updateLdapField("baseDn", e.target.value);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}}>
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Search Filter"), i18next.t("ldap:Search Filter - Tooltip"))} :
-                </Col>
-                <Col span={20}>
-                  <Input value={this.state.provider.filter} onChange={e => {
-                    this.updateLdapField("filter", e.target.value);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}}>
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Filter fields"), i18next.t("ldap:Filter fields - Tooltip"))} :
-                </Col>
-                <Col span={20}>
-                  <Select value={this.state.provider.filterFields ?? []} style={{width: "100%"}} mode={"multiple"} options={[
-                    {value: "uid", label: "uid"},
-                    {value: "mail", label: "Email"},
-                    {value: "mobile", label: "mobile"},
-                    {value: "sAMAccountName", label: "sAMAccountName"},
-                  ].map((item) => Setting.getOption(item.label, item.value))} onChange={value => {
-                    this.updateLdapField("filterFields", value);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}}>
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Admin"), i18next.t("ldap:Admin - Tooltip"))} :
-                </Col>
-                <Col span={20}>
-                  <Input value={this.state.provider.username} onChange={e => {
-                    this.updateLdapField("username", e.target.value);
-                  }} />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}}>
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Admin Password"), i18next.t("ldap:Admin Password - Tooltip"))} :
-                </Col>
-                <Col span={20}>
-                  <Input.Password
-                    iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} value={this.state.provider.password}
-                    onChange={e => {
-                      this.updateLdapField("password", e.target.value);
-                    }}
-                  />
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}}>
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Auto Sync"), i18next.t("ldap:Auto Sync - Tooltip"))} :
-                </Col>
-                <Col span={20}>
-                  <InputNumber min={0} formatter={value => value.replace(/\$\s?|(,*)/g, "")} disabled={false}
-                    value={this.state.provider.autoSync} onChange={value => {
-                      this.updateLdapField("autoSync", value);
-                    }} /><span>&nbsp;mins</span>
-                  {this.renderAutoSyncWarn()}
-                </Col>
-              </Row>
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("ldap:Enable Attribute Mapping"), i18next.t("ldap:Enable Attribute Mapping - Tooltip"))} :
-                </Col>
-                <Col span={20} >
-                  <Switch checked={this.state.provider.enableAttributeMapping} onChange={checked => {
-                    this.updateLdapField("enableAttributeMapping", checked);
-                  }} />
-                </Col>
-              </Row>
-            </React.Fragment>
-          ) : null
-        }
-        {
           (this.state.provider.type === "Alipay" || this.state.provider.type === "WeChat Pay") ? (
             <Row style={{marginTop: "20px"}} >
               <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
@@ -1608,24 +1461,6 @@ class ProviderEditPage extends React.Component {
         </div>
       </div>
     );
-  }
-
-  renderAutoSyncWarn() {
-    if (this.state.provider.autoSync > 0) {
-      return (
-        <span style={{
-          color: "#faad14",
-          marginLeft: "20px",
-        }}>{i18next.t("ldap:The Auto Sync option will sync all users to specify organization")}</span>
-      );
-    }
-  }
-
-  updateLdapField(key, value) {
-    this.setState((prevState) => {
-      prevState.provider[key] = value;
-      return prevState;
-    });
   }
 }
 

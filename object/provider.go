@@ -87,17 +87,6 @@ type Provider struct {
 	NameIdFormat         string `xorm:"varchar(100)" json:"nameIdFormat"`
 	ValidateIdpSignature bool   `json:"validateIdPSignature"`
 
-
-	Username     string   `xorm:"varchar(100)" json:"username"`
-	Password     string   `xorm:"varchar(100)" json:"password"`
-	BaseDn       string   `xorm:"varchar(100)" json:"baseDn"`
-	Filter       string   `xorm:"varchar(200)" json:"filter"`
-	FilterFields []string `xorm:"varchar(100)" json:"filterFields"`
-	AutoSync int    `json:"autoSync"`
-	LastSync string `xorm:"varchar(100)" json:"lastSync"`
-	EnableAttributeMapping bool                    `xorm:"bool" json:"enableAttributeMapping"`
-	AttributeMappingItems  []*AttributeMappingItem `xorm:"text" json:"attributeMappingItems"`
-
 	ProviderUrl string `xorm:"varchar(200)" json:"providerUrl"`
 
 	RemoveFromApps bool `xorm:"-" json:"removeFromApps"`
