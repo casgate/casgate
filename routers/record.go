@@ -15,15 +15,16 @@
 package routers
 
 import (
+	goCtx "context"
 	"encoding/json"
 
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 
-	"github.com/beego/beego/context"
+	beeCtx "github.com/beego/beego/context"
 )
 
-func getUser(ctx *context.Context) (username string) {
+func getUser(ctx *beeCtx.Context) (username string) {
 	defer func() {
 		if r := recover(); r != nil {
 			username = getUserByClientIdSecret(ctx)
@@ -39,7 +40,7 @@ func getUser(ctx *context.Context) (username string) {
 	return
 }
 
-func getUserByClientIdSecret(ctx *context.Context) string {
+func getUserByClientIdSecret(ctx *beeCtx.Context) string {
 	clientId := ctx.Input.Query("clientId")
 	clientSecret := ctx.Input.Query("clientSecret")
 	if clientId == "" || clientSecret == "" {
@@ -58,17 +59,24 @@ func getUserByClientIdSecret(ctx *context.Context) string {
 	return util.GetId(application.Organization, application.Name)
 }
 
-func RecordMessage(ctx *context.Context) {
-	rb := object.ExtractRecord(ctx)
+func InitRecordMessage(bCtx *beeCtx.Context) {
+	reqCtx := bCtx.Request.Context()
+	rb := object.NewRecordBuilder(bCtx)
+	ctxWithRecord := goCtx.WithValue(reqCtx, object.RecordDataKey, rb)
+	bCtx.Request = bCtx.Request.WithContext(ctxWithRecord)
+}
+
+func LogRecordMessage(bCtx *beeCtx.Context) {
+	rb, err := object.ExtractRecord(bCtx)
 	var record *object.Record
 
-	if rb == nil {
-		record = defaultRecordLog(ctx)
+	if err != nil {
+		record = defaultRecordLog(bCtx)
 	} else {
 		record = rb.Build()
 	}
 
-	if resp, ok := ctx.Input.Data()["json"]; ok {
+	if resp, ok := bCtx.Input.Data()["json"]; ok {
 		if jsonResp, err := json.Marshal(resp); err == nil {
 			record.Response = string(jsonResp)
 		}
@@ -77,7 +85,7 @@ func RecordMessage(ctx *context.Context) {
 	util.SafeGoroutine(func() { object.AddRecord(record) })
 }
 
-func defaultRecordLog(ctx *context.Context) *object.Record {
+func defaultRecordLog(ctx *beeCtx.Context) *object.Record {
 	record := object.NewRecord(ctx)
 
 	userId := getUser(ctx)

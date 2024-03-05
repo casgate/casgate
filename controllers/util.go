@@ -15,6 +15,7 @@
 package controllers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -253,6 +254,10 @@ func (c *ApiController) GetProviderFromContext(category string) (*object.Provide
 	}
 
 	return provider, nil
+}
+
+func (c *ApiController) getRequestCtx() context.Context {
+	return c.Ctx.Request.Context()
 }
 
 func checkQuotaForApplication(count int) error {

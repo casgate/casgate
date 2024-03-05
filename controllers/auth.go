@@ -336,7 +336,8 @@ func (c *ApiController) Login() {
 		return
 	}
 
-	record := object.GetRecord(c.Ctx)
+	goCtx := c.getRequestCtx()
+	record := object.GetRecord(goCtx)
 
 	if authForm.Username != "" {
 		if authForm.Type == ResponseTypeLogin {
@@ -912,7 +913,7 @@ func (c *ApiController) Login() {
 			isLinked, err := object.LinkUserAccount(user, provider.Type, userInfo.Id)
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-;
+
 				c.ResponseError(err.Error())
 				return
 			}
@@ -978,7 +979,7 @@ func (c *ApiController) Login() {
 		}
 
 		if application == nil {
-			record.AddReason(fmt.Sprintf("Login error: application: %s doens not exists",  authForm.Application))
+			record.AddReason(fmt.Sprintf("Login error: application: %s doens not exists", authForm.Application))
 
 			c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 			return

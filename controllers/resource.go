@@ -203,6 +203,8 @@ func (c *ApiController) DeleteResource() {
 // @Success   200             {object}  object.Resource  	FileUrl, objectKey
 // @router /upload-resource [post]
 func (c *ApiController) UploadResource() {
+	goCtx := c.getRequestCtx()
+
 	owner := c.Input().Get("owner")
 	username := c.Input().Get("user")
 	application := c.Input().Get("application")
@@ -344,7 +346,7 @@ func (c *ApiController) UploadResource() {
 		}
 
 		applicationObj.TermsOfUse = fileUrl
-		_, err = object.UpdateApplication(c.Ctx, applicationId, applicationObj)
+		_, err = object.UpdateApplication(goCtx, applicationId, applicationObj)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return

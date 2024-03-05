@@ -164,6 +164,7 @@ require (
 	github.com/prometheus/common v0.30.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/qiniu/go-sdk/v7 v7.12.1 // indirect
+	github.com/r3labs/diff/v3 v3.0.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rs/zerolog v1.30.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
@@ -185,6 +186,8 @@ require (
 	github.com/ucloud/ucloud-sdk-go v0.22.5 // indirect
 	github.com/utahta/go-linenotify v0.5.0 // indirect
 	github.com/vartanbeno/go-reddit/v2 v2.0.0 // indirect
+	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
+	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/volcengine/volc-sdk-golang v1.0.117 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect

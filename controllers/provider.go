@@ -162,6 +162,9 @@ func (c *ApiController) GetProvider() {
 func (c *ApiController) UpdateProvider() {
 	id := c.Input().Get("id")
 
+	goCtx := c.getRequestCtx()
+	record := object.GetRecord(goCtx)
+
 	var provider object.Provider
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &provider)
 	if err != nil {
@@ -179,9 +182,9 @@ func (c *ApiController) UpdateProvider() {
 	affected, err := object.UpdateProvider(id, &provider)
 	if err != nil {
 		detail := fmt.Sprintf("Update provider error: Owner: %s, Name: %s, Type: %s", provider.Owner, provider.Name, provider.Type)
-		object.GetRecord(c.Ctx).AddReason(detail)
+		record.AddReason(detail)
 	} else {
-		object.GetRecord(c.Ctx).AddReason("Update provider success")
+		record.AddReason("Update provider success")
 	}
 
 	c.Data["json"] = wrapActionResponse(affected, err)
@@ -229,6 +232,8 @@ func (c *ApiController) AddProvider() {
 // @Failure 500 Internal server error
 // @router /delete-provider [post]
 func (c *ApiController) DeleteProvider() {
+	goCtx := c.getRequestCtx()
+
 	var provider object.Provider
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &provider)
 	if err != nil {
@@ -257,7 +262,7 @@ func (c *ApiController) DeleteProvider() {
 			}
 			app.Providers = providers
 
-			_, err = object.UpdateApplication(c.Ctx, app.GetId(), app)
+			_, err = object.UpdateApplication(goCtx, app.GetId(), app)
 			if err != nil {
 				c.ResponseInternalServerError(err.Error())
 				return

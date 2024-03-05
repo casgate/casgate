@@ -15,14 +15,16 @@
 package object
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
 
-	"github.com/beego/beego/context"
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/util"
+	"github.com/r3labs/diff/v3"
 	"github.com/xorm-io/core"
 )
 
@@ -445,7 +447,7 @@ func GetMaskedApplications(applications []*Application, userId string) []*Applic
 	return applications
 }
 
-func UpdateApplication(ctx *context.Context, id string, application *Application) (bool, error) {
+func UpdateApplication(ctx context.Context, id string, application *Application) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
 	oldApplication, err := getApplication(owner, name)
 	if oldApplication == nil {
@@ -474,10 +476,10 @@ func UpdateApplication(ctx *context.Context, id string, application *Application
 
 	record := GetRecord(ctx)
 	for _, providerItem := range application.Providers {
-		record.AddReason(fmt.Sprintf("Added provider: %s", providerItem.Name))
-
 		providerItem.Provider = nil
 	}
+
+	recordProvidersDiff(record, oldApplication.Providers, application.Providers)
 
 	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
 	if application.ClientSecret == "***" {
@@ -489,6 +491,23 @@ func UpdateApplication(ctx *context.Context, id string, application *Application
 	}
 
 	return affected != 0, nil
+}
+
+func recordProvidersDiff(record *RecordBuilder, oldProviders, newProviders []*ProviderItem) {
+	providersDiff, err := diff.Diff(mapProvidersToNames(oldProviders), mapProvidersToNames(newProviders))
+	if err != nil {
+		logs.Error("diff providers: %v", err.Error())
+
+		return
+	}
+
+	if len(providersDiff) > 0 {
+		if diff, err := json.Marshal(providersDiff); err == nil {
+			record.AddReason(fmt.Sprintf("diff providers: %s", string(diff)))
+		} else {
+			logs.Error("marshall diff: %v", err.Error())
+		}
+	}
 }
 
 func AddApplication(application *Application) (bool, error) {

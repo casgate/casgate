@@ -261,7 +261,10 @@ func (c *ApiController) DeleteLdap() {
 // @Success 200 {object} LdapSyncResp The Response object
 // @router /sync-ldap-users [post]
 func (c *ApiController) SyncLdapUsers() {
-	object.GetRecord(c.Ctx).AddReason("LDAP: start sync users")
+	goCtx := c.getRequestCtx()
+	record := object.GetRecord(goCtx)
+
+	record.AddReason("LDAP: start sync users")
 
 	id := c.Input().Get("id")
 
@@ -269,7 +272,7 @@ func (c *ApiController) SyncLdapUsers() {
 	var users []object.LdapUser
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &users)
 	if err != nil {
-		object.GetRecord(c.Ctx).AddReason(fmt.Sprintf("LDAP error: %s", err.Error()))
+		record.AddReason(fmt.Sprintf("LDAP error: %s", err.Error()))
 
 		c.ResponseError(err.Error())
 		return
@@ -279,13 +282,13 @@ func (c *ApiController) SyncLdapUsers() {
 
 	err = object.UpdateLdapSyncTime(ldapId)
 	if err != nil {
-		object.GetRecord(c.Ctx).AddReason(fmt.Sprintf("LDAP error: %s", err.Error()))
+		record.AddReason(fmt.Sprintf("LDAP error: %s", err.Error()))
 
 		c.ResponseError(err.Error())
 		return
 	}
 
-	object.GetRecord(c.Ctx).AddReason("LDAP: finish sync users")
+	record.AddReason("LDAP: finish sync users")
 
 	c.ResponseOk(&LdapSyncResp{
 		Exist:  exist,

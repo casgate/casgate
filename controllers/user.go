@@ -282,6 +282,9 @@ func (c *ApiController) UpdateUser() {
 	id := c.Input().Get("id")
 	columnsStr := c.Input().Get("columns")
 
+	goCtx := c.getRequestCtx()
+	record := object.GetRecord(goCtx)
+
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
@@ -350,7 +353,7 @@ func (c *ApiController) UpdateUser() {
 		}
 	}
 
-	object.GetRecord(c.Ctx).AddOldObject(oldUser).AddReason("Update user")
+	record.AddOldObject(oldUser).AddReason("Update user")
 
 	c.Data["json"] = wrapActionResponse(affected)
 	c.ServeJSON()

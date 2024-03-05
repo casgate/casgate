@@ -57,7 +57,7 @@ type Record struct {
 }
 
 type RecordDetail struct {
-	Reason    []string    `json:"reason,omitempty"`
+	Reasons   []string    `json:"reasons,omitempty"`
 	OldObject interface{} `json:"oldObject,omitempty"`
 }
 

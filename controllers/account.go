@@ -70,6 +70,9 @@ func (c *ApiController) Signup() {
 		return
 	}
 
+	gCtx := c.getRequestCtx()
+	record := object.GetRecord(gCtx)
+
 	var authForm form.AuthForm
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &authForm)
 	if err != nil {
@@ -281,7 +284,7 @@ func (c *ApiController) Signup() {
 		return
 	}
 
-	object.GetRecord(c.Ctx).WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User signed up")
+	record.WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User signed up")
 
 	userId := user.GetId()
 	util.LogInfo(c.Ctx, "API: [%s] is signed up as new user", userId)
@@ -307,7 +310,8 @@ func (c *ApiController) Logout() {
 	user := c.GetSessionUsername()
 	c.Ctx.Input.SetData("user", user)
 
-	record := object.GetRecord(c.Ctx).WithUsername(user)
+	goCtx := c.getRequestCtx()
+	record := object.GetRecord(goCtx).WithUsername(user)
 
 	if accessToken == "" && redirectUri == "" {
 		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
