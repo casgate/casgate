@@ -315,9 +315,9 @@ func isProxyProviderType(providerType string) bool {
 // @Title Login
 // @Tag Login API
 // @Description login
-// @Param clientId        query    string  true clientId
-// @Param responseType    query    string  true responseType
-// @Param redirectUri     query    string  true redirectUri
+// @Param clientId        query    string  false clientId
+// @Param responseType    query    string  false responseType
+// @Param redirectUri     query    string  false redirectUri
 // @Param scope     query    string  false  scope
 // @Param state     query    string  false  state
 // @Param nonce     query    string  false nonce
