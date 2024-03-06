@@ -3772,21 +3772,18 @@
                         "in": "query",
                         "name": "clientId",
                         "description": "clientId",
-                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "query",
                         "name": "responseType",
                         "description": "responseType",
-                        "required": true,
                         "type": "string"
                     },
                     {
                         "in": "query",
                         "name": "redirectUri",
                         "description": "redirectUri",
-                        "required": true,
                         "type": "string"
                     },
                     {
