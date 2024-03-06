@@ -548,6 +548,11 @@ paths:
       - Callback API
       description: Get Login Error Counts
       operationId: ApiController.Callback
+      responses:
+        "200":
+          description: '"The Response object"'
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/check-user-password:
     post:
       tags:
@@ -1154,6 +1159,11 @@ paths:
       tags:
       - Login API
       operationId: ApiController.GetCaptcha
+      responses:
+        "200":
+          description: '"The Response object"'
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/get-captcha-status:
     get:
       tags:
@@ -1886,14 +1896,6 @@ paths:
       - Record API
       description: get records by filter
       operationId: ApiController.GetRecordsByFilter
-      parameters:
-      - in: body
-        name: filter
-        description: filter Record message
-        required: true
-        schema:
-          type: string
-        type: string
       responses:
         "200":
           description: The Response object
@@ -2368,6 +2370,11 @@ paths:
       tags:
       - GetWebhookEventType API
       operationId: ApiController.GetWebhookEventType
+      responses:
+        "200":
+          description: '"The Response object"'
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/get-webhooks:
     get:
       tags:
@@ -2718,6 +2725,11 @@ paths:
       tags:
       - Account API
       operationId: ApiController.ResetEmailOrPhone
+      responses:
+        "200":
+          description: '"The Response object"'
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/run-syncer:
     get:
       tags:
@@ -2827,6 +2839,11 @@ paths:
       tags:
       - Verification API
       operationId: ApiController.SendVerificationCode
+      responses:
+        "200":
+          description: '"The Response object"'
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/set-password:
     post:
       tags:
@@ -2959,6 +2976,11 @@ paths:
     post:
       tags:
       - Login API
+      responses:
+        "200":
+          description: '"The Response object"'
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/update-adapter:
     post:
       tags:
@@ -3575,11 +3597,21 @@ paths:
       tags:
       - Verification API
       operationId: ApiController.VerifyCaptcha
+      responses:
+        "200":
+          description: '"The Response object"'
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/verify-code:
     post:
       tags:
       - Verification API
       operationId: ApiController.VerifyCode
+      responses:
+        "200":
+          description: '"The Response object"'
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/webauthn/signin/begin:
     get:
       tags:
@@ -3654,11 +3686,16 @@ paths:
       tags:
       - HandleOfficialAccountEvent API
       operationId: ApiController.HandleOfficialAccountEvent
+      responses:
+        "200":
+          description: '"The Response object"'
+          schema:
+            $ref: '#/definitions/controllers.Response'
 definitions:
-  176565.<nil>.string:
+  187988.<nil>.string:
     title: string
     type: object
-  297708.<nil>.string:
+  309233.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -3811,6 +3848,8 @@ definitions:
         type: boolean
       enablePassword:
         type: boolean
+      enablePasswordRecovery:
+        type: boolean
       enableSamlCompress:
         type: boolean
       enableSignUp:
@@ -3820,6 +3859,12 @@ definitions:
       enableWebAuthn:
         type: boolean
       expireInHours:
+        type: integer
+        format: int64
+      failedSigninFrozenTime:
+        type: integer
+        format: int64
+      failedSigninLimit:
         type: integer
         format: int64
       footerText:
@@ -3872,10 +3917,18 @@ definitions:
       refreshExpireInHours:
         type: integer
         format: int64
+      samlAttributes:
+        type: array
+        items:
+          $ref: '#/definitions/object.SamlItem'
       samlReplyUrl:
         type: string
       signinHtml:
         type: string
+      signinMethods:
+        type: array
+        items:
+          $ref: '#/definitions/object.SigninMethod'
       signinUrl:
         type: string
       signupHtml:
@@ -3894,6 +3947,10 @@ definitions:
         type: string
       themeData:
         $ref: '#/definitions/object.ThemeData'
+      tokenFields:
+        type: array
+        items:
+          type: string
       tokenFormat:
         type: string
   object.AttributeMappingItem:
@@ -4109,9 +4166,13 @@ definitions:
         type: string
       cert:
         type: string
+      clientCert:
+        type: string
       createdTime:
         type: string
       enableAttributeMapping:
+        type: boolean
+      enableMutualTls:
         type: boolean
       enableRoleMapping:
         type: boolean
@@ -4195,7 +4256,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/176565.<nil>.string'
+          $ref: '#/definitions/187988.<nil>.string'
       description:
         type: string
       displayName:
@@ -4595,6 +4656,8 @@ definitions:
         type: string
       customAuthUrl:
         type: string
+      customConfUrl:
+        type: string
       customLogo:
         type: string
       customTokenUrl:
@@ -4644,6 +4707,8 @@ definitions:
         type: string
       regionId:
         type: string
+      removeFromApps:
+        type: boolean
       requestSignature:
         type: string
       roleMappingItems:
@@ -4665,7 +4730,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/297708.<nil>.string'
+        $ref: '#/definitions/309233.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:
@@ -4701,7 +4766,7 @@ definitions:
       createdTime:
         type: string
       detail:
-        type: string
+        $ref: '#/definitions/object.RecordDetail'
       extendedUser:
         $ref: '#/definitions/object.User'
       id:
@@ -4727,6 +4792,18 @@ definitions:
         type: string
       user:
         type: string
+  object.RecordDetail:
+    title: RecordDetail
+    type: object
+    properties:
+      oldObject:
+        additionalProperties:
+          description: support string, struct or []struct
+          type: string
+      reason:
+        type: array
+        items:
+          type: string
   object.Resource:
     title: Resource
     type: object
@@ -4808,14 +4885,40 @@ definitions:
         type: array
         items:
           type: string
-  object.SignupItem:
-    title: SignupItem
+  object.SamlItem:
+    title: SamlItem
     type: object
     properties:
       name:
         type: string
+      nameFormat:
+        type: string
+      value:
+        type: string
+  object.SigninMethod:
+    title: SigninMethod
+    type: object
+    properties:
+      displayName:
+        type: string
+      name:
+        type: string
+      rule:
+        type: string
+  object.SignupItem:
+    title: SignupItem
+    type: object
+    properties:
+      label:
+        type: string
+      name:
+        type: string
+      placeholder:
+        type: string
       prompted:
         type: boolean
+      regex:
+        type: string
       required:
         type: boolean
       rule:
@@ -5200,15 +5303,16 @@ definitions:
         type: string
       onedrive:
         type: string
+      openid:
+        type: string
       oura:
         type: string
       owner:
         type: string
       password:
         type: string
-      passwordChangeTime:
-        type: string
-        format: datetime
+      passwordChangeRequired:
+        type: boolean
       passwordSalt:
         type: string
       passwordType:
