@@ -15,12 +15,16 @@
 package object
 
 import (
-	"github.com/beego/beego/context"
+	goCtx "context"
+	"errors"
+
+	beeCtx "github.com/beego/beego/context"
+	"github.com/beego/beego/logs"
 )
 
-func NewRecordBuilder(ctx *context.Context) *RecordBuilder {
+func NewRecordBuilder(bCtx *beeCtx.Context) *RecordBuilder {
 	rb := &RecordBuilder{
-		record: NewRecord(ctx),
+		record: NewRecord(bCtx),
 	}
 
 	rb.setDefaultFieldValues()
@@ -61,8 +65,8 @@ func (rb *RecordBuilder) WithResponse(response string) *RecordBuilder {
 	return rb
 }
 
-func (rb *RecordBuilder) AddDetail(detail string) *RecordBuilder {
-	rb.record.Detail.Reason = append(rb.record.Detail.Reason, detail)
+func (rb *RecordBuilder) AddReason(detail string) *RecordBuilder {
+	rb.record.Detail.Reasons = append(rb.record.Detail.Reasons, detail)
 
 	return rb
 }
@@ -79,29 +83,38 @@ func (rb *RecordBuilder) Build() *Record {
 
 type recordDataKey string
 
-const dataKey recordDataKey = "recordsStore"
+const RecordDataKey recordDataKey = "recordDataStore"
 
-func ExtractRecord(ctx *context.Context) *RecordBuilder {
-	values := ctx.Input.GetData(dataKey)
+func ExtractRecord(bCtx *beeCtx.Context) (*RecordBuilder, error) {
+	reqCtx := bCtx.Request.Context()
 
-	if values == nil {
-		return nil
-	}
-
-	rb, ok := values.(*RecordBuilder)
-	if !ok {
-		return nil
-	}
-
-	return rb
+	return extractRecordFromCtx(reqCtx)
 }
 
-func GetRecord(ctx *context.Context) *RecordBuilder {
-	rb := ExtractRecord(ctx)
-	if rb == nil {
-		rb = NewRecordBuilder(ctx)
-		ctx.Input.SetData(dataKey, rb)
+func GetRecord(ctx goCtx.Context) *RecordBuilder {
+	rb, err := extractRecordFromCtx(ctx)
+	if err == nil {
+		return rb
 	}
 
-	return rb
+	logs.Error("extract record from context: %s", err.Error())
+
+	return &RecordBuilder{}
+}
+
+var ErrExtractRecordFromCtx = errors.New("extract record from ctx")
+
+func extractRecordFromCtx(goCtx goCtx.Context) (*RecordBuilder, error) {
+	recordVal := goCtx.Value(RecordDataKey)
+
+	if recordVal == nil {
+		return nil, ErrExtractRecordFromCtx
+	}
+
+	rb, ok := recordVal.(*RecordBuilder)
+	if !ok {
+		return nil, ErrExtractRecordFromCtx
+	}
+
+	return rb, nil
 }

@@ -336,25 +336,34 @@ func (c *ApiController) Login() {
 		return
 	}
 
+	goCtx := c.getRequestCtx()
+	record := object.GetRecord(goCtx)
+
 	if authForm.Username != "" {
 		if authForm.Type == ResponseTypeLogin {
 			if c.GetSessionUsername() != "" {
+				record.AddReason("Login error: please sign out first")
+
 				c.ResponseError(c.T("account:Please sign out first"), c.GetSessionUsername())
 				return
 			}
 		}
 
+		record.WithUsername(authForm.Username)
+
 		var user *object.User
 		var msg string
 
 		if authForm.Password == "" {
-			object.GetRecord(c.Ctx).WithUsername(authForm.Username).AddDetail("Empty password")
+			record.AddReason("Empty password")
 
 			if user, err = object.GetUserByFields(authForm.Organization, authForm.Username); err != nil {
+				record.AddReason("Login error: please sign out first")
+
 				c.ResponseError(err.Error(), nil)
 				return
 			} else if user == nil {
-				object.GetRecord(c.Ctx).WithUsername(authForm.Username).AddDetail("user not found")
+				record.AddReason("Login error: User not found")
 
 				c.ResponseError(fmt.Sprintf(c.T("general:Invalid username or password/code"), util.GetId(authForm.Organization, authForm.Username)))
 				return
@@ -366,6 +375,8 @@ func (c *ApiController) Login() {
 				authForm.CountryCode = user.GetCountryCode(authForm.CountryCode)
 				var ok bool
 				if checkDest, ok = util.GetE164Number(authForm.Username, authForm.CountryCode); !ok {
+					record.AddReason("Login error: invalid country code")
+
 					c.ResponseError(fmt.Sprintf(c.T("verification:Phone number is invalid in your region %s"), authForm.CountryCode))
 					return
 				}
@@ -374,6 +385,8 @@ func (c *ApiController) Login() {
 			// check result through Email or Phone
 			err := object.CheckSigninCode(user, checkDest, authForm.Code, c.GetAcceptLanguage())
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s - %s", verificationCodeType, err.Error()))
+
 				c.ResponseError(fmt.Sprintf("%s - %s", verificationCodeType, err.Error()))
 				return
 			}
@@ -381,21 +394,29 @@ func (c *ApiController) Login() {
 			// disable the verification code
 			err = object.DisableVerificationCode(checkDest)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error(), nil)
 				return
 			}
 		} else {
 			application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error(), nil)
 				return
 			}
 
 			if application == nil {
+				record.AddReason(fmt.Sprintf("Login error: application does not exists: %s", authForm.Application))
+
 				c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 				return
 			}
 			if authForm.SigninMethod == "Password" && !application.EnablePassword {
+				record.AddReason("Login error: login with password is not enabled for the application")
+
 				c.ResponseError(c.T("auth:The login method: login with password is not enabled for the application"))
 				return
 			}
@@ -405,16 +426,22 @@ func (c *ApiController) Login() {
 			}
 			var enableCaptcha bool
 			if enableCaptcha, err = object.CheckToEnableCaptcha(application, authForm.Organization, authForm.Username); err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			} else if enableCaptcha {
 				isHuman, err := captcha.VerifyCaptchaByCaptchaType(authForm.CaptchaType, authForm.CaptchaToken, authForm.ClientSecret)
 				if err != nil {
+					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 					c.ResponseError(err.Error())
 					return
 				}
 
 				if !isHuman {
+					record.AddReason("Login error: turing test filed")
+
 					c.ResponseError(c.T("verification:Turing test failed."))
 					return
 				}
@@ -439,7 +466,7 @@ func (c *ApiController) Login() {
 			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())	
-				object.GetRecord(c.Ctx).AddDetail(err.Error())
+				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
 			}
 			
 		}
@@ -449,17 +476,23 @@ func (c *ApiController) Login() {
 		} else {
 			application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
 
 			if application == nil {
+				record.AddReason(fmt.Sprintf("Login error: application does not exists: %s", authForm.Application))
+
 				c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 				return
 			}
 
 			organization, err := object.GetOrganizationByUser(user)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 			}
 
@@ -484,41 +517,53 @@ func (c *ApiController) Login() {
 
 			resp = c.HandleLoggedIn(application, user, &authForm)
 
-			object.GetRecord(c.Ctx).WithUsername(user.Name).WithOrganization(application.Organization).AddDetail("User logged in")
+			record.WithOrganization(application.Organization).AddReason("User logged in")
 		}
 	} else if authForm.Provider != "" {
 		var application *object.Application
 		if authForm.ClientId != "" {
 			application, err = object.GetApplicationByClientId(authForm.ClientId)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
 		} else {
 			application, err = object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
 		}
 
 		if application == nil {
+			record.AddReason(fmt.Sprintf("Login error: the application does not exists: %s", err.Error()))
+
 			c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 			return
 		}
 		organization, err := object.GetOrganization(util.GetId("admin", application.Organization))
 		if err != nil {
+			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 			c.ResponseError(c.T(err.Error()))
 		}
 
 		provider, err := object.GetProvider(util.GetId("admin", authForm.Provider))
 		if err != nil {
+			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 			c.ResponseError(err.Error())
 			return
 		}
 
 		providerItem := application.GetProviderItem(provider.Name)
 		if !providerItem.IsProviderVisible() {
+			record.AddReason(fmt.Sprintf("Login error: provider is not enabled for the application: %s", provider.Name))
+
 			c.ResponseError(fmt.Sprintf(c.T("auth:The provider: %s is not enabled for the application"), provider.Name))
 			return
 		}
@@ -529,6 +574,8 @@ func (c *ApiController) Login() {
 			// SAML
 			userInfo, authData, err = object.ParseSamlResponse(authForm.SamlResponse, provider, c.Ctx.Request.Host)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
@@ -537,17 +584,23 @@ func (c *ApiController) Login() {
 			idpInfo := object.FromProviderToIdpInfo(c.Ctx, provider)
 			idProvider := idp.GetIdProvider(idpInfo, authForm.RedirectUri)
 			if idProvider == nil {
+				record.AddReason(fmt.Sprintf("Login error: provider type is not supported: %s", provider.Type))
+
 				c.ResponseError(fmt.Sprintf(c.T("storage:The provider type: %s is not supported"), provider.Type))
 				return
 			}
 
 			err = setHttpClient(idProvider, *idpInfo)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
 
 			if authForm.State != conf.GetConfigString("authState") && authForm.State != application.Name {
+				record.AddReason(fmt.Sprintf("Login error: mismatch state: %s got: %s", conf.GetConfigString("authState"), authForm.State))
+
 				c.ResponseError(fmt.Sprintf(c.T("auth:State expected: %s, but got: %s"), conf.GetConfigString("authState"), authForm.State))
 				return
 			}
@@ -555,17 +608,23 @@ func (c *ApiController) Login() {
 			// https://github.com/golang/oauth2/issues/123#issuecomment-103715338
 			token, err := idProvider.GetToken(authForm.Code)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
 
 			if !token.Valid() {
+				record.AddReason("Login error: invalid token")
+
 				c.ResponseError(c.T("auth:Invalid token"))
 				return
 			}
 
 			userInfo, err = idProvider.GetUserInfo(token)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(fmt.Sprintf(c.T("auth:Failed to login in: %s"), err.Error()))
 				return
 			}
@@ -577,6 +636,8 @@ func (c *ApiController) Login() {
 				if jwtToken != nil {
 					err = jwtToken.UnsafeClaimsWithoutVerification(&authData)
 					if err != nil {
+						record.AddReason("Login error: invalid token")
+
 						c.ResponseError(c.T("auth:Invalid token"))
 						return
 					}
@@ -589,6 +650,8 @@ func (c *ApiController) Login() {
 			if provider.Category == "OAuth" || provider.Category == "Web3" || provider.Category == "SAML" {
 				user, err = object.GetUserByField(application.Organization, provider.Type, userInfo.Id)
 				if err != nil {
+					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 					c.ResponseError(err.Error())
 					return
 				}
@@ -598,12 +661,18 @@ func (c *ApiController) Login() {
 				// Sign in via OAuth (want to sign up but already have account)
 
 				if user.IsForbidden {
+					record.AddReason("Login error: user forbidden to sign in")
+
 					c.ResponseError(c.T("check:The user is forbidden to sign in, please contact the administrator"))
+					return
 				}
 
 				resp = c.HandleLoggedIn(application, user, &authForm)
 
-				object.GetRecord(c.Ctx).WithUsername(user.Name).WithOrganization(application.Organization).AddDetail("User logged in")
+				record.WithOrganization(application.Organization).AddReason("User logged in")
+				if jsonProvider, err := json.Marshal(provider); err == nil {
+					record.AddReason(fmt.Sprintf("provider: %s", jsonProvider))
+				}
 
 				err = object.UpdateUserIdProvider(c.Ctx.Request.Context(), &object.UserIdProvider{
 					Owner:           organization.Name,
@@ -612,6 +681,8 @@ func (c *ApiController) Login() {
 					LastSignInTime:  util.GetCurrentTime(),
 				})
 				if err != nil {
+					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 					c.ResponseInternalServerError(err.Error())
 					return
 				}
@@ -622,6 +693,8 @@ func (c *ApiController) Login() {
 						// Find existing user with Email
 						user, err = object.GetUserByField(application.Organization, "email", userInfo.Email)
 						if err != nil {
+							record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 							c.ResponseError(err.Error())
 							return
 						}
@@ -631,6 +704,8 @@ func (c *ApiController) Login() {
 						// Find existing user with phone number
 						user, err = object.GetUserByField(application.Organization, "phone", userInfo.Phone)
 						if err != nil {
+							record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 							c.ResponseError(err.Error())
 							return
 						}
@@ -639,11 +714,15 @@ func (c *ApiController) Login() {
 
 				if user == nil || user.IsDeleted {
 					if !application.EnableSignUp {
+						record.AddReason(fmt.Sprintf("Login error: provider: %s, username: %s, (%s) does not allowed to sign up as new account", provider.Type, userInfo.Username, userInfo.DisplayName))
+
 						c.ResponseError(fmt.Sprintf(c.T("auth:The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support"), provider.Type, userInfo.Username, userInfo.DisplayName))
 						return
 					}
 
 					if !providerItem.CanSignUp {
+						record.AddReason(fmt.Sprintf("Login error: provider: %s, username: %s, (%s) does not allowed to sign up as new account via %s", provider.Type, userInfo.Username, userInfo.DisplayName, provider.Type))
+
 						c.ResponseError(fmt.Sprintf(c.T("auth:The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up"), provider.Type, userInfo.Username, userInfo.DisplayName, provider.Type))
 						return
 					}
@@ -651,6 +730,8 @@ func (c *ApiController) Login() {
 					// Handle username conflicts
 					tmpUser, err := object.GetUser(util.GetId(application.Organization, userInfo.Username))
 					if err != nil {
+						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 						c.ResponseError(err.Error())
 						return
 					}
@@ -658,6 +739,8 @@ func (c *ApiController) Login() {
 					if tmpUser != nil {
 						uid, err := uuid.NewRandom()
 						if err != nil {
+							record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 							c.ResponseError(err.Error())
 							return
 						}
@@ -669,6 +752,8 @@ func (c *ApiController) Login() {
 					properties := map[string]string{}
 					count, err := object.GetUserCount(application.Organization, "", "", "")
 					if err != nil {
+						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 						c.ResponseError(err.Error())
 						return
 					}
@@ -676,6 +761,8 @@ func (c *ApiController) Login() {
 					properties["no"] = strconv.Itoa(int(count + 2))
 					initScore, err := organization.GetInitScore()
 					if err != nil {
+						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 						c.ResponseError(fmt.Errorf(c.T("account:Get init score failed, error: %w"), err).Error())
 						return
 					}
@@ -711,11 +798,15 @@ func (c *ApiController) Login() {
 
 					affected, err := object.AddUser(user)
 					if err != nil {
+						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 						c.ResponseError(err.Error())
 						return
 					}
 
 					if !affected {
+						record.AddReason(fmt.Sprintf("Login error: user information is invalid: %s", util.StructToJson(user)))
+
 						c.ResponseError(fmt.Sprintf(c.T("auth:Failed to create user, user information is invalid: %s"), util.StructToJson(user)))
 						return
 					}
@@ -725,6 +816,8 @@ func (c *ApiController) Login() {
 					// sync info from 3rd-party if possible
 					_, err := object.SetUserOAuthProperties(organization, user, provider.Type, userInfo)
 					if err != nil {
+						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 						c.ResponseError(err.Error())
 						return
 					}
@@ -732,6 +825,8 @@ func (c *ApiController) Login() {
 
 				_, err = object.LinkUserAccount(user, provider.Type, userInfo.Id)
 				if err != nil {
+					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 					c.ResponseError(err.Error())
 					return
 				}
@@ -745,6 +840,8 @@ func (c *ApiController) Login() {
 					CreatedTime:     util.GetCurrentTime(),
 				})
 				if err != nil {
+					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 					c.ResponseError(err.Error())
 					return
 				}
@@ -752,6 +849,8 @@ func (c *ApiController) Login() {
 				if provider.EnableRoleMapping {
 					mapper, err := role_mapper.NewRoleMapper(provider.Category, provider.RoleMappingItems, authData)
 					if err != nil {
+						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 						c.ResponseError(err.Error())
 						return
 					}
@@ -759,6 +858,8 @@ func (c *ApiController) Login() {
 					userRoles := mapper.GetRoles()
 					err = object.AddRolesToUser(user.GetId(), userRoles)
 					if err != nil {
+						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 						c.ResponseError(err.Error())
 						return
 					}
@@ -766,28 +867,36 @@ func (c *ApiController) Login() {
 
 				resp = c.HandleLoggedIn(application, user, &authForm)
 
-				object.GetRecord(c.Ctx).WithAction("signup").WithUsername(user.Name).WithOrganization(application.Organization).AddDetail("User logged in")
+				record.WithAction("signup").WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User logged in")
 			}
 		} else { // authForm.Method != "signup"
 			userId := c.GetSessionUsername()
 			if userId == "" {
+				record.AddReason("Login error: invalid username or password")
+
 				c.ResponseError(fmt.Sprintf(c.T("general:Invalid username or password/code"), util.GetId(application.Organization, userInfo.Id)), userInfo)
 				return
 			}
 
 			oldUser, err := object.GetUserByField(application.Organization, provider.Type, userInfo.Id)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
 
 			if oldUser != nil {
+				record.AddReason(fmt.Sprintf("Login error: provider: %s and username: %s (%s) is already linked to another account %s (%s)", provider.Type, userInfo.Username, userInfo.DisplayName, oldUser.Name, oldUser.DisplayName))
+
 				c.ResponseError(fmt.Sprintf(c.T("auth:The account for provider: %s and username: %s (%s) is already linked to another account: %s (%s)"), provider.Type, userInfo.Username, userInfo.DisplayName, oldUser.Name, oldUser.DisplayName))
 				return
 			}
 
 			user, err := object.GetUser(userId)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
@@ -795,12 +904,16 @@ func (c *ApiController) Login() {
 			// sync info from 3rd-party if possible
 			_, err = object.SetUserOAuthProperties(organization, user, provider.Type, userInfo)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
 
 			isLinked, err := object.LinkUserAccount(user, provider.Type, userInfo.Id)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
@@ -814,10 +927,14 @@ func (c *ApiController) Login() {
 	} else if c.getMfaUserSession() != "" {
 		user, err := object.GetUser(c.getMfaUserSession())
 		if err != nil {
+			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 			c.ResponseError(err.Error())
 			return
 		}
 		if user == nil {
+			record.AddReason("Login error: expired user session")
+
 			c.ResponseError("expired user session")
 			return
 		}
@@ -825,13 +942,15 @@ func (c *ApiController) Login() {
 		if authForm.Passcode != "" {
 			mfaUtil := object.GetMfaUtil(authForm.MfaType, user.GetPreferredMfaProps(false))
 			if mfaUtil == nil {
+				record.AddReason("Login error: invalid multi-factor authentication type")
+
 				c.ResponseError("Invalid multi-factor authentication type")
 				return
 			}
 
 			err = mfaUtil.Verify(authForm.Passcode)
 			if err != nil {
-				object.GetRecord(c.Ctx).AddDetail("OTP was wrong")
+				record.AddReason("OTP was wrong")
 
 				c.ResponseError(err.Error())
 				return
@@ -839,21 +958,29 @@ func (c *ApiController) Login() {
 		} else if authForm.RecoveryCode != "" {
 			err = object.MfaRecover(user, authForm.RecoveryCode)
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
 		} else {
+			record.AddReason("missing passcode or recovery code")
+
 			c.ResponseError("missing passcode or recovery code")
 			return
 		}
 
 		application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
 		if err != nil {
+			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 			c.ResponseError(err.Error())
 			return
 		}
 
 		if application == nil {
+			record.AddReason(fmt.Sprintf("Login error: application: %s doens not exists", authForm.Application))
+
 			c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 			return
 		}
@@ -868,14 +995,18 @@ func (c *ApiController) Login() {
 		resp = c.HandleLoggedIn(application, user, &authForm)
 		c.setMfaUserSession("")
 
-		object.GetRecord(c.Ctx).WithOrganization(application.Organization).WithUsername(user.Name).AddDetail("MFA success")
+		record.WithOrganization(application.Organization).WithUsername(user.Name).AddReason("MFA success")
 	} else if c.getChangePasswordUserSession() != "" {
 		user, err := object.GetUser(c.getChangePasswordUserSession())
 		if err != nil {
+			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 			c.ResponseError(err.Error())
 			return
 		}
 		if user == nil {
+			record.AddReason("expired user session")
+
 			c.ResponseError("expired user session")
 			return
 		}
@@ -887,11 +1018,15 @@ func (c *ApiController) Login() {
 
 		application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
 		if err != nil {
+			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 			c.ResponseError(err.Error())
 			return
 		}
 
 		if application == nil {
+			record.AddReason(fmt.Sprintf("Login error: application %s does not exist", authForm.Application))
+
 			c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 			return
 		}
@@ -899,17 +1034,21 @@ func (c *ApiController) Login() {
 		resp = c.HandleLoggedIn(application, user, &authForm)
 		c.setChangePasswordUserSession("")
 
-		object.GetRecord(c.Ctx).WithOrganization(application.Organization).WithUsername(user.Name).AddDetail("Changed password")
+		record.WithOrganization(application.Organization).WithUsername(user.Name).AddReason("Changed password")
 	} else {
 		if c.GetSessionUsername() != "" {
 			// user already signed in to Casdoor, so let the user click the avatar button to do the quick sign-in
 			application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
 				c.ResponseError(err.Error())
 				return
 			}
 
 			if application == nil {
+				record.AddReason(fmt.Sprintf("Login error: application %s does not exist", authForm.Application))
+
 				c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 				return
 			}
@@ -917,8 +1056,10 @@ func (c *ApiController) Login() {
 			user := c.getCurrentUser()
 			resp = c.HandleLoggedIn(application, user, &authForm)
 
-			object.GetRecord(c.Ctx).WithOrganization(application.Organization).WithUsername(user.Name).AddDetail("Quick sign in")
+			record.WithOrganization(application.Organization).WithUsername(user.Name).AddReason("Quick sign in")
 		} else {
+			record.AddReason("Login error: Unknown authentication type (not password or provider)")
+
 			c.ResponseError(fmt.Sprintf(c.T("auth:Unknown authentication type (not password or provider), form = %s"), util.StructToJson(authForm)))
 			return
 		}

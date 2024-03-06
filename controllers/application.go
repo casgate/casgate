@@ -211,6 +211,7 @@ func (c *ApiController) GetOrganizationApplications() {
 // @router /update-application [post]
 func (c *ApiController) UpdateApplication() {
 	id := c.Input().Get("id")
+	goCtx := c.getRequestCtx()
 
 	var application object.Application
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &application)
@@ -219,7 +220,7 @@ func (c *ApiController) UpdateApplication() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateApplication(id, &application))
+	c.Data["json"] = wrapActionResponse(object.UpdateApplication(goCtx, id, &application))
 	c.ServeJSON()
 }
 

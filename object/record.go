@@ -50,14 +50,14 @@ type Record struct {
 
 	Object       string        `xorm:"text" json:"object"`
 	Response     string        `xorm:"text" json:"response"`
-	Detail       *RecordDetail `xorm:"text" json:"detail"`
+	Detail       *RecordDetail `xorm:"text" json:"detail,omitempty"`
 	ExtendedUser *User         `xorm:"-" json:"extendedUser"`
 
 	IsTriggered bool `json:"isTriggered"`
 }
 
 type RecordDetail struct {
-	Reason    []string    `json:"reason,omitempty"`
+	Reasons   []string    `json:"reasons,omitempty"`
 	OldObject interface{} `json:"oldObject,omitempty"`
 }
 
