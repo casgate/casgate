@@ -698,7 +698,7 @@ class ProviderEditPage extends React.Component {
           )
         }
         {
-          (this.state.provider.type === "Custom" || this.state.provider.category === "SAML") &&
+          (this.state.provider.type === "Custom" || this.state.provider.category === "SAML" || this.state.provider.type === "OpenID") &&
           <React.Fragment>
             <Row style={{marginTop: "20px"}} >
               <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>

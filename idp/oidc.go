@@ -76,7 +76,12 @@ func (idp *OpenIdProvider) EnrichOauthURLsIfNotValid() error {
 }
 
 func (idp *OpenIdProvider) EnrichOauthURLs() error {
-	request, err := http.NewRequest("GET", idp.ConfURL, nil)
+	requestURL := idp.ConfURL
+	if !strings.Contains(requestURL, ".well-known/openid-configuration") {
+		requestURL = fmt.Sprintf("%s/%s", idp.ConfURL, ".well-known/openid-configuration")
+	}
+
+	request, err := http.NewRequest("GET", requestURL, nil)
 	if err != nil {
 		return err
 	}
