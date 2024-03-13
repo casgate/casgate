@@ -24,7 +24,7 @@ var (
 	regexLowerCase = regexp.MustCompile(`[a-z]`)
 	regexUpperCase = regexp.MustCompile(`[A-Z]`)
 	regexDigit     = regexp.MustCompile(`\d`)
-	regexSpecial   = regexp.MustCompile(`[!@#$%^&*]`)
+	regexSpecial   = regexp.MustCompile(`[~!@#$%^&*_\-+=` + "`" + `|\(){}[\]:;"'<>,.?/]`)
 )
 
 func isValidOption_AtLeast6(password string) string {
@@ -68,6 +68,27 @@ func isValidOption_NoRepeat(password string) string {
 	return ""
 }
 
+func isValidOption_OneUppercase(password string) string {
+	if !regexUpperCase.MatchString(password) {
+		return "The password must contain at least one uppercase letter"
+	}
+	return ""
+}
+
+func isValidOption_OneLowercase(password string) string {
+	if !regexLowerCase.MatchString(password) {
+		return "The password must contain at least one lowercase letter"
+	}
+	return ""
+}
+
+func isValidOption_OneDigit(password string) string {
+	if !regexDigit.MatchString(password) {
+		return "The password must contain at least one digit"
+	}
+	return ""
+}
+
 func checkPasswordComplexity(password string, options []string) string {
 	if len(password) == 0 {
 		return "Please input your password!"
@@ -78,11 +99,14 @@ func checkPasswordComplexity(password string, options []string) string {
 	}
 
 	checkers := map[string]ValidatorFunc{
-		"AtLeast6":    isValidOption_AtLeast6,
-		"AtLeast8":    isValidOption_AtLeast8,
-		"Aa123":       isValidOption_Aa123,
-		"SpecialChar": isValidOption_SpecialChar,
-		"NoRepeat":    isValidOption_NoRepeat,
+		"AtLeast6":     isValidOption_AtLeast6,
+		"AtLeast8":     isValidOption_AtLeast8,
+		"Aa123":        isValidOption_Aa123,
+		"SpecialChar":  isValidOption_SpecialChar,
+		"NoRepeat":     isValidOption_NoRepeat,
+		"OneUppercase": isValidOption_OneUppercase,
+		"OneLowercase": isValidOption_OneLowercase,
+		"OneDigit":     isValidOption_OneDigit,
 	}
 
 	for _, option := range options {

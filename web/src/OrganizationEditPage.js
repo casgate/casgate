@@ -217,6 +217,9 @@ class OrganizationEditPage extends React.Component {
                 {value: "Aa123", name: i18next.t("user:The password must contain at least one uppercase letter, one lowercase letter and one digit")},
                 {value: "SpecialChar", name: i18next.t("user:The password must contain at least one special character")},
                 {value: "NoRepeat", name: i18next.t("user:The password must not contain any repeated characters")},
+                {value: "OneUppercase", name: i18next.t("user:The password must contain at least one uppercase letter")},
+                {value: "OneLowercase", name: i18next.t("user:The password must contain at least one lowercase letter")},
+                {value: "OneDigit", name: i18next.t("user:The password must contain at least one digit")},
               ].map((item) => Setting.getOption(item.name, item.value))}
             />
           </Col>
