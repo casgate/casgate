@@ -37,7 +37,7 @@ function isValidOption_Aa123(password) {
 }
 
 function isValidOption_SpecialChar(password) {
-  const regex = /^(?=.*[!@#$%^&*]).+$/;
+  const regex = /^(?=.*[~!@#$%^&*_\-+=`|\\(){}[\]:;"'<>,.?/]).+$/;
   if (!regex.test(password)) {
     return i18next.t("user:The password must contain at least one special character");
   }
@@ -48,6 +48,30 @@ function isValidOption_NoRepeat(password) {
   const regex = /(.)\1+/;
   if (regex.test(password)) {
     return i18next.t("user:The password must not contain any repeated characters");
+  }
+  return "";
+}
+
+function isValidOption_OneUppercase(password) {
+  const regex = /[A-Z]/;
+  if (!regex.test(password)) {
+    return i18next.t("user:The password must contain at least one uppercase letter");
+  }
+  return "";
+}
+
+function isValidOption_OneLowercase(password) {
+  const regex = /[a-z]/;
+  if (!regex.test(password)) {
+    return i18next.t("user:The password must contain at least one lowercase letter");
+  }
+  return "";
+}
+
+function isValidOption_OneDigit(password) {
+  const regex = /\d/;
+  if (!regex.test(password)) {
+    return i18next.t("user:The password must contain at least one digit");
   }
   return "";
 }
@@ -67,6 +91,9 @@ export function checkPasswordComplexity(password, options) {
     Aa123: isValidOption_Aa123,
     SpecialChar: isValidOption_SpecialChar,
     NoRepeat: isValidOption_NoRepeat,
+    OneUppercase: isValidOption_OneUppercase,
+    OneLowercase: isValidOption_OneLowercase,
+    OneDigit: isValidOption_OneDigit,
   };
 
   for (const option of options) {
