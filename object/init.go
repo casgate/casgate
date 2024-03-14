@@ -92,6 +92,11 @@ func initBuiltInOrganization() bool {
 		return true
 	}
 
+	userTablePasswordMaxLength, err := GetUserTablePasswordMaxLength()
+	if err != nil {
+		panic(err)
+	}
+
 	organization = &Organization{
 		Owner:              "admin",
 		Name:               "built-in",
@@ -106,6 +111,8 @@ func initBuiltInOrganization() bool {
 		Tags:               []string{},
 		Languages:          []string{"en", "zh", "es", "fr", "de", "id", "ja", "ko", "ru", "vi", "pt"},
 		InitScore:          2000,
+		PasswordMaxLength:  userTablePasswordMaxLength,
+		PasswordMinLength:  1,
 		AccountItems:       getBuiltInAccountItems(),
 		EnableSoftDeletion: false,
 		IsProfilePublic:    false,

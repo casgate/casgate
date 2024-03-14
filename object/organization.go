@@ -59,6 +59,8 @@ type Organization struct {
 	PasswordSalt           string     `xorm:"varchar(100)" json:"passwordSalt"`
 	PasswordOptions        []string   `xorm:"varchar(100)" json:"passwordOptions"`
 	PasswordChangeInterval int        `json:"passwordChangeInterval"`
+	PasswordMaxLength      int        `json:"passwordMaxLength"`
+	PasswordMinLength      int        `json:"passwordMinLength"`
 	CountryCodes           []string   `xorm:"varchar(200)"  json:"countryCodes"`
 	DefaultAvatar          string     `xorm:"varchar(200)" json:"defaultAvatar"`
 	DefaultApplication     string     `xorm:"varchar(100)" json:"defaultApplication"`
@@ -176,7 +178,7 @@ func GetMaskedOrganizations(organizations []*Organization, errs ...error) ([]*Or
 	return organizations, nil
 }
 
-func UpdateOrganization(ctx context.Context, id string, organization *Organization) (bool, error) {
+func UpdateOrganization(ctx context.Context, id string, organization *Organization, lang string) (bool, error) {
 	var affected int64
 	err := trm.WithTx(ctx, func(ctx context.Context) error {
 		owner, name := util.GetOwnerAndNameFromId(id)
@@ -217,6 +219,11 @@ func UpdateOrganization(ctx context.Context, id string, organization *Organizati
 			organization.MasterPassword = org.MasterPassword
 		}
 
+		err = checkPasswordLength(organization, lang)
+		if err != nil {
+			return err
+		}
+
 		affected, err = repo.UpdateOrganization(ctx, owner, name, organization)
 		if err != nil {
 			return err
@@ -228,6 +235,16 @@ func UpdateOrganization(ctx context.Context, id string, organization *Organizati
 }
 
 func AddOrganization(organization *Organization) (bool, error) {
+	if organization.PasswordMaxLength <= 0 {
+		maxLen, err := GetUserTablePasswordMaxLength()
+		if err != nil {
+			return false, err
+		}
+		organization.PasswordMaxLength = maxLen
+	}
+	if organization.PasswordMinLength <= 0 {
+		organization.PasswordMinLength = 1
+	}
 	affected, err := ormer.Engine.Insert(organization)
 	if err != nil {
 		return false, err
@@ -558,6 +575,23 @@ func updateOrganizationUsersPasswordChangeTime(ctx context.Context, owner string
 				return fmt.Errorf("repo.UpdateUserPasswordChangeTime: %w", err)
 			}
 		}
+	}
+	return nil
+}
+
+func checkPasswordLength(org *Organization, lang string) error {
+	maxLen, err := GetUserTablePasswordMaxLength()
+	minLen := 1
+	if err != nil {
+		return err
+	}
+	if org.PasswordMaxLength == 0 && org.PasswordMinLength == 0 {
+		org.PasswordMaxLength = maxLen
+		org.PasswordMinLength = 1
+		return nil
+	}
+	if maxLen < org.PasswordMaxLength || org.PasswordMinLength < minLen {
+		return fmt.Errorf(i18n.Translate(lang, "check:The password must be between %d and %d characters long"), minLen, maxLen)
 	}
 	return nil
 }

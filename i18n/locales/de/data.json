@@ -59,7 +59,8 @@
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "Sie haben zu oft das falsche Passwort oder den falschen Code eingegeben. Bitte warten Sie %d Minuten und versuchen Sie es erneut",
     "Your region is not allow to signup by phone": "Ihre Region ist nicht berechtigt, sich telefonisch anzumelden",
     "password must not be same as previous": "password must not be same as previous",
-    "unsupported password type: %s": "Nicht unterstützter Passworttyp: %s"
+    "unsupported password type: %s": "Nicht unterstützter Passworttyp: %s",
+    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long"
   },
   "general": {
     "Invalid username or password/code": "Ungültiger Benutzername oder Passwort/Code",

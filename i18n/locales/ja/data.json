@@ -59,7 +59,8 @@
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "あなたは間違ったパスワードまたはコードを何度も入力しました。%d 分間待ってから再度お試しください",
     "Your region is not allow to signup by phone": "あなたの地域は電話でサインアップすることができません",
     "password must not be same as previous": "password must not be same as previous",
-    "unsupported password type: %s": "サポートされていないパスワードタイプ：%s"
+    "unsupported password type: %s": "サポートされていないパスワードタイプ：%s",
+    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long"
   },
   "general": {
     "Invalid username or password/code": "Invalid username or password/code",

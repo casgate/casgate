@@ -6652,6 +6652,14 @@
                         "type": "string"
                     }
                 },
+                "passwordMinLength": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "passwordMaxLength": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "passwordSalt": {
                     "type": "string"
                 },
