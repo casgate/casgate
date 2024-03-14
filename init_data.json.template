@@ -16,6 +16,8 @@
       "languages": ["en", "zh", "es", "fr", "de", "id", "ja", "ko", "ru", "vi", "it", "ms", "tr","ar", "he", "nl", "pl", "fi", "sv", "uk", "kk", "fa"],
       "masterPassword": "",
       "initScore": 2000,
+      "passwordMinLength: 1,
+      "passwordMaxLength": 100,
       "enableSoftDeletion": false,
       "isProfilePublic": true,
       "accountItems": []

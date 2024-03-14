@@ -223,6 +223,26 @@ class OrganizationEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("organization:Password min length"), i18next.t("organization:Password min length - Tooltip"))} :
+          </Col>
+          <Col span={4} >
+            <InputNumber value={this.state.organization.passwordMinLength} onChange={value => {
+              this.updateOrganizationField("passwordMinLength", value);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("organization:Password max length"), i18next.t("organization:Password max length - Tooltip"))} :
+          </Col>
+          <Col span={4} >
+            <InputNumber value={this.state.organization.passwordMaxLength} onChange={value => {
+              this.updateOrganizationField("passwordMaxLength", value);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
             {Setting.getLabel(i18next.t("organization:Password change interval"), i18next.t("organization:Password change interval - Tooltip"))} :
           </Col>
           <Col span={4} >

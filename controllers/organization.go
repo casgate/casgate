@@ -123,7 +123,7 @@ func (c *ApiController) UpdateOrganization() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateOrganization(c.Ctx.Request.Context(), id, &organization))
+	c.Data["json"] = wrapActionResponse(object.UpdateOrganization(c.Ctx.Request.Context(), id, &organization, c.GetAcceptLanguage()))
 	c.ServeJSON()
 }
 

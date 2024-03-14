@@ -71,7 +71,7 @@ func CheckUserSignup(application *Application, organization *Organization, form 
 	}
 
 	if application.IsSignupItemVisible("Password") {
-		msg := CheckPasswordComplexityByOrg(organization, form.Password)
+		msg := CheckPasswordComplexityByOrg(organization, form.Password, lang)
 		if msg != "" {
 			return msg
 		}
@@ -229,14 +229,19 @@ func CheckOneTimePassword(user *User, dest, code, lang string) error {
 	return nil
 }
 
-func CheckPasswordComplexityByOrg(organization *Organization, password string) string {
-	errorMsg := checkPasswordComplexity(password, organization.PasswordOptions)
+func CheckPasswordComplexityByOrg(organization *Organization, password string, lang string) string {
+	maxLen := organization.PasswordMaxLength
+	minLen := organization.PasswordMinLength
+	if maxLen < len(password) || len(password) < minLen {
+		return fmt.Sprintf(i18n.Translate(lang, "check:The password must be between %d and %d characters long"), minLen, maxLen)
+	}
+		errorMsg := checkPasswordComplexity(password, organization.PasswordOptions)
 	return errorMsg
 }
 
-func CheckPasswordComplexity(user *User, password string) string {
+func CheckPasswordComplexity(user *User, password string, lang string) string {
 	organization, _ := GetOrganizationByUser(user)
-	return CheckPasswordComplexityByOrg(organization, password)
+	return CheckPasswordComplexityByOrg(organization, password, lang)
 }
 
 func checkLdapUserPassword(user *User, password string, lang string) error {

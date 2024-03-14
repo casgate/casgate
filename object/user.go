@@ -38,6 +38,7 @@ const (
 const UserEnforcerId = "built-in/user-enforcer-built-in"
 
 var userEnforcer *UserGroupEnforcer
+var userMaxPasswordLength int
 
 func InitUserManager() {
 	enforcer, err := GetInitializedEnforcer(UserEnforcerId)
@@ -1212,4 +1213,22 @@ func GetUsersByTagWithFilter(owner string, tag string, cond builder.Cond) ([]*Us
 	}
 
 	return users, nil
+}
+
+func GetUserTablePasswordMaxLength() (int, error) {
+	if userMaxPasswordLength != 0 {
+		return userMaxPasswordLength, nil
+	}
+	user := User{}
+	table, err := ormer.Engine.TableInfo(&user)
+	if err != nil {
+		return 0, err
+	}
+	for _, col := range table.Columns() {
+		if col.Name == "password" {
+			userMaxPasswordLength = col.Length
+			return userMaxPasswordLength, nil
+		}
+	}
+	return 0, fmt.Errorf("could not found column 'password' in table 'user'")
 }

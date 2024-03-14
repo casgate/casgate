@@ -586,7 +586,7 @@ func (c *ApiController) SetPassword() {
 		}
 	}
 
-	msg := object.CheckPasswordComplexity(targetUser, newPassword)
+	msg := object.CheckPasswordComplexity(targetUser, newPassword, c.GetAcceptLanguage())
 	if msg != "" {
 		c.ResponseUnprocessableEntity(msg)
 		return

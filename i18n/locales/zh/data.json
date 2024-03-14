@@ -59,7 +59,8 @@
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "密码错误次数已达上限，请在 %d 分后重试",
     "Your region is not allow to signup by phone": "所在地区不支持手机号注册",
     "password must not be same as previous": "password must not be same as previous",
-    "unsupported password type: %s": "不支持的密码类型: %s"
+    "unsupported password type: %s": "不支持的密码类型: %s",
+    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long"
   },
   "general": {
     "Invalid username or password/code": "用户名或密码无效",
