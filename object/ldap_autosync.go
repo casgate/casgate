@@ -1,6 +1,7 @@
 package object
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -36,17 +37,24 @@ func GetLdapAutoSynchronizer() *LdapAutoSynchronizer {
 
 // StartAutoSync
 // start autosync for specified ldap, old existing autosync goroutine will be ceased
-func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string) error {
+func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string, recordBuilder *RecordBuilder) error {
+	recordBuilder.AddReason("Start LDAP autosync")
+
 	l.Lock()
 	defer l.Unlock()
 
 	ldap, err := GetLdap(ldapId)
 	if err != nil {
+		recordBuilder.AddReason(fmt.Sprintf("Get LDAP: %s", err.Error()))
+
 		return err
 	}
 
 	if ldap == nil {
-		return fmt.Errorf("ldap %s doesn't exist", ldapId)
+		msg := fmt.Sprintf("ldap %s doesn't exist", ldapId)
+		recordBuilder.AddReason(msg)
+
+		return errors.New(msg)
 	}
 	if res, ok := l.ldapIdToStopChan[ldapId]; ok {
 		res <- struct{}{}
@@ -55,9 +63,16 @@ func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string) error {
 
 	stopChan := make(chan struct{})
 	l.ldapIdToStopChan[ldapId] = stopChan
-	logs.Info(fmt.Sprintf("autoSync started for %s", ldap.Id))
+
+	logMsg := fmt.Sprintf("autoSync started for %s", ldap.Id)
+	recordBuilder.AddReason(logMsg)
+
+	logs.Info(logMsg)
+
 	util.SafeGoroutine(func() {
 		err := l.syncRoutine(ldap, stopChan)
+		recordBuilder.AddReason(fmt.Sprintf("Sync error: %s", err.Error()))
+
 		if err != nil {
 			panic(err)
 		}
@@ -113,7 +128,7 @@ func syncUsers(ldap *Ldap) error {
 
 	existed, failed, err := SyncLdapUsers(ldap.Owner, AutoAdjustLdapUser(users), ldap.Id)
 	if len(failed) != 0 {
-		logs.Warning(fmt.Sprintf("ldap autosync,%d new users,but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)), failed)
+		logs.Warning(fmt.Sprintf("ldap autosync, %d new users, but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)), failed)
 		logs.Warning(err.Error())
 	} else {
 		logs.Info(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)))
@@ -133,7 +148,7 @@ func (l *LdapAutoSynchronizer) LdapAutoSynchronizerStartUpAll() error {
 	organizations := []*Organization{}
 	err := ormer.Engine.Desc("created_time").Find(&organizations)
 	if err != nil {
-		logs.Info("failed to Star up LdapAutoSynchronizer; ")
+		logs.Info("failed to startup LdapAutoSynchronizer")
 	}
 	for _, org := range organizations {
 		ldaps, err := GetLdaps(org.Name)
@@ -143,7 +158,11 @@ func (l *LdapAutoSynchronizer) LdapAutoSynchronizerStartUpAll() error {
 
 		for _, ldap := range ldaps {
 			if ldap.AutoSync != 0 {
-				err = l.StartAutoSync(ldap.Id)
+				rb := NewRecordBuilder()
+				err = l.StartAutoSync(ldap.Id, rb)
+
+				util.SafeGoroutine(func() { AddRecord(rb.Build()) })
+
 				if err != nil {
 					return err
 				}

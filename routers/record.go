@@ -61,7 +61,7 @@ func getUserByClientIdSecret(ctx *beeCtx.Context) string {
 
 func InitRecordMessage(bCtx *beeCtx.Context) {
 	reqCtx := bCtx.Request.Context()
-	rb := object.NewRecordBuilder(bCtx)
+	rb := object.NewRecordBuilderFromCtx(bCtx)
 	ctxWithRecord := goCtx.WithValue(reqCtx, object.RecordDataKey, rb)
 	bCtx.Request = bCtx.Request.WithContext(ctxWithRecord)
 }

@@ -143,23 +143,36 @@ func (c *ApiController) GetLdap() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-ldap [post]
 func (c *ApiController) AddLdap() {
+	gCtx := c.getRequestCtx()
+	record := object.GetRecord(gCtx)
+
 	var ldap object.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Unmarshall: %v", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
 
 	if util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
-		c.ResponseError(c.T("general:Missing parameter"))
+		msg := c.T("general:Missing parameter")
+		record.AddReason(msg)
+
+		c.ResponseError(msg)
 		return
 	}
 
 	if ok, err := object.CheckLdapExist(&ldap); err != nil {
+		record.AddReason(fmt.Sprintf("Check LDAP exists: %v", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	} else if ok {
-		c.ResponseError(c.T("ldap:Ldap server exist"))
+		msg := c.T("ldap:Ldap server exist")
+		record.AddReason(msg)
+
+		c.ResponseError(msg)
 		return
 	}
 
@@ -167,8 +180,10 @@ func (c *ApiController) AddLdap() {
 	resp.Data2 = ldap
 
 	if ldap.AutoSync != 0 {
-		err = object.GetLdapAutoSynchronizer().StartAutoSync(ldap.Id)
+		err = object.GetLdapAutoSynchronizer().StartAutoSync(ldap.Id, record)
 		if err != nil {
+			record.AddReason(fmt.Sprintf("Get LDAP syncronizer error: %v", err.Error()))
+
 			c.ResponseError(err.Error())
 			return
 		}
@@ -186,35 +201,50 @@ func (c *ApiController) AddLdap() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-ldap [post]
 func (c *ApiController) UpdateLdap() {
+	gCtx := c.getRequestCtx()
+	record := object.GetRecord(gCtx)
+
 	var ldap object.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 	if err != nil || util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
-		c.ResponseError(c.T("general:Missing parameter"))
+		msg := c.T("general:Missing parameter")
+		record.AddReason(msg)
+
+		c.ResponseError(msg)
 		return
 	}
 
 	for _, roleMappingItem := range ldap.RoleMappingItems {
 		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
-			c.ResponseError(c.T("general:Missing parameter"))
+			msg := c.T("general:Missing parameter")
+			record.AddReason(msg)
+
+			c.ResponseError(msg)
 			return
 		}
 	}
 
 	prevLdap, err := object.GetLdap(ldap.Id)
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Get LDAP: %v", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
 
 	affected, err := object.UpdateLdap(&ldap)
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Update LDAP: %v", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
 
 	if ldap.AutoSync != 0 {
-		err := object.GetLdapAutoSynchronizer().StartAutoSync(ldap.Id)
+		err := object.GetLdapAutoSynchronizer().StartAutoSync(ldap.Id, record)
 		if err != nil {
+			record.AddReason(fmt.Sprintf("Get LDAP syncronizer error: %v", err.Error()))
+
 			c.ResponseError(err.Error())
 			return
 		}
