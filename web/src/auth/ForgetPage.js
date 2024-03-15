@@ -401,7 +401,7 @@ class ForgetPage extends React.Component {
                   required: true,
                   validateTrigger: "onChange",
                   validator: (rule, value) => {
-                    const errorMsg = PasswordChecker.checkPasswordComplexity(value, application.organizationObj.passwordOptions);
+                    const errorMsg = PasswordChecker.checkPasswordComplexity(value, application.organizationObj.passwordOptions, application.organizationObj.passwordSpecialChars);
                     if (errorMsg === "") {
                       return Promise.resolve();
                     } else {

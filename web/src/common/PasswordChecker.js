@@ -36,12 +36,13 @@ function isValidOption_Aa123(password) {
   return "";
 }
 
-function isValidOption_SpecialChar(password) {
-  const regex = /^(?=.*[~!@#$%^&*_\-+=`|\\(){}[\]:;"'<>,.?/]).+$/;
-  if (!regex.test(password)) {
-    return i18next.t("user:The password must contain at least one special character");
+export function isValidOption_SpecialChar(password, specialChars) {
+  for (let i = 0; i < password.length; i++) {
+    if (specialChars.includes(password[i])) {
+      return "";
+    }
   }
-  return "";
+  return "The password must contain at least one special character";
 }
 
 function isValidOption_NoRepeat(password) {
@@ -76,7 +77,7 @@ function isValidOption_OneDigit(password) {
   return "";
 }
 
-export function checkPasswordComplexity(password, options) {
+export function checkPasswordComplexity(password, options, specialChars) {
   if (password.length === 0) {
     return i18next.t("login:Please input your password!");
   }
@@ -96,13 +97,20 @@ export function checkPasswordComplexity(password, options) {
     OneDigit: isValidOption_OneDigit,
   };
 
+  let errorMsg = "";
   for (const option of options) {
-    const checkerFunc = checkers[option];
-    if (checkerFunc) {
-      const errorMsg = checkerFunc(password);
-      if (errorMsg !== "") {
-        return errorMsg;
+    switch (option) {
+    case "SpecialChar":
+      errorMsg = isValidOption_SpecialChar(password, specialChars);
+      break;
+    default:
+      const checkerFunc = checkers[option];
+      if (checkerFunc) {
+        errorMsg = checkerFunc(password);
       }
+    }
+    if (errorMsg !== "") {
+      return errorMsg;
     }
   }
   return "";

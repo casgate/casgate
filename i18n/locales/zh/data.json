@@ -60,7 +60,8 @@
     "Your region is not allow to signup by phone": "所在地区不支持手机号注册",
     "password must not be same as previous": "password must not be same as previous",
     "unsupported password type: %s": "不支持的密码类型: %s",
-    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long"
+    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
+    "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on": "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on"
   },
   "general": {
     "Invalid username or password/code": "用户名或密码无效",

@@ -16,6 +16,7 @@ package object
 
 import (
 	"regexp"
+	"strings"
 )
 
 type ValidatorFunc func(password string) string
@@ -24,7 +25,6 @@ var (
 	regexLowerCase = regexp.MustCompile(`[a-z]`)
 	regexUpperCase = regexp.MustCompile(`[A-Z]`)
 	regexDigit     = regexp.MustCompile(`\d`)
-	regexSpecial   = regexp.MustCompile(`[~!@#$%^&*_\-+=` + "`" + `|\(){}[\]:;"'<>,.?/]`)
 )
 
 func isValidOption_AtLeast6(password string) string {
@@ -52,11 +52,13 @@ func isValidOption_Aa123(password string) string {
 	return ""
 }
 
-func isValidOption_SpecialChar(password string) string {
-	if !regexSpecial.MatchString(password) {
-		return "The password must contain at least one special character"
+func isValidOption_SpecialChar(password string, specialChars string) string {
+	for _, p := range password {
+		if strings.ContainsRune(specialChars, p) {
+			return ""
+		}
 	}
-	return ""
+	return "The password must contain at least one special character"
 }
 
 func isValidOption_NoRepeat(password string) string {
@@ -89,7 +91,7 @@ func isValidOption_OneDigit(password string) string {
 	return ""
 }
 
-func checkPasswordComplexity(password string, options []string) string {
+func checkPasswordComplexity(password string, options []string, specialChars string) string {
 	if len(password) == 0 {
 		return "Please input your password!"
 	}
@@ -102,20 +104,24 @@ func checkPasswordComplexity(password string, options []string) string {
 		"AtLeast6":     isValidOption_AtLeast6,
 		"AtLeast8":     isValidOption_AtLeast8,
 		"Aa123":        isValidOption_Aa123,
-		"SpecialChar":  isValidOption_SpecialChar,
 		"NoRepeat":     isValidOption_NoRepeat,
 		"OneUppercase": isValidOption_OneUppercase,
 		"OneLowercase": isValidOption_OneLowercase,
 		"OneDigit":     isValidOption_OneDigit,
 	}
 
+	var errorMsg string
 	for _, option := range options {
-		checkerFunc, ok := checkers[option]
-		if ok {
-			errorMsg := checkerFunc(password)
-			if errorMsg != "" {
-				return errorMsg
+		switch option {
+		case "SpecialChar":
+			errorMsg = isValidOption_SpecialChar(password, specialChars)
+		default:
+			if checkerFunc, ok := checkers[option]; ok {
+				errorMsg = checkerFunc(password)
 			}
+		}
+		if errorMsg != "" {
+			return errorMsg
 		}
 	}
 	return ""

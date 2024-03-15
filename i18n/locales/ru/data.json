@@ -60,7 +60,8 @@
     "Your region is not allow to signup by phone": "Ваш регион не разрешает регистрацию по телефону",
     "password must not be same as previous": "пароль не должен быть такой же как предыдущий",
     "unsupported password type: %s": "неподдерживаемый тип пароля: %s",
-    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long"
+    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
+    "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on": "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on"
   },
   "general": {
     "Invalid username or password/code": "Неправильное имя пользователя или пароль/код",

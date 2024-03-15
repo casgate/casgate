@@ -50,8 +50,8 @@ export const PasswordModal = (props) => {
   };
   const handleNewPassword = (value) => {
     setNewPassword(value);
-
-    const errorMessage = PasswordChecker.checkPasswordComplexity(value, passwordOptions);
+    const specialChars = organization ? organization.passwordSpecialChars : "";
+    const errorMessage = PasswordChecker.checkPasswordComplexity(value, passwordOptions, specialChars);
     setNewPasswordValid(errorMessage === "");
     setNewPasswordErrorMessage(errorMessage);
   };
@@ -84,7 +84,7 @@ export const PasswordModal = (props) => {
       return;
     }
 
-    const errorMsg = PasswordChecker.checkPasswordComplexity(newPassword, organization.passwordOptions);
+    const errorMsg = PasswordChecker.checkPasswordComplexity(newPassword, organization.passwordOptions, organization.passwordSpecialChars);
     if (errorMsg !== "") {
       Setting.showMessage("error", errorMsg);
       setConfirmLoading(false);

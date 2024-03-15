@@ -235,7 +235,7 @@ func CheckPasswordComplexityByOrg(organization *Organization, password string, l
 	if maxLen < len(password) || len(password) < minLen {
 		return fmt.Sprintf(i18n.Translate(lang, "check:The password must be between %d and %d characters long"), minLen, maxLen)
 	}
-		errorMsg := checkPasswordComplexity(password, organization.PasswordOptions)
+	errorMsg := checkPasswordComplexity(password, organization.PasswordOptions, organization.PasswordSpecialChars)
 	return errorMsg
 }
 
@@ -296,7 +296,6 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 	}
 	return resetUserSigninErrorTimes(user)
 }
-
 
 var ErrorUserNotFound = errors.New("user not found")
 var ErrorUserDeleted = errors.New("user deleted")
