@@ -18,11 +18,27 @@ import (
 	goCtx "context"
 	"errors"
 
+	"github.com/casdoor/casdoor/util"
 	beeCtx "github.com/beego/beego/context"
 	"github.com/beego/beego/logs"
 )
 
-func NewRecordBuilder(bCtx *beeCtx.Context) *RecordBuilder {
+func NewRecordBuilder() *RecordBuilder {
+	record := &Record{
+		Name:        util.GenerateId(),
+		CreatedTime: util.GetCurrentTime(),
+	}
+
+	rb := &RecordBuilder{
+		record: record,
+	}
+
+	rb.setDefaultFieldValues()
+
+	return rb
+}
+
+func NewRecordBuilderFromCtx(bCtx *beeCtx.Context) *RecordBuilder {
 	rb := &RecordBuilder{
 		record: NewRecord(bCtx),
 	}
