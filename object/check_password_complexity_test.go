@@ -6,7 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsValidOption_SpecialChar(t *testing.T) {
+func TestCheckPasswordComplexity_SpecialChar(t *testing.T) {
+	specialChars := `~!@#$%^&*_\-+=` + "`" + `|(){}[]:;"'<>,.?/😎`
 	for _, p := range []string{
 		"Passw0rd!@",
 		"!@Test123",
@@ -29,9 +30,10 @@ func TestIsValidOption_SpecialChar(t *testing.T) {
 		")",
 		"]",
 		"[",
+		"😎",
 	} {
 		t.Run("Password with special characters", func(t *testing.T) {
-			result := isValidOption_SpecialChar(p)
+			result := checkPasswordComplexity(p, []string{"SpecialChar"}, specialChars)
 			assert.True(t, len(result) == 0)
 		})
 	}
@@ -42,7 +44,7 @@ func TestIsValidOption_SpecialChar(t *testing.T) {
 		"TestPassword",
 	} {
 		t.Run("Password without special characters", func(t *testing.T) {
-			result := isValidOption_SpecialChar(p)
+			result := checkPasswordComplexity(p, []string{"SpecialChar"}, specialChars)
 			assert.True(t, len(result) > 0)
 		})
 	}

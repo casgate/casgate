@@ -27,6 +27,8 @@ import (
 	"github.com/xorm-io/core"
 )
 
+const DefaultOrganizationPasswordSpecialChars = `~!@#$%^&*_\-+=` + "`" + `|(){}[]:;"'<>,.?/`
+
 type AccountItem struct {
 	Name       string `json:"name"`
 	Visible    bool   `json:"visible"`
@@ -71,6 +73,7 @@ type Organization struct {
 	InitScore              int        `json:"initScore"`
 	EnableSoftDeletion     bool       `json:"enableSoftDeletion"`
 	IsProfilePublic        bool       `json:"isProfilePublic"`
+	PasswordSpecialChars   string     `xorm:"mediumtext" json:"passwordSpecialChars"`
 
 	MfaItems     []*MfaItem     `xorm:"varchar(300)" json:"mfaItems"`
 	AccountItems []*AccountItem `xorm:"varchar(5000)" json:"accountItems"`
@@ -224,6 +227,11 @@ func UpdateOrganization(ctx context.Context, id string, organization *Organizati
 			return err
 		}
 
+		err = checkSpecialCharsIsFilled(organization, lang)
+		if err != nil {
+			return err
+		}
+
 		affected, err = repo.UpdateOrganization(ctx, owner, name, organization)
 		if err != nil {
 			return err
@@ -244,6 +252,9 @@ func AddOrganization(organization *Organization) (bool, error) {
 	}
 	if organization.PasswordMinLength <= 0 {
 		organization.PasswordMinLength = 1
+	}
+	if organization.PasswordSpecialChars == "" {
+		organization.PasswordSpecialChars = DefaultOrganizationPasswordSpecialChars
 	}
 	affected, err := ormer.Engine.Insert(organization)
 	if err != nil {
@@ -592,6 +603,19 @@ func checkPasswordLength(org *Organization, lang string) error {
 	}
 	if maxLen < org.PasswordMaxLength || org.PasswordMinLength < minLen {
 		return fmt.Errorf(i18n.Translate(lang, "check:The password must be between %d and %d characters long"), minLen, maxLen)
+	}
+	return nil
+}
+
+func checkSpecialCharsIsFilled(org *Organization, lang string) error {
+	for _, opt := range org.PasswordOptions {
+		if opt == "SpecialChar" {
+			if len(org.PasswordSpecialChars) == 0 {
+				return fmt.Errorf(i18n.Translate(
+					lang, "check:You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on",
+				))
+			}
+		}
 	}
 	return nil
 }

@@ -224,6 +224,19 @@ class OrganizationEditPage extends React.Component {
             />
           </Col>
         </Row>
+        <Row style={{marginTop: "20px", display: this.state.organization.passwordOptions.includes("SpecialChar") ? "" : "none"}}>
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("organization:Password special chars"), i18next.t("organization:Password special chars - Tooltip"))} :
+          </Col>
+          <Col span={22}>
+            <Input
+              value={this.state.organization.passwordSpecialChars}
+              required={this.state.organization.passwordOptions.includes("SpecialChar")}
+              onChange={e => {
+                this.updateOrganizationField("passwordSpecialChars", e.target.value);
+              }} />
+          </Col>
+        </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
             {Setting.getLabel(i18next.t("organization:Password min length"), i18next.t("organization:Password min length - Tooltip"))} :
