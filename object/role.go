@@ -15,6 +15,7 @@
 package object
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -105,7 +106,11 @@ func getRole(owner string, name string) (*Role, error) {
 }
 
 func GetRole(id string) (*Role, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name, err := util.GetOwnerAndNameFromIdWithError(id)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("invalid role id: %s", id))
+	}
+
 	return getRole(owner, name)
 }
 

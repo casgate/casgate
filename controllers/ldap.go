@@ -308,7 +308,10 @@ func (c *ApiController) SyncLdapUsers() {
 		return
 	}
 
-	exist, failed, _ := object.SyncLdapUsers(owner, users, ldapId)
+	exist, failed, err := object.SyncLdapUsers(owner, users, ldapId)
+	if err != nil {
+		record.AddReason(fmt.Sprintf("LDAP error: %s", err.Error()))
+	}
 
 	err = object.UpdateLdapSyncTime(ldapId)
 	if err != nil {
