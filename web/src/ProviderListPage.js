@@ -155,8 +155,18 @@ class ProviderListPage extends BaseListPage {
           {text: "Storage", value: "Storage"},
           {text: "Web3", value: "Web3"},
         ],
-        width: "110px",
+        width: "180px",
         sorter: true,
+        render: (text, record, index) => {
+          const {owner, name, category} = record;
+          const url = `${Setting.ServerUrl}/api/get-provider-saml-metadata?id=${owner}/${encodeURIComponent(name)}`;
+
+          return category === "SAML" ?
+            (<React.Fragment>
+              {category} <a target="_blank" rel="noreferrer" href={url}>(SP metadata)</a>
+            </React.Fragment>
+            ) : category;
+        },
       },
       {
         title: i18next.t("provider:Type"),

@@ -2847,6 +2847,35 @@
                 }
             }
         },
+        "/api/get-provider-saml-metadata": {
+            "get": {
+                "tags": [
+                    "Provider API"
+                ],
+                "description": "get provider SAML methadata",
+                "operationId": "ApiController.GetProviderSamlMetadata",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "description": "The id ( owner/name ) of the provider",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/object.Provider"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
         "/api/get-providers": {
             "get": {
                 "tags": [
@@ -5650,11 +5679,11 @@
         }
     },
     "definitions": {
-        "187988.\u003cnil\u003e.string": {
+        "194330.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "309233.\u003cnil\u003e.string": {
+        "317359.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6479,7 +6508,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/187988.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/194330.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6646,21 +6675,24 @@
                     "type": "integer",
                     "format": "int64"
                 },
+                "passwordMaxLength": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "passwordMinLength": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "passwordOptions": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "passwordMinLength": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "passwordMaxLength": {
-                    "type": "integer",
-                    "format": "int64"
-                },
                 "passwordSalt": {
+                    "type": "string"
+                },
+                "passwordSpecialChars": {
                     "type": "string"
                 },
                 "passwordType": {
@@ -7054,6 +7086,9 @@
                 "appId": {
                     "type": "string"
                 },
+                "baseHostUrl": {
+                    "type": "string"
+                },
                 "bucket": {
                     "type": "string"
                 },
@@ -7181,6 +7216,9 @@
                 "signatureAlgorithm": {
                     "type": "string"
                 },
+                "singleLogoutServiceUrl": {
+                    "type": "string"
+                },
                 "subType": {
                     "type": "string"
                 },
@@ -7194,7 +7232,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/309233.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/317359.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"
@@ -7299,7 +7337,7 @@
                         "type": "string"
                     }
                 },
-                "reason": {
+                "reasons": {
                     "type": "array",
                     "items": {
                         "type": "string"

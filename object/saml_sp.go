@@ -59,9 +59,11 @@ var signatureAlgorithms = map[string]string{
 	sha512CryptoAlgorithm: dsig.RSASHA512SignatureMethod,
 }
 
+var samlSertRegex = regexp.MustCompile("<[[[:alpha:]]+:]?X509Certificate>([\\s\\S]*?)</[[[:alpha:]]+:]?X509Certificate>")
+
 func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*idp.UserInfo, map[string]any, error) {
 	samlResponse, _ = url.QueryUnescape(samlResponse)
-	sp, err := buildSp(provider, samlResponse, host)
+	sp, err := BuildSp(provider, samlResponse, host)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -138,7 +140,7 @@ func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method
 		return "", "", fmt.Errorf(i18n.Translate(lang, "saml_sp:provider %s's category is not SAML"), provider.Name)
 	}
 
-	sp, err := buildSp(provider, "", host)
+	sp, err := BuildSp(provider, "", host)
 	if err != nil {
 		return "", "", err
 	}
@@ -160,7 +162,7 @@ func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method
 	return auth, method, nil
 }
 
-func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLServiceProvider, error) {
+func BuildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLServiceProvider, error) {
 	_, origin := getOriginFromHost(host)
 
 	issuer := provider.ClientId
@@ -180,6 +182,7 @@ func buildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 		SignAuthnRequests:           false,
 		SPKeyStore:                  dsig.RandomKeyStoreForTest(),
 		SkipSignatureValidation:     !provider.ValidateIdpSignature,
+		ServiceProviderSLOURL:       provider.SingleLogoutServiceUrl,
 	}
 
 	if provider.Endpoint != "" {
@@ -249,7 +252,7 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 }
 
 func buildIdPCertificateStore(provider *Provider, samlResponse string) (certStore *dsig.MemoryX509CertificateStore, err error) {
-	certEncodedData, err := getCertificateFromSamlResponse(samlResponse, provider.Type)
+	certEncodedData, err := getCertificateFromSamlResponse(samlResponse)
 	if err != nil {
 		return &dsig.MemoryX509CertificateStore{}, err
 	}
@@ -268,20 +271,15 @@ func buildIdPCertificateStore(provider *Provider, samlResponse string) (certStor
 	return certStore, nil
 }
 
-func getCertificateFromSamlResponse(samlResponse string, providerType string) (string, error) {
+func getCertificateFromSamlResponse(samlResponse string) (string, error) {
 	de, err := base64.StdEncoding.DecodeString(samlResponse)
 	if err != nil {
 		return "", err
 	}
 
 	deStr := strings.Replace(string(de), "\n", "", -1)
-	tagMap := map[string]string{
-		"Aliyun IDaaS": "ds",
-		"Keycloak":     "dsig",
-	}
-	tag := tagMap[providerType]
-	expression := fmt.Sprintf("<%s:X509Certificate>([\\s\\S]*?)</%s:X509Certificate>", tag, tag)
-	res := regexp.MustCompile(expression).FindStringSubmatch(deStr)
+
+	res := samlSertRegex.FindStringSubmatch(deStr)
 	if res == nil {
 		return "", errors.New("could not obtain signature certificate from SAML response")
 	}

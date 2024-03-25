@@ -82,7 +82,7 @@ type Application struct {
 	Tags                   []string        `xorm:"mediumtext" json:"tags"`
 	InvitationCodes        []string        `xorm:"varchar(200)" json:"invitationCodes"`
 	IsPublic               bool            `xorm:"bool" json:"isPublic"`
-	SamlAttributes      []*SamlItem     `xorm:"varchar(1000)" json:"samlAttributes"`
+	SamlAttributes         []*SamlItem     `xorm:"varchar(1000)" json:"samlAttributes"`
 
 	ClientId             string     `xorm:"varchar(100)" json:"clientId"`
 	ClientSecret         string     `xorm:"varchar(100)" json:"clientSecret"`
@@ -420,7 +420,7 @@ func GetMaskedApplication(application *Application, userId string) *Application 
 	if application.OrganizationObj != nil {
 		if application.OrganizationObj.MasterPassword != "" {
 			application.OrganizationObj.MasterPassword = "***"
-		}	
+		}
 		if application.OrganizationObj.PasswordType != "" {
 			application.OrganizationObj.PasswordType = "***"
 		}

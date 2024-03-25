@@ -87,7 +87,9 @@ type Provider struct {
 	NameIdFormat         string `xorm:"varchar(100)" json:"nameIdFormat"`
 	ValidateIdpSignature bool   `json:"validateIdPSignature"`
 
-	ProviderUrl string `xorm:"varchar(200)" json:"providerUrl"`
+	BaseHostUrl            string `xorm:"varchar(255)" json:"baseHostUrl"`
+	ProviderUrl            string `xorm:"varchar(200)" json:"providerUrl"`
+	SingleLogoutServiceUrl string `xorm:"varchar(255)" json:"singleLogoutServiceUrl"`
 
 	RemoveFromApps bool `xorm:"-" json:"removeFromApps"`
 }

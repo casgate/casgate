@@ -209,6 +209,10 @@ export const OtherProviderInfo = {
       logo: `${StaticBaseUrl}/img/social_keycloak.png`,
       url: "https://www.keycloak.org/",
     },
+    "Custom": {
+      logo: `${StaticBaseUrl}/img/social_custom.png`,
+      url: "",
+    },
   },
   Payment: {
     "Dummy": {
@@ -905,6 +909,11 @@ export function getProviderLogoURL(provider) {
     return `${StaticBaseUrl}/img/social_${provider.type.toLowerCase()}.png`;
   } else {
     const info = OtherProviderInfo[provider.category][provider.type];
+
+    if (provider.customLogo !== "") {
+      return provider.customLogo;
+    }
+
     // avoid crash when provider is not found
     if (info) {
       return info.logo;
@@ -1046,6 +1055,7 @@ export function getProviderTypeOptions(category) {
   } else if (category === "SAML") {
     return ([
       {id: "Aliyun IDaaS", name: "Aliyun IDaaS"},
+      {id: "Custom", name: "Custom"},
       {id: "Keycloak", name: "Keycloak"},
     ]);
   } else if (category === "Payment") {

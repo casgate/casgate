@@ -28,4 +28,3 @@ func (cm *PlainCredManager) GetHashedPassword(password string, userSalt string) 
 func (cm *PlainCredManager) IsPasswordCorrect(plainPwd string, hashedPwd string, userSalt string) bool {
 	return hashedPwd == plainPwd
 }
-
