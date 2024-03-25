@@ -15,8 +15,11 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/object"
 )
 
@@ -36,4 +39,68 @@ func (c *ApiController) GetSamlMeta() {
 	metadata, _ := object.GetSamlMeta(application, host)
 	c.Data["xml"] = metadata
 	c.ServeXML()
+}
+
+// GetProviderSamlMetadata
+// @Title GetProviderSamlMetadata
+// @Tag Provider API
+// @Description get provider SAML methadata
+// @Param   id     query    string  true        "The id ( owner/name ) of the provider"
+// @Success 200 {object} object.Provider The Response object
+// @Failure 500 Internal server error
+// @router /get-provider-saml-metadata [get]
+func (c *ApiController) GetProviderSamlMetadata() {
+	id := c.Input().Get("id")
+
+	provider, err := object.GetProvider(id)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	sp, err := object.BuildSp(provider, "", provider.BaseHostUrl)
+	if err != nil {
+		c.ResponseInternalServerError("Build SP error")
+		return
+	}
+
+	validityHours := int64(24)
+
+	entityDescriptor, err := sp.MetadataWithSLO(validityHours)
+	if err != nil {
+		c.ResponseInternalServerError("Build SP metadata error")
+		return
+	}
+
+	if nameIDFormat, err := MapSamlNameIDFormat(provider.NameIdFormat); err == nil {
+		entityDescriptor.SPSSODescriptor.NameIDFormats = []string{nameIDFormat}
+	} else {
+		logs.Error("mapping methadata: %s", err.Error())
+	}
+
+	c.Data["xml"] = entityDescriptor
+	c.ServeXML()
+}
+
+var ErrMapShortToLongFormat = errors.New("Error short to long format")
+
+var samlShortToLongNameIDFormatMapping = map[string]string{
+	"persistent":                 "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+	"transient":                  "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
+	"emailAddress":               "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+	"unspecified":                "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+	"X509SubjectName":            "urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName",
+	"WindowsDomainQualifiedName": "urn:oasis:names:tc:SAML:1.1:nameid-format:WindowsDomainQualifiedName",
+	"kerberos":                   "urn:oasis:names:tc:SAML:2.0:nameid-format:kerberos",
+	"entity":                     "urn:oasis:names:tc:SAML:2.0:nameid-format:entity",
+}
+
+func MapSamlNameIDFormat(shortFormat string) (string, error) {
+	fixedShortFormat := strings.ToLower(shortFormat)
+
+	if longFormat, ok := samlShortToLongNameIDFormatMapping[fixedShortFormat]; ok {
+		return longFormat, nil
+	}
+
+	return "", ErrMapShortToLongFormat
 }

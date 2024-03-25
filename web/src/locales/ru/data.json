@@ -881,7 +881,11 @@
     "Validate IdP signature - Tooltip": "Валидация подписи Identity Provider",
     "Wallets": "Wallets",
     "Wallets - Tooltip": "Wallets - Tooltip",
-    "admin (Shared)": "администратор (общий)"
+    "admin (Shared)": "администратор (общий)",
+    "Single Logout Service Logout URL": "Single Logout Service Logout URL",
+    "Single Logout Service Logout URL - Tooltip": "Single Logout Service Logout URL - Tooltip",
+    "Base Host URL": "Base Host URL",
+    "Base Host URL - Tooltip": "Base Host URL - Tooltip"
   },
   "record": {
     "Is triggered": "Сработало",

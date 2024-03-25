@@ -209,7 +209,7 @@ export const OtherProviderInfo = {
       logo: `${StaticBaseUrl}/img/social_keycloak.png`,
       url: "https://www.keycloak.org/",
     },
-    "Custom": {
+    "Generic": {
       logo: `${StaticBaseUrl}/img/social_custom.png`,
       url: "",
     },
@@ -1055,7 +1055,7 @@ export function getProviderTypeOptions(category) {
   } else if (category === "SAML") {
     return ([
       {id: "Aliyun IDaaS", name: "Aliyun IDaaS"},
-      {id: "Custom", name: "Custom"},
+      {id: "Generic", name: "Generic"},
       {id: "Keycloak", name: "Keycloak"},
     ]);
   } else if (category === "Payment") {

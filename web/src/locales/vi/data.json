@@ -881,7 +881,11 @@
     "Validate IdP signature - Tooltip": "Validate Identity Provider signature",
     "Wallets": "Wallets",
     "Wallets - Tooltip": "Wallets - Tooltip",
-    "admin (Shared)": "quản trị viên (Chung)"
+    "admin (Shared)": "quản trị viên (Chung)",
+    "Single Logout Service Logout URL": "Single Logout Service Logout URL",
+    "Single Logout Service Logout URL - Tooltip": "Single Logout Service Logout URL - Tooltip",
+    "Base Host URL": "Base Host URL",
+    "Base Host URL - Tooltip": "Base Host URL - Tooltip"
   },
   "record": {
     "Is triggered": "Bị kích hoạt",
