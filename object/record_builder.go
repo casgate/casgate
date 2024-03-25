@@ -18,9 +18,9 @@ import (
 	goCtx "context"
 	"errors"
 
-	"github.com/casdoor/casdoor/util"
 	beeCtx "github.com/beego/beego/context"
 	"github.com/beego/beego/logs"
+	"github.com/casdoor/casdoor/util"
 )
 
 func NewRecordBuilder() *RecordBuilder {

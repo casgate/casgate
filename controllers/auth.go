@@ -456,19 +456,19 @@ func (c *ApiController) Login() {
 				isPasswordWithLdapEnabled = false
 			}
 
-			if (isSigninViaLdap) {
-				user, _ := object.GetUserByFields(authForm.Organization,  authForm.Username)
+			if isSigninViaLdap {
+				user, _ := object.GetUserByFields(authForm.Organization, authForm.Username)
 				if user == nil {
-					object.SyncUserFromLdap(authForm.Organization, authForm.Username, authForm.Password, c.GetAcceptLanguage())				
+					object.SyncUserFromLdap(authForm.Organization, authForm.Username, authForm.Password, c.GetAcceptLanguage())
 				}
 			}
 
 			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
 			if err != nil {
-				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())	
+				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
 				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
 			}
-			
+
 		}
 
 		if msg != "" {

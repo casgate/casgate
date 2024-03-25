@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	
+
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/thanhpk/randstr"
 
@@ -180,7 +180,6 @@ func isMicrosoftAD(Conn *goldap.Conn) (bool, error) {
 	return isMicrosoft, err
 }
 
-
 func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User) ([]LdapUser, error) {
 	SearchAttributes := []string{
 		"uidNumber", "cn", "sn", "gidNumber", "entryUUID", "displayName", "mail", "email",
@@ -203,7 +202,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User) ([]LdapUse
 	}
 
 	ldapFilter := ldapServer.Filter
-	if (selectedUser != nil) {
+	if selectedUser != nil {
 		ldapFilter = ldapServer.buildAuthFilterString(selectedUser)
 	}
 
@@ -546,8 +545,8 @@ func SyncUserFromLdap(organization string, userName string, password string, lan
 	}
 
 	user := &User{
-		Name: userName,	
-	  }
+		Name: userName,
+	}
 
 	for _, ldapServer := range ldaps {
 		conn, err := ldapServer.GetLdapConn()
