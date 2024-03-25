@@ -804,6 +804,10 @@ func AddUser(user *User) (bool, error) {
 		user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
 	}
 
+	if user.PasswordChangeRequired {
+		user.PasswordChangeTime = time.Now()
+	}
+
 	updated, err := user.refreshAvatar()
 	if err != nil {
 		return false, err
