@@ -476,7 +476,8 @@
     "Verification code": "Код подтверждения",
     "WebAuthn": "WebAuthn",
     "sign up now": "Зарегистрируйтесь сейчас",
-    "username, Email or phone": "имя пользователя, электронная почта или телефон"
+    "username, Email or phone": "имя пользователя, электронная почта или телефон",
+    "Choose server": "Сервер для подключения"
   },
   "mfa": {
     "Each time you sign in to your Account, you'll need your password and a authentication code": "Each time you sign in to your Account, you'll need your password and a authentication code",

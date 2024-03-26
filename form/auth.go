@@ -60,4 +60,6 @@ type AuthForm struct {
 
 	Plan    string `json:"plan"`
 	Pricing string `json:"pricing"`
+
+	LdapId string `json:"ldapId"`
 }

@@ -39,6 +39,11 @@ type LdapSyncResp struct {
 	Failed []object.LdapUser `json:"failed"`
 }
 
+type LdapIdWithNameResp struct {
+	Id  string `json:"id"`
+	Name string `json:"name"`
+}
+
 // GetLdapUsers
 // @Title GetLdapser
 // @Tag Account API
@@ -109,6 +114,34 @@ func (c *ApiController) GetLdaps() {
 	owner := c.Input().Get("owner")
 
 	c.ResponseOk(object.GetMaskedLdaps(object.GetLdaps(owner)))
+}
+
+// GetLdaps
+// @Title GetLdapServerNames
+// @Tag Account API
+// @Description get ldaps
+// @Param	owner	query	string	false	"owner"
+// @Success 200 {array} LdapIdWithNameResp The Response object
+// @router /get-ldap-server-names [get]
+func (c *ApiController) GetLdapServerNames() {
+	owner := c.Input().Get("owner")
+	
+	ldaps, err := object.GetLdaps(owner)
+	
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	var namesWithId [] LdapIdWithNameResp
+	for _, ldap := range ldaps {
+		namesWithId = append(namesWithId, LdapIdWithNameResp{
+			Id: ldap.Id,
+			Name: ldap.ServerName,
+		})
+	}
+
+	c.ResponseOk(namesWithId)
 }
 
 // GetLdap

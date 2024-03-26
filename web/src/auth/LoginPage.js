@@ -37,6 +37,7 @@ import {MfaAuthVerifyForm, NextMfa, RequiredMfa} from "./mfa/MfaAuthVerifyForm";
 import {ChangePasswordForm, NextChangePasswordForm} from "./ChangePasswordForm";
 
 import {GoogleOneTapLoginVirtualButton} from "./GoogleLoginButton";
+import LdapSelect from "../common/select/LdapSelect";
 class LoginPage extends React.Component {
   constructor(props) {
     super(props);
@@ -59,6 +60,7 @@ class LoginPage extends React.Component {
       isTermsOfUseVisible: false,
       termsOfUseContent: "",
       orgChoiceMode: new URLSearchParams(props.location?.search).get("orgChoiceMode") ?? null,
+      ldapId: "",
     };
 
     if (this.state.type === "cas" && props.match?.params.casApplicationName !== undefined) {
@@ -383,6 +385,7 @@ class LoginPage extends React.Component {
       // OAuth
       const oAuthParams = Util.getOAuthGetParameters();
       this.populateOauthValues(values);
+      values["ldapId"] = this.state.ldapId;
       AuthBackend.login(values, oAuthParams)
         .then((res) => {
           const callback = (res) => {
@@ -585,6 +588,7 @@ class LoginPage extends React.Component {
             >
             </Form.Item>
             {this.renderMethodChoiceBox()}
+            {this.renderLdapServerChoiceBox(this.getApplicationObj()?.organization)}
             <Row style={{minHeight: 130, alignItems: "center"}}>
               <Col span={24}>
                 <Form.Item
@@ -1034,6 +1038,36 @@ class LoginPage extends React.Component {
 
     return (
       <div style={{height: 300, width: 300}}>
+        {renderChoiceBox()}
+      </div>
+    );
+  }
+
+  renderLdapServerChoiceBox(organization) {
+    const renderChoiceBox = () => {
+      if (!this.state || !this.state.loginMethod) {
+        return null;
+      }
+      switch (this.state.loginMethod) {
+      case "ldap":
+        return (
+          <div style={{marginBottom: "20px"}}>
+            <p style={{fontSize: ""}}>
+              {i18next.t("login:Choose server")}
+            </p>
+            <LdapSelect organization={organization} style={{width: "100%"}}
+              onSelect={(value) => {
+                this.setState({ldapId: value});
+              }} />
+          </div>
+        );
+      default:
+        return null;
+      }
+    };
+
+    return (
+      <div style={{}}>
         {renderChoiceBox()}
       </div>
     );
