@@ -881,7 +881,11 @@
     "Validate IdP signature - Tooltip": "Validate Identity Provider signature",
     "Wallets": "Wallets",
     "Wallets - Tooltip": "Wallets - Tooltip",
-    "admin (Shared)": "admin（共享）"
+    "admin (Shared)": "admin（共享）",
+    "Single Logout Service Logout URL": "Single Logout Service Logout URL",
+    "Single Logout Service Logout URL - Tooltip": "Single Logout Service Logout URL - Tooltip",
+    "Base Host URL": "Base Host URL",
+    "Base Host URL - Tooltip": "Base Host URL - Tooltip"
   },
   "record": {
     "Is triggered": "已触发",

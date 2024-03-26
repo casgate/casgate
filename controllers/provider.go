@@ -325,38 +325,3 @@ func (c *ApiController) TestProviderConnection() {
 	}
 	c.ResponseOk()
 }
-
-// GetProviderSamlMetadata
-// @Title GetProviderSamlMetadata
-// @Tag Provider API
-// @Description get provider SAML methadata
-// @Param   id     query    string  true        "The id ( owner/name ) of the provider"
-// @Success 200 {object} object.Provider The Response object
-// @Failure 500 Internal server error
-// @router /get-provider-saml-metadata [get]
-func (c *ApiController) GetProviderSamlMetadata() {
-	id := c.Input().Get("id")
-
-	provider, err := object.GetProvider(id)
-	if err != nil {
-		c.ResponseInternalServerError(err.Error())
-		return
-	}
-
-	sp, err := object.BuildSp(provider, "", provider.BaseHostUrl)
-	if err != nil {
-		c.ResponseInternalServerError("Build SP error")
-		return
-	}
-
-	validityHours := int64(24)
-
-	xml, err := sp.MetadataWithSLO(validityHours)
-	if err != nil {
-		c.ResponseInternalServerError("Build SP metadata error")
-		return
-	}
-
-	c.Data["xml"] = xml
-	c.ServeXML()
-}
