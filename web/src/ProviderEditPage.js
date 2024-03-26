@@ -418,9 +418,31 @@ class ProviderEditPage extends React.Component {
   loadSamlConfiguration() {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(this.state.provider.metadata, "text/xml");
-    const cert = xmlDoc.getElementsByTagName("ds:X509Certificate")[0].childNodes[0].nodeValue;
-    const endpoint = xmlDoc.getElementsByTagName("SingleSignOnService")[0].getAttribute("Location");
-    const issuerUrl = xmlDoc.getElementsByTagName("EntityDescriptor")[0].getAttribute("entityID");
+
+    const cert = document.evaluate(
+      "string(/*[local-name()='EntityDescriptor']/*[local-name()='IDPSSODescriptor']/*[local-name()='KeyDescriptor']/*[local-name()='KeyInfo']/*[local-name()='X509Data']/*[local-name()='X509Certificate'][1]/text())",
+      xmlDoc,
+      null,
+      XPathResult.ANY_TYPE,
+      null
+    ).stringValue;
+
+    const endpoint = document.evaluate(
+      "string(/*[local-name()='EntityDescriptor']/*[local-name()='IDPSSODescriptor']/*[local-name()='SingleLogoutService']/@Location)",
+      xmlDoc,
+      null,
+      XPathResult.ANY_TYPE,
+      null
+    ).stringValue;
+
+    const issuerUrl = document.evaluate(
+      "string(/*[local-name()='EntityDescriptor']/@entityID)",
+      xmlDoc,
+      null,
+      XPathResult.ANY_TYPE,
+      null
+    ).stringValue;
+
     this.updateProviderField("idP", cert);
     this.updateProviderField("endpoint", endpoint);
     this.updateProviderField("issuerUrl", issuerUrl);
@@ -667,6 +689,7 @@ class ProviderEditPage extends React.Component {
                   </Button>
                 </Col>
               </Row>
+
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                   {Setting.getLabel(i18next.t("general:Favicon"), i18next.t("general:Favicon - Tooltip"))} :
@@ -1371,35 +1394,41 @@ class ProviderEditPage extends React.Component {
           ) : null
         }
 
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("provider:Single Logout Service Logout URL"), i18next.t("provider:Single Logout Service Logout URL - Tooltip"))} :
-          </Col>
-          <Col span={21} >
-            <Input prefix={<LinkOutlined />} value={this.state.provider.singleLogoutServiceUrl} onChange={e => {
-              this.updateProviderField("singleLogoutServiceUrl", e.target.value);
-            }} />
-          </Col>
-          <Col span={1}>
-            <Button type="primary" onClick={() => {
-              copy(`${authConfig.serverUrl}/api/acs`);
-              Setting.showMessage("success", i18next.t("provider:Link copied to clipboard successfully"));
-            }}>
-              {i18next.t("provider:Copy")}
-            </Button>
-          </Col>
-        </Row>
+        {
+          this.state.provider.category === "SAML" && this.state.provider.type === "Generic" ? (
+            <React.Fragment>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("provider:Single Logout Service Logout URL"), i18next.t("provider:Single Logout Service Logout URL - Tooltip"))} :
+                </Col>
+                <Col span={21} >
+                  <Input prefix={<LinkOutlined />} value={this.state.provider.singleLogoutServiceUrl} onChange={e => {
+                    this.updateProviderField("singleLogoutServiceUrl", e.target.value);
+                  }} />
+                </Col>
+                <Col span={1}>
+                  <Button type="primary" onClick={() => {
+                    copy(`${authConfig.serverUrl}/api/acs`);
+                    Setting.showMessage("success", i18next.t("provider:Link copied to clipboard successfully"));
+                  }}>
+                    {i18next.t("provider:Copy")}
+                  </Button>
+                </Col>
+              </Row>
 
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("provider:Base Host URL"), i18next.t("provider:Base Host URL - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Input value={this.state.provider.baseHostUrl} onChange={e => {
-              this.updateProviderField("baseHostUrl", e.target.value);
-            }} />
-          </Col>
-        </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("provider:Base Host URL"), i18next.t("provider:Base Host URL - Tooltip"))} :
+                </Col>
+                <Col span={22} >
+                  <Input value={this.state.provider.baseHostUrl} onChange={e => {
+                    this.updateProviderField("baseHostUrl", e.target.value);
+                  }} />
+                </Col>
+              </Row>
+            </React.Fragment>
+          ) : null
+        }
 
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
