@@ -165,7 +165,7 @@
     "New Enforcer": "New Enforcer"
   },
   "forget": {
-    "Account": "Счет",
+    "Account": "Аккаунт",
     "Change Password": "Change Password",
     "Choose email or phone": "Выберите электронную почту или телефон",
     "Next Step": "Следующий шаг",
@@ -447,7 +447,7 @@
     "unsynced": "unsynced"
   },
   "login": {
-    "Auto sign in": "Автоматическая авторизация",
+    "Auto sign in": "Оставаться в системе",
     "Continue with": "Продолжайте с",
     "Email or phone": "Электронная почта или телефон",
     "Failed to obtain MetaMask authorization": "Failed to obtain MetaMask authorization",
