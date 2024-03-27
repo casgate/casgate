@@ -133,7 +133,7 @@ func (c *ApiController) GetLdapServerNames() {
 		return
 	}
 
-	var namesWithId [] LdapIdWithNameResp
+	var namesWithId []LdapIdWithNameResp
 	for _, ldap := range ldaps {
 		namesWithId = append(namesWithId, LdapIdWithNameResp{
 			Id: ldap.Id,

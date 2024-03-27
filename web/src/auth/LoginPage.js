@@ -1051,15 +1051,10 @@ class LoginPage extends React.Component {
       switch (this.state.loginMethod) {
       case "ldap":
         return (
-          <div style={{marginBottom: "20px"}}>
-            <p style={{fontSize: ""}}>
-              {i18next.t("login:Choose server")}
-            </p>
-            <LdapSelect organization={organization} style={{width: "100%"}}
-              onSelect={(value) => {
-                this.setState({ldapId: value});
-              }} />
-          </div>
+          <LdapSelect organization={organization} style={{width: "100%"}}
+            onSelect={(value) => {
+              this.setState({ldapId: value});
+            }} />
         );
       default:
         return null;

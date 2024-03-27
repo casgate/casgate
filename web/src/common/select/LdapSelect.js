@@ -34,6 +34,9 @@ function LdapSelect(props) {
       .then((res) => {
         if (res.status === "ok") {
           setLdaps(res.data);
+          if (!res.data) {
+            res.data = [];
+          }
           const selectedValueExist = res.data.filter(ldap => ldap.id === value).length > 0;
           if (initValue === undefined || !selectedValueExist) {
             handleOnChange(res.data.length > 0 ? Setting.getOption(res.data[0].name, res.data[0].id) : "");
@@ -56,19 +59,28 @@ function LdapSelect(props) {
     return items;
   };
 
+  const items = getLdapItems();
+  if (items.length === 0) {
+    return null;
+  }
   return (
-    <Select
-      options={getLdapItems()}
-      virtual={false}
-      placeholder={i18next.t("login:Please select an ldap server")}
-      value={value}
-      onChange={handleOnChange}
-      filterOption={(input, option) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase())}
-      style={style}
-      onSelect={onSelect}
-      className={className}
-    >
-    </Select>
+    <div style={{marginBottom: "20px"}}>
+      <p style={{fontSize: ""}}>
+        {i18next.t("login:Choose server")}
+      </p>
+      <Select
+        options={getLdapItems()}
+        virtual={false}
+        placeholder={i18next.t("login:Please select an ldap server")}
+        value={value}
+        onChange={handleOnChange}
+        filterOption={(input, option) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase())}
+        style={style}
+        onSelect={onSelect}
+        className={className}
+      >
+      </Select>
+    </div>
   );
 }
 
