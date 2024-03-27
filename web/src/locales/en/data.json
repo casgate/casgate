@@ -476,7 +476,8 @@
     "Verification code": "Verification code",
     "WebAuthn": "WebAuthn",
     "sign up now": "sign up now",
-    "username, Email or phone": "username, Email or phone"
+    "username, Email or phone": "username, Email or phone",
+    "Choose server": "LDAP Server for connect"
   },
   "mfa": {
     "Each time you sign in to your Account, you'll need your password and a authentication code": "Each time you sign in to your Account, you'll need your password and a authentication code",

@@ -150,6 +150,7 @@ func initAPI() {
 
 	beego.Router("/api/get-ldap-users", &controllers.ApiController{}, "GET:GetLdapUsers")
 	beego.Router("/api/get-ldaps", &controllers.ApiController{}, "GET:GetLdaps")
+	beego.Router("/api/get-ldap-server-names", &controllers.ApiController{}, "GET:GetLdapServerNames")
 	beego.Router("/api/get-ldap", &controllers.ApiController{}, "GET:GetLdap")
 	beego.Router("/api/add-ldap", &controllers.ApiController{}, "POST:AddLdap")
 	beego.Router("/api/update-ldap", &controllers.ApiController{}, "POST:UpdateLdap")

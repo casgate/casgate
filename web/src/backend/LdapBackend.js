@@ -24,6 +24,16 @@ export function getLdaps(owner) {
   }).then(res => res.json());
 }
 
+export function getLdapServerNames(owner) {
+  return fetch(`${Setting.ServerUrl}/api/get-ldap-server-names?owner=${owner}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Accept-Language": Setting.getAcceptLanguage(),
+    },
+  }).then(res => res.json());
+}
+
 export function getLdap(owner, name) {
   return fetch(`${Setting.ServerUrl}/api/get-ldap?id=${owner}/${encodeURIComponent(name)}`, {
     method: "GET",

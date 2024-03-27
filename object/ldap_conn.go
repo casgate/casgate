@@ -538,7 +538,7 @@ func (user *User) getFieldFromLdapAttribute(attribute string) string {
 	}
 }
 
-func SyncUserFromLdap(organization string, userName string, password string, lang string) (*LdapUser, error) {
+func SyncUserFromLdap(organization string, ldapId string, userName string, password string, lang string) (*LdapUser, error) {
 	ldaps, err := GetLdaps(organization)
 	if err != nil {
 		return nil, err
@@ -549,6 +549,11 @@ func SyncUserFromLdap(organization string, userName string, password string, lan
 	}
 
 	for _, ldapServer := range ldaps {
+		
+		if len(ldapId) > 0 && ldapServer.Id != ldapId {
+			continue
+		}
+
 		conn, err := ldapServer.GetLdapConn()
 		if err != nil {
 			continue
