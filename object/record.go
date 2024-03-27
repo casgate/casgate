@@ -23,6 +23,7 @@ import (
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
+	"github.com/xorm-io/builder"
 )
 
 var logPostOnly bool
@@ -38,7 +39,7 @@ type Record struct {
 
 	Owner       string `xorm:"varchar(100) index" json:"owner"`
 	Name        string `xorm:"varchar(100) index" json:"name"`
-	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
+	CreatedTime string `xorm:"varchar(100) index" json:"createdTime"`
 
 	Organization string `xorm:"varchar(100)" json:"organization"`
 	ClientIp     string `xorm:"varchar(100)" json:"clientIp"`
@@ -130,8 +131,14 @@ func AddRecord(record *Record) bool {
 	return affected != 0
 }
 
-func GetRecordCount(field, value string, filterRecord *Record) (int64, error) {
+func GetRecordCount(field, value, fromDate, endDate string, filterRecord *Record) (int64, error) {
 	session := GetSession("", -1, -1, field, value, "", "")
+	if fromDate != "" {
+		session = session.Where(builder.Gt{"created_time": fromDate})
+	}
+	if endDate != "" {
+		session = session.Where(builder.Lt{"created_time": endDate})
+	}
 	return session.Count(filterRecord)
 }
 
@@ -145,9 +152,15 @@ func GetRecords(filterRecord *Record) ([]*Record, error) {
 	return records, nil
 }
 
-func GetPaginationRecords(offset, limit int, field, value, sortField, sortOrder string, filterRecord *Record) ([]*Record, error) {
+func GetPaginationRecords(offset, limit int, field, value, fromDate, endDate, sortField, sortOrder string, filterRecord *Record) ([]*Record, error) {
 	records := []*Record{}
 	session := GetSession("", offset, limit, field, value, sortField, sortOrder)
+	if fromDate != "" {
+		session = session.Where(builder.Gt{"created_time": fromDate})
+	}
+	if endDate != "" {
+		session = session.Where(builder.Lt{"created_time": endDate})
+	}
 	err := session.Find(&records, filterRecord)
 	if err != nil {
 		return records, err
