@@ -40,7 +40,7 @@ type LdapSyncResp struct {
 }
 
 type LdapIdWithNameResp struct {
-	Id  string `json:"id"`
+	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -125,9 +125,8 @@ func (c *ApiController) GetLdaps() {
 // @router /get-ldap-server-names [get]
 func (c *ApiController) GetLdapServerNames() {
 	owner := c.Input().Get("owner")
-	
+
 	ldaps, err := object.GetLdaps(owner)
-	
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -136,7 +135,7 @@ func (c *ApiController) GetLdapServerNames() {
 	var namesWithId []LdapIdWithNameResp
 	for _, ldap := range ldaps {
 		namesWithId = append(namesWithId, LdapIdWithNameResp{
-			Id: ldap.Id,
+			Id:   ldap.Id,
 			Name: ldap.ServerName,
 		})
 	}

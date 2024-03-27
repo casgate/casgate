@@ -549,7 +549,6 @@ func SyncUserFromLdap(organization string, ldapId string, userName string, passw
 	}
 
 	for _, ldapServer := range ldaps {
-		
 		if len(ldapId) > 0 && ldapServer.Id != ldapId {
 			continue
 		}
@@ -574,5 +573,6 @@ func SyncUserFromLdap(organization string, ldapId string, userName string, passw
 		_, _, err = SyncLdapUsers(organization, AutoAdjustLdapUser(res), ldapServer.Id)
 		return &res[0], err
 	}
+
 	return nil, nil
 }
