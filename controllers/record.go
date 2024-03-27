@@ -49,6 +49,8 @@ func (c *ApiController) GetRecords() {
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
+	fromDate := c.Input().Get("fromDate")
+	endDate := c.Input().Get("endDate")
 	organizationName := c.Input().Get("organizationName")
 
 	filterRecord := &object.Record{Organization: user.Owner}
@@ -67,15 +69,14 @@ func (c *ApiController) GetRecords() {
 		c.ResponseOk(records)
 	} else {
 		limit := util.ParseInt(limit)
-
-		count, err := object.GetRecordCount(field, value, filterRecord)
+		count, err := object.GetRecordCount(field, value, fromDate, endDate, filterRecord)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		records, err := object.GetPaginationRecords(paginator.Offset(), limit, field, value, sortField, sortOrder, filterRecord)
+		records, err := object.GetPaginationRecords(paginator.Offset(), limit, field, value, fromDate, endDate, sortField, sortOrder, filterRecord)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
