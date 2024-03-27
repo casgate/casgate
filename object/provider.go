@@ -143,6 +143,17 @@ func GetGlobalProviderCount(field, value string) (int64, error) {
 	return session.Count(&Provider{})
 }
 
+func GetProvidersByCertName(certName string) ([]*Provider, error) {
+	providers := []*Provider{}
+
+	err := ormer.Engine.Where("cert = ?", certName).Find(&providers, &Provider{})
+	if err != nil {
+		return nil, err
+	}
+
+	return providers, nil
+}
+
 func GetProviders(owner string) ([]*Provider, error) {
 	providers := []*Provider{}
 	err := ormer.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&providers, &Provider{})

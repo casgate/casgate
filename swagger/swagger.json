@@ -952,6 +952,15 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "409": {
+                        "description": "Conflict"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
@@ -2229,6 +2238,34 @@
                         "description": "The Response object",
                         "schema": {
                             "$ref": "#/definitions/object.Ldap"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/get-ldap-server-names": {
+            "get": {
+                "tags": [
+                    "Account API"
+                ],
+                "description": "get ldaps",
+                "operationId": "ApiController.GetLdapServerNames",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "owner",
+                        "description": "owner",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/LdapIdWithNameResp"
+                            }
                         }
                     }
                 }
@@ -5679,16 +5716,20 @@
         }
     },
     "definitions": {
-        "194330.\u003cnil\u003e.string": {
+        "194443.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "317359.\u003cnil\u003e.string": {
+        "317472.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
         "LaravelResponse": {
             "title": "LaravelResponse",
+            "type": "object"
+        },
+        "LdapIdWithNameResp": {
+            "title": "LdapIdWithNameResp",
             "type": "object"
         },
         "LdapResp": {
@@ -6508,7 +6549,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/194330.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/194443.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -7232,7 +7273,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/317359.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/317472.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"
