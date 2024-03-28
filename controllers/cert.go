@@ -16,7 +16,10 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 
+	"github.com/beego/beego/logs"
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
@@ -167,15 +170,41 @@ func (c *ApiController) AddCert() {
 // @Description delete cert
 // @Param   body    body   object.Cert  true        "The details of the cert"
 // @Success 200 {object} controllers.Response The Response object
+// @Failure 400 Bad Request
+// @Failure 409 Conflict
+// @Failure 500 Internal Server Error
 // @router /delete-cert [post]
 func (c *ApiController) DeleteCert() {
 	var cert object.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest(err.Error())
+		return
+	}
+
+	providers, err := object.GetProvidersByCertName(cert.Name)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	if len(providers) > 0 {
+		errMess := makeDeleteCertErrMessage(providers)
+		c.ResponseConflict(errMess)
+
 		return
 	}
 
 	c.Data["json"] = wrapActionResponse(object.DeleteCert(&cert))
 	c.ServeJSON()
+}
+
+func makeDeleteCertErrMessage(providers []*object.Provider) string {
+	providerIDs := make([]string, 0, len(providers))
+
+	for _, provider := range providers {
+		providerIDs = append(providerIDs, provider.Name)
+	}
+
+	return fmt.Sprintf("Can't delete certificate due to using in providers: %s", strings.Join(providerIDs, ", "))
 }

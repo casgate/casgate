@@ -617,6 +617,12 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad Request
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
   /api/delete-domain:
     post:
       tags:
@@ -1448,6 +1454,24 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Ldap'
+  /api/get-ldap-server-names:
+    get:
+      tags:
+      - Account API
+      description: get ldaps
+      operationId: ApiController.GetLdapServerNames
+      parameters:
+      - in: query
+        name: owner
+        description: owner
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/LdapIdWithNameResp'
   /api/get-ldap-users:
     get:
       tags:
@@ -3708,14 +3732,17 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  194330.<nil>.string:
+  194443.<nil>.string:
     title: string
     type: object
-  317359.<nil>.string:
+  317472.<nil>.string:
     title: string
     type: object
   LaravelResponse:
     title: LaravelResponse
+    type: object
+  LdapIdWithNameResp:
+    title: LdapIdWithNameResp
     type: object
   LdapResp:
     title: LdapResp
@@ -4272,7 +4299,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/194330.<nil>.string'
+          $ref: '#/definitions/194443.<nil>.string'
       description:
         type: string
       displayName:
@@ -4758,7 +4785,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/317359.<nil>.string'
+        $ref: '#/definitions/317472.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:
