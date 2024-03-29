@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -174,7 +175,7 @@ func (syncer *Syncer) getUserValue(user *User, key string) string {
 	jsonData, _ := json.Marshal(user)
 	var mapData map[string]interface{}
 	if err := json.Unmarshal(jsonData, &mapData); err != nil {
-		fmt.Println("conversion failed:", err)
+		logs.Error("conversion failed: %s", err.Error())
 		return user.Id
 	}
 	value := mapData[util.SnakeToCamel(key)]

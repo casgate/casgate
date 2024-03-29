@@ -200,7 +200,6 @@ func ApiFilter(ctx *context.Context) {
 	if willLog(subOwner, subName, method, urlPath, objOwner, objName) {
 		logLine := fmt.Sprintf("subOwner = %s, subName = %s, method = %s, urlPath = %s, obj.Owner = %s, obj.Name = %s, result = %s",
 			subOwner, subName, method, urlPath, objOwner, objName, result)
-		fmt.Println(logLine)
 		util.LogInfo(ctx, logLine)
 	}
 

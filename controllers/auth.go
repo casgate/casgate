@@ -26,6 +26,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/captcha"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/form"
@@ -1074,8 +1075,12 @@ func (c *ApiController) GetSamlLogin() {
 	relayState := c.Input().Get("relayState")
 	authURL, method, err := object.GenerateSamlRequest(providerId, relayState, c.Ctx.Request.Host, c.GetAcceptLanguage())
 	if err != nil {
-		c.ResponseError(err.Error())
+		logs.Error("generate SAML request: %s", err.Error())
+
+		c.ResponseInternalServerError("Create SAML request error")
+		return
 	}
+
 	c.ResponseOk(authURL, method)
 }
 
@@ -1085,6 +1090,7 @@ func (c *ApiController) HandleSamlLogin() {
 	decode, err := base64.StdEncoding.DecodeString(relayState)
 	if err != nil {
 		c.ResponseError(err.Error())
+		return
 	}
 	slice := strings.Split(string(decode), "&")
 	relayState = url.QueryEscape(relayState)
