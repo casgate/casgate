@@ -910,7 +910,7 @@ export function getProviderLogoURL(provider) {
   } else {
     const info = OtherProviderInfo[provider.category][provider.type];
 
-    if (provider.customLogo !== "") {
+    if (provider.customLogo) {
       return provider.customLogo;
     }
 
@@ -918,6 +918,7 @@ export function getProviderLogoURL(provider) {
     if (info) {
       return info.logo;
     }
+
     return "";
   }
 }

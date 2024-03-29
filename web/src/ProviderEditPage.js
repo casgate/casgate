@@ -548,7 +548,7 @@ class ProviderEditPage extends React.Component {
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
             {Setting.getLabel(i18next.t("provider:Type"), i18next.t("provider:Type - Tooltip"))} :
           </Col>
-          <Col span={22} >
+          <Col span={22}>
             <Select virtual={false} style={{width: "100%"}} showSearch value={this.state.provider.type} onChange={(value => {
               this.updateProviderField("type", value);
               if (value === "Local File System") {
@@ -689,36 +689,38 @@ class ProviderEditPage extends React.Component {
                   </Button>
                 </Col>
               </Row>
-
-              <Row style={{marginTop: "20px"}} >
-                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-                  {Setting.getLabel(i18next.t("general:Favicon"), i18next.t("general:Favicon - Tooltip"))} :
-                </Col>
-                <Col span={22} >
-                  <Row style={{marginTop: "20px"}} >
-                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 1}>
-                      {Setting.getLabel(i18next.t("general:URL"), i18next.t("general:URL - Tooltip"))} :
-                    </Col>
-                    <Col span={23} >
-                      <Input prefix={<LinkOutlined />} value={this.state.provider.customLogo} onChange={e => {
-                        this.updateProviderField("customLogo", e.target.value);
-                      }} />
-                    </Col>
-                  </Row>
-                  <Row style={{marginTop: "20px"}} >
-                    <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 1}>
-                      {i18next.t("general:Preview")}:
-                    </Col>
-                    <Col span={23} >
-                      <a target="_blank" rel="noreferrer" href={this.state.provider.customLogo}>
-                        <img src={this.state.provider.customLogo} alt={this.state.provider.customLogo} height={90} style={{marginBottom: "20px"}} />
-                      </a>
-                    </Col>
-                  </Row>
-                </Col>
-              </Row>
             </React.Fragment>
           )
+        }
+        {
+          this.state.provider.type === "Custom" || this.state.provider.type === "OpenID" || this.state.provider.type === "Generic" ? (
+            <Row style={{marginTop: "20px"}} >
+              <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                {Setting.getLabel(i18next.t("general:Favicon"), i18next.t("general:Favicon - Tooltip"))} :
+              </Col>
+              <Col span={22} >
+                <Row style={{marginTop: "20px"}} >
+                  <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 1}>
+                    {Setting.getLabel(i18next.t("general:URL"), i18next.t("general:URL - Tooltip"))} :
+                  </Col>
+                  <Col span={23} >
+                    <Input prefix={<LinkOutlined />} value={this.state.provider.customLogo} onChange={e => {
+                      this.updateProviderField("customLogo", e.target.value);
+                    }} />
+                  </Col>
+                </Row>
+                <Row style={{marginTop: "20px"}} >
+                  <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 1}>
+                    {i18next.t("general:Preview")}:
+                  </Col>
+                  <Col span={23} >
+                    <a target="_blank" rel="noreferrer" href={this.state.provider.customLogo}>
+                      <img src={this.state.provider.customLogo} alt={this.state.provider.customLogo} height={90} style={{marginBottom: "20px"}} />
+                    </a>
+                  </Col>
+                </Row>
+              </Col>
+            </Row>) : null
         }
         {
           (this.state.provider.type === "Custom" || this.state.provider.category === "SAML" || this.state.provider.type === "OpenID") &&
