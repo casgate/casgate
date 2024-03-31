@@ -20,6 +20,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"maps"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -629,10 +630,9 @@ func (c *ApiController) Login() {
 				return
 			}
 
-			// decode JWT token without verifying the signature to fill authData
 			if provider.Category == "OAuth" {
+				// decode JWT token without verifying the signature to fill authData
 				jwtToken, _ := jwt.ParseSigned(token.AccessToken)
-
 				if jwtToken != nil {
 					err = jwtToken.UnsafeClaimsWithoutVerification(&authData)
 					if err != nil {
@@ -641,6 +641,10 @@ func (c *ApiController) Login() {
 						c.ResponseError(c.T("auth:Invalid token"))
 						return
 					}
+				}
+
+				if provider.Type == "OpenID" && len(userInfo.AdditionalInfo) != 0 {
+					maps.Copy(authData, userInfo.AdditionalInfo)
 				}
 			}
 		}
