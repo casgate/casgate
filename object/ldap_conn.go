@@ -187,6 +187,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User) ([]LdapUse
 	}
 	if l.IsAD {
 		SearchAttributes = append(SearchAttributes, "sAMAccountName")
+		SearchAttributes = append(SearchAttributes, "userPrincipalName")
 	} else {
 		SearchAttributes = append(SearchAttributes, "uid")
 	}
