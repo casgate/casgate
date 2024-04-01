@@ -3732,10 +3732,10 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  194443.<nil>.string:
+  194510.<nil>.string:
     title: string
     type: object
-  317472.<nil>.string:
+  317539.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -4299,7 +4299,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/194443.<nil>.string'
+          $ref: '#/definitions/194510.<nil>.string'
       description:
         type: string
       displayName:
@@ -4785,7 +4785,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/317472.<nil>.string'
+        $ref: '#/definitions/317539.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:
@@ -5254,6 +5254,8 @@ definitions:
       fitbit:
         type: string
       gender:
+        type: string
+      genericsaml:
         type: string
       gitea:
         type: string

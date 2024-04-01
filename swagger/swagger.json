@@ -5716,11 +5716,11 @@
         }
     },
     "definitions": {
-        "194443.\u003cnil\u003e.string": {
+        "194510.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "317472.\u003cnil\u003e.string": {
+        "317539.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6549,7 +6549,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/194443.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/194510.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -7273,7 +7273,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/317472.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/317539.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"
@@ -7968,6 +7968,9 @@
                     "type": "string"
                 },
                 "gender": {
+                    "type": "string"
+                },
+                "genericsaml": {
                     "type": "string"
                 },
                 "gitea": {
