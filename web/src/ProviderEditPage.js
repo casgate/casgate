@@ -693,7 +693,7 @@ class ProviderEditPage extends React.Component {
           )
         }
         {
-          this.state.provider.type === "Custom" || this.state.provider.type === "OpenID" || this.state.provider.type === "Generic" ? (
+          this.state.provider.type === "Custom" || this.state.provider.type === "OpenID" || this.state.provider.type === "GenericSAML" ? (
             <Row style={{marginTop: "20px"}} >
               <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
                 {Setting.getLabel(i18next.t("general:Favicon"), i18next.t("general:Favicon - Tooltip"))} :
@@ -1397,7 +1397,7 @@ class ProviderEditPage extends React.Component {
         }
 
         {
-          this.state.provider.category === "SAML" && this.state.provider.type === "Generic" ? (
+          this.state.provider.category === "SAML" && this.state.provider.type === "GenericSAML" ? (
             <React.Fragment>
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
