@@ -812,7 +812,7 @@ func (c *ApiController) Login() {
 					if !affected {
 						record.AddReason(fmt.Sprintf("Login error: user information is invalid: %s", util.StructToJson(user)))
 
-						c.ResponseError(fmt.Sprintf(c.T("auth:Failed to create user, user information is invalid: %s"), util.StructToJson(user)))
+						c.ResponseError(fmt.Sprintf(c.T("auth:Failed to create user, user information is invalid")))
 						return
 					}
 				}
