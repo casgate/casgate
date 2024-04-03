@@ -902,10 +902,7 @@ export function getProviderLogoURL(provider) {
   if (provider.category === "OAuth") {
     if (provider.type === "Custom" && provider.customLogo) {
       return provider.customLogo;
-    }
-    if (provider.type === "OpenID") {
-      return "https://upload.wikimedia.org/wikipedia/commons/6/68/Social_icons-openid-22x22.png";
-    }
+    }   
     return `${StaticBaseUrl}/img/social_${provider.type.toLowerCase()}.png`;
   } else {
     const info = OtherProviderInfo[provider.category][provider.type];
