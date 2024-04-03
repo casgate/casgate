@@ -271,29 +271,36 @@ class LdapEditPage extends React.Component {
             }} />
           </Col>
         </Row>
-        <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
-            {Setting.getLabel(i18next.t("ldap:Admin"), i18next.t("ldap:Admin - Tooltip"))} :
-          </Col>
-          <Col span={20}>
-            <Input value={this.state.ldap.username} onChange={e => {
-              this.updateLdapField("username", e.target.value);
-            }} />
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}}>
-          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
-            {Setting.getLabel(i18next.t("ldap:Admin Password"), i18next.t("ldap:Admin Password - Tooltip"))} :
-          </Col>
-          <Col span={20}>
-            <Input.Password
-              iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} value={this.state.ldap.password}
-              onChange={e => {
-                this.updateLdapField("password", e.target.value);
-              }}
-            />
-          </Col>
-        </Row>
+        {
+          this.state.ldap.enableSsl && this.state.ldap.enableCryptographicAuth ? null :
+            <Row style={{marginTop: "20px"}}>
+              <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+                {Setting.getLabel(i18next.t("ldap:Admin"), i18next.t("ldap:Admin - Tooltip"))} :
+              </Col>
+              <Col span={20}>
+                <Input value={this.state.ldap.username} onChange={e => {
+                  this.updateLdapField("username", e.target.value);
+                }} />
+              </Col>
+            </Row>
+        }
+        {
+          this.state.ldap.enableSsl && this.state.ldap.enableCryptographicAuth ? null :
+            <Row style={{marginTop: "20px"}}>
+              <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+                {Setting.getLabel(i18next.t("ldap:Admin Password"), i18next.t("ldap:Admin Password - Tooltip"))} :
+              </Col>
+              <Col span={20}>
+                <Input.Password
+                  iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
+                  value={this.state.ldap.password}
+                  onChange={e => {
+                    this.updateLdapField("password", e.target.value);
+                  }}
+                />
+              </Col>
+            </Row>
+        }
         <Row style={{marginTop: "20px"}}>
           <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Auto Sync"), i18next.t("ldap:Auto Sync - Tooltip"))} :

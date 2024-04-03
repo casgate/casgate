@@ -102,9 +102,9 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 			tlsConf.Certificates = clientCerts
 		}
 
-		conn, err = goldap.DialURL(fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), goldap.DialWithTLSConfig(tlsConf))
+		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), tlsConf)
 	} else {
-		conn, err = goldap.DialURL(fmt.Sprintf("%s:%d", ldap.Host, ldap.Port))
+		conn, err = goldap.Dial("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port))
 	}
 
 	if err != nil {
