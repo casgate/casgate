@@ -186,6 +186,7 @@ type User struct {
 	// SAML Types
 	Keycloak    string `xorm:"keycloak varchar(100)" json:"keycloak"`
 	AliyunIDaaS string `xorm:"aliyunidaas varchar(100)" json:"aliyunidaas"`
+	GenericSAML string `xorm:"genericsaml varchar(100)" json:"genericsaml"`
 
 	WebauthnCredentials []webauthn.Credential `xorm:"webauthnCredentials blob" json:"webauthnCredentials"`
 	PreferredMfaType    string                `xorm:"varchar(100)" json:"preferredMfaType"`

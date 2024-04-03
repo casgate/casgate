@@ -20,6 +20,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"maps"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -92,7 +93,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 	if user.Type == "paid-user" {
 		subscriptions, err := object.GetSubscriptionsByUser(user.Owner, user.Name)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError("internal server error")
 			return
 		}
 		existActiveSubscription := false
@@ -113,7 +114,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 			// paid-user does not have active or pending subscription, find the default pricing of application
 			pricing, err := object.GetApplicationDefaultPricing(application.Organization, application.Name)
 			if err != nil {
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 			if pricing == nil {
@@ -246,13 +247,13 @@ func (c *ApiController) GetApplicationLogin() {
 	if loginType == "code" {
 		msg, application, err = object.CheckOAuthLogin(clientId, responseType, redirectUri, scope, state, c.GetAcceptLanguage())
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError("internal server error")
 			return
 		}
 	} else if loginType == "cas" {
 		application, err = object.GetApplication(id)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError("internal server error")
 			return
 		}
 		if application == nil {
@@ -262,7 +263,7 @@ func (c *ApiController) GetApplicationLogin() {
 
 		err = object.CheckCasLogin(application, c.GetAcceptLanguage(), redirectUri)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError("internal server error")
 			return
 		}
 	}
@@ -333,7 +334,7 @@ func (c *ApiController) Login() {
 	var authForm form.AuthForm
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &authForm)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest("read request body error")
 		return
 	}
 
@@ -429,14 +430,14 @@ func (c *ApiController) Login() {
 			if enableCaptcha, err = object.CheckToEnableCaptcha(application, authForm.Organization, authForm.Username); err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			} else if enableCaptcha {
 				isHuman, err := captcha.VerifyCaptchaByCaptchaType(authForm.CaptchaType, authForm.CaptchaToken, authForm.ClientSecret)
 				if err != nil {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-					c.ResponseError(err.Error())
+					c.ResponseInternalServerError("internal server error")
 					return
 				}
 
@@ -479,7 +480,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
@@ -494,7 +495,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 			}
 
 			if object.IsNeedPromptMfa(organization, user) {
@@ -527,7 +528,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 		} else {
@@ -535,7 +536,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 		}
@@ -557,7 +558,7 @@ func (c *ApiController) Login() {
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError("internal server error")
 			return
 		}
 
@@ -577,7 +578,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 		} else if provider.Category == "OAuth" || provider.Category == "Web3" {
@@ -595,7 +596,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
@@ -611,7 +612,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
@@ -630,10 +631,9 @@ func (c *ApiController) Login() {
 				return
 			}
 
-			// decode JWT token without verifying the signature to fill authData
 			if provider.Category == "OAuth" {
+				// decode JWT token without verifying the signature to fill authData
 				jwtToken, _ := jwt.ParseSigned(token.AccessToken)
-
 				if jwtToken != nil {
 					err = jwtToken.UnsafeClaimsWithoutVerification(&authData)
 					if err != nil {
@@ -642,6 +642,10 @@ func (c *ApiController) Login() {
 						c.ResponseError(c.T("auth:Invalid token"))
 						return
 					}
+				}
+
+				if provider.Type == "OpenID" && len(userInfo.AdditionalInfo) != 0 {
+					maps.Copy(authData, userInfo.AdditionalInfo)
 				}
 			}
 		}
@@ -652,8 +656,7 @@ func (c *ApiController) Login() {
 				user, err = object.GetUserByField(application.Organization, provider.Type, userInfo.Id)
 				if err != nil {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
-					c.ResponseError(err.Error())
+					c.ResponseInternalServerError("internal server error")
 					return
 				}
 			}
@@ -696,7 +699,7 @@ func (c *ApiController) Login() {
 						if err != nil {
 							record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-							c.ResponseError(err.Error())
+							c.ResponseInternalServerError("internal server error")
 							return
 						}
 					}
@@ -707,7 +710,7 @@ func (c *ApiController) Login() {
 						if err != nil {
 							record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-							c.ResponseError(err.Error())
+							c.ResponseInternalServerError("internal server error")
 							return
 						}
 					}
@@ -733,7 +736,8 @@ func (c *ApiController) Login() {
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-						c.ResponseError(err.Error())
+
+						c.ResponseInternalServerError("internal server error")
 						return
 					}
 
@@ -742,7 +746,7 @@ func (c *ApiController) Login() {
 						if err != nil {
 							record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-							c.ResponseError(err.Error())
+							c.ResponseInternalServerError("internal server error")
 							return
 						}
 
@@ -755,7 +759,7 @@ func (c *ApiController) Login() {
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-						c.ResponseError(err.Error())
+						c.ResponseInternalServerError("internal server error")
 						return
 					}
 
@@ -801,14 +805,14 @@ func (c *ApiController) Login() {
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-						c.ResponseError(err.Error())
+						c.ResponseInternalServerError("internal server error")
 						return
 					}
 
 					if !affected {
 						record.AddReason(fmt.Sprintf("Login error: user information is invalid: %s", util.StructToJson(user)))
 
-						c.ResponseError(fmt.Sprintf(c.T("auth:Failed to create user, user information is invalid: %s"), util.StructToJson(user)))
+						c.ResponseError(fmt.Sprintf(c.T("auth:Failed to create user, user information is invalid")))
 						return
 					}
 				}
@@ -819,7 +823,7 @@ func (c *ApiController) Login() {
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-						c.ResponseError(err.Error())
+						c.ResponseInternalServerError("internal server error")
 						return
 					}
 				}
@@ -828,7 +832,7 @@ func (c *ApiController) Login() {
 				if err != nil {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-					c.ResponseError(err.Error())
+					c.ResponseInternalServerError("internal server error")
 					return
 				}
 
@@ -843,7 +847,7 @@ func (c *ApiController) Login() {
 				if err != nil {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-					c.ResponseError(err.Error())
+					c.ResponseInternalServerError("internal server error")
 					return
 				}
 
@@ -852,7 +856,7 @@ func (c *ApiController) Login() {
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-						c.ResponseError(err.Error())
+						c.ResponseInternalServerError("internal server error")
 						return
 					}
 
@@ -861,7 +865,7 @@ func (c *ApiController) Login() {
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-						c.ResponseError(err.Error())
+						c.ResponseInternalServerError("internal server error")
 						return
 					}
 				}
@@ -883,7 +887,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
@@ -898,7 +902,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
@@ -907,7 +911,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
@@ -915,7 +919,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
@@ -930,7 +934,7 @@ func (c *ApiController) Login() {
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError("internal server error")
 			return
 		}
 		if user == nil {
@@ -953,7 +957,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason("OTP was wrong")
 
-				c.ResponseError(err.Error())
+				c.ResponseUnprocessableEntity("OTP was wrong")
 				return
 			}
 		} else if authForm.RecoveryCode != "" {
@@ -961,7 +965,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 		} else {
@@ -975,7 +979,7 @@ func (c *ApiController) Login() {
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError("internal server error")
 			return
 		}
 
@@ -1002,7 +1006,7 @@ func (c *ApiController) Login() {
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError("internal server error")
 			return
 		}
 		if user == nil {
@@ -1021,7 +1025,7 @@ func (c *ApiController) Login() {
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-			c.ResponseError(err.Error())
+			c.ResponseInternalServerError("internal server error")
 			return
 		}
 
@@ -1043,7 +1047,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseError(err.Error())
+				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
@@ -1089,7 +1093,7 @@ func (c *ApiController) HandleSamlLogin() {
 	samlResponse := c.Input().Get("SAMLResponse")
 	decode, err := base64.StdEncoding.DecodeString(relayState)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest("decoding relay state error")
 		return
 	}
 	slice := strings.Split(string(decode), "&")
@@ -1108,7 +1112,7 @@ func (c *ApiController) HandleSamlLogin() {
 func (c *ApiController) HandleOfficialAccountEvent() {
 	respBytes, err := ioutil.ReadAll(c.Ctx.Request.Body)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest("read body error")
 		return
 	}
 
@@ -1119,7 +1123,7 @@ func (c *ApiController) HandleOfficialAccountEvent() {
 	}
 	err = xml.Unmarshal(respBytes, &data)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseBadRequest("unmarshall body error")
 		return
 	}
 
@@ -1161,7 +1165,7 @@ func (c *ApiController) GetCaptchaStatus() {
 	userId := c.Input().Get("user_id")
 	user, err := object.GetUserByFields(organization, userId)
 	if err != nil {
-		c.ResponseError(err.Error())
+		c.ResponseInternalServerError("internal server error")
 		return
 	}
 

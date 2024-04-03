@@ -185,11 +185,15 @@ func (idp *OpenIdProvider) GetUserInfo(token *oauth2.Token) (*UserInfo, error) {
 		return nil, err
 	}
 
-	var dataMap map[string]interface{}
+	var (
+		dataMap    map[string]interface{}
+		attributes map[string]interface{}
+	)
 	err = json.Unmarshal(data, &dataMap)
 	if err != nil {
 		return nil, err
 	}
+	_ = json.Unmarshal(data, &attributes)
 
 	// map user info
 	var displayName string
@@ -233,11 +237,12 @@ func (idp *OpenIdProvider) GetUserInfo(token *oauth2.Token) (*UserInfo, error) {
 	}
 
 	userInfo := &UserInfo{
-		Id:          oidcUserinfo.Id,
-		Username:    oidcUserinfo.Username,
-		DisplayName: oidcUserinfo.DisplayName,
-		Email:       oidcUserinfo.Email,
-		AvatarUrl:   oidcUserinfo.AvatarUrl,
+		Id:             oidcUserinfo.Id,
+		Username:       oidcUserinfo.Username,
+		DisplayName:    oidcUserinfo.DisplayName,
+		Email:          oidcUserinfo.Email,
+		AvatarUrl:      oidcUserinfo.AvatarUrl,
+		AdditionalInfo: attributes,
 	}
 	return userInfo, nil
 }
