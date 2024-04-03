@@ -205,18 +205,18 @@ class LdapEditPage extends React.Component {
           this.state.ldap.enableSsl ? (
             <Row style={{marginTop: "20px"}} >
               <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
-                {Setting.getLabel(i18next.t("ldap:Enable mTLS"), i18next.t("ldap:Enable mTLS - Tooltip"))} :
+                {Setting.getLabel(i18next.t("ldap:Enable Cryptographic Authentication"), i18next.t("ldap:Enable Cryptographic Authentication - Tooltip"))} :
               </Col>
               <Col span={20} >
-                <Switch checked={this.state.ldap.enableMutualTls} onChange={checked => {
-                  this.updateLdapField("enableMutualTls", checked);
+                <Switch checked={this.state.ldap.enableCryptographicAuth} onChange={checked => {
+                  this.updateLdapField("enableCryptographicAuth", checked);
                 }} />
               </Col>
             </Row>
           ) : null
         }
         {
-          this.state.ldap.enableSsl && this.state.ldap.enableMutualTls ? (
+          this.state.ldap.enableSsl && this.state.ldap.enableCryptographicAuth ? (
             <Row style={{marginTop: "20px"}} >
               <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
                 {Setting.getLabel(i18next.t("cert:Client Certificate"), i18next.t("cert:Client Certificate - Tooltip"))} :

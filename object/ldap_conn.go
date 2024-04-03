@@ -79,7 +79,7 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 			}
 		}
 
-		if ldap.EnableMutualTls {
+		if ldap.EnableCryptographicAuth {
 			var clientCerts []tls.Certificate
 			if ldap.ClientCert != "" {
 				cert, err := getCertByName(ldap.ClientCert)
@@ -102,16 +102,20 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 			tlsConf.Certificates = clientCerts
 		}
 
-		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), tlsConf)
+		conn, err = goldap.DialURL(fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), goldap.DialWithTLSConfig(tlsConf))
 	} else {
-		conn, err = goldap.Dial("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port))
+		conn, err = goldap.DialURL(fmt.Sprintf("%s:%d", ldap.Host, ldap.Port))
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = conn.Bind(ldap.Username, ldap.Password)
+	if ldap.EnableSsl && ldap.EnableCryptographicAuth {
+		err = conn.ExternalBind()
+	} else {
+		err = conn.Bind(ldap.Username, ldap.Password)
+	}
 	if err != nil {
 		return nil, err
 	}
