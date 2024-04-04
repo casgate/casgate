@@ -64,9 +64,7 @@ func (c *ApiController) GetProviderSamlMetadata() {
 		return
 	}
 
-	validityHours := int64(24)
-
-	entityDescriptor, err := sp.MetadataWithSLO(validityHours)
+	entityDescriptor, err := sp.MetadataWithSLO(-1)
 	if err != nil {
 		c.ResponseInternalServerError("Build SP metadata error")
 		return
