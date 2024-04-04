@@ -166,7 +166,7 @@ func getSAMLRequestMethod(provider *Provider) string {
 func buildSAMLRequest(sp *saml2.SAMLServiceProvider, httpMethod string, relayState string) (auth string, err error) {
 	if httpMethod == http.MethodGet {
 		return sp.BuildAuthURL(relayState)
-	} 
+	}
 
 	postData, err := sp.BuildAuthBodyPost(relayState)
 	return string(postData[:]), err
@@ -186,13 +186,13 @@ func BuildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 	}
 
 	sp := &saml2.SAMLServiceProvider{
-		ServiceProviderIssuer:       issuer,
-		AssertionConsumerServiceURL: fmt.Sprintf("%s/api/acs", origin),
-		NameIdFormat:                nameIdFormat,
-		SignAuthnRequests:           false,
-		SPKeyStore:                  dsig.RandomKeyStoreForTest(),
-		SkipSignatureValidation:     !provider.ValidateIdpSignature,
-		ServiceProviderSLOURL:       provider.SingleLogoutServiceUrl,
+		ServiceProviderIssuer:          issuer,
+		AssertionConsumerServiceURL:    fmt.Sprintf("%s/api/acs", origin),
+		NameIdFormat:                   nameIdFormat,
+		SignAuthnRequests:              false,
+		SPKeyStore:                     dsig.RandomKeyStoreForTest(),
+		SkipSignatureValidation:        !provider.ValidateIdpSignature,
+		ServiceProviderSLOURL:          provider.SingleLogoutServiceUrl,
 		SignAuthnRequestsCanonicalizer: dsig.MakeC14N10ExclusiveCanonicalizerWithPrefixList(""),
 	}
 

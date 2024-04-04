@@ -736,7 +736,6 @@ func (c *ApiController) Login() {
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-
 						c.ResponseInternalServerError("internal server error")
 						return
 					}
