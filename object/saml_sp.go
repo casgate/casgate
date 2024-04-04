@@ -20,6 +20,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -145,21 +146,30 @@ func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method
 		return "", "", err
 	}
 
-	if provider.RequestSignature != NotToSign {
-		post, err := sp.BuildAuthBodyPost(relayState)
-		if err != nil {
-			return "", "", err
-		}
-		auth = string(post[:])
-		method = "POST"
-	} else {
-		auth, err = sp.BuildAuthURL(relayState)
-		if err != nil {
-			return "", "", err
-		}
-		method = "GET"
+	method = getSAMLRequestMethod(provider)
+	data, err := buildSAMLRequest(sp, method, relayState)
+	if err != nil {
+		return "", "", err
 	}
-	return auth, method, nil
+
+	return data, method, nil
+}
+
+func getSAMLRequestMethod(provider *Provider) string {
+	if provider.EndpointType == "HTTP-POST" {
+		return http.MethodPost
+	}
+
+	return http.MethodGet
+}
+
+func buildSAMLRequest(sp *saml2.SAMLServiceProvider, httpMethod string, relayState string) (auth string, err error) {
+	if httpMethod == http.MethodGet {
+		return sp.BuildAuthURL(relayState)
+	}
+
+	postData, err := sp.BuildAuthBodyPost(relayState)
+	return string(postData[:]), err
 }
 
 func BuildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLServiceProvider, error) {
@@ -176,13 +186,14 @@ func BuildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 	}
 
 	sp := &saml2.SAMLServiceProvider{
-		ServiceProviderIssuer:       issuer,
-		AssertionConsumerServiceURL: fmt.Sprintf("%s/api/acs", origin),
-		NameIdFormat:                nameIdFormat,
-		SignAuthnRequests:           false,
-		SPKeyStore:                  dsig.RandomKeyStoreForTest(),
-		SkipSignatureValidation:     !provider.ValidateIdpSignature,
-		ServiceProviderSLOURL:       provider.SingleLogoutServiceUrl,
+		ServiceProviderIssuer:          issuer,
+		AssertionConsumerServiceURL:    fmt.Sprintf("%s/api/acs", origin),
+		NameIdFormat:                   nameIdFormat,
+		SignAuthnRequests:              false,
+		SPKeyStore:                     dsig.RandomKeyStoreForTest(),
+		SkipSignatureValidation:        !provider.ValidateIdpSignature,
+		ServiceProviderSLOURL:          provider.SingleLogoutServiceUrl,
+		SignAuthnRequestsCanonicalizer: dsig.MakeC14N10ExclusiveCanonicalizerWithPrefixList(""),
 	}
 
 	if provider.Endpoint != "" {
