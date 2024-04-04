@@ -238,7 +238,8 @@ func (c *ApiController) UpdateLdap() {
 
 	var ldap object.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
-	if err != nil || util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
+	if err != nil || util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) ||
+		!ldap.EnableCryptographicAuth && util.IsStringsEmpty(ldap.Username, ldap.Password) {
 		msg := c.T("general:Missing parameter")
 		record.AddReason(msg)
 
