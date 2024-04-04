@@ -79,7 +79,7 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 			}
 		}
 
-		if ldap.EnableMutualTls {
+		if ldap.EnableCryptographicAuth {
 			var clientCerts []tls.Certificate
 			if ldap.ClientCert != "" {
 				cert, err := getCertByName(ldap.ClientCert)
@@ -111,7 +111,11 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 		return nil, err
 	}
 
-	err = conn.Bind(ldap.Username, ldap.Password)
+	if ldap.EnableSsl && ldap.EnableCryptographicAuth {
+		err = conn.ExternalBind()
+	} else {
+		err = conn.Bind(ldap.Username, ldap.Password)
+	}
 	if err != nil {
 		return nil, err
 	}
