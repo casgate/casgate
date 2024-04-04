@@ -902,7 +902,7 @@ export function getProviderLogoURL(provider) {
   if (provider.category === "OAuth") {
     if (provider.type === "Custom" && provider.customLogo) {
       return provider.customLogo;
-    }   
+    }
     return `${StaticBaseUrl}/img/social_${provider.type.toLowerCase()}.png`;
   } else {
     const info = OtherProviderInfo[provider.category][provider.type];

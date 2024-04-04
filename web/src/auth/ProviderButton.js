@@ -135,9 +135,9 @@ export function renderProviderLogo(provider, application, width, margin, size, l
           {Modal.info({
             title: i18next.t("provider:Please use WeChat and scan the QR code to sign in"),
             content: (
-                <div>
-                  <img width={256} height={256} src = {"data:image/png;base64," + provider.content} alt="Wechat QR code" style={{margin: margin}} />
-                </div>
+              <div>
+                <img width={256} height={256} src = {"data:image/png;base64," + provider.content} alt="Wechat QR code" style={{margin: margin}} />
+              </div>
             ),
             onOk() {
               window.clearInterval(t1);
@@ -145,34 +145,34 @@ export function renderProviderLogo(provider, application, width, margin, size, l
           });}
         };
         return (
-            <Tooltip title={provider.displayName}>
-              <a key={provider.displayName} >
-                <img width={width} height={width} src={getProviderLogoURL(provider)} alt={provider.displayName} style={{margin: margin}} onClick={info} />
-              </a>
-            </Tooltip>
+          <Tooltip title={provider.displayName}>
+            <a key={provider.displayName} >
+              <img width={width} height={width} src={getProviderLogoURL(provider)} alt={provider.displayName} style={{margin: margin}} onClick={info} />
+            </a>
+          </Tooltip>
         );
       } else {
         return (
-            <Tooltip title={provider.displayName}>
-              <a key={provider.displayName} href={Provider.getAuthUrl(application, provider, "signup")}>
-                <img width={width} height={width} src={getProviderLogoURL(provider)} alt={provider.displayName} style={{margin: margin}} />
-              </a>
-            </Tooltip>
+          <Tooltip title={provider.displayName}>
+            <a key={provider.displayName} href={Provider.getAuthUrl(application, provider, "signup")}>
+              <img width={width} height={width} src={getProviderLogoURL(provider)} alt={provider.displayName} style={{margin: margin}} />
+            </a>
+          </Tooltip>
         );
       }
     } else if (provider.category === "SAML") {
       return (
-          <Tooltip title={provider.displayName}>
-            <a key={provider.displayName} onClick={() => goToSamlUrl(provider, location)}>
-              <img width={width} height={width} src={getProviderLogoURL(provider)} alt={provider.displayName} style={{margin: margin}} />
-            </a>
-          </Tooltip>
+        <Tooltip title={provider.displayName}>
+          <a key={provider.displayName} onClick={() => goToSamlUrl(provider, location)}>
+            <img width={width} height={width} src={getProviderLogoURL(provider)} alt={provider.displayName} style={{margin: margin}} />
+          </a>
+        </Tooltip>
       );
     } else if (provider.category === "Web3") {
       return (
-          <a key={provider.displayName} onClick={() => goToWeb3Url(application, provider, "signup")}>
-            <img width={width} height={width} src={getProviderLogoURL(provider)} alt={provider.displayName} style={{margin: margin}} />
-          </a>
+        <a key={provider.displayName} onClick={() => goToWeb3Url(application, provider, "signup")}>
+          <img width={width} height={width} src={getProviderLogoURL(provider)} alt={provider.displayName} style={{margin: margin}} />
+        </a>
       );
     }
   } else if (provider.type === "Custom") {
@@ -184,58 +184,58 @@ export function renderProviderLogo(provider, application, width, margin, size, l
     const customSpanStyle = {textAlign: "center", lineHeight: "50px", width: "100%", fontSize: "19px"};
     if (provider.category === "OAuth") {
       return (
-          <Tooltip title={provider.displayName}>
-            <a key={provider.displayName} href={Provider.getAuthUrl(application, provider, "signup")} style={customAStyle}>
-              <button style={customButtonStyle}>
-                <img width={26} src={getProviderLogoURL(provider)} alt={provider.displayName} style={customImgStyle} />
-                <span style={customSpanStyle}>{text}</span>
-              </button>
-            </a>
-          </Tooltip>
+        <Tooltip title={provider.displayName}>
+          <a key={provider.displayName} href={Provider.getAuthUrl(application, provider, "signup")} style={customAStyle}>
+            <button style={customButtonStyle}>
+              <img width={26} src={getProviderLogoURL(provider)} alt={provider.displayName} style={customImgStyle} />
+              <span style={customSpanStyle}>{text}</span>
+            </button>
+          </a>
+        </Tooltip>
       );
     } else if (provider.category === "SAML") {
       return (
-          <Tooltip title={provider.displayName}>
-            <a key={provider.displayName} onClick={() => goToSamlUrl(provider, location)} style={customAStyle}>
-              <button style={customButtonStyle}>
-                <img width={26} src={getProviderLogoURL(provider)} alt={provider.displayName} style={customImgStyle} />
-                <span style={customSpanStyle}>{text}</span>
-              </button>
-            </a>
-          </Tooltip>
+        <Tooltip title={provider.displayName}>
+          <a key={provider.displayName} onClick={() => goToSamlUrl(provider, location)} style={customAStyle}>
+            <button style={customButtonStyle}>
+              <img width={26} src={getProviderLogoURL(provider)} alt={provider.displayName} style={customImgStyle} />
+              <span style={customSpanStyle}>{text}</span>
+            </button>
+          </a>
+        </Tooltip>
       );
     }
   } else {
     // big button, for disable password signin
     if (provider.category === "SAML") {
       return (
-          <div key={provider.displayName} style={{marginBottom: "10px"}}>
-            <a onClick={() => goToSamlUrl(provider, location)}>
-              {
-                getSigninButton(provider)
-              }
-            </a>
-          </div>
+        <div key={provider.displayName} style={{marginBottom: "10px"}}>
+          <a onClick={() => goToSamlUrl(provider, location)}>
+            {
+              getSigninButton(provider)
+            }
+          </a>
+        </div>
       );
     } else if (provider.category === "Web3") {
       return (
-          <div key={provider.displayName} style={{marginBottom: "10px"}}>
-            <a onClick={() => goToWeb3Url(application, provider, "signup")}>
-              {
-                getSigninButton(provider)
-              }
-            </a>
-          </div>
+        <div key={provider.displayName} style={{marginBottom: "10px"}}>
+          <a onClick={() => goToWeb3Url(application, provider, "signup")}>
+            {
+              getSigninButton(provider)
+            }
+          </a>
+        </div>
       );
     } else {
       return (
-          <div key={provider.displayName} style={{marginBottom: "10px"}}>
-            <a href={Provider.getAuthUrl(application, provider, "signup")}>
-              {
-                getSigninButton(provider)
-              }
-            </a>
-          </div>
+        <div key={provider.displayName} style={{marginBottom: "10px"}}>
+          <a href={Provider.getAuthUrl(application, provider, "signup")}>
+            {
+              getSigninButton(provider)
+            }
+          </a>
+        </div>
       );
     }
   }
