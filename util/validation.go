@@ -22,6 +22,10 @@ import (
 	"github.com/nyaruka/phonenumbers"
 )
 
+const (
+	usernameAllowedSpecialSymbols = "!#$%&'*+/=?^{|}~@.\x60"
+)
+
 var (
 	rePhone          *regexp.Regexp
 	ReWhiteSpace     *regexp.Regexp
@@ -33,7 +37,9 @@ func init() {
 	rePhone, _ = regexp.Compile(`(\d{3})\d*(\d{4})`)
 	ReWhiteSpace, _ = regexp.Compile(`\s`)
 	ReFieldWhiteList, _ = regexp.Compile("^[`A-Za-z0-9]+$")
-	ReUserName, _ = regexp.Compile("^[a-zA-Z0-9]+((?:-[a-zA-Z0-9]+)|(?:_[a-zA-Z0-9]+))*$")
+
+	specialSymbolsPattern := regexp.QuoteMeta(usernameAllowedSpecialSymbols)
+	ReUserName, _ = regexp.Compile(fmt.Sprintf("^([a-zA-Z0-9]+[a-zA-Z0-9\\-_%s]*[a-zA-Z0-9]+|[a-zA-Z0-9]+)$", specialSymbolsPattern))
 }
 
 func IsEmailValid(email string) bool {
