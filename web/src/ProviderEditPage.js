@@ -428,7 +428,7 @@ class ProviderEditPage extends React.Component {
     ).stringValue;
 
     const endpoint = document.evaluate(
-      "string(/*[local-name()='EntityDescriptor']/*[local-name()='IDPSSODescriptor']/*[local-name()='SingleLogoutService']/@Location)",
+      `string(/*[local-name()='EntityDescriptor']/*[local-name()='IDPSSODescriptor']/*[local-name()='SingleSignOnService' and @Binding='urn:oasis:names:tc:SAML:2.0:bindings:${this.state.provider.endpointType}']/@Location)`,
       xmlDoc,
       null,
       XPathResult.ANY_TYPE,
@@ -516,6 +516,7 @@ class ProviderEditPage extends React.Component {
                 this.updateProviderField("type", "AWS S3");
               } else if (value === "SAML") {
                 this.updateProviderField("type", "Keycloak");
+                this.updateProviderField("endpointType", "HTTP-POST");
               } else if (value === "Payment") {
                 this.updateProviderField("type", "PayPal");
               } else if (value === "Captcha") {
@@ -1259,6 +1260,25 @@ class ProviderEditPage extends React.Component {
                   }}>
                     {i18next.t("provider:Parse")}
                   </Button>
+                </Col>
+              </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("provider:Endpoint Type (HTTP)"), i18next.t("provider:SAML 2.0 Endpoint Type (HTTP)"))} :
+                </Col>
+                <Col span={22} >
+                  <Select virtual={false} style={{width: "100%"}} value={this.state.provider.endpointType} onChange={(value => {
+                    this.updateProviderField("endpointType", value);
+                    this.updateProviderField("endpoint", "");
+                  })}>
+                    {
+                      [
+                        {id: "HTTP-POST", name: "HTTP-POST"},
+                        {id: "HTTP-Redirect", name: "HTTP-Redirect"},
+                      ]
+                        .map((endpointType, index) => <Option key={index} value={endpointType.id}>{endpointType.name}</Option>)
+                    }
+                  </Select>
                 </Col>
               </Row>
               <Row style={{marginTop: "20px"}} >

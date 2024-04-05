@@ -885,7 +885,9 @@
     "Single Logout Service Logout URL": "Single Logout Service Logout URL",
     "Single Logout Service Logout URL - Tooltip": "Single Logout Service Logout URL - Tooltip",
     "Base Host URL": "Base Host URL",
-    "Base Host URL - Tooltip": "Base Host URL - Tooltip"
+    "Base Host URL - Tooltip": "Base Host URL - Tooltip",
+    "Endpoint Type (HTTP)": "Endpoint Type (HTTP)",
+    "SAML 2.0 Endpoint Type (HTTP)": "SAML 2.0 Endpoint Type (HTTP)"
   },
   "record": {
     "Is triggered": "Foi acionado",
