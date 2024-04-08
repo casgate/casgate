@@ -21,7 +21,7 @@ import (
 
 func GetCurrentTime() string {
 	timestamp := time.Now().Unix()
-	tm := time.Unix(timestamp, 0)
+	tm := time.Unix(timestamp, 0).UTC()
 	return tm.Format(time.RFC3339)
 }
 

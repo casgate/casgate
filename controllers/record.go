@@ -43,8 +43,8 @@ func (c *ApiController) GetRecords() {
 		return
 	}
 
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
+	pageSize := c.Input().Get("pageSize")
+	pageNumber := c.Input().Get("p")
 	field := c.Input().Get("field")
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
@@ -59,29 +59,33 @@ func (c *ApiController) GetRecords() {
 		filterRecord.Organization = organizationName
 	}
 
-	if limit == "" || page == "" {
-		records, err := object.GetRecords(filterRecord)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(records)
+	var (
+		limit, offset int
+		paginator     *pagination.Paginator
+	)
+	if pageSize == "" || pageNumber == "" {
+		limit = -1
+		offset = -1
 	} else {
-		limit := util.ParseInt(limit)
+		limit = util.ParseInt(pageSize)
 		count, err := object.GetRecordCount(field, value, fromDate, endDate, filterRecord)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
+		paginator = pagination.SetPaginator(c.Ctx, limit, count)
+		offset = paginator.Offset()
+	}
 
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		records, err := object.GetPaginationRecords(paginator.Offset(), limit, field, value, fromDate, endDate, sortField, sortOrder, filterRecord)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
+	records, err := object.GetPaginationRecords(offset, limit, field, value, fromDate, endDate, sortField, sortOrder, filterRecord)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
 
+	if paginator == nil {
+		c.ResponseOk(records)
+	} else {
 		c.ResponseOk(records, paginator.Nums())
 	}
 }
