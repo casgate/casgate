@@ -58,7 +58,7 @@ func (c *ApiController) GetProviderSamlMetadata() {
 		return
 	}
 
-	sp, err := object.BuildSp(provider, "", provider.BaseHostUrl)
+	sp, err := object.BuildSp(provider, "", c.Ctx.Request.Host)
 	if err != nil {
 		c.ResponseInternalServerError("Build SP error")
 		return

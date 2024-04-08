@@ -576,7 +576,7 @@ func (c *ApiController) Login() {
 			// SAML
 			userInfo, authData, err = object.ParseSamlResponse(authForm.SamlResponse, provider, c.Ctx.Request.Host)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+				record.AddReason(fmt.Sprintf("SAML login error: %s", err.Error()))
 
 				c.ResponseInternalServerError("internal server error")
 				return
