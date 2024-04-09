@@ -48,9 +48,6 @@ func CheckUserSignup(application *Application, organization *Organization, form 
 		if unicode.IsDigit(rune(form.Username[0])) {
 			return i18n.Translate(lang, "check:Username cannot start with a digit")
 		}
-		if util.IsEmailValid(form.Username) {
-			return i18n.Translate(lang, "check:Username cannot be an email address")
-		}
 		if util.ReWhiteSpace.MatchString(form.Username) {
 			return i18n.Translate(lang, "check:Username cannot contain white spaces")
 		}
