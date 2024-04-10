@@ -55,7 +55,7 @@ func (c *ApiController) GetRecords() {
 		}
 
 		if !user.IsAdmin {
-			c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
+			c.ResponseForbidden(c.T("auth:Forbidden operation"))
 			return
 		}
 
