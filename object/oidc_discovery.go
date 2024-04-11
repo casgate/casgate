@@ -60,6 +60,14 @@ func isIpAddress(host string) bool {
 	return ip != nil
 }
 
+func getOriginFromHostWithConfPriority(host string) (string, string) {
+	origin := conf.GetConfigString("origin")
+	if origin != "" {
+		return origin, origin
+	}
+	return getOriginFromHost(host)
+}
+
 func getOriginFromHost(host string) (string, string) {
 	origin := conf.GetConfigString("origin")
 	if util.GetUrlHostWithoutScheme(origin) == host {

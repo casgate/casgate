@@ -173,7 +173,7 @@ func buildSAMLRequest(sp *saml2.SAMLServiceProvider, httpMethod string, relaySta
 }
 
 func BuildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLServiceProvider, error) {
-	_, origin := getOriginFromHost(host)
+	_, origin := getOriginFromHostWithConfPriority(host)
 
 	issuer := provider.ClientId
 	if issuer == "" {
