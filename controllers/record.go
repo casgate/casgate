@@ -16,7 +16,6 @@ package controllers
 
 import (
 	"encoding/json"
-
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
@@ -31,18 +30,6 @@ import (
 // @Success 200 {object} object.Record The Response object
 // @router /get-records [get]
 func (c *ApiController) GetRecords() {
-	user, ok := c.RequireSignedInUser()
-	if !ok {
-		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
-		return
-	}
-
-	isAdmin := user.IsAdmin || user.IsGlobalAdmin()
-	if !isAdmin {
-		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
-		return
-	}
-
 	pageSize := c.Input().Get("pageSize")
 	pageNumber := c.Input().Get("p")
 	field := c.Input().Get("field")
@@ -53,10 +40,30 @@ func (c *ApiController) GetRecords() {
 	endDate := c.Input().Get("endDate")
 	organizationName := c.Input().Get("organizationName")
 
-	filterRecord := &object.Record{Organization: user.Owner}
+	filterRecord := &object.Record{}
 
-	if c.IsGlobalAdmin() && organizationName != "" {
-		filterRecord.Organization = organizationName
+	if c.IsGlobalAdmin() {
+		if organizationName != "" {
+			filterRecord.Organization = organizationName
+		}
+	} else {
+		user, ok := c.RequireSignedInUser()
+		if !ok {
+			c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
+			return
+		}
+
+		if !user.IsAdmin {
+			c.ResponseForbidden(c.T("auth:Forbidden operation"))
+			return
+		}
+
+		if organizationName != "" && organizationName != user.Owner {
+			c.ResponseForbidden(c.T("auth:Unable to get records from other organization without global administrator role"))
+			return
+		}
+
+		filterRecord.Organization = user.Owner
 	}
 
 	var (
