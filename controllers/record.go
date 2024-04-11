@@ -16,7 +16,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
@@ -60,7 +59,7 @@ func (c *ApiController) GetRecords() {
 		}
 
 		if organizationName != "" && organizationName != user.Owner {
-			c.ResponseError(errors.New("unable to get records from other organization without global administrator role").Error())
+			c.ResponseForbidden(c.T("auth:Unable to get records from other organization without global administrator role"))
 			return
 		}
 
