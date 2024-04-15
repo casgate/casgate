@@ -38,7 +38,7 @@ func GetLdapAutoSynchronizer() *LdapAutoSynchronizer {
 // StartAutoSync
 // start autosync for specified ldap, old existing autosync goroutine will be ceased
 func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string, recordBuilder *RecordBuilder) error {
-	recordBuilder.AddReason("Start LDAP autosync")
+	recordBuilder.AddReason(fmt.Sprintf("Start LDAP %s autosync process", ldapId))
 
 	l.Lock()
 	defer l.Unlock()
@@ -46,14 +46,12 @@ func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string, recordBuilder *Recor
 	ldap, err := GetLdap(ldapId)
 	if err != nil {
 		recordBuilder.AddReason(fmt.Sprintf("Get LDAP: %s", err.Error()))
-
 		return err
 	}
 
 	if ldap == nil {
 		msg := fmt.Sprintf("ldap %s doesn't exist", ldapId)
 		recordBuilder.AddReason(msg)
-
 		return errors.New(msg)
 	}
 	if res, ok := l.ldapIdToStopChan[ldapId]; ok {
@@ -64,14 +62,14 @@ func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string, recordBuilder *Recor
 	stopChan := make(chan struct{})
 	l.ldapIdToStopChan[ldapId] = stopChan
 
-	logMsg := fmt.Sprintf("autoSync started for %s", ldap.Id)
+	logMsg := fmt.Sprintf("autoSync process started for %s", ldap.Id)
 	recordBuilder.AddReason(logMsg)
 
 	logs.Info(logMsg)
 
 	util.SafeGoroutine(func() {
-		err := l.syncRoutine(ldap, recordBuilder, stopChan)
-		recordBuilder.AddReason(fmt.Sprintf("Sync error: %s", err.Error()))
+		err := l.syncRoutine(ldap, stopChan)
+		recordBuilder.AddReason(fmt.Sprintf("Sync process error: %s", err.Error()))
 
 		if err != nil {
 			panic(err)
@@ -90,8 +88,11 @@ func (l *LdapAutoSynchronizer) StopAutoSync(ldapId string) {
 }
 
 // autosync goroutine
-func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, recordBuilder *RecordBuilder, stopChan chan struct{}) error {
-	err := syncUsers(ldap, recordBuilder)
+func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, stopChan chan struct{}) error {
+	rb := NewRecordBuilder()
+	err := syncUsers(ldap, rb)
+	util.SafeGoroutine(func() { AddRecord(rb.Build()) })
+
 	if err != nil {
 		return err
 	}
@@ -104,7 +105,10 @@ func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, recordBuilder *RecordBuil
 			logs.Info(fmt.Sprintf("autoSync goroutine for %s stopped", ldap.Id))
 			return nil
 		case <-ticker.C:
-			err = syncUsers(ldap, recordBuilder)
+			rb = NewRecordBuilder()
+			err = syncUsers(ldap, rb)
+			util.SafeGoroutine(func() { AddRecord(rb.Build()) })
+
 			if err != nil {
 				return err
 			}
@@ -113,6 +117,7 @@ func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, recordBuilder *RecordBuil
 }
 
 func syncUsers(ldap *Ldap, recordBuilder *RecordBuilder) error {
+	recordBuilder.AddReason(fmt.Sprintf("autoSync started for %s", ldap.Id))
 	// fetch all users
 	conn, err := ldap.GetLdapConn()
 	if err != nil {
