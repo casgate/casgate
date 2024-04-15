@@ -70,7 +70,7 @@ func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string, recordBuilder *Recor
 	logs.Info(logMsg)
 
 	util.SafeGoroutine(func() {
-		err := l.syncRoutine(ldap, stopChan)
+		err := l.syncRoutine(ldap, recordBuilder, stopChan)
 		recordBuilder.AddReason(fmt.Sprintf("Sync error: %s", err.Error()))
 
 		if err != nil {
@@ -90,8 +90,8 @@ func (l *LdapAutoSynchronizer) StopAutoSync(ldapId string) {
 }
 
 // autosync goroutine
-func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, stopChan chan struct{}) error {
-	err := syncUsers(ldap)
+func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, recordBuilder *RecordBuilder, stopChan chan struct{}) error {
+	err := syncUsers(ldap, recordBuilder)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, stopChan chan struct{}) e
 			logs.Info(fmt.Sprintf("autoSync goroutine for %s stopped", ldap.Id))
 			return nil
 		case <-ticker.C:
-			err = syncUsers(ldap)
+			err = syncUsers(ldap, recordBuilder)
 			if err != nil {
 				return err
 			}
@@ -112,17 +112,19 @@ func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, stopChan chan struct{}) e
 	}
 }
 
-func syncUsers(ldap *Ldap) error {
+func syncUsers(ldap *Ldap, recordBuilder *RecordBuilder) error {
 	// fetch all users
 	conn, err := ldap.GetLdapConn()
 	if err != nil {
 		logs.Warning(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
+		recordBuilder.AddReason(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
 		return nil
 	}
 
 	users, err := conn.GetLdapUsers(ldap, nil)
 	if err != nil {
 		logs.Warning(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
+		recordBuilder.AddReason(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
 		return nil
 	}
 
@@ -130,8 +132,11 @@ func syncUsers(ldap *Ldap) error {
 	if len(failed) != 0 {
 		logs.Warning(fmt.Sprintf("ldap autosync, %d new users, but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)), failed)
 		logs.Warning(err.Error())
+		recordBuilder.AddReason(fmt.Sprintf("ldap autosync, %d new users, but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)))
+		recordBuilder.AddReason(err.Error())
 	} else {
 		logs.Info(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)))
+		recordBuilder.AddReason(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)))
 	}
 
 	err = UpdateLdapSyncTime(ldap.Id)

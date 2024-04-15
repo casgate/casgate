@@ -459,9 +459,15 @@ func (c *ApiController) Login() {
 			}
 
 			if isSigninViaLdap {
-				user, _ := object.GetUserByFields(authForm.Organization, authForm.Username)
+				user, err = object.GetUserByFields(authForm.Organization, authForm.Username)
+				if err != nil {
+					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+				}
 				if user == nil {
-					object.SyncUserFromLdap(authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage())
+					_, err = object.SyncUserFromLdap(authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage())
+					if err != nil {
+						record.AddReason(fmt.Sprintf("Ldap sync error: %s", err.Error()))
+					}
 				}
 			}
 
@@ -518,8 +524,7 @@ func (c *ApiController) Login() {
 			}
 
 			resp = c.HandleLoggedIn(application, user, &authForm)
-
-			record.WithOrganization(application.Organization).AddReason("User logged in")
+			record.WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User logged in")
 		}
 	} else if authForm.Provider != "" {
 		var application *object.Application
@@ -672,8 +677,8 @@ func (c *ApiController) Login() {
 				}
 
 				resp = c.HandleLoggedIn(application, user, &authForm)
+				record.WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User logged in")
 
-				record.WithOrganization(application.Organization).AddReason("User logged in")
 				if jsonProvider, err := json.Marshal(provider); err == nil {
 					record.AddReason(fmt.Sprintf("provider: %s", jsonProvider))
 				}
@@ -851,9 +856,10 @@ func (c *ApiController) Login() {
 				}
 
 				if provider.EnableRoleMapping {
+					record.AddReason("Start role mapping")
 					mapper, err := role_mapper.NewRoleMapper(provider.Category, provider.RoleMappingItems, authData)
 					if err != nil {
-						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+						record.AddReason(fmt.Sprintf("Role mapping error: %s", err.Error()))
 
 						c.ResponseInternalServerError("internal server error")
 						return
@@ -862,11 +868,12 @@ func (c *ApiController) Login() {
 					userRoles := mapper.GetRoles()
 					err = object.AddRolesToUser(user.GetId(), userRoles)
 					if err != nil {
-						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+						record.AddReason(fmt.Sprintf("Role mapping error: %s", err.Error()))
 
 						c.ResponseInternalServerError("internal server error")
 						return
 					}
+					record.AddReason("Finish role mapping")
 				}
 
 				resp = c.HandleLoggedIn(application, user, &authForm)
