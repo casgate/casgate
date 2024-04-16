@@ -37,9 +37,13 @@ func GetSession(owner string, offset, limit int, field, value, sortField, sortOr
 		field = ""
 	}
 
-	if field != "" && value != "" {
+	if field != "" {
+		filterValue := ""
+		if value != "" {
+			filterValue = fmt.Sprintf("%%%s%%", value)
+		}
 		if util.FilterField(field) {
-			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), fmt.Sprintf("%%%s%%", value))
+			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), filterValue)
 		}
 	}
 	if sortField == "" || sortOrder == "" {
