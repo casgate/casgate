@@ -20,6 +20,7 @@ import (
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
+	"github.com/xorm-io/builder"
 	"github.com/xorm-io/xorm"
 )
 
@@ -115,6 +116,9 @@ func GetSessionForUser(owner string, offset, limit int, field, value, sortField,
 				Desc("a." + util.SnakeString(sortField))
 		}
 	}
+
+	notUserAccesToken := builder.Not{builder.Like{"a.tag", "<access-token>"}}
+	session = session.And(notUserAccesToken)
 
 	return session
 }

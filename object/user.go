@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -248,6 +249,10 @@ func (u *User) isPasswordChangeRequestAllowed() bool {
 
 func GetGlobalUserCount(field, value string) (int64, error) {
 	session := GetSession("", -1, -1, field, value, "", "")
+
+	notUserAccesToken := builder.Not{builder.Like{"tag", "<access-token>"}}
+	session = session.And(notUserAccesToken)
+
 	return session.Count(&User{})
 }
 
@@ -264,8 +269,11 @@ func GetGlobalUsers() ([]*User, error) {
 func GetPaginationGlobalUsers(offset, limit int, field, value, sortField, sortOrder string) ([]*User, error) {
 	users := []*User{}
 	session := GetSessionForUser("", offset, limit, field, value, sortField, sortOrder)
+
 	err := session.Find(&users)
 	if err != nil {
+		logs.Error(err.Error())
+
 		return nil, err
 	}
 
@@ -278,6 +286,9 @@ func GetPaginationGlobalUsers(offset, limit int, field, value, sortField, sortOr
 func GetUserCount(owner, field, value string, groupName string) (int64, error) {
 	session := GetSession(owner, -1, -1, field, value, "", "")
 
+	notUserAccesToken := builder.Not{builder.Like{"tag", "<access-token>"}}
+	session = session.And(notUserAccesToken)
+
 	if groupName != "" {
 		return GetGroupUserCount(util.GetId(owner, groupName), field, value)
 	}
@@ -286,7 +297,9 @@ func GetUserCount(owner, field, value string, groupName string) (int64, error) {
 }
 
 func GetOnlineUserCount(owner string, isOnline int) (int64, error) {
-	return ormer.Engine.Where("is_online = ?", isOnline).Count(&User{Owner: owner})
+	notUserAccesToken := builder.Not{builder.Like{"tag", "<access-token>"}}
+
+	return ormer.Engine.Where("is_online = ?", isOnline).And(notUserAccesToken).Count(&User{Owner: owner})
 }
 
 func GetUsers(owner string) ([]*User, error) {
@@ -319,7 +332,10 @@ func GetUsersByTag(owner string, tag string) ([]*User, error) {
 
 func GetSortedUsers(owner string, sorter string, limit int) ([]*User, error) {
 	users := []*User{}
-	err := ormer.Engine.Desc(sorter).Limit(limit, 0).Find(&users, &User{Owner: owner})
+
+	notUserAccesToken := builder.Not{builder.Like{"tag", "<access-token>"}}
+
+	err := ormer.Engine.Desc(sorter).And(notUserAccesToken).Limit(limit, 0).Find(&users, &User{Owner: owner})
 	if err != nil {
 		return nil, err
 	}
