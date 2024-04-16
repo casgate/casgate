@@ -470,7 +470,6 @@ func (c *ApiController) Login() {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
 				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
 			}
-
 		}
 
 		if msg != "" {
