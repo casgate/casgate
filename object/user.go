@@ -63,7 +63,7 @@ type User struct {
 	PasswordChangeTime     time.Time `json:"-"`
 	PasswordSalt           string    `xorm:"varchar(100)" json:"passwordSalt"`
 	PasswordType           string    `xorm:"varchar(100)" json:"passwordType"`
-	DisplayName            string    `xorm:"varchar(100)" json:"displayName"`
+	DisplayName            string    `xorm:"varchar(255)" json:"displayName"`
 	FirstName              string    `xorm:"varchar(100)" json:"firstName"`
 	LastName               string    `xorm:"varchar(100)" json:"lastName"`
 	Avatar                 string    `xorm:"varchar(500)" json:"avatar"`

@@ -1,4 +1,4 @@
-// Copyright 2021 The Casdoor Authors. All Rights Reserved.
+// Copyright 2024 The Casdoor Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package controllers
 import (
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // AddAccessToken
@@ -99,13 +98,13 @@ func (c *ApiController) DeleteAccessToken() {
 	if err != nil {
 		logs.Error("delete access token: %s", err.Error())
 
-	 	c.ResponseInternalServerError("delete token error")
+		c.ResponseInternalServerError("delete token error")
 		return
 	}
 	if !affected {
 		logs.Error("delete access token: does not affected")
 
-	 	c.ResponseInternalServerError("token does not deleted")
+		c.ResponseInternalServerError("token does not deleted")
 		return
 	}
 
@@ -136,11 +135,17 @@ func (c *ApiController) RecreateAccessToken() {
 		return
 	}
 
-	accTokenUser, err := object.GetAccessTokenUser(token)
+	apiTokenUser, err := object.GetApiKeyUser(token)
 	if err != nil {
 		logs.Error("get access token: %s", err.Error())
 
-	 	c.ResponseInternalServerError("token not provided")
+		c.ResponseInternalServerError("token not provided")
+		return
+	}
+	if apiTokenUser == nil {
+		logs.Info("api token user not found")
+
+		c.ResponseInternalServerError("api token not found")
 		return
 	}
 
@@ -152,26 +157,28 @@ func (c *ApiController) RecreateAccessToken() {
 		return
 	}
 
-	accessKey := util.GenerateId()
-	username := object.MakeTokenUserName(tokenOwner, accessKey)
-	accTokenUser.AccessKey = accessKey
-	accTokenUser.AccessSecret = util.GenerateId()
-	accTokenUser.Name = username
+	if apiTokenUser.Tag != object.MakeTokenUserTag(tokenOwner) {
+		logs.Error("token owner mismatch")
 
-	err = object.RecreateAccessToken(accTokenUser)
+		c.ResponseUnprocessableEntity("owner mismatch")
+		return
+	}
+
+	err = object.RecreateAccessToken(tokenOwner, apiTokenUser)
 	if err != nil {
+		logs.Error("recreate access token: %s", err.Error())
+
 		c.ResponseInternalServerError("Token not affected")
 		return
 	}
 
-	c.ResponseOk(object.MakeUserAccessToken(accTokenUser))
+	c.ResponseOk(object.MakeUserAccessToken(apiTokenUser))
 }
 
 // GetUserByAccessToken
 // @Title GetUserByAccessToken
 // @Tag Access Token API
 // @Description get user by access token
-// @Param owner query string true "The owner of token"
 // @Param user_access_token string true "The user access token"
 // @Success 200 {object} object.User The Response object
 // @Failure 403 Unauthorized operation
@@ -179,25 +186,19 @@ func (c *ApiController) RecreateAccessToken() {
 // @Failure 500 Internal Server Error
 // @router /get-user-by-access-token [post]
 func (c *ApiController) GetUserByAccessToken() {
-	owner := c.Input().Get("owner")
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
-		return
-	}
-
 	token := c.Input().Get("user_access_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
 		return
 	}
 
-	user, err := object.GetUser(owner)
+	owner, err := object.GetApiKeyOwner(token)
 	if err != nil {
-		logs.Error("get user: %s", err.Error())
+		logs.Error("get api key owner : %s", err.Error())
 
 		c.ResponseInternalServerError("Internal server error")
 		return
 	}
 
-	c.ResponseOk(user)
+	c.ResponseOk(owner)
 }
