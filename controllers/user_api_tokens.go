@@ -59,7 +59,7 @@ func (c *ApiController) AddAccessToken() {
 		return
 	}
 
-	c.ResponseOk(object.MakeUserAccessToken(tokenUser))
+	c.ResponseOk(object.MakeUserApiToken(tokenUser))
 }
 
 // DeleteAccessToken
@@ -94,7 +94,7 @@ func (c *ApiController) DeleteAccessToken() {
 		return
 	}
 
-	affected, err := object.DeleteAccessToken(user, token)
+	affected, err := object.DeleteApiToken(user, token)
 	if err != nil {
 		logs.Error("delete access token: %s", err.Error())
 
@@ -164,7 +164,7 @@ func (c *ApiController) RecreateAccessToken() {
 		return
 	}
 
-	err = object.RecreateAccessToken(tokenOwner, apiTokenUser)
+	err = object.RecreateApiToken(tokenOwner, apiTokenUser)
 	if err != nil {
 		logs.Error("recreate access token: %s", err.Error())
 
@@ -172,7 +172,7 @@ func (c *ApiController) RecreateAccessToken() {
 		return
 	}
 
-	c.ResponseOk(object.MakeUserAccessToken(apiTokenUser))
+	c.ResponseOk(object.MakeUserApiToken(apiTokenUser))
 }
 
 // GetUserByAccessToken

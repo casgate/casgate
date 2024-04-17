@@ -57,7 +57,7 @@ func separateTokenToKeys(token string) (string, string) {
 	return accessKey, accessSecret
 }
 
-func DeleteAccessToken(user *User, token string) (bool, error) {
+func DeleteApiToken(user *User, token string) (bool, error) {
 	tag := fmt.Sprintf("<access-token><access-token-user-id:%s>", user.Id)
 
 	accessKey, accessSecret := separateTokenToKeys(token)
@@ -73,7 +73,7 @@ func DeleteAccessToken(user *User, token string) (bool, error) {
 	return affected != 0, err
 }
 
-func RecreateAccessToken(tokenOwner, tokenUser *User) error {
+func RecreateApiToken(tokenOwner, tokenUser *User) error {
 	tokenUser.AccessKey = util.GenerateId()
 	tokenUser.AccessSecret = util.GenerateId()
 
@@ -132,24 +132,6 @@ func GetApiKeyOwner(token string) (*User, error) {
 	}
 
 	return owner, nil
-
-	// accessKey, accessSecret := separateTokenToKeys(token)
-
-	// token_user := &User{
-	// 	AccessKey: accessKey,
-	// 	AccessSecret: accessSecret,
-	// }
-
-	// present, err := ormer.Engine.Get(token_user)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// if !present {
-	// 	return nil, nil
-	// }
-
-	// return token_user, nil
 }
 
 type UserApiToken struct {
@@ -176,7 +158,7 @@ func MakeUserForToken(owner *User) *User {
 	return &tokenUser
 }
 
-func MakeUserAccessToken(user *User) UserApiToken {
+func MakeUserApiToken(user *User) UserApiToken {
 	return UserApiToken{
 		Owner:    user.Owner,
 		ApiToken: user.AccessKey + user.AccessSecret,
