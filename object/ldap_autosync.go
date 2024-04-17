@@ -134,14 +134,17 @@ func syncUsers(ldap *Ldap, recordBuilder *RecordBuilder) error {
 	}
 
 	existed, failed, err := SyncLdapUsers(ldap.Owner, AutoAdjustLdapUser(users), ldap.Id)
-	if len(failed) != 0 {
-		logs.Warning(fmt.Sprintf("ldap autosync, %d new users, but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)), failed)
-		logs.Warning(err.Error())
-		recordBuilder.AddReason(fmt.Sprintf("ldap autosync, %d new users, but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)))
-		recordBuilder.AddReason(err.Error())
+	if err != nil {
+		logs.Warning(fmt.Sprintf("ldap autosync error: %s", err.Error()))
+		recordBuilder.AddReason(fmt.Sprintf("ldap autosync error: %s", err.Error()))
+	} else if len(failed) != 0 {
+		logs.Warning(fmt.Sprintf("ldap autosync finished, %d new users, but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)), failed)
+		recordBuilder.AddReason(fmt.Sprintf("ldap autosync finished, %d new users, but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)))
 	} else {
 		logs.Info(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)))
-		recordBuilder.AddReason(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)))
+		if len(users) > len(existed) {
+			recordBuilder.AddReason(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)))
+		}
 	}
 
 	err = UpdateLdapSyncTime(ldap.Id)
