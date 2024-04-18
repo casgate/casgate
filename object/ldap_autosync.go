@@ -38,7 +38,7 @@ func GetLdapAutoSynchronizer() *LdapAutoSynchronizer {
 // StartAutoSync
 // start autosync for specified ldap, old existing autosync goroutine will be ceased
 func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string, recordBuilder *RecordBuilder) error {
-	recordBuilder.AddReason("Start LDAP autosync")
+	recordBuilder.AddReason(fmt.Sprintf("Start LDAP %s autosync process", ldapId))
 
 	l.Lock()
 	defer l.Unlock()
@@ -46,14 +46,12 @@ func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string, recordBuilder *Recor
 	ldap, err := GetLdap(ldapId)
 	if err != nil {
 		recordBuilder.AddReason(fmt.Sprintf("Get LDAP: %s", err.Error()))
-
 		return err
 	}
 
 	if ldap == nil {
 		msg := fmt.Sprintf("ldap %s doesn't exist", ldapId)
 		recordBuilder.AddReason(msg)
-
 		return errors.New(msg)
 	}
 	if res, ok := l.ldapIdToStopChan[ldapId]; ok {
@@ -64,16 +62,15 @@ func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string, recordBuilder *Recor
 	stopChan := make(chan struct{})
 	l.ldapIdToStopChan[ldapId] = stopChan
 
-	logMsg := fmt.Sprintf("autoSync started for %s", ldap.Id)
+	logMsg := fmt.Sprintf("autoSync process started for %s", ldap.Id)
 	recordBuilder.AddReason(logMsg)
 
 	logs.Info(logMsg)
 
 	util.SafeGoroutine(func() {
 		err := l.syncRoutine(ldap, stopChan)
-		recordBuilder.AddReason(fmt.Sprintf("Sync error: %s", err.Error()))
-
 		if err != nil {
+			recordBuilder.AddReason(fmt.Sprintf("Sync process error: %s", err.Error()))
 			panic(err)
 		}
 	})
@@ -113,33 +110,48 @@ func (l *LdapAutoSynchronizer) syncRoutine(ldap *Ldap, stopChan chan struct{}) e
 }
 
 func syncUsers(ldap *Ldap) error {
+	rb := NewRecordBuilder()
+
+	logs.Info(fmt.Sprintf("autoSync started for %s", ldap.Id))
+	rb.AddReason(fmt.Sprintf("autoSync started for %s", ldap.Id))
+
 	// fetch all users
 	conn, err := ldap.GetLdapConn()
 	if err != nil {
-		logs.Warning(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
+		logAndAddRecord(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err), logs.LevelWarning, rb)
 		return nil
 	}
 
 	users, err := conn.GetLdapUsers(ldap, nil)
 	if err != nil {
-		logs.Warning(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err))
+		logAndAddRecord(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err), logs.LevelWarning, rb)
 		return nil
 	}
 
 	existed, failed, err := SyncLdapUsers(ldap.Owner, AutoAdjustLdapUser(users), ldap.Id)
-	if len(failed) != 0 {
-		logs.Warning(fmt.Sprintf("ldap autosync, %d new users, but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)), failed)
-		logs.Warning(err.Error())
+	if err != nil {
+		logAndAddRecord(fmt.Sprintf("ldap autosync error: %s", err.Error()), logs.LevelWarning, rb)
+	} else if len(failed) != 0 {
+		logAndAddRecord(fmt.Sprintf("ldap autosync finished, %d new users, but %d user failed during :", len(users)-len(existed)-len(failed), len(failed)), logs.LevelWarning, rb)
 	} else {
-		logs.Info(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)))
+		if len(users) > len(existed) {
+			logAndAddRecord(fmt.Sprintf("ldap autosync success, %d new users, %d existing users", len(users)-len(existed), len(existed)), logs.LevelInformational, rb)
+		}
 	}
 
 	err = UpdateLdapSyncTime(ldap.Id)
-	if err != nil {
-		return err
+	return err
+}
+
+func logAndAddRecord(message string, logLevel int, rb *RecordBuilder) {
+	if logLevel == logs.LevelWarning {
+		logs.Warning(message)
+	} else if logLevel == logs.LevelInformational {
+		logs.Info(message)
 	}
 
-	return nil
+	rb.AddReason(message)
+	util.SafeGoroutine(func() { AddRecord(rb.Build()) })
 }
 
 // LdapAutoSynchronizerStartUpAll
