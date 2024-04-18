@@ -69,9 +69,8 @@ func (l *LdapAutoSynchronizer) StartAutoSync(ldapId string, recordBuilder *Recor
 
 	util.SafeGoroutine(func() {
 		err := l.syncRoutine(ldap, stopChan)
-		recordBuilder.AddReason(fmt.Sprintf("Sync process error: %s", err.Error()))
-
 		if err != nil {
+			recordBuilder.AddReason(fmt.Sprintf("Sync process error: %s", err.Error()))
 			panic(err)
 		}
 	})
