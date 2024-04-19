@@ -14,7 +14,10 @@
 
 package util
 
-import "sort"
+import (
+	"slices"
+	"sort"
+)
 
 func DeleteVal(values []string, val string) []string {
 	newValues := []string{}
@@ -40,7 +43,9 @@ func ReplaceVal(values []string, oldVal string, newVal string) []string {
 
 func ContainsString(values []string, val string) bool {
 	sort.Strings(values)
-	return sort.SearchStrings(values, val) != len(values)
+	_, found := slices.BinarySearch(values, val)
+
+	return found
 }
 
 func InSlice(slice []string, elem string) bool {

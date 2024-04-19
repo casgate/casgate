@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/beego/beego/context"
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/object"
 )
@@ -77,6 +78,9 @@ func CorsFilter(ctx *context.Context) {
 			if ok {
 				setCorsHeaders(ctx, origin)
 			} else {
+				logs.Error("Cors origin mismatch: origin: %s, originConf: %s, originHostname: %s, host: %s, isHostIntranet: %s, isOriginAllowed: %s",
+					origin, originConf, originHostname, host, isHostIntranet(host), ok)
+
 				ctx.ResponseWriter.WriteHeader(http.StatusForbidden)
 				return
 			}

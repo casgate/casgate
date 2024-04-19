@@ -31,6 +31,27 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/object.OidcDiscovery'
+  /api/add-access-token:
+    post:
+      tags:
+      - Access Token API
+      description: add access token
+      operationId: ApiController.AddAccessToken
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.UserAccessToken'
+        "403":
+          description: Unauthorized operation
+        "500":
+          description: Internal Server Error
   /api/add-adapter:
     post:
       tags:
@@ -563,6 +584,32 @@ paths:
           description: Bad request
         "401":
           description: Unauthorized
+  /api/delete-access-token:
+    post:
+      tags:
+      - Access Token API
+      description: delete access token
+      operationId: ApiController.DeleteAccessToken
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of token
+        required: true
+        type: string
+      - in: string
+        name: user_access_token
+        description: The user access token
+        schema:
+          $ref: '#/definitions/true'
+      responses:
+        "200":
+          description: Ok
+        "403":
+          description: Unauthorized operation
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal Server Error
   /api/delete-adapter:
     post:
       tags:
@@ -2305,6 +2352,34 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Application'
+  /api/get-user-by-access-token:
+    post:
+      tags:
+      - Access Token API
+      description: get user by access token
+      operationId: ApiController.GetUserByAccessToken
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of token
+        required: true
+        type: string
+      - in: string
+        name: user_access_token
+        description: The user access token
+        schema:
+          $ref: '#/definitions/true'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.User'
+        "403":
+          description: Unauthorized operation
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal Server Error
   /api/get-user-count:
     get:
       tags:
@@ -2752,6 +2827,34 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/recreate-access-token:
+    post:
+      tags:
+      - Access Token API
+      description: recreate access token
+      operationId: ApiController.RecreateAccessToken
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of token
+        required: true
+        type: string
+      - in: string
+        name: user_access_token
+        description: The user access token
+        schema:
+          $ref: '#/definitions/true'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.UserAccessToken'
+        "403":
+          description: Unauthorized operation
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal Server Error
   /api/remove-user-from-group:
     post:
       tags:
@@ -3732,10 +3835,10 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  194510.<nil>.string:
+  198563.<nil>.string:
     title: string
     type: object
-  317539.<nil>.string:
+  321740.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -4215,7 +4318,7 @@ definitions:
         type: string
       enableAttributeMapping:
         type: boolean
-      enableMutualTls:
+      enableCryptographicAuth:
         type: boolean
       enableRoleMapping:
         type: boolean
@@ -4299,7 +4402,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/194510.<nil>.string'
+          $ref: '#/definitions/198563.<nil>.string'
       description:
         type: string
       displayName:
@@ -4727,6 +4830,8 @@ definitions:
         type: boolean
       endpoint:
         type: string
+      endpointType:
+        type: string
       host:
         type: string
       idP:
@@ -4785,7 +4890,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/317539.<nil>.string'
+        $ref: '#/definitions/321740.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:
@@ -5482,6 +5587,14 @@ definitions:
         type: string
       zoom:
         type: string
+  object.UserAccessToken:
+    title: UserAccessToken
+    type: object
+    properties:
+      access_token:
+        type: string
+      owner:
+        type: string
   object.UserIdProvider:
     title: UserIdProvider
     type: object
@@ -5579,6 +5692,9 @@ definitions:
     type: object
   protocol.CredentialCreationResponse:
     title: CredentialCreationResponse
+    type: object
+  "true":
+    title: "true"
     type: object
   util.SystemInfo:
     title: SystemInfo

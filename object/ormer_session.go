@@ -20,6 +20,7 @@ import (
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
+	"github.com/xorm-io/builder"
 	"github.com/xorm-io/xorm"
 )
 
@@ -37,9 +38,13 @@ func GetSession(owner string, offset, limit int, field, value, sortField, sortOr
 		field = ""
 	}
 
-	if field != "" && value != "" {
+	if field != "" {
+		filterValue := ""
+		if value != "" {
+			filterValue = fmt.Sprintf("%%%s%%", value)
+		}
 		if util.FilterField(field) {
-			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), fmt.Sprintf("%%%s%%", value))
+			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), filterValue)
 		}
 	}
 	if sortField == "" || sortOrder == "" {
@@ -115,6 +120,9 @@ func GetSessionForUser(owner string, offset, limit int, field, value, sortField,
 				Desc("a." + util.SnakeString(sortField))
 		}
 	}
+
+	notUserAccesToken := builder.Not{builder.Like{"a.tag", "<access-token>"}}
+	session = session.And(notUserAccesToken)
 
 	return session
 }

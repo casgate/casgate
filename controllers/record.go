@@ -16,7 +16,6 @@ package controllers
 
 import (
 	"encoding/json"
-
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
@@ -31,20 +30,8 @@ import (
 // @Success 200 {object} object.Record The Response object
 // @router /get-records [get]
 func (c *ApiController) GetRecords() {
-	user, ok := c.RequireSignedInUser()
-	if !ok {
-		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
-		return
-	}
-
-	isAdmin := user.IsAdmin || user.IsGlobalAdmin()
-	if !isAdmin {
-		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
-		return
-	}
-
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
+	pageSize := c.Input().Get("pageSize")
+	pageNumber := c.Input().Get("p")
 	field := c.Input().Get("field")
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
@@ -53,35 +40,59 @@ func (c *ApiController) GetRecords() {
 	endDate := c.Input().Get("endDate")
 	organizationName := c.Input().Get("organizationName")
 
-	filterRecord := &object.Record{Organization: user.Owner}
+	filterRecord := &object.Record{}
 
-	if c.IsGlobalAdmin() && organizationName != "" {
-		filterRecord.Organization = organizationName
-	}
-
-	if limit == "" || page == "" {
-		records, err := object.GetRecords(filterRecord)
-		if err != nil {
-			c.ResponseError(err.Error())
+	if c.IsGlobalAdmin() {
+		if organizationName != "" {
+			filterRecord.Organization = organizationName
+		}
+	} else {
+		user, ok := c.RequireSignedInUser()
+		if !ok {
+			c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
 			return
 		}
 
-		c.ResponseOk(records)
+		if !user.IsAdmin {
+			c.ResponseForbidden(c.T("auth:Forbidden operation"))
+			return
+		}
+
+		if organizationName != "" && organizationName != user.Owner {
+			c.ResponseForbidden(c.T("auth:Unable to get records from other organization without global administrator role"))
+			return
+		}
+
+		filterRecord.Organization = user.Owner
+	}
+
+	var (
+		limit, offset int
+		paginator     *pagination.Paginator
+	)
+	if pageSize == "" || pageNumber == "" {
+		limit = -1
+		offset = -1
 	} else {
-		limit := util.ParseInt(limit)
+		limit = util.ParseInt(pageSize)
 		count, err := object.GetRecordCount(field, value, fromDate, endDate, filterRecord)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
+		paginator = pagination.SetPaginator(c.Ctx, limit, count)
+		offset = paginator.Offset()
+	}
 
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		records, err := object.GetPaginationRecords(paginator.Offset(), limit, field, value, fromDate, endDate, sortField, sortOrder, filterRecord)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
+	records, err := object.GetPaginationRecords(offset, limit, field, value, fromDate, endDate, sortField, sortOrder, filterRecord)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
 
+	if paginator == nil {
+		c.ResponseOk(records)
+	} else {
 		c.ResponseOk(records, paginator.Nums())
 	}
 }
