@@ -52,17 +52,24 @@ type LdapIdWithNameResp struct {
 // @Success 200 {object} LdapResp The Response object
 // @router /get-ldap-users [get]
 func (c *ApiController) GetLdapUsers() {
+	gCtx := c.getRequestCtx()
+	record := object.GetRecord(gCtx)
+
 	id := c.Input().Get("id")
 
 	_, ldapId := util.GetOwnerAndNameFromId(id)
 	ldapServer, err := object.GetLdap(ldapId)
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Get LDAP: %s", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
 
 	conn, err := ldapServer.GetLdapConn()
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Get LDAP connection: %s", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
@@ -82,6 +89,8 @@ func (c *ApiController) GetLdapUsers() {
 
 	users, err := conn.GetLdapUsers(ldapServer, nil)
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Get LDAP users: %s", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
@@ -92,6 +101,8 @@ func (c *ApiController) GetLdapUsers() {
 	}
 	existUuids, err := object.GetExistUuids(ldapServer.Owner, uuids)
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Find existed LDAP users: %s", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
