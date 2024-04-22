@@ -21,6 +21,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/i18n"
@@ -247,6 +248,8 @@ func CheckPasswordComplexity(user *User, password string, lang string) string {
 func checkLdapUserPassword(user *User, password string, lang string) error {
 	ldaps, err := GetLdaps(user.Owner)
 	if err != nil {
+		logs.Error("get ldaps: %s", err.Error())
+
 		return err
 	}
 
@@ -256,6 +259,8 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 	for _, ldapServer := range ldaps {
 		conn, err := ldapServer.GetLdapConn()
 		if err != nil {
+			logs.Error("get ldap conn: %s", err.Error())
+
 			continue
 		}
 
@@ -264,7 +269,9 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 
 		searchResult, err := conn.Conn.Search(searchReq)
 		if err != nil {
+			logs.Error("ldap conn search: %s", err.Error())
 			conn.Close()
+
 			return err
 		}
 
@@ -279,10 +286,13 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 
 		hit = true
 		dn := searchResult.Entries[0].DN
+
 		if err = conn.Conn.Bind(dn, password); err == nil {
 			ldapLoginSuccess = true
 			conn.Close()
 			break
+		} else {
+			logs.Error("ldap conn bind: %s", err.Error())
 		}
 
 		conn.Close()
@@ -297,12 +307,14 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 	return resetUserSigninErrorTimes(user)
 }
 
-var ErrorUserNotFound = errors.New("user not found")
-var ErrorUserDeleted = errors.New("user deleted")
-var ErrorUserBlocked = errors.New("user blocked")
-var ErrorWrongPassword = errors.New("wrong password")
-var ErrorLDAPError = errors.New("LDAP error")
-var ErrorLDAPUserNotFound = errors.New("LDAP user not found")
+var (
+	ErrorUserNotFound     = errors.New("user not found")
+	ErrorUserDeleted      = errors.New("user deleted")
+	ErrorUserBlocked      = errors.New("user blocked")
+	ErrorWrongPassword    = errors.New("wrong password")
+	ErrorLDAPError        = errors.New("LDAP error")
+	ErrorLDAPUserNotFound = errors.New("LDAP user not found")
+)
 
 func NewCheckUserPasswordError(err error) *CheckUserPasswordError {
 	return &CheckUserPasswordError{

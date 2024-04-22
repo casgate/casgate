@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/beego/beego/logs"
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/thanhpk/randstr"
 
@@ -347,11 +348,38 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 	return res
 }
 
-func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUsers []LdapUser, failedUsers []LdapUser, err error) {
+func extractEmails(syncUsers []LdapUser) []string {
+	var emails []string
+	for _, user := range syncUsers {
+		emails = append(emails, user.Email)
+	}
+
+	return emails
+}
+
+func extractUuids(syncUsers []LdapUser) []string {
 	var uuids []string
 	for _, user := range syncUsers {
 		uuids = append(uuids, user.Uuid)
 	}
+
+	return uuids
+}
+
+func isUserWithEmailPresent(user LdapUser, existingEmails []string) bool {
+	for _, existinEmail := range existingEmails {
+		if user.Email == existinEmail {
+
+			return true
+		}
+	}
+
+	return false
+}
+
+func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUsers []LdapUser, failedUsers []LdapUser, err error) {
+	uuids := extractUuids(syncUsers)
+	emails := extractEmails(syncUsers)
 
 	organization, err := getOrganization("admin", owner)
 	if err != nil {
@@ -376,6 +404,11 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 	}
 	tag := strings.Join(ou, ".")
 
+	existingEmails, err := GetExistingEmails(owner, emails)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	for _, syncUser := range syncUsers {
 		existUuids, err := GetExistUuids(owner, uuids)
 		if err != nil {
@@ -390,6 +423,11 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 					found = true
 				}
 			}
+		}
+
+		if isUserWithEmailPresent(syncUser, existingEmails) {
+			existUsers = append(existUsers, syncUser)
+			found = true
 		}
 
 		name, err := syncUser.buildLdapUserName()
@@ -463,6 +501,18 @@ func GetExistUuids(owner string, uuids []string) ([]string, error) {
 	}
 
 	return existUuids, nil
+}
+
+func GetExistingEmails(owner string, emails []string) ([]string, error) {
+	var existEmails []string
+
+	err := ormer.Engine.Table("user").Where("owner = ?", owner).Cols("email").
+		In("email", emails).Select("DISTINCT email").Find(&existEmails)
+	if err != nil {
+		return existEmails, err
+	}
+
+	return existEmails, nil
 }
 
 func (ldapUser *LdapUser) buildLdapUserName() (string, error) {
@@ -544,12 +594,14 @@ func SyncUserFromLdap(organization string, ldapId string, userName string, passw
 		return nil, err
 	}
 
-	user := &User{
-		Name: userName,
+	user := &User{}
+	if strings.Contains(userName, "@") {
+		user.Email = userName
+	} else {
+		user.Name = userName
 	}
 
 	for _, ldapServer := range ldaps {
-		
 		if len(ldapId) > 0 && ldapServer.Id != ldapId {
 			continue
 		}
@@ -559,7 +611,12 @@ func SyncUserFromLdap(organization string, ldapId string, userName string, passw
 			continue
 		}
 
-		res, _ := conn.GetLdapUsers(ldapServer, user)
+		res, err := conn.GetLdapUsers(ldapServer, user)
+		if err != nil {
+			logs.Error("get ldap users: %s", err.Error())
+
+			continue
+		}
 		if len(res) == 0 {
 			conn.Close()
 			continue
@@ -567,11 +624,17 @@ func SyncUserFromLdap(organization string, ldapId string, userName string, passw
 
 		err = checkLdapUserPassword(user, password, lang)
 		if err != nil {
+			logs.Error("check ldap user password: %s", err.Error())
+
 			conn.Close()
 			return nil, err
 		}
 
 		_, _, err = SyncLdapUsers(organization, AutoAdjustLdapUser(res), ldapServer.Id)
+		if err != nil {
+			logs.Error("sync ldap users: %s", err.Error())
+		}
+
 		return &res[0], err
 	}
 	return nil, nil
