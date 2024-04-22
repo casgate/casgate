@@ -6,21 +6,20 @@ import (
 	"github.com/casdoor/casdoor/object"
 )
 
-func (r *Repo) GetUserIdProvider(ctx context.Context, owner, providerName, usernameFromIdp string) (*object.UserIdProvider, error) {
-	if owner == "" || providerName == "" || usernameFromIdp == "" {
+func (r *Repo) GetUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider) (*object.UserIdProvider, error) {
+	if userIdProvider.Owner == "" || userIdProvider.ProviderName == "" || userIdProvider.UsernameFromIdp == "" {
 		return nil, nil
 	}
 
-	query := r.trm.GetEngine(ctx).Where("owner = ? and provider_name = ? and username_from_idp = ?", owner, providerName, usernameFromIdp)
+	query := r.trm.GetEngine(ctx)
 
-	userIdProvider := object.UserIdProvider{Owner: owner, ProviderName: providerName, UsernameFromIdp: usernameFromIdp}
-	existed, err := query.Get(&userIdProvider)
+	existed, err := query.Get(userIdProvider)
 	if err != nil {
 		return nil, err
 	}
 
 	if existed {
-		return &userIdProvider, nil
+		return userIdProvider, nil
 	}
 
 	return nil, nil
