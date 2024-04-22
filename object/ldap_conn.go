@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -426,6 +427,17 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				Properties:        map[string]string{},
 			}
 
+			application, err := GetApplicationByUser(newUser)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			userId, err := GenerateIdForNewUser(application)
+			if err != nil {
+				return nil, nil, err
+			}
+			newUser.Id = userId
+
 			if organization.DefaultApplication != "" {
 				newUser.SignupApplication = organization.DefaultApplication
 			}
@@ -438,6 +450,18 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 			if !affected {
 				failedUsers = append(failedUsers, syncUser)
 				continue
+			}
+
+			userIdProvider := &UserIdProvider{
+				Owner:           organization.Name,
+				LdapId:          ldapId,
+				UsernameFromIdp: syncUser.Uuid,
+				CreatedTime:     util.GetCurrentTime(),
+				UserId:          newUser.Id,
+			}
+			_, err = AddUserIdProvider(context.Background(), userIdProvider)
+			if err != nil {
+				return nil, nil, err
 			}
 		}
 
