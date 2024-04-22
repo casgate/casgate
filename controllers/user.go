@@ -265,6 +265,45 @@ func (c *ApiController) GetUser() {
 	c.ResponseOk(maskedUser)
 }
 
+// AddUserIdProvider
+// @Title AddUserIdProvider
+// @Tag User API
+// @Description add user id provider
+// @Param   body    body   object.UserIdProvider  true        "The details of the user id provider"
+// @Success 200 {object} controllers.Response The Response object
+// @router /add-user-id-provider [post]
+func (c *ApiController) AddUserIdProvider() {
+	var userIdProvider object.UserIdProvider
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &userIdProvider)
+	if err != nil {
+		c.ResponseBadRequest(err.Error())
+		return
+	}
+
+	if !c.IsGlobalAdmin() {
+		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	if userIdProvider.CreatedTime == "" {
+		userIdProvider.CreatedTime = util.GetCurrentTime()
+	}
+
+	if userIdProvider.Owner == "" || ((userIdProvider.ProviderName == "") == (userIdProvider.LdapId == "")) || userIdProvider.UsernameFromIdp == "" {
+		c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
+		return
+	}
+
+	affected, err := object.AddUserIdProvider(c.Ctx.Request.Context(), &userIdProvider)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.Data["json"] = wrapActionResponse(affected)
+	c.ServeJSON()
+}
+
 // UpdateUser
 // @Title UpdateUser
 // @Tag User API

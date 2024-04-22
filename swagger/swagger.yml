@@ -466,6 +466,24 @@ paths:
           description: Unprocessable entity
         "500":
           description: Internal server error
+  /api/add-user-id-provider:
+    post:
+      tags:
+      - User API
+      description: add user id provider
+      operationId: ApiController.AddUserIdProvider
+      parameters:
+      - in: body
+        name: body
+        description: The details of the user id provider
+        required: true
+        schema:
+          $ref: '#/definitions/object.UserIdProvider'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/add-user-keys:
     post:
       tags:
@@ -5489,6 +5507,10 @@ definitions:
       createdTime:
         type: string
       lastSignInTime:
+        type: string
+      ldapId:
+        type: string
+      ldapServerName:
         type: string
       owner:
         type: string
