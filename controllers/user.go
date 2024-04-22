@@ -178,21 +178,28 @@ func (c *ApiController) GetUser() {
 	fillUserIdProvider := util.ParseBool(c.Input().Get("fillUserIdProvider"))
 
 	var err error
-	var userFromUserId *object.User
-	if userId != "" && owner != "" {
-		userFromUserId, err = object.GetUserByUserId(owner, userId)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		if userFromUserId == nil {
-			c.ResponseNotFound("user not found")
-			return
-		}
-
-		id = util.GetId(userFromUserId.Owner, userFromUserId.Name)
+	var user *object.User
+	switch {
+	case email != "":
+		user, err = object.GetUserByEmail(owner, email)
+	case phone != "":
+		user, err = object.GetUserByPhone(owner, phone)
+	case userId != "":
+		user, err = object.GetUserByUserId(owner, userId)
+	default:
+		user, err = object.GetUser(id)
 	}
+
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+	if user == nil {
+		c.ResponseNotFound("user not found")
+		return
+	}
+
+	id = util.GetId(user.Owner, user.Name)
 
 	if owner == "" {
 		owner = util.GetOwnerFromId(id)
@@ -218,26 +225,7 @@ func (c *ApiController) GetUser() {
 		}
 	}
 
-	var user *object.User
-	switch {
-	case email != "":
-		user, err = object.GetUserByEmail(owner, email)
-	case phone != "":
-		user, err = object.GetUserByPhone(owner, phone)
-	case userId != "":
-		user = userFromUserId
-	default:
-		user, err = object.GetUser(id)
-	}
-
-	if err != nil {
-		c.ResponseInternalServerError(err.Error())
-		return
-	}
-
-	if user != nil {
-		user.MultiFactorAuths = object.GetAllMfaProps(user, true)
-	}
+	user.MultiFactorAuths = object.GetAllMfaProps(user, true)
 
 	err = object.ExtendUserWithRolesAndPermissions(user)
 	if err != nil {
