@@ -70,7 +70,7 @@ func GetUserIdProviders(owner string) ([]*UserIdProvider, error) {
 func AddUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) (bool, error) {
 	var affected int64
 	err := trm.WithTx(ctx, func(ctx context.Context) error {
-		existedUserIdProvider, err := repo.GetUserIdProvider(ctx, userIdProvider.Owner, userIdProvider.ProviderName, userIdProvider.UsernameFromIdp)
+		existedUserIdProvider, err := repo.GetUserIdProvider(ctx, userIdProvider)
 		if err != nil {
 			return err
 		}

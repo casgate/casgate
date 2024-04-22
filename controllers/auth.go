@@ -495,6 +495,14 @@ func (c *ApiController) Login() {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
 				c.ResponseInternalServerError("internal server error")
+				return
+			}
+
+			if organization == nil {
+				record.AddReason(fmt.Sprintf("Login error: Organization does not exist"))
+
+				c.ResponseInternalServerError(c.T("check:Organization does not exist"))
+				return
 			}
 
 			if object.IsNeedPromptMfa(organization, user) {
