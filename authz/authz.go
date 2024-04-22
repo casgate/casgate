@@ -94,6 +94,7 @@ p, *, !anonymous, GET, /api/get-subscription, *, *
 p, *, *, GET, /api/get-provider, *, *
 p, *, *, GET, /api/get-organization-names, *, *
 p, *, *, GET, /api/get-ldap-server-names, *, *
+p, *, !anonymous, POST, /api/add-user-id-provider, *, *
 `
 
 		sa := stringadapter.NewAdapter(ruleText)
