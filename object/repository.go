@@ -29,7 +29,7 @@ type Repository interface {
 
 	GetUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) (*UserIdProvider, error)
 	InsertUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) (int64, error)
-	UpdateUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) error
+	UpdateUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider, updateKey string) error
 
 	UpdateEntitiesFieldValue(ctx context.Context, entityName string, fieldName, newValue string, findConditions map[string]interface{}) error
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func (r *Repo) GetUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider) (*object.UserIdProvider, error) {
-	if userIdProvider.Owner == "" || userIdProvider.ProviderName == "" || userIdProvider.UsernameFromIdp == "" {
+	if userIdProvider.Owner == "" || ((userIdProvider.ProviderName == "") == (userIdProvider.LdapId == "")) || userIdProvider.UsernameFromIdp == "" {
 		return nil, nil
 	}
 
@@ -29,11 +29,15 @@ func (r *Repo) InsertUserIdProvider(ctx context.Context, userIdProvider *object.
 	return r.insertEntity(ctx, userIdProvider)
 }
 
-func (r *Repo) UpdateUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider) error {
+func (r *Repo) UpdateUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider, updateKey string) error {
+	updateValue := userIdProvider.ProviderName
+	if updateKey == "ldap_id" {
+		updateValue = userIdProvider.LdapId
+	}
 	return r.UpdateEntitiesFieldValue(ctx, "user_id_provider", "last_sign_in_time", userIdProvider.LastSignInTime,
 		map[string]interface{}{
 			"owner":             userIdProvider.Owner,
-			"provider_name":     userIdProvider.ProviderName,
+			updateKey:           updateValue,
 			"username_from_idp": userIdProvider.UsernameFromIdp,
 		})
 }

@@ -531,6 +531,23 @@ func (c *ApiController) Login() {
 			}
 
 			resp = c.HandleLoggedIn(application, user, &authForm)
+
+			userIdProvider := &object.UserIdProvider{
+				Owner:           organization.Name,
+				LdapId:          authForm.LdapId,
+				UsernameFromIdp: user.Name,
+				LastSignInTime:  util.GetCurrentTime(),
+			}
+
+			err = object.UpdateUserIdProvider(c.Ctx.Request.Context(), userIdProvider, "ldap_id")
+
+			if err != nil {
+				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
+				c.ResponseInternalServerError("internal server error")
+				return
+			}
+
 			record.WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User logged in")
 		}
 	} else if authForm.Provider != "" {
@@ -695,7 +712,7 @@ func (c *ApiController) Login() {
 					ProviderName:    provider.Name,
 					UsernameFromIdp: userInfo.Username,
 					LastSignInTime:  util.GetCurrentTime(),
-				})
+				}, "provider_name")
 				if err != nil {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
