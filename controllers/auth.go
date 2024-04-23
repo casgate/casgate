@@ -449,7 +449,6 @@ func (c *ApiController) Login() {
 				}
 			}
 
-			password := authForm.Password
 			isSigninViaLdap := authForm.SigninMethod == "LDAP"
 			var isPasswordWithLdapEnabled bool
 			if authForm.SigninMethod == "Password" {
@@ -471,7 +470,7 @@ func (c *ApiController) Login() {
 				}
 			}
 
-			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
+			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, authForm.Password, c.GetAcceptLanguage(), &authForm.LdapId, enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
 				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
