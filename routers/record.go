@@ -25,8 +25,6 @@ import (
 	beeCtx "github.com/beego/beego/context"
 )
 
-var sensitiveResponseFields = []string{"access_token", "id_token", "refresh_token"}
-
 func getUser(ctx *beeCtx.Context) (username string) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -80,7 +78,9 @@ func LogRecordMessage(bCtx *beeCtx.Context) {
 	}
 
 	if resp, ok := bCtx.Input.Data()["json"]; ok {
-		sanitizeData(resp)
+		sensitiveResponseFields := []string{"access_token", "id_token", "refresh_token"}
+		sanitizeData(resp, sensitiveResponseFields, "***")
+
 		if jsonResp, err := json.Marshal(resp); err == nil {
 			record.Response = string(jsonResp)
 		}
@@ -104,10 +104,10 @@ func defaultRecordLog(ctx *beeCtx.Context) *object.Record {
 	return record
 }
 
-func sanitizeData(data interface{}) {
+func sanitizeData(data interface{}, sensitiveResponseFields []string, stringToReplace string) {
 	v := reflect.ValueOf(data)
 	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
+		v = v.Elem() // dereference if it is a pointer
 	}
 
 	if v.Kind() == reflect.Struct {
@@ -115,13 +115,15 @@ func sanitizeData(data interface{}) {
 			field := v.Field(i)
 			fieldType := v.Type().Field(i)
 
+			// check if the field is a struct and recursively call sanitizeData
 			if field.Kind() == reflect.Struct || (field.Kind() == reflect.Ptr && field.Elem().Kind() == reflect.Struct) {
-				sanitizeData(field.Addr().Interface())
+				sanitizeData(field.Addr().Interface(), sensitiveResponseFields, stringToReplace)
 			} else {
+				// check if the field name or its tag is in the list of sensitive fields
 				for _, sensitiveField := range sensitiveResponseFields {
 					if (fieldType.Name == sensitiveField || fieldType.Tag.Get("json") == sensitiveField) && field.CanSet() {
 						if field.Kind() == reflect.String {
-							field.SetString("***")
+							field.SetString(stringToReplace)
 						}
 						break
 					}
