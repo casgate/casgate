@@ -427,17 +427,6 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				Properties:        map[string]string{},
 			}
 
-			application, err := GetApplicationByUser(newUser)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			userId, err := GenerateIdForNewUser(application)
-			if err != nil {
-				return nil, nil, err
-			}
-			newUser.Id = userId
-
 			if organization.DefaultApplication != "" {
 				newUser.SignupApplication = organization.DefaultApplication
 			}
