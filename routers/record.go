@@ -17,12 +17,15 @@ package routers
 import (
 	goCtx "context"
 	"encoding/json"
+	"reflect"
 
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 
 	beeCtx "github.com/beego/beego/context"
 )
+
+var sensitiveResponseFields = []string{"access_token", "id_token", "refresh_token"}
 
 func getUser(ctx *beeCtx.Context) (username string) {
 	defer func() {
@@ -77,6 +80,7 @@ func LogRecordMessage(bCtx *beeCtx.Context) {
 	}
 
 	if resp, ok := bCtx.Input.Data()["json"]; ok {
+		sanitizeData(resp)
 		if jsonResp, err := json.Marshal(resp); err == nil {
 			record.Response = string(jsonResp)
 		}
@@ -98,4 +102,31 @@ func defaultRecordLog(ctx *beeCtx.Context) *object.Record {
 	}
 
 	return record
+}
+
+func sanitizeData(data interface{}) {
+	v := reflect.ValueOf(data)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	if v.Kind() == reflect.Struct {
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			fieldType := v.Type().Field(i)
+
+			if field.Kind() == reflect.Struct || (field.Kind() == reflect.Ptr && field.Elem().Kind() == reflect.Struct) {
+				sanitizeData(field.Addr().Interface())
+			} else {
+				for _, sensitiveField := range sensitiveResponseFields {
+					if (fieldType.Name == sensitiveField || fieldType.Tag.Get("json") == sensitiveField) && field.CanSet() {
+						if field.Kind() == reflect.String {
+							field.SetString("***")
+						}
+						break
+					}
+				}
+			}
+		}
+	}
 }
