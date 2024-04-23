@@ -646,6 +646,12 @@ func GetPasswordToken(application *Application, username string, password string
 			ErrorDescription: "the user is forbidden to sign in, please contact the administrator",
 		}, nil
 	}
+	if user.IsPasswordChangeRequired() {
+		return nil, &TokenError{
+			Error:            InvalidGrant,
+			ErrorDescription: "the user must change password first",
+		}, nil
+	}
 
 	err = ExtendUserWithRolesAndPermissions(user)
 	if err != nil {
