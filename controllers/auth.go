@@ -649,7 +649,20 @@ func (c *ApiController) Login() {
 				}
 
 				if provider.Type == "OpenID" && len(userInfo.AdditionalInfo) != 0 {
+					//add userInfo and tokenId to authData
+
 					maps.Copy(authData, userInfo.AdditionalInfo)
+
+					idToken, _ := token.Extra("id_token").(string)
+					jwtIdToken, _ := jwt.ParseSigned(idToken)
+
+					err = jwtIdToken.UnsafeClaimsWithoutVerification(&authData)
+					if err != nil {
+						record.AddReason("Login error: invalid id token")
+
+						c.ResponseError(c.T("auth:Invalid id token"))
+						return
+					}
 				}
 			}
 		}
