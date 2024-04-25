@@ -59,7 +59,7 @@ func handleAccessRequest(w radius.ResponseWriter, r *radius.Request) {
 		w.Write(r.Response(radius.CodeAccessReject))
 		return
 	}
-	_, err := object.CheckUserPassword(organization, username, password, "en", nil)
+	_, err := object.CheckUserPassword(organization, username, password, "en")
 	if err != nil {
 		w.Write(r.Response(radius.CodeAccessReject))
 		return

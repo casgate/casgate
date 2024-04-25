@@ -241,7 +241,7 @@ func CheckPasswordComplexity(user *User, password string, lang string) string {
 	return CheckPasswordComplexityByOrg(organization, password, lang)
 }
 
-func checkLdapUserPassword(user *User, password string, lang string) (string, error) {
+func CheckLdapUserPassword(user *User, password string, lang string) (string, error) {
 	ldaps, err := GetLdaps(user.Owner)
 	if err != nil {
 		return "", err
@@ -347,7 +347,7 @@ func (err *CheckUserPasswordError) RealError() error {
 	return err.err
 }
 
-func CheckUserPassword(organization string, username string, password string, lang string, ldapServerId *string, options ...bool) (*User, error) {
+func CheckUserPassword(organization string, username string, password string, lang string, options ...bool) (*User, error) {
 	enableCaptcha := false
 	isSigninViaLdap := false
 	isPasswordWithLdapEnabled := false
@@ -389,7 +389,7 @@ func CheckUserPassword(organization string, username string, password string, la
 		}
 
 		// only for LDAP users
-		*ldapServerId, err = checkLdapUserPassword(user, password, lang)
+		_, err = CheckLdapUserPassword(user, password, lang)
 		if err != nil {
 			if err.Error() == "user not exist" {
 				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
