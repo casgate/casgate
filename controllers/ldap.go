@@ -87,7 +87,7 @@ func (c *ApiController) GetLdapUsers() {
 	//	})
 	//}
 
-	users, err := conn.GetLdapUsers(ldapServer, nil)
+	users, err := conn.GetLdapUsers(ldapServer, nil, record)
 	if err != nil {
 		record.AddReason(fmt.Sprintf("Get LDAP users: %s", err.Error()))
 
