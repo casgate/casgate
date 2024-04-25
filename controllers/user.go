@@ -284,7 +284,7 @@ func (c *ApiController) AddUserIdProvider() {
 
 	affected, err := object.AddUserIdProvider(c.Ctx.Request.Context(), &userIdProvider)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseInternalServerError(c.T("user:Failed to add userIdProvider"))
 		return
 	}
 

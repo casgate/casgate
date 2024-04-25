@@ -11,16 +11,19 @@
   },
   "auth": {
     "Challenge method should be S256": "チャレンジメソッドはS256である必要があります",
-    "Failed to create user, user information is invalid: %s": "ユーザーの作成に失敗しました。ユーザー情報が無効です：%s",
+    "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "ログインできませんでした：%s",
+    "Forbidden operation": "Forbidden operation",
     "Invalid token": "無効なトークン",
     "State expected: %s, but got: %s": "期待される状態： %s、実際には：%s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "プロバイダーのアカウント：%s とユーザー名：%s（%s）が存在せず、新しいアカウントを %%s 経由でサインアップすることはできません。他の方法でサインアップしてください",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support": "プロバイダー名：%sとユーザー名：%s（%s）のアカウントは存在しません。新しいアカウントとしてサインアップすることはできません。 ITサポートに連絡してください",
     "The account for provider: %s and username: %s (%s) is already linked to another account: %s (%s)": "プロバイダのアカウント：%s とユーザー名：%s (%s) は既に別のアカウント：%s (%s) にリンクされています",
     "The application: %s does not exist": "アプリケーション: %sは存在しません",
+    "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "ログイン方法：パスワードでのログインはアプリケーションで有効になっていません",
     "The provider: %s is not enabled for the application": "プロバイダー：%sはアプリケーションでは有効化されていません",
+    "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "不正操作",
     "Unknown authentication type (not password or provider), form = %s": "不明な認証タイプ（パスワードまたはプロバイダーではない）フォーム=%s",
     "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
@@ -48,10 +51,11 @@
     "Phone cannot be empty": "電話は空っぽにできません",
     "Phone number is invalid": "電話番号が無効です",
     "Session outdated, please login again": "セッションが期限切れになりました。再度ログインしてください",
+    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
     "The user is forbidden to sign in, please contact the administrator": "ユーザーはサインインできません。管理者に連絡してください",
+    "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "ユーザー名には英数字、アンダースコア、ハイフンしか含めることができません。連続したハイフンまたはアンダースコアは不可であり、ハイフンまたはアンダースコアで始まるまたは終わることもできません。",
     "Username already exists": "ユーザー名はすでに存在しています",
-    "Username cannot be an email address": "ユーザー名には電子メールアドレスを使用できません",
     "Username cannot contain white spaces": "ユーザ名にはスペースを含めることはできません",
     "Username cannot start with a digit": "ユーザー名は数字で始めることはできません",
     "Username is too long (maximum is 255 characters).": "ユーザー名が長すぎます（最大255文字）。",
@@ -59,9 +63,9 @@
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "あなたは間違ったパスワードまたはコードを何度も入力しました。%d 分間待ってから再度お試しください",
     "Your region is not allow to signup by phone": "あなたの地域は電話でサインアップすることができません",
     "password must not be same as previous": "password must not be same as previous",
-    "unsupported password type: %s": "サポートされていないパスワードタイプ：%s",
-    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
-    "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on": "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on"
+    "password or code is incorrect": "password or code is incorrect",
+    "password or code is incorrect, you have %d remaining chances": "password or code is incorrect, you have %d remaining chances",
+    "unsupported password type: %s": "サポートされていないパスワードタイプ：%s"
   },
   "general": {
     "Invalid username or password/code": "Invalid username or password/code",
@@ -126,6 +130,7 @@
   },
   "user": {
     "Display name cannot be empty": "表示名は空にできません",
+    "Failed to add userIdProvider": "Failed to add userIdProvider",
     "New password cannot contain blank space.": "新しいパスワードにはスペースを含めることはできません。"
   },
   "util": {

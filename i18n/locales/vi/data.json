@@ -11,16 +11,19 @@
   },
   "auth": {
     "Challenge method should be S256": "Phương pháp thách thức nên là S256",
-    "Failed to create user, user information is invalid: %s": "Không thể tạo người dùng, thông tin người dùng không hợp lệ: %s",
+    "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Đăng nhập không thành công: %s",
+    "Forbidden operation": "Forbidden operation",
     "Invalid token": "Mã thông báo không hợp lệ",
     "State expected: %s, but got: %s": "Trạng thái dự kiến: %s, nhưng nhận được: %s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "Tài khoản cho nhà cung cấp: %s và tên người dùng: %s (%s) không tồn tại và không được phép đăng ký làm tài khoản mới qua %%s, vui lòng sử dụng cách khác để đăng ký",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support": "Tài khoản cho nhà cung cấp: %s và tên người dùng: %s (%s) không tồn tại và không được phép đăng ký như một tài khoản mới, vui lòng liên hệ với bộ phận hỗ trợ công nghệ thông tin của bạn",
     "The account for provider: %s and username: %s (%s) is already linked to another account: %s (%s)": "Tài khoản cho nhà cung cấp: %s và tên người dùng: %s (%s) đã được liên kết với tài khoản khác: %s (%s)",
     "The application: %s does not exist": "Ứng dụng: %s không tồn tại",
+    "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "Phương thức đăng nhập: đăng nhập bằng mật khẩu không được kích hoạt cho ứng dụng",
     "The provider: %s is not enabled for the application": "Nhà cung cấp: %s không được kích hoạt cho ứng dụng",
+    "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Hoạt động không được ủy quyền",
     "Unknown authentication type (not password or provider), form = %s": "Loại xác thực không xác định (không phải mật khẩu hoặc nhà cung cấp), biểu mẫu = %s",
     "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
@@ -48,10 +51,11 @@
     "Phone cannot be empty": "Điện thoại không thể để trống",
     "Phone number is invalid": "Số điện thoại không hợp lệ",
     "Session outdated, please login again": "Phiên làm việc hết hạn, vui lòng đăng nhập lại",
+    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
     "The user is forbidden to sign in, please contact the administrator": "Người dùng bị cấm đăng nhập, vui lòng liên hệ với quản trị viên",
+    "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "Tên người dùng chỉ có thể chứa các ký tự chữ và số, gạch dưới hoặc gạch ngang, không được có hai ký tự gạch dưới hoặc gạch ngang liền kề và không được bắt đầu hoặc kết thúc bằng dấu gạch dưới hoặc gạch ngang.",
     "Username already exists": "Tên đăng nhập đã tồn tại",
-    "Username cannot be an email address": "Tên người dùng không thể là địa chỉ email",
     "Username cannot contain white spaces": "Tên người dùng không thể chứa khoảng trắng",
     "Username cannot start with a digit": "Tên người dùng không thể bắt đầu bằng chữ số",
     "Username is too long (maximum is 255 characters).": "Tên đăng nhập quá dài (tối đa là 255 ký tự).",
@@ -59,9 +63,9 @@
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "Bạn đã nhập sai mật khẩu hoặc mã quá nhiều lần, vui lòng đợi %d phút và thử lại",
     "Your region is not allow to signup by phone": "Vùng của bạn không được phép đăng ký bằng điện thoại",
     "password must not be same as previous": "password must not be same as previous",
-    "unsupported password type: %s": "Loại mật khẩu không được hỗ trợ: %s",
-    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
-    "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on": "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on"
+    "password or code is incorrect": "password or code is incorrect",
+    "password or code is incorrect, you have %d remaining chances": "password or code is incorrect, you have %d remaining chances",
+    "unsupported password type: %s": "Loại mật khẩu không được hỗ trợ: %s"
   },
   "general": {
     "Invalid username or password/code": "Invalid username or password/code",
@@ -126,6 +130,7 @@
   },
   "user": {
     "Display name cannot be empty": "Tên hiển thị không thể trống",
+    "Failed to add userIdProvider": "Failed to add userIdProvider",
     "New password cannot contain blank space.": "Mật khẩu mới không thể chứa dấu trắng."
   },
   "util": {
