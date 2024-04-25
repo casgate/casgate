@@ -18,12 +18,14 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"net/mail"
 	"strings"
 
 	"github.com/beego/beego/logs"
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/thanhpk/randstr"
 
+	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -588,18 +590,24 @@ func (user *User) getFieldFromLdapAttribute(attribute string) string {
 	}
 }
 
-func SyncUserFromLdap(organization string, ldapId string, userName string, password string, lang string) (*LdapUser, error) {
+func SyncUserFromLdap(form form.AuthForm, lang string) (*LdapUser, error) {
+	organization := form.Organization
+	userName := form.Username
+	ldapId := form.LdapId
+	password := form.Password
+
 	ldaps, err := GetLdaps(organization)
 	if err != nil {
 		return nil, err
 	}
 
 	user := &User{}
-	if strings.Contains(userName, "@") {
+	if _, err = mail.ParseAddress(userName); err == nil {
 		user.Email = userName
 	} else {
 		user.Name = userName
 	}
+
 
 	for _, ldapServer := range ldaps {
 		if len(ldapId) > 0 && ldapServer.Id != ldapId {

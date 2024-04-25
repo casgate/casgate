@@ -459,7 +459,7 @@ func (c *ApiController) Login() {
 			if isSigninViaLdap {
 				user, _ := object.GetUserByFields(authForm.Organization, authForm.Username)
 				if user == nil {
-					object.SyncUserFromLdap(authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage())
+					object.SyncUserFromLdap(authForm, c.GetAcceptLanguage())
 				}
 			}
 
