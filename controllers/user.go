@@ -261,6 +261,9 @@ func (c *ApiController) GetUser() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-user-id-provider [post]
 func (c *ApiController) AddUserIdProvider() {
+	goCtx := c.getRequestCtx()
+	record := object.GetRecord(goCtx)
+
 	var userIdProvider object.UserIdProvider
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &userIdProvider)
 	if err != nil {
@@ -278,12 +281,14 @@ func (c *ApiController) AddUserIdProvider() {
 	}
 
 	if userIdProvider.Owner == "" || ((userIdProvider.ProviderName == "") == (userIdProvider.LdapId == "")) || userIdProvider.UsernameFromIdp == "" {
+		record.AddReason("Add UserIdProvider: Failed to add userIdProvider. Missing parameter")
 		c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
 		return
 	}
 
 	affected, err := object.AddUserIdProvider(c.Ctx.Request.Context(), &userIdProvider)
-	if err != nil {
+	if err != nil || !affected {
+		record.AddReason("Add UserIdProvider: Failed to add userIdProvider")
 		c.ResponseInternalServerError(c.T("user:Failed to add userIdProvider"))
 		return
 	}
