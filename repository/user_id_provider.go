@@ -29,15 +29,6 @@ func (r *Repo) InsertUserIdProvider(ctx context.Context, userIdProvider *object.
 	return r.insertEntity(ctx, userIdProvider)
 }
 
-func (r *Repo) UpdateUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider, updateKey string) error {
-	updateValue := userIdProvider.ProviderName
-	if updateKey == "ldap_id" {
-		updateValue = userIdProvider.LdapId
-	}
-	return r.UpdateEntitiesFieldValue(ctx, "user_id_provider", "last_sign_in_time", userIdProvider.LastSignInTime,
-		map[string]interface{}{
-			"owner":             userIdProvider.Owner,
-			updateKey:           updateValue,
-			"username_from_idp": userIdProvider.UsernameFromIdp,
-		})
+func (r *Repo) UpdateUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider, findConditions map[string]interface{}) error {
+	return r.UpdateEntitiesFieldValue(ctx, "user_id_provider", "last_sign_in_time", userIdProvider.LastSignInTime, findConditions)
 }

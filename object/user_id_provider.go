@@ -109,7 +109,16 @@ func AddUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) (boo
 }
 
 func UpdateUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider, updateKey string) error {
+	updateValue := userIdProvider.ProviderName
+	if updateKey == "ldap_id" {
+		updateValue = userIdProvider.LdapId
+	}
+	findConditions := map[string]interface{}{
+		"owner":             userIdProvider.Owner,
+		updateKey:           updateValue,
+		"username_from_idp": userIdProvider.UsernameFromIdp,
+	}
 	return trm.WithTx(ctx, func(ctx context.Context) error {
-		return repo.UpdateUserIdProvider(ctx, userIdProvider, updateKey)
+		return repo.UpdateUserIdProvider(ctx, userIdProvider, findConditions)
 	})
 }
