@@ -3993,7 +3993,9 @@ definitions:
         type: boolean
       enableSamlCompress:
         type: boolean
-      enableSignUp:
+      enableInternalSignUp:
+        type: boolean
+      enableIdpSignUp:
         type: boolean
       enableSigninSession:
         type: boolean

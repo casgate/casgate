@@ -175,16 +175,17 @@ func initBuiltInApplication() {
 	}
 
 	application = &Application{
-		Owner:          "admin",
-		Name:           "app-built-in",
-		CreatedTime:    util.GetCurrentTime(),
-		DisplayName:    "Casdoor",
-		Logo:           fmt.Sprintf("%s/img/casdoor-logo_1185x256.png", conf.GetConfigString("staticBaseUrl")),
-		HomepageUrl:    "https://casdoor.org",
-		Organization:   "built-in",
-		Cert:           "cert-built-in",
-		EnablePassword: true,
-		EnableSignUp:   true,
+		Owner:                "admin",
+		Name:                 "app-built-in",
+		CreatedTime:          util.GetCurrentTime(),
+		DisplayName:          "Casdoor",
+		Logo:                 fmt.Sprintf("%s/img/casdoor-logo_1185x256.png", conf.GetConfigString("staticBaseUrl")),
+		HomepageUrl:          "https://casdoor.org",
+		Organization:         "built-in",
+		Cert:                 "cert-built-in",
+		EnablePassword:       true,
+		EnableInternalSignUp: true,
+		EnableIdpSignUp:      true,
 		Providers: []*ProviderItem{
 			{Name: "provider_captcha_default", CanSignUp: false, CanSignIn: false, CanUnlink: false, Prompted: false, AlertType: "None", Rule: "None", Provider: nil},
 		},

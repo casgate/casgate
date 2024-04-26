@@ -64,7 +64,8 @@ type Application struct {
 	Cert                   string          `xorm:"varchar(100)" json:"cert"`
 	EnablePassword         bool            `json:"enablePassword"`
 	EnablePasswordRecovery bool            `json:"enablePasswordRecovery"`
-	EnableSignUp           bool            `json:"enableSignUp"`
+	EnableInternalSignUp   bool            `json:"enableInternalSignUp"`
+	EnableIdpSignUp        bool            `json:"enableIdpSignUp"`
 	EnableSigninSession    bool            `json:"enableSigninSession"`
 	EnableAutoSignin       bool            `json:"enableAutoSignin"`
 	EnableCodeSignin       bool            `json:"enableCodeSignin"`

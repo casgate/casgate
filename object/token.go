@@ -806,7 +806,7 @@ func GetWechatMiniProgramToken(application *Application, code string, host strin
 	}
 
 	if user == nil {
-		if !application.EnableSignUp {
+		if !application.EnableInternalSignUp && !application.EnableIdpSignUp {
 			return nil, &TokenError{
 				Error:            InvalidGrant,
 				ErrorDescription: "the application does not allow to sign up new account",

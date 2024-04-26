@@ -352,7 +352,7 @@ func GetDefaultApplication(id string) (*Application, error) {
 
 	defaultApplication := applications[0]
 	for _, application := range applications {
-		if application.EnableSignUp {
+		if application.EnableInternalSignUp || application.EnableIdpSignUp {
 			defaultApplication = application
 			break
 		}
