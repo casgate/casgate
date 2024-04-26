@@ -106,11 +106,15 @@ func NewRecord(ctx *context.Context) *Record {
 func AddRecord(record *Record) bool {
 	if logPostOnly {
 		if record.Method == "GET" {
+			logs.Info("record not saved, reason: GET request")
+
 			return false
 		}
 	}
 
 	if record.Organization == "app" {
+		logs.Info("record not saved, reason: organization == app")
+
 		return false
 	}
 
@@ -120,11 +124,13 @@ func AddRecord(record *Record) bool {
 	if errWebhook == nil {
 		record.IsTriggered = true
 	} else {
-		logs.Error("webhook: ", errWebhook)
+		logs.Info("webhook: ", errWebhook)
 	}
 
 	affected, err := ormer.Engine.Insert(record)
 	if err != nil {
+		logs.Error("record not saved: %s", err.Error())
+
 		panic(err)
 	}
 
