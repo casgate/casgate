@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
@@ -115,12 +116,7 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 		}
 	}
 
-	authData := map[string]interface{}{
-		"ID": assertionInfo.NameID,
-	}
-	for key := range assertionInfo.Values {
-		authData[key] = assertionInfo.Values.Get(key)
-	}
+	authData := getAuthData(assertionInfo, provider)
 
 	userInfo := idp.UserInfo{
 		Id:          dataMap["id"],
@@ -130,6 +126,40 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 		AvatarUrl:   dataMap["avatarUrl"],
 	}
 	return &userInfo, authData, nil
+}
+
+func getAuthData(assertionInfo *saml2.AssertionInfo, provider *Provider) map[string]interface{} {
+	authData := map[string]interface{}{
+		"ID": assertionInfo.NameID,
+	}
+
+	for key := range assertionInfo.Values {
+		if !slices.ContainsFunc(provider.RoleMappingItems, func(item *RoleMappingItem) bool {
+			return item.Role == key
+		}) {
+			authData[key] = assertionInfo.Values.Get(key)
+		}
+	}
+
+	for _, mappItem := range provider.RoleMappingItems {
+		for _, assertion := range assertionInfo.Assertions {
+			roles := make([]string, 0)
+
+			for _, attribute := range assertion.AttributeStatement.Attributes {
+				if attribute.Name == mappItem.Attribute {
+
+					for _, val := range attribute.Values {
+						roles = append(roles, val.Value)
+					}
+
+				}
+			}
+
+			authData[mappItem.Attribute] = roles
+		}
+	}
+
+	return authData
 }
 
 func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method string, err error) {
