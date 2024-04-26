@@ -7,7 +7,7 @@ import (
 )
 
 func (r *Repo) GetUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider) (*object.UserIdProvider, error) {
-	if userIdProvider.Owner == "" || ((userIdProvider.ProviderName == "") == (userIdProvider.LdapId == "")) || userIdProvider.UsernameFromIdp == "" {
+	if userIdProvider.Owner == "" || !object.CheckUserIdProviderOrigin(*userIdProvider) || userIdProvider.UsernameFromIdp == "" {
 		return nil, nil
 	}
 

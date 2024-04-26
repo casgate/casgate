@@ -276,15 +276,13 @@ func (c *ApiController) AddUserIdProvider() {
 		return
 	}
 
-	if userIdProvider.CreatedTime == "" {
-		userIdProvider.CreatedTime = util.GetCurrentTime()
-	}
-
-	if userIdProvider.Owner == "" || ((userIdProvider.ProviderName == "") == (userIdProvider.LdapId == "")) || userIdProvider.UsernameFromIdp == "" {
+	if userIdProvider.Owner == "" || !object.CheckUserIdProviderOrigin(userIdProvider) || userIdProvider.UsernameFromIdp == "" {
 		record.AddReason("Add UserIdProvider: Failed to add userIdProvider. Missing parameter")
 		c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
 		return
 	}
+
+	userIdProvider.CreatedTime = util.GetCurrentTime()
 
 	affected, err := object.AddUserIdProvider(c.Ctx.Request.Context(), &userIdProvider)
 	if err != nil || !affected {

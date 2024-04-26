@@ -590,3 +590,10 @@ func CheckToEnableCaptcha(application *Application, organization, username strin
 
 	return false, nil
 }
+
+func CheckUserIdProviderOrigin(userIdProvider UserIdProvider) bool {
+	isProviderNameEmpty := userIdProvider.ProviderName == ""
+	isLdapIdEmpty := userIdProvider.LdapId == ""
+
+	return isProviderNameEmpty != isLdapIdEmpty
+}
