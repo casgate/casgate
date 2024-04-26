@@ -392,6 +392,15 @@ func (c *ApiController) TestLdapConnection() {
 		return
 	}
 
+	if ldap.Password == "***" {
+		pwdFromDB, err := object.GetLdapPassword(ldap)
+		if err != nil {
+			c.ResponseError(err.Error())
+		}
+
+		ldap.Password = pwdFromDB
+	}
+
 	for _, roleMappingItem := range ldap.RoleMappingItems {
 		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
 			c.ResponseError(c.T("general:Missing parameter"))
