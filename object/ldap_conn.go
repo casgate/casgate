@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -439,6 +440,18 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				failedUsers = append(failedUsers, syncUser)
 				continue
 			}
+
+			userIdProvider := &UserIdProvider{
+				Owner:           organization.Name,
+				LdapId:          ldapId,
+				UsernameFromIdp: syncUser.Uuid,
+				CreatedTime:     util.GetCurrentTime(),
+				UserId:          newUser.Id,
+			}
+			_, err = AddUserIdProvider(context.Background(), userIdProvider)
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 
 		ldap, err := GetLdap(ldapId)
@@ -569,7 +582,7 @@ func SyncUserFromLdap(organization string, ldapId string, userName string, passw
 			continue
 		}
 
-		err = checkLdapUserPassword(user, password, lang)
+		_, err = CheckLdapUserPassword(user, password, lang)
 		if err != nil {
 			conn.Close()
 			return nil, err

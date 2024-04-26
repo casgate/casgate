@@ -241,14 +241,15 @@ func CheckPasswordComplexity(user *User, password string, lang string) string {
 	return CheckPasswordComplexityByOrg(organization, password, lang)
 }
 
-func checkLdapUserPassword(user *User, password string, lang string) error {
+func CheckLdapUserPassword(user *User, password string, lang string) (string, error) {
 	ldaps, err := GetLdaps(user.Owner)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	ldapLoginSuccess := false
 	hit := false
+	var ldapServerId string
 
 	for _, ldapServer := range ldaps {
 		conn, err := ldapServer.GetLdapConn()
@@ -262,7 +263,7 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 		searchResult, err := conn.Conn.Search(searchReq)
 		if err != nil {
 			conn.Close()
-			return err
+			return "", err
 		}
 
 		if len(searchResult.Entries) == 0 {
@@ -271,13 +272,14 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 		}
 		if len(searchResult.Entries) > 1 {
 			conn.Close()
-			return fmt.Errorf(i18n.Translate(lang, "check:Multiple accounts with same uid, please check your ldap server"))
+			return ldapServer.Id, fmt.Errorf(i18n.Translate(lang, "check:Multiple accounts with same uid, please check your ldap server"))
 		}
 
 		hit = true
 		dn := searchResult.Entries[0].DN
 		if err = conn.Conn.Bind(dn, password); err == nil {
 			ldapLoginSuccess = true
+			ldapServerId = ldapServer.Id
 			conn.Close()
 			break
 		}
@@ -287,11 +289,11 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 
 	if !ldapLoginSuccess {
 		if !hit {
-			return fmt.Errorf("user not exist")
+			return "", fmt.Errorf("user not exist")
 		}
-		return fmt.Errorf(i18n.Translate(lang, "check:LDAP user name or password incorrect"))
+		return "", fmt.Errorf(i18n.Translate(lang, "check:LDAP user name or password incorrect"))
 	}
-	return resetUserSigninErrorTimes(user)
+	return ldapServerId, resetUserSigninErrorTimes(user)
 }
 
 var ErrorUserNotFound = errors.New("user not found")
@@ -387,7 +389,7 @@ func CheckUserPassword(organization string, username string, password string, la
 		}
 
 		// only for LDAP users
-		err = checkLdapUserPassword(user, password, lang)
+		_, err = CheckLdapUserPassword(user, password, lang)
 		if err != nil {
 			if err.Error() == "user not exist" {
 				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
@@ -587,4 +589,11 @@ func CheckToEnableCaptcha(application *Application, organization, username strin
 	}
 
 	return false, nil
+}
+
+func CheckUserIdProviderOrigin(userIdProvider UserIdProvider) bool {
+	isProviderNameEmpty := userIdProvider.ProviderName == ""
+	isLdapIdEmpty := userIdProvider.LdapId == ""
+
+	return isProviderNameEmpty != isLdapIdEmpty
 }

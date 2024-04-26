@@ -449,7 +449,6 @@ func (c *ApiController) Login() {
 				}
 			}
 
-			password := authForm.Password
 			isSigninViaLdap := authForm.SigninMethod == "LDAP"
 			var isPasswordWithLdapEnabled bool
 			if authForm.SigninMethod == "Password" {
@@ -471,7 +470,17 @@ func (c *ApiController) Login() {
 				}
 			}
 
-			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
+			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, authForm.Password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
+
+			if err != nil {
+				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
+				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
+			}
+
+			if user.Ldap != "" && (isSigninViaLdap || isPasswordWithLdapEnabled) {
+				authForm.LdapId, err = object.CheckLdapUserPassword(user, authForm.Password, c.GetAcceptLanguage())
+			}
+
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
 				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
@@ -501,6 +510,14 @@ func (c *ApiController) Login() {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
 				c.ResponseInternalServerError("internal server error")
+				return
+			}
+
+			if organization == nil {
+				record.AddReason(fmt.Sprintf("Login error: Organization does not exist"))
+
+				c.ResponseInternalServerError(c.T("check:Organization does not exist"))
+				return
 			}
 
 			if object.IsNeedPromptMfa(organization, user) {
@@ -523,6 +540,25 @@ func (c *ApiController) Login() {
 			}
 
 			resp = c.HandleLoggedIn(application, user, &authForm)
+
+			if user.Ldap != "" {
+				userIdProvider := &object.UserIdProvider{
+					Owner:           organization.Name,
+					LdapId:          authForm.LdapId,
+					UsernameFromIdp: user.Name,
+					LastSignInTime:  util.GetCurrentTime(),
+				}
+
+				err = object.UpdateUserIdProvider(c.Ctx.Request.Context(), userIdProvider, "ldap_id")
+
+				if err != nil {
+					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
+					c.ResponseInternalServerError("internal server error")
+					return
+				}
+			}
+
 			record.WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User logged in")
 		}
 	} else if authForm.Provider != "" {
@@ -700,7 +736,7 @@ func (c *ApiController) Login() {
 					ProviderName:    provider.Name,
 					UsernameFromIdp: userInfo.Username,
 					LastSignInTime:  util.GetCurrentTime(),
-				})
+				}, "provider_name")
 				if err != nil {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 

@@ -62,6 +62,7 @@ class LoginPage extends React.Component {
       orgChoiceMode: new URLSearchParams(props.location?.search).get("orgChoiceMode") ?? null,
       ldapId: "",
     };
+    this.ldapSelectIdSetter = this.ldapSelectIdSetter.bind(this);
 
     if (this.state.type === "cas" && props.match?.params.casApplicationName !== undefined) {
       this.state.owner = props.match?.params?.owner;
@@ -1043,6 +1044,12 @@ class LoginPage extends React.Component {
     );
   }
 
+  ldapSelectIdSetter(ldapId) {
+    this.setState({
+      ldapId: ldapId,
+    });
+  }
+
   renderLdapServerChoiceBox(organization) {
     const renderChoiceBox = () => {
       if (!this.state || !this.state.loginMethod) {
@@ -1052,6 +1059,9 @@ class LoginPage extends React.Component {
       case "ldap":
         return (
           <LdapSelect organization={organization} style={{width: "100%"}}
+            ldapIdSetter={(value) => {
+              this.ldapSelectIdSetter(value);
+            }}
             onSelect={(value) => {
               this.setState({ldapId: value});
             }} />

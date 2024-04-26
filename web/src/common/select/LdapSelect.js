@@ -45,9 +45,10 @@ function LdapSelect(props) {
       });
   };
 
-  const handleOnChange = (value) => {
-    setValue(value);
-    onChange?.(value);
+  const handleOnChange = (obj) => {
+    setValue(obj);
+    props.ldapIdSetter(obj.value);
+    onChange?.(obj);
   };
 
   const getLdapItems = () => {

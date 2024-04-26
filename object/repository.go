@@ -27,9 +27,9 @@ type Repository interface {
 
 	GetModel(ctx context.Context, owner string, name string, forUpdate bool) (*Model, error)
 
-	GetUserIdProvider(ctx context.Context, owner, providerName, usernameFromIdp string) (*UserIdProvider, error)
-	InsertUserIdProvider(ctx context.Context, organization *UserIdProvider) (int64, error)
-	UpdateUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) error
+	GetUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) (*UserIdProvider, error)
+	InsertUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) (int64, error)
+	UpdateUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider, findConditions map[string]interface{}) error
 
 	UpdateEntitiesFieldValue(ctx context.Context, entityName string, fieldName, newValue string, findConditions map[string]interface{}) error
 }
