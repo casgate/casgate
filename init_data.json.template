@@ -33,7 +33,8 @@
       "organization": "",
       "cert": "",
       "enablePassword": true,
-      "enableSignUp": true,
+      "enableInternalSignUp": true,
+      "enableIdpSignUp": true,
       "clientId": "",
       "clientSecret": "",
       "providers": [

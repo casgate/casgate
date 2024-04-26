@@ -233,7 +233,7 @@ class ProviderTable extends React.Component {
       },
     ];
 
-    if (!this.props.application.enableSignUp) {
+    if (!this.props.application.enableIdpSignUp) {
       columns = columns.filter(column => column.key !== "canSignUp");
     }
 

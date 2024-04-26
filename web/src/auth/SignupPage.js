@@ -536,7 +536,7 @@ class SignupPage extends React.Component {
   }
 
   renderForm(application) {
-    if (!application.enableSignUp) {
+    if (!application.enableInternalSignUp) {
       return (
         <Result
           status="error"

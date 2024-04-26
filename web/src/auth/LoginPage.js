@@ -526,7 +526,7 @@ class LoginPage extends React.Component {
       return Util.renderMessage(this.state.msg);
     }
 
-    if (this.state.mode === "signup" && !application.enableSignUp) {
+    if (this.state.mode === "signup" && !application.enableInternalSignUp && !application.enableIdpSignUp) {
       return (
         <Result
           status="error"
@@ -764,7 +764,7 @@ class LoginPage extends React.Component {
   }
 
   renderFooter(application) {
-    if (!application.enableSignUp) {
+    if (!application.enableInternalSignUp) {
       return;
     }
 
