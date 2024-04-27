@@ -35,6 +35,8 @@ const (
 
 	DefaultFailedSigninLimit      = 5
 	DefaultFailedSigninFrozenTime = 15
+
+	disabledLdapUserErrorData = "data 533"
 )
 
 func CheckUserSignup(application *Application, organization *Organization, form *form.AuthForm, lang string) string {
@@ -251,6 +253,7 @@ func CheckLdapUserPassword(user *User, password string, lang string) (string, er
 	ldapLoginSuccess := false
 	hit := false
 	var ldapServerId string
+	userDisabled := false
 
 	for _, ldapServer := range ldaps {
 		conn, err := ldapServer.GetLdapConn()
@@ -285,7 +288,17 @@ func CheckLdapUserPassword(user *User, password string, lang string) (string, er
 			break
 		}
 
+		if strings.Contains(err.Error(), disabledLdapUserErrorData) {
+			userDisabled = true
+			conn.Close()
+			break
+		}
+
 		conn.Close()
+	}
+
+	if userDisabled {
+		return "", fmt.Errorf("user is disabled")
 	}
 
 	if !ldapLoginSuccess {
@@ -394,6 +407,10 @@ func CheckUserPassword(ctx context.Context, organization string, username string
 		if err != nil {
 			if err.Error() == "user not exist" {
 				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
+			}
+
+			if err.Error() == "user is disabled" {
+				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator"))
 			}
 
 			return nil, recordSigninErrorInfo(ctx, user, lang, enableCaptcha)
