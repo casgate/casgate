@@ -1,10 +1,8 @@
 package object
 
 import (
-	"fmt"
 	"github.com/casdoor/casdoor/util"
 	goldap "github.com/go-ldap/ldap/v3"
-	"strings"
 )
 
 type (
@@ -41,7 +39,7 @@ func buildAttributeMappingMap(attributeMappingItems []*AttributeMappingItem) Att
 	return attributeMappingMap
 }
 
-func MapAttributesToUser(entry *goldap.Entry, user *LdapUser, attributeMappingMap AttributeMappingMap, rb *RecordBuilder) {
+func MapAttributesToUser(entry *goldap.Entry, user *LdapUser, attributeMappingMap AttributeMappingMap) []string {
 	unmappedAttributes := make([]string, 0)
 
 	// creating map for quick access to LDAP attributes by name
@@ -77,8 +75,5 @@ func MapAttributesToUser(entry *goldap.Entry, user *LdapUser, attributeMappingMa
 		}
 	}
 
-	// if there are unmapped attributes, log them
-	if len(unmappedAttributes) > 0 {
-		rb.AddReason(fmt.Sprintf("User (%s) has unmapped attributes: %s", entry.DN, strings.Join(unmappedAttributes, ", ")))
-	}
+	return unmappedAttributes
 }

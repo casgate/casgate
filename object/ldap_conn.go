@@ -233,7 +233,10 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 		var user LdapUser
 
 		if ldapServer.EnableAttributeMapping {
-			MapAttributesToUser(entry, &user, attributeMappingMap, rb)
+			unmappedAttributes := MapAttributesToUser(entry, &user, attributeMappingMap)
+			if len(unmappedAttributes) > 0 {
+				rb.AddReason(fmt.Sprintf("User (%s) has unmapped attributes: %s", entry.DN, strings.Join(unmappedAttributes, ", ")))
+			}
 		}
 
 		for _, attribute := range entry.Attributes {
