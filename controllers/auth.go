@@ -477,7 +477,7 @@ func (c *ApiController) Login() {
 				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
 			}
 
-			if user.Ldap != "" && (isSigninViaLdap || isPasswordWithLdapEnabled) {
+			if user != nil && user.Ldap != "" && (isSigninViaLdap || isPasswordWithLdapEnabled) {
 				authForm.LdapId, err = object.CheckLdapUserPassword(user, authForm.Password, c.GetAcceptLanguage())
 			}
 
