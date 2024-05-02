@@ -551,6 +551,8 @@ func (user *User) getFieldFromLdapAttribute(attribute string) string {
 		return user.Email
 	case "mobile":
 		return user.Phone
+	case "userPrincipalName":
+		return user.Email
 	default:
 		return ""
 	}
