@@ -130,7 +130,7 @@ func StaticFilter(ctx *context.Context) {
 	if urlPath == "/" {
 		path += "/index.html"
 	} else {
-		path += urlPath
+		path += filepath.Clean(urlPath)
 	}
 
 	if !util.FileExist(path) {
