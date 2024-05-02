@@ -17,8 +17,10 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 
+	"github.com/beego/beego/logs"
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/captcha"
 	"github.com/casdoor/casdoor/conf"
@@ -786,7 +788,9 @@ func (c *ApiController) SendInvite() {
 
 	user, err := object.GetUser(util.GetId(owner, username))
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		logs.Error("get user: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
 		return
 	}
 
@@ -802,19 +806,25 @@ func (c *ApiController) SendInvite() {
 
 	organization, err := object.GetOrganization(util.GetId("admin", owner))
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		logs.Error("get organization: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
 		return
 	}
 
 	application, err := object.GetApplicationByUser(user)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		logs.Error("get application by user: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
 		return
 	}
 
 	provider, err := application.GetEmailProvider()
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		logs.Error("get email provider: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
 		return
 	}
 
@@ -845,11 +855,19 @@ func (c *ApiController) SendInvite() {
 		}
 	}
 
-	content := fmt.Sprintf(provider.InviteContent, link)
+	content, err := url.JoinPath(provider.InviteContent, link)
+	if err != nil {
+		logs.Error("join path: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
+		return
+	}
 
 	err = object.SendEmail(provider, provider.InviteTitle, content, user.Email, sender)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		logs.Error("send email: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
 		return
 	}
 
