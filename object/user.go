@@ -334,7 +334,14 @@ func GetSortedUsers(owner string, sorter string, limit int) ([]*User, error) {
 	users := []*User{}
 
 	notUserAccesToken := builder.Not{builder.Like{"tag", "<access-token>"}}
+	sorter = strings.ReplaceAll(strings.ReplaceAll(sorter, "\"", ""), "'", "")
+	exist, errExist := ormer.Engine.SQL("SELECT ? from USER", sorter).Exist()
+	if errExist != nil {
+		return nil, nil
+	}
+	if exist == true {
 
+	}
 	err := ormer.Engine.Desc(sorter).And(notUserAccesToken).Limit(limit, 0).Find(&users, &User{Owner: owner})
 	if err != nil {
 		return nil, err
