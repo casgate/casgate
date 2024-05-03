@@ -35,8 +35,6 @@ const (
 
 	DefaultFailedSigninLimit      = 5
 	DefaultFailedSigninFrozenTime = 15
-
-	disabledLdapUserErrorData = "data 533"
 )
 
 func CheckUserSignup(application *Application, organization *Organization, form *form.AuthForm, lang string) string {
@@ -279,17 +277,22 @@ func CheckLdapUserPassword(user *User, password string, lang string) (string, er
 			return ldapServer.Id, fmt.Errorf(i18n.Translate(lang, "check:Multiple accounts with same uid, please check your ldap server"))
 		}
 
+		userDisabled = checkIsUserDisabled(searchResult.Entries[0].Attributes)
+		if userDisabled {
+			user.IsForbidden = true
+			_, err = UpdateUser(user.GetId(), user, []string{"is_forbidden"}, false)
+			if err != nil {
+				return "", err
+			}
+			conn.Close()
+			break
+		}
+
 		hit = true
 		dn := searchResult.Entries[0].DN
 		if err = conn.Conn.Bind(dn, password); err == nil {
 			ldapLoginSuccess = true
 			ldapServerId = ldapServer.Id
-			conn.Close()
-			break
-		}
-
-		if strings.Contains(err.Error(), disabledLdapUserErrorData) {
-			userDisabled = true
 			conn.Close()
 			break
 		}
@@ -614,4 +617,16 @@ func CheckUserIdProviderOrigin(userIdProvider UserIdProvider) bool {
 	isLdapIdEmpty := userIdProvider.LdapId == ""
 
 	return isProviderNameEmpty != isLdapIdEmpty
+}
+
+func checkIsUserDisabled(userAttributes []*goldap.EntryAttribute) bool {
+	isDisabled := false
+
+	for _, attr := range userAttributes {
+		if attr.Name == "userAccountControl" && attr.Values[0] == "514" {
+			isDisabled = true
+		}
+	}
+
+	return isDisabled
 }
