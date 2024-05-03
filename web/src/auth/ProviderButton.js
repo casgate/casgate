@@ -154,7 +154,7 @@ export function renderProviderLogo(provider, application, width, margin, size, l
       } else {
         return (
           <Tooltip title={provider.displayName}>
-            <a key={provider.displayName} href={Provider.getAuthUrl(application, provider, "signup")}>
+            <a key={provider.displayName} href={Provider.getAuthUrl(application, provider, "signup")} target="_blank" rel="noreferrer">
               <img width={width} height={width} src={getProviderLogoURL(provider)} alt={provider.displayName} style={{margin: margin}} />
             </a>
           </Tooltip>
@@ -185,7 +185,7 @@ export function renderProviderLogo(provider, application, width, margin, size, l
     if (provider.category === "OAuth") {
       return (
         <Tooltip title={provider.displayName}>
-          <a key={provider.displayName} href={Provider.getAuthUrl(application, provider, "signup")} style={customAStyle}>
+          <a key={provider.displayName} href={Provider.getAuthUrl(application, provider, "signup")} target="_blank" rel="noreferrer" style={customAStyle}>
             <button style={customButtonStyle}>
               <img width={26} src={getProviderLogoURL(provider)} alt={provider.displayName} style={customImgStyle} />
               <span style={customSpanStyle}>{text}</span>
@@ -230,7 +230,7 @@ export function renderProviderLogo(provider, application, width, margin, size, l
     } else {
       return (
         <div key={provider.displayName} style={{marginBottom: "10px"}}>
-          <a href={Provider.getAuthUrl(application, provider, "signup")}>
+          <a href={Provider.getAuthUrl(application, provider, "signup")} target="_blank" rel="noreferrer">
             {
               getSigninButton(provider)
             }
