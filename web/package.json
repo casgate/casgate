@@ -111,5 +111,9 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
+  },
+  "resolutions": {
+    "css-select": "^4.0.0",
+    "svgo": "^2.8.0"
   }
 }
