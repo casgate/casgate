@@ -115,6 +115,7 @@
   "resolutions": {
     "css-select": "^4.0.0",
     "svgo": "^2.8.0",
-    "**/postcss": "^8.4.31"
+    "**/postcss": "^8.4.31",
+    "**/crypto-es": "^2.1.0"
   }
 }
