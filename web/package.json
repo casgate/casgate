@@ -114,6 +114,7 @@
   },
   "resolutions": {
     "css-select": "^4.0.0",
-    "svgo": "^2.8.0"
+    "svgo": "^2.8.0",
+    "**/postcss": "^8.4.31"
   }
 }
