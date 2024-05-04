@@ -22,8 +22,8 @@ import (
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 	"github.com/lor00x/goldap/message"
-
-	ldap "github.com/forestmgy/ldapserver"
+	
+	ldap "github.com/casgate/ldapserver"
 
 	"github.com/xorm-io/builder"
 )

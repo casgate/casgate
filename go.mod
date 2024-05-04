@@ -15,10 +15,10 @@ require (
 	github.com/casdoor/notify v0.44.0
 	github.com/casdoor/oss v1.3.0
 	github.com/casdoor/xorm-adapter/v3 v3.0.4
+	github.com/casgate/ldapserver v1.0.2
 	github.com/dchest/captcha v0.0.0-20200903113550-03f5f0333e1f
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/fogleman/gg v1.3.0
-	github.com/forestmgy/ldapserver v1.1.0
 	github.com/go-ldap/ldap/v3 v3.3.0
 	github.com/go-mysql-org/go-mysql v1.7.0
 	github.com/go-pay/gopay v1.5.72
