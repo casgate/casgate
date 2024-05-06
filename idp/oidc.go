@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/casdoor/casdoor/object"
 	"io"
 	"net/http"
 	"net/url"
@@ -33,6 +34,7 @@ type OpenIdProvider struct {
 	Client *http.Client
 	Config *oauth2.Config
 
+	Cert        string
 	ConfURL     string
 	UserInfoURL string
 	TokenURL    string
@@ -57,6 +59,7 @@ func NewOpenIdProvider(idpInfo *ProviderInfo, redirectUrl string) *OpenIdProvide
 	}
 	idp.ConfURL = idpInfo.ConfURL
 	idp.UserMapping = idpInfo.UserMapping
+	idp.Cert = idpInfo.Cert
 
 	return idp
 }
@@ -128,18 +131,22 @@ func (idp *OpenIdProvider) GetToken(code string) (*oauth2.Token, error) {
 }
 
 func (idp *OpenIdProvider) TestConnection() error {
-	if util.IsStringsEmpty(idp.Config.ClientID, idp.Config.ClientSecret, idp.AuthURL) {
+	if util.IsStringsEmpty(idp.Config.ClientID, idp.Config.ClientSecret) {
 		return NewMissingParameterError("Missing parameter")
 	}
 
-	httpClient := new(http.Client)
+	httpClient, err := object.GetProviderHttpClient(ProviderInfo{ //want to use GetProviderHttpClient from object package to get https client
+		Cert:     idp.Cert,
+		ConfURL:  idp.ConfURL,
+		TokenURL: idp.TokenURL,
+	})
 	data := url.Values{}
 	data.Add("grant_type", "client_credentials")
 	data.Add("client_id", idp.Config.ClientID)
 	data.Add("client_secret", idp.Config.ClientSecret)
 
 	idp.SetHttpClient(httpClient)
-	err := idp.EnrichOauthURLs()
+	err = idp.EnrichOauthURLs()
 	if err != nil {
 		return err
 	}
