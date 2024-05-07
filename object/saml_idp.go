@@ -307,7 +307,7 @@ func GetSamlResponse(application *Application, user *User, samlRequest string, h
 		X509Certificate: certificate,
 	}
 	ctx := dsig.NewDefaultSigningContext(randomKeyStore)
-	ctx.Hash = crypto.SHA1
+	ctx.Hash = crypto.SHA256
 	//signedXML, err := ctx.SignEnvelopedLimix(samlResponse)
 	//if err != nil {
 	//	return "", "", fmt.Errorf("err: %s", err.Error())
