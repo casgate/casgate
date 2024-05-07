@@ -15,6 +15,7 @@
 package object
 
 import (
+	"errors"
 	"math/rand"
 	"time"
 
@@ -46,14 +47,28 @@ func (user *User) UpdateUserHash() error {
 	return nil
 }
 
-func (user *User) UpdateUserPassword(organization *Organization) {
-	credManager := cred.GetCredManager(organization.PasswordType)
+func (user *User) UpdateUserPassword(organization *Organization) error {
+	var credManager cred.CredManager
+
+	switch user.PasswordType {
+	case "":
+		credManager = cred.GetCredManager(organization.PasswordType)
+	case "plain":
+		credManager = cred.GetCredManager(organization.PasswordType)
+	default:
+		credManager = cred.GetCredManager(user.PasswordType)
+	}
+
 	if credManager != nil {
 		user.PasswordSalt = getRandomString(saltLenth)
 		hashedPassword := credManager.GetHashedPassword(user.Password, user.PasswordSalt)
 		user.Password = hashedPassword
 		user.PasswordType = organization.PasswordType
+	} else {
+		return errors.New("invalid password type")
 	}
+
+	return nil
 }
 
 func getRandomString(n int) string {
