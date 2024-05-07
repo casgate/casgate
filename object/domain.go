@@ -110,6 +110,12 @@ func UpdateDomain(id string, domain *Domain) (bool, error) {
 		return false, err
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(oldDomain.Name,
+		oldDomain.Owner, domain.Name, domain.Owner, domainEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	if affected != 0 {
 		domainReachablePermissions, err := subDomainPermissions(domain)
 		if err != nil {
@@ -129,6 +135,11 @@ func AddDomain(domain *Domain) (bool, error) {
 	affected, err := ormer.Engine.Insert(domain)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := addCasbinObjectGroupingPolicy(domain.Name, domain.Owner, domainEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	if affected != 0 {
@@ -187,6 +198,11 @@ func DeleteDomain(domain *Domain) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{domain.Owner, domain.Name}).Delete(&Domain{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(domain.Name, domain.Owner, domainEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	if affected != 0 {

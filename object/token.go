@@ -161,7 +161,8 @@ func (token *Token) GetId() string {
 
 func UpdateToken(id string, token *Token) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if t, err := getToken(owner, name); err != nil {
+	t, err := getToken(owner, name)
+	if err != nil {
 		return false, err
 	} else if t == nil {
 		return false, nil
@@ -170,6 +171,12 @@ func UpdateToken(id string, token *Token) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(token)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := updateCasbinObjectGroupingPolicy(t.Name,
+		t.Organization, token.Name, token.Organization, tokenEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -181,6 +188,11 @@ func AddToken(token *Token) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(token.Name, token.Organization, tokenEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -188,6 +200,11 @@ func DeleteToken(token *Token) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{token.Owner, token.Name}).Delete(&Token{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(token.Name, token.Organization, tokenEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

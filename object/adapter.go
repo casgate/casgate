@@ -94,7 +94,8 @@ func GetAdapter(id string) (*Adapter, error) {
 
 func UpdateAdapter(id string, adapter *Adapter) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if adapter, err := getAdapter(owner, name); adapter == nil {
+	oldAdapter, err := getAdapter(owner, name)
+	if oldAdapter == nil || err != nil {
 		return false, err
 	}
 
@@ -114,6 +115,12 @@ func UpdateAdapter(id string, adapter *Adapter) (bool, error) {
 		return false, err
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(oldAdapter.Name, oldAdapter.Owner,
+		adapter.Name, adapter.Owner, adapterEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -123,6 +130,11 @@ func AddAdapter(adapter *Adapter) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(adapter.Name, adapter.Owner, adapterEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -130,6 +142,11 @@ func DeleteAdapter(adapter *Adapter) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{adapter.Owner, adapter.Name}).Delete(&Adapter{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(adapter.Name, adapter.Owner, adapterEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

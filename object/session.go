@@ -85,7 +85,8 @@ func GetSingleSession(id string) (*Session, error) {
 func UpdateSession(id string, session *Session) (bool, error) {
 	owner, name, application := util.GetOwnerAndNameAndOtherFromId(id)
 
-	if ss, err := GetSingleSession(id); err != nil {
+	ss, err := GetSingleSession(id)
+	if err != nil {
 		return false, err
 	} else if ss == nil {
 		return false, nil
@@ -94,6 +95,12 @@ func UpdateSession(id string, session *Session) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name, application}).Update(session)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := updateCasbinObjectGroupingPolicy(ss.Name,
+		ss.Owner, session.Name, session.Owner, sessionEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -117,6 +124,11 @@ func AddSession(session *Session) (bool, error) {
 		affected, err := ormer.Engine.Insert(session)
 		if err != nil {
 			return false, err
+		}
+
+		ok, err := addCasbinObjectGroupingPolicy(session.Name, session.Owner, sessionEntity)
+		if !ok || err != nil {
+			return ok, err
 		}
 
 		return affected != 0, nil
@@ -145,12 +157,14 @@ func DeleteSession(id string) (bool, error) {
 		return false, err
 	}
 
+	session, err := GetSingleSession(id)
+	if err != nil {
+		return false, err
+	}
+	fmt.Println("------------------DEBUG---------------------")
+	fmt.Println(id, owner, name, applicationName, application, session)
+	fmt.Println("------------------DEBUG---------------------")
 	if (owner == CasdoorOrganization && applicationName == CasdoorApplication) || application.EnableSigninSession {
-		session, err := GetSingleSession(id)
-		if err != nil {
-			return false, err
-		}
-
 		if session != nil {
 			DeleteBeegoSession(session.SessionId)
 		}
@@ -159,6 +173,13 @@ func DeleteSession(id string) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name, application.Name}).Delete(&Session{})
 	if err != nil {
 		return false, err
+	}
+
+	if session != nil {
+		ok, err := removeCasbinObjectGroupingPolicy(session.Name, session.Owner, sessionEntity)
+		if !ok || err != nil {
+			return ok, err
+		}
 	}
 
 	return affected != 0, nil

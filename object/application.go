@@ -491,6 +491,12 @@ func UpdateApplication(ctx context.Context, id string, application *Application)
 		return false, err
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(oldApplication.Name,
+		oldApplication.Organization, application.Name, application.Organization, applicationEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -543,6 +549,11 @@ func AddApplication(application *Application) (bool, error) {
 		return false, nil
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(application.Name, application.Organization, applicationEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -554,6 +565,11 @@ func DeleteApplication(application *Application) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{application.Owner, application.Name}).Delete(&Application{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(application.Name, application.Organization, applicationEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

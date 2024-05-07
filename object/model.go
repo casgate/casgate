@@ -122,6 +122,12 @@ func UpdateModel(id string, modelObj *Model) (bool, error) {
 		return false, err
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(m.Name,
+		m.Owner, modelObj.Name, modelObj.Owner, modelEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	if affected > 0 {
 		if !equalRules(m.CustomPolicyMappingRules, modelObj.CustomPolicyMappingRules) ||
 			m.CustomPolicyMapping != modelObj.CustomPolicyMapping {
@@ -146,6 +152,11 @@ func AddModel(model *Model) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(model.Name, model.Owner, modelEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -153,6 +164,11 @@ func DeleteModel(model *Model) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{model.Owner, model.Name}).Delete(&Model{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(model.Name, model.Owner, modelEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

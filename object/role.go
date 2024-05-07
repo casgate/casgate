@@ -142,6 +142,12 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, err
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(oldRole.Name,
+		oldRole.Owner, role.Name, role.Owner, roleEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	if affected != 0 {
 		roleReachablePermissions, err := subRolePermissions(role)
 		if err != nil {
@@ -161,6 +167,11 @@ func AddRole(role *Role) (bool, error) {
 	affected, err := ormer.Engine.Insert(role)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := addCasbinObjectGroupingPolicy(role.Name, role.Owner, roleEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	if affected != 0 {
@@ -185,6 +196,13 @@ func AddRoles(roles []*Role) bool {
 	affected, err := ormer.Engine.Insert(roles)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Duplicate entry") {
+			panic(err)
+		}
+	}
+
+	for _, role := range roles {
+		ok, err := addCasbinObjectGroupingPolicy(role.Name, role.Owner, roleEntity)
+		if !ok || err != nil {
 			panic(err)
 		}
 	}
@@ -271,6 +289,11 @@ func DeleteRole(role *Role) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{role.Owner, role.Name}).Delete(&Role{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(role.Name, role.Owner, roleEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	if affected != 0 {

@@ -90,7 +90,8 @@ func GetEnforcer(id string) (*Enforcer, error) {
 
 func UpdateEnforcer(id string, enforcer *Enforcer) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if oldEnforcer, err := getEnforcer(owner, name); err != nil {
+	oldEnforcer, err := getEnforcer(owner, name)
+	if err != nil {
 		return false, err
 	} else if oldEnforcer == nil {
 		return false, nil
@@ -99,6 +100,12 @@ func UpdateEnforcer(id string, enforcer *Enforcer) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(enforcer)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := updateCasbinObjectGroupingPolicy(oldEnforcer.Name,
+		oldEnforcer.Owner, enforcer.Name, enforcer.Owner, enforcerEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -110,6 +117,11 @@ func AddEnforcer(enforcer *Enforcer) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(enforcer.Name, enforcer.Owner, enforcerEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -117,6 +129,11 @@ func DeleteEnforcer(enforcer *Enforcer) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{enforcer.Owner, enforcer.Name}).Delete(&Enforcer{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(enforcer.Name, enforcer.Owner, enforcerEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

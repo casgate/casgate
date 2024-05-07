@@ -103,7 +103,8 @@ func GetWebhook(id string) (*Webhook, error) {
 
 func UpdateWebhook(id string, webhook *Webhook) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if w, err := getWebhook(owner, name); err != nil {
+	w, err := getWebhook(owner, name)
+	if err != nil {
 		return false, err
 	} else if w == nil {
 		return false, nil
@@ -112,6 +113,12 @@ func UpdateWebhook(id string, webhook *Webhook) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(webhook)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := updateCasbinObjectGroupingPolicy(w.Name,
+		w.Organization, webhook.Name, webhook.Organization, webhookEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -123,6 +130,11 @@ func AddWebhook(webhook *Webhook) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(webhook.Name, webhook.Organization, webhookEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -130,6 +142,11 @@ func DeleteWebhook(webhook *Webhook) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{webhook.Owner, webhook.Name}).Delete(&Webhook{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(webhook.Name, webhook.Organization, webhookEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

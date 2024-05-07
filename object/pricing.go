@@ -117,7 +117,8 @@ func GetApplicationDefaultPricing(owner, appName string) (*Pricing, error) {
 
 func UpdatePricing(id string, pricing *Pricing) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if p, err := getPricing(owner, name); err != nil {
+	p, err := getPricing(owner, name)
+	if err != nil {
 		return false, err
 	} else if p == nil {
 		return false, nil
@@ -128,6 +129,12 @@ func UpdatePricing(id string, pricing *Pricing) (bool, error) {
 		return false, err
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(p.Name,
+		p.Owner, pricing.Name, pricing.Owner, pricingEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -136,6 +143,12 @@ func AddPricing(pricing *Pricing) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	ok, err := addCasbinObjectGroupingPolicy(pricing.Name, pricing.Owner, pricingEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -144,6 +157,12 @@ func DeletePricing(pricing *Pricing) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(pricing.Name, pricing.Owner, pricingEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 

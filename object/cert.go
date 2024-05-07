@@ -179,7 +179,8 @@ func GetCert(id string) (*Cert, error) {
 
 func UpdateCert(id string, cert *Cert) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if c, err := getCert(owner, name); err != nil {
+	c, err := getCert(owner, name)
+	if err != nil {
 		return false, err
 	} else if c == nil {
 		return false, nil
@@ -194,6 +195,12 @@ func UpdateCert(id string, cert *Cert) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(cert)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := updateCasbinObjectGroupingPolicy(c.Name,
+		c.Owner, cert.Name, cert.Owner, certEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -211,6 +218,11 @@ func AddCert(cert *Cert) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(cert.Name, cert.Owner, certEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -218,6 +230,11 @@ func DeleteCert(cert *Cert) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{cert.Owner, cert.Name}).Delete(&Cert{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(cert.Name, cert.Owner, certEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

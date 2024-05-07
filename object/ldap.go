@@ -67,6 +67,11 @@ func AddLdap(ldap *Ldap) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(ldap.Id, ldap.Owner, ldapEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -153,7 +158,8 @@ func GetMaskedLdaps(ldaps []*Ldap, errs ...error) ([]*Ldap, error) {
 func UpdateLdap(ldap *Ldap) (bool, error) {
 	var l *Ldap
 	var err error
-	if l, err = GetLdap(ldap.Id); err != nil {
+	l, err = GetLdap(ldap.Id)
+	if err != nil {
 		return false, nil
 	} else if l == nil {
 		return false, nil
@@ -171,6 +177,12 @@ func UpdateLdap(ldap *Ldap) (bool, error) {
 		return false, nil
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(l.Id,
+		l.Owner, ldap.Id, ldap.Owner, ldapEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -178,6 +190,11 @@ func DeleteLdap(ldap *Ldap) (bool, error) {
 	affected, err := ormer.Engine.ID(ldap.Id).Delete(&Ldap{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(ldap.Id, ldap.Owner, ldapEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

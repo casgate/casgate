@@ -110,7 +110,8 @@ func GetPlan(id string) (*Plan, error) {
 
 func UpdatePlan(id string, plan *Plan) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if p, err := getPlan(owner, name); err != nil {
+	p, err := getPlan(owner, name)
+	if err != nil {
 		return false, err
 	} else if p == nil {
 		return false, nil
@@ -121,6 +122,12 @@ func UpdatePlan(id string, plan *Plan) (bool, error) {
 		return false, err
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(p.Name,
+		p.Owner, plan.Name, plan.Owner, planEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -129,6 +136,12 @@ func AddPlan(plan *Plan) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	ok, err := addCasbinObjectGroupingPolicy(plan.Name, plan.Owner, planEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -137,5 +150,11 @@ func DeletePlan(plan *Plan) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(plan.Name, plan.Owner, planEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }

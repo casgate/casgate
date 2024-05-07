@@ -678,6 +678,23 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 		return 0, err
 	}
 
+	if oldUser.Name != user.Name || oldUser.Owner != user.Owner || oldUser.IsAdmin != user.IsAdmin {
+		oldRole := userRole
+		if oldUser.IsAdmin {
+			oldRole = adminRole
+		}
+		role := userRole
+		if user.IsAdmin {
+			role = adminRole
+		}
+		ok, err := casbinEnforcer.UpdateNamedGroupingPolicy(subjectGroupingPolicy,
+			[]string{oldUser.Name, oldRole, oldUser.Owner},
+			[]string{user.Name, role, user.Owner})
+		if !ok || err != nil {
+			return 0, err
+		}
+	}
+
 	hasImpactOnPolicy :=
 		(util.InSlice(columns, "groups") && !slices.Equal(oldUser.Groups, user.Groups)) ||
 			(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
@@ -763,6 +780,23 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(user)
 	if err != nil {
 		return false, err
+	}
+
+	if oldUser.Name != user.Name || oldUser.Owner != user.Owner || oldUser.IsAdmin != user.IsAdmin {
+		oldRole := userRole
+		if oldUser.IsAdmin {
+			oldRole = adminRole
+		}
+		role := userRole
+		if user.IsAdmin {
+			role = adminRole
+		}
+		ok, err := casbinEnforcer.UpdateNamedGroupingPolicy(subjectGroupingPolicy,
+			[]string{oldUser.Name, oldRole, oldUser.Owner},
+			[]string{user.Name, role, user.Owner})
+		if !ok || err != nil {
+			return ok, err
+		}
 	}
 
 	if affected != 0 &&
@@ -853,6 +887,15 @@ func AddUser(user *User) (bool, error) {
 		return false, err
 	}
 
+	role := userRole
+	if user.IsAdmin {
+		role = adminRole
+	}
+	ok, err := casbinEnforcer.AddRoleForUserInDomain(user.Name, role, user.Owner)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	if affected != 0 {
 		reachablePermissions, err := reachablePermissionsByUser(user)
 		if err != nil {
@@ -896,6 +939,17 @@ func AddUsers(users []*User) (bool, error) {
 	if err != nil {
 		if !strings.Contains(err.Error(), "Duplicate entry") {
 			return false, err
+		}
+	}
+
+	for _, user := range users {
+		role := userRole
+		if user.IsAdmin {
+			role = adminRole
+		}
+		ok, err := casbinEnforcer.AddRoleForUserInDomain(user.Name, role, user.Owner)
+		if !ok || err != nil {
+			return ok, err
 		}
 	}
 
@@ -947,9 +1001,18 @@ func AddUsersInBatch(users []*User) (bool, error) {
 
 func DeleteUser(user *User) (bool, error) {
 	// Forced offline the user first
-	_, err := DeleteSession(util.GetSessionId(user.Owner, user.Name, CasdoorApplication))
+	userOwnerSessions, err := GetSessions(user.Owner)
 	if err != nil {
 		return false, err
+	}
+	for _, userOwnerSession := range userOwnerSessions {
+		if userOwnerSession.Name == user.Name {
+			_, err := DeleteSession(util.GetSessionId(user.Owner, user.Name,
+				userOwnerSession.Application))
+			if err != nil {
+				return false, err
+			}
+		}
 	}
 
 	oldReachablePermissions, err := reachablePermissionsByUser(user)
@@ -960,6 +1023,16 @@ func DeleteUser(user *User) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{user.Owner, user.Name}).Delete(&User{})
 	if err != nil {
 		return false, err
+	}
+
+	role := userRole
+	if user.IsAdmin {
+		role = adminRole
+	}
+	ok, err := casbinEnforcer.RemoveNamedGroupingPolicy(subjectGroupingPolicy,
+		user.Name, role, user.Owner)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	if affected != 0 {

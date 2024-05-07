@@ -120,7 +120,8 @@ func GetPayment(id string) (*Payment, error) {
 
 func UpdatePayment(id string, payment *Payment) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if p, err := getPayment(owner, name); err != nil {
+	p, err := getPayment(owner, name)
+	if err != nil {
 		return false, err
 	} else if p == nil {
 		return false, nil
@@ -129,6 +130,12 @@ func UpdatePayment(id string, payment *Payment) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(payment)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := updateCasbinObjectGroupingPolicy(p.Name,
+		p.Owner, payment.Name, payment.Owner, paymentEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -140,6 +147,11 @@ func AddPayment(payment *Payment) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(payment.Name, payment.Owner, paymentEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -147,6 +159,11 @@ func DeletePayment(payment *Payment) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{payment.Owner, payment.Name}).Delete(&Payment{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(payment.Name, payment.Owner, paymentEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

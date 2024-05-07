@@ -200,7 +200,8 @@ func GetSubscription(id string) (*Subscription, error) {
 
 func UpdateSubscription(id string, subscription *Subscription) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if s, err := getSubscription(owner, name); err != nil {
+	s, err := getSubscription(owner, name)
+	if err != nil {
 		return false, err
 	} else if s == nil {
 		return false, nil
@@ -209,6 +210,12 @@ func UpdateSubscription(id string, subscription *Subscription) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(subscription)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := updateCasbinObjectGroupingPolicy(s.Name,
+		s.Owner, subscription.Name, subscription.Owner, subscriptionEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -220,6 +227,11 @@ func AddSubscription(subscription *Subscription) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(subscription.Name, subscription.Owner, subscriptionEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -227,6 +239,11 @@ func DeleteSubscription(subscription *Subscription) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{subscription.Owner, subscription.Name}).Delete(&Subscription{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(subscription.Name, subscription.Owner, subscriptionEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

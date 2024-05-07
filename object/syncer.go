@@ -136,7 +136,8 @@ func GetMaskedSyncers(syncers []*Syncer) []*Syncer {
 
 func UpdateSyncer(id string, syncer *Syncer) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if s, err := getSyncer(owner, name); err != nil {
+	s, err := getSyncer(owner, name)
+	if err != nil {
 		return false, err
 	} else if s == nil {
 		return false, nil
@@ -156,6 +157,12 @@ func UpdateSyncer(id string, syncer *Syncer) (bool, error) {
 		if err != nil {
 			return false, err
 		}
+	}
+
+	ok, err := updateCasbinObjectGroupingPolicy(s.Name, s.Organization,
+		syncer.Name, syncer.Organization, syncerEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -194,6 +201,11 @@ func AddSyncer(syncer *Syncer) (bool, error) {
 		}
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(syncer.Name, syncer.Organization, syncerEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -205,6 +217,11 @@ func DeleteSyncer(syncer *Syncer) (bool, error) {
 
 	if affected == 1 {
 		deleteSyncerJob(syncer)
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(syncer.Name, syncer.Organization, syncerEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

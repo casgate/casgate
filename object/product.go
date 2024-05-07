@@ -96,7 +96,8 @@ func GetProduct(id string) (*Product, error) {
 
 func UpdateProduct(id string, product *Product) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if p, err := getProduct(owner, name); err != nil {
+	p, err := getProduct(owner, name)
+	if err != nil {
 		return false, err
 	} else if p == nil {
 		return false, nil
@@ -105,6 +106,12 @@ func UpdateProduct(id string, product *Product) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(product)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := updateCasbinObjectGroupingPolicy(p.Name,
+		p.Owner, product.Name, product.Owner, productEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -116,6 +123,11 @@ func AddProduct(product *Product) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(product.Name, product.Owner, productEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -123,6 +135,11 @@ func DeleteProduct(product *Product) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{product.Owner, product.Name}).Delete(&Product{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(product.Name, product.Owner, productEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -298,6 +315,13 @@ func CreateProductForPlan(plan *Plan) *Product {
 
 func UpdateProductForPlan(plan *Plan, product *Product) {
 	product.Owner = plan.Owner
+
+	ok, err := updateCasbinObjectGroupingPolicy(product.Name,
+		product.Owner, product.Name, plan.Owner, productEntity)
+	if !ok || err != nil {
+		panic(err)
+	}
+
 	product.DisplayName = fmt.Sprintf("Product for Plan %v/%v/%v", plan.Name, plan.DisplayName, plan.Period)
 	product.Detail = fmt.Sprintf("This product was auto created for plan %v(%v), subscription period is %v", plan.Name, plan.DisplayName, plan.Period)
 	product.Price = plan.Price

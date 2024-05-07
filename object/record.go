@@ -134,6 +134,11 @@ func AddRecord(record *Record) bool {
 		panic(err)
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(record.Name, record.Organization, recordEntity)
+	if !ok || err != nil {
+		panic(err)
+	}
+
 	return affected != 0
 }
 

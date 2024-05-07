@@ -101,15 +101,22 @@ func GetResource(id string) (*Resource, error) {
 
 func UpdateResource(id string, resource *Resource) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
-	if r, err := getResource(owner, name); err != nil {
+	r, err := getResource(owner, name)
+	if err != nil {
 		return false, err
 	} else if r == nil {
 		return false, nil
 	}
 
-	_, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(resource)
+	_, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(resource)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := updateCasbinObjectGroupingPolicy(r.Name,
+		r.Owner, resource.Name, resource.Owner, resourceEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	// return affected != 0
@@ -122,6 +129,11 @@ func AddResource(resource *Resource) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(resource.Name, resource.Owner, resourceEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -129,6 +141,11 @@ func DeleteResource(resource *Resource) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{resource.Owner, resource.Name}).Delete(&Resource{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(resource.Name, resource.Owner, resourceEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

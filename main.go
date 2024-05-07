@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/beego/beego"
@@ -42,12 +43,20 @@ func main() {
 	object.CreateTables()
 	object.DoMigration()
 
+	myEnforcer, err := object.InitCasbinEnforcer()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	object.InitDb()
 	object.InitFromFile()
 	object.InitDefaultStorageProvider()
 	object.InitLdapAutoSynchronizer()
 	proxy.InitHttpClient()
-	authz.InitApi()
+	err = authz.InitApi(myEnforcer)
+	if err != nil {
+		log.Fatal(err)
+	}
 	object.InitUserManager()
 
 	util.SafeGoroutine(func() { object.RunSyncUsersJob() })
@@ -79,7 +88,7 @@ func main() {
 	beego.BConfig.WebConfig.Session.SessionCookieLifeTime = 3600 * 24 * 30
 	beego.BConfig.WebConfig.Session.SessionCookieSameSite = http.SameSiteLaxMode
 
-	err := logs.SetLogger(logs.AdapterFile, conf.GetConfigString("logConfig"))
+	err = logs.SetLogger(logs.AdapterFile, conf.GetConfigString("logConfig"))
 	if err != nil {
 		panic(err)
 	}

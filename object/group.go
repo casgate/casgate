@@ -129,6 +129,12 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 		return false, err
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(oldGroup.Name,
+		oldGroup.Owner, group.Name, group.Owner, groupEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	if affected != 0 {
 		groupReachablePermissions, err := subGroupPermissions(group)
 		if err != nil {
@@ -155,6 +161,11 @@ func AddGroup(group *Group) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(group.Name, group.Owner, groupEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	if affected != 0 {
 		domainReachablePermissions, err := subGroupPermissions(group)
 		if err != nil {
@@ -178,6 +189,14 @@ func AddGroups(groups []*Group) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	for _, group := range groups {
+		ok, err := addCasbinObjectGroupingPolicy(group.Name, group.Owner, groupEntity)
+		if !ok || err != nil {
+			return ok, err
+		}
+	}
+
 	return affected != 0, nil
 }
 
@@ -219,6 +238,11 @@ func DeleteGroup(group *Group) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{group.Owner, group.Name}).Delete(&Group{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(group.Name, group.Owner, groupEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	if affected != 0 {

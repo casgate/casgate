@@ -232,7 +232,8 @@ func GetWechatMiniProgramProvider(application *Application) *Provider {
 
 func UpdateProvider(id string, provider *Provider) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if p, err := getProvider(owner, name); err != nil {
+	p, err := getProvider(owner, name)
+	if err != nil {
 		return false, err
 	} else if p == nil {
 		return false, nil
@@ -263,6 +264,12 @@ func UpdateProvider(id string, provider *Provider) (bool, error) {
 		return false, err
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(p.Name,
+		p.Owner, provider.Name, provider.Owner, providerEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -277,6 +284,11 @@ func AddProvider(provider *Provider) (bool, error) {
 		return false, err
 	}
 
+	ok, err := addCasbinObjectGroupingPolicy(provider.Name, provider.Owner, providerEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	return affected != 0, nil
 }
 
@@ -284,6 +296,11 @@ func DeleteProvider(provider *Provider) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{provider.Owner, provider.Name}).Delete(&Provider{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(provider.Name, provider.Owner, providerEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

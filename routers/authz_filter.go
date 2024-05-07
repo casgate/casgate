@@ -88,11 +88,16 @@ func getObject(ctx *context.Context) (string, string) {
 		}
 
 		organization := ctx.Input.Query("organization")
+		oraganizationName := ctx.Input.Query("organizationName")
 		if organization != "" {
 			if objOwner != "admin" {
 				return "", ""
 			}
 			objOwner = organization
+		}
+
+		if objOwner == "" {
+			objOwner = oraganizationName
 		}
 
 		return objOwner, objName

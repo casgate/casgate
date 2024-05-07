@@ -122,6 +122,12 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 		return false, err
 	}
 
+	ok, err := updateCasbinObjectGroupingPolicy(oldPermission.Name,
+		oldPermission.Owner, permission.Name, permission.Owner, permissionEntity)
+	if !ok || err != nil {
+		return ok, err
+	}
+
 	if affected != 0 {
 		err = ProcessPolicyDifference([]*Permission{permission})
 		if err != nil {
@@ -136,6 +142,11 @@ func AddPermission(permission *Permission) (bool, error) {
 	affected, err := ormer.Engine.Insert(permission)
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := addCasbinObjectGroupingPolicy(permission.Name, permission.Owner, permissionEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	if affected != 0 {
@@ -156,6 +167,13 @@ func AddPermissions(permissions []*Permission) bool {
 	affected, err := ormer.Engine.Insert(permissions)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Duplicate entry") {
+			panic(err)
+		}
+	}
+
+	for _, permission := range permissions {
+		ok, err := addCasbinObjectGroupingPolicy(permission.Name, permission.Owner, permissionEntity)
+		if !ok || err != nil {
 			panic(err)
 		}
 	}
@@ -202,6 +220,11 @@ func DeletePermission(permission *Permission) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{permission.Owner, permission.Name}).Delete(&Permission{})
 	if err != nil {
 		return false, err
+	}
+
+	ok, err := removeCasbinObjectGroupingPolicy(permission.Name, permission.Owner, permissionEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	if affected != 0 {
