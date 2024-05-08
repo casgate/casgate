@@ -51,9 +51,8 @@ func (user *User) UpdateUserPassword(organization *Organization) error {
 	var credManager cred.CredManager
 
 	switch user.PasswordType {
-	case "":
-		credManager = cred.GetCredManager(organization.PasswordType)
-	case "plain":
+	case "", "plain":
+		user.PasswordType = organization.PasswordType
 		credManager = cred.GetCredManager(organization.PasswordType)
 	default:
 		credManager = cred.GetCredManager(user.PasswordType)
@@ -66,7 +65,6 @@ func (user *User) UpdateUserPassword(organization *Organization) error {
 	user.PasswordSalt = getRandomString(saltLenth)
 	hashedPassword := credManager.GetHashedPassword(user.Password, user.PasswordSalt)
 	user.Password = hashedPassword
-	user.PasswordType = organization.PasswordType
 
 	return nil
 }
