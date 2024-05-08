@@ -59,14 +59,14 @@ func (user *User) UpdateUserPassword(organization *Organization) error {
 		credManager = cred.GetCredManager(user.PasswordType)
 	}
 
-	if credManager != nil {
-		user.PasswordSalt = getRandomString(saltLenth)
-		hashedPassword := credManager.GetHashedPassword(user.Password, user.PasswordSalt)
-		user.Password = hashedPassword
-		user.PasswordType = organization.PasswordType
-	} else {
+	if credManager == nil {
 		return errors.New("invalid password type")
 	}
+
+	user.PasswordSalt = getRandomString(saltLenth)
+	hashedPassword := credManager.GetHashedPassword(user.Password, user.PasswordSalt)
+	user.Password = hashedPassword
+	user.PasswordType = organization.PasswordType
 
 	return nil
 }
