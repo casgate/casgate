@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -143,8 +144,8 @@ func CheckUserSignup(application *Application, organization *Organization, form 
 	return ""
 }
 
-func checkSigninErrorTimes(user *User, lang string) error {
-	failedSigninLimit, failedSigninFrozenTime, err := GetFailedSigninConfigByUser(user)
+func checkSigninErrorTimes(ctx context.Context, user *User, lang string) error {
+	failedSigninLimit, failedSigninFrozenTime, err := GetFailedSigninConfigByUser(ctx, user)
 	if err != nil {
 		return err
 	}
@@ -169,14 +170,14 @@ func checkSigninErrorTimes(user *User, lang string) error {
 	return nil
 }
 
-func CheckPassword(user *User, password string, lang string, options ...bool) error {
+func CheckPassword(ctx context.Context, user *User, password string, lang string, options ...bool) error {
 	enableCaptcha := false
 	if len(options) > 0 {
 		enableCaptcha = options[0]
 	}
 	// check the login error times
 	if !enableCaptcha {
-		err := checkSigninErrorTimes(user, lang)
+		err := checkSigninErrorTimes(ctx, user, lang)
 		if err != nil {
 			return err
 		}
@@ -207,20 +208,20 @@ func CheckPassword(user *User, password string, lang string, options ...bool) er
 			return resetUserSigninErrorTimes(user)
 		}
 
-		return recordSigninErrorInfo(user, lang, enableCaptcha)
+		return recordSigninErrorInfo(ctx, user, lang, enableCaptcha)
 	} else {
 		return fmt.Errorf(i18n.Translate(lang, "check:unsupported password type: %s"), organization.PasswordType)
 	}
 }
 
-func CheckOneTimePassword(user *User, dest, code, lang string) error {
+func CheckOneTimePassword(ctx context.Context, user *User, dest, code, lang string) error {
 	// check the login error times
-	if err := checkSigninErrorTimes(user, lang); err != nil {
+	if err := checkSigninErrorTimes(ctx, user, lang); err != nil {
 		return err
 	}
 	result := CheckVerificationCode(dest, code, lang)
 	if result.Code != VerificationSuccess {
-		return recordSigninErrorInfo(user, lang)
+		return recordSigninErrorInfo(ctx, user, lang)
 	}
 	resetUserSigninErrorTimes(user)
 	return nil
@@ -347,7 +348,7 @@ func (err *CheckUserPasswordError) RealError() error {
 	return err.err
 }
 
-func CheckUserPassword(organization string, username string, password string, lang string, options ...bool) (*User, error) {
+func CheckUserPassword(ctx context.Context, organization string, username string, password string, lang string, options ...bool) (*User, error) {
 	enableCaptcha := false
 	isSigninViaLdap := false
 	isPasswordWithLdapEnabled := false
@@ -382,7 +383,7 @@ func CheckUserPassword(organization string, username string, password string, la
 
 		// check the login error times
 		if !enableCaptcha {
-			err = checkSigninErrorTimes(user, lang)
+			err = checkSigninErrorTimes(ctx, user, lang)
 			if err != nil {
 				return nil, err
 			}
@@ -395,10 +396,10 @@ func CheckUserPassword(organization string, username string, password string, la
 				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
 			}
 
-			return nil, recordSigninErrorInfo(user, lang, enableCaptcha)
+			return nil, recordSigninErrorInfo(ctx, user, lang, enableCaptcha)
 		}
 	} else {
-		err = CheckPassword(user, password, lang, enableCaptcha)
+		err = CheckPassword(ctx, user, password, lang, enableCaptcha)
 		if err != nil {
 			return nil, err
 		}

@@ -51,6 +51,8 @@ func getWebBuildFolder() string {
 }
 
 func fastAutoSignin(ctx *context.Context) (string, error) {
+	goCtx := ctx.Request.Context()
+
 	userId := getSessionUser(ctx)
 	if userId == "" {
 		return "", nil
@@ -71,7 +73,7 @@ func fastAutoSignin(ctx *context.Context) (string, error) {
 		return "", nil
 	}
 
-	application, err := object.GetApplicationByClientId(clientId)
+	application, err := object.GetApplicationByClientId(goCtx, clientId)
 	if err != nil {
 		return "", err
 	}

@@ -41,6 +41,7 @@ const (
 // @Success 200 {object} controllers.Response "The Response object"
 // @router /send-verification-code [post]
 func (c *ApiController) SendVerificationCode() {
+	ctx := c.getRequestCtx()
 	var vform form.VerificationForm
 	err := c.ParseForm(&vform)
 	if err != nil {
@@ -61,7 +62,7 @@ func (c *ApiController) SendVerificationCode() {
 		}
 		c.SetSession("oneTimeCode", "")
 	} else {
-		applicationCaptchaProvider, err := object.GetCaptchaProviderByApplication(vform.ApplicationId, "false", c.GetAcceptLanguage())
+		applicationCaptchaProvider, err := object.GetCaptchaProviderByApplication(ctx, vform.ApplicationId, "false", c.GetAcceptLanguage())
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -81,7 +82,7 @@ func (c *ApiController) SendVerificationCode() {
 		}
 	}
 
-	application, err := object.GetApplication(vform.ApplicationId)
+	application, err := object.GetApplication(ctx, vform.ApplicationId)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -349,6 +350,7 @@ func (c *ApiController) ResetEmailOrPhone() {
 // @Success 200 {object} controllers.Response "The Response object"
 // @router /verify-code [post]
 func (c *ApiController) VerifyCode() {
+	ctx := c.getRequestCtx()
 	var authForm form.AuthForm
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &authForm)
 	if err != nil {
@@ -395,7 +397,7 @@ func (c *ApiController) VerifyCode() {
 		}
 	}
 
-	if err := object.CheckOneTimePassword(user, checkDest, authForm.Code, c.GetAcceptLanguage()); err != nil {
+	if err := object.CheckOneTimePassword(ctx, user, checkDest, authForm.Code, c.GetAcceptLanguage()); err != nil {
 		c.ResponseError(err.Error())
 		return
 	}

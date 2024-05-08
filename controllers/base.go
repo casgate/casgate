@@ -127,11 +127,12 @@ func (c *ApiController) GetSessionUsername() string {
 }
 
 func (c *ApiController) GetSessionApplication() *object.Application {
+	ctx := c.getRequestCtx()
 	clientId := c.GetSession("aud")
 	if clientId == nil {
 		return nil
 	}
-	application, err := object.GetApplicationByClientId(clientId.(string))
+	application, err := object.GetApplicationByClientId(ctx, clientId.(string))
 	if err != nil {
 		c.ResponseError(err.Error())
 		return nil

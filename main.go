@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -42,10 +43,12 @@ func main() {
 	object.CreateTables()
 	object.DoMigration()
 
-	object.InitDb()
-	object.InitFromFile()
+	ctx := context.Background()
+
+	object.InitDb(ctx)
+	object.InitFromFile(ctx)
 	object.InitDefaultStorageProvider()
-	object.InitLdapAutoSynchronizer()
+	object.InitLdapAutoSynchronizer(ctx)
 	proxy.InitHttpClient()
 	authz.InitApi()
 	object.InitUserManager()

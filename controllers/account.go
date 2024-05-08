@@ -80,7 +80,7 @@ func (c *ApiController) Signup() {
 		return
 	}
 
-	application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
+	application, err := object.GetApplication(gCtx, fmt.Sprintf("admin/%s", authForm.Application))
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -196,7 +196,7 @@ func (c *ApiController) Signup() {
 	var affected bool
 
 	if authForm.Id == "" {
-		affected, err = object.AddUser(user)
+		affected, err = object.AddUser(gCtx, user)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -322,7 +322,7 @@ func (c *ApiController) Logout() {
 
 		c.ClearUserSession()
 		owner, username := util.GetOwnerAndNameFromId(user)
-		_, err := object.DeleteSessionId(util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
+		_, err := object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
 
@@ -354,7 +354,7 @@ func (c *ApiController) Logout() {
 			return
 		}
 
-		affected, application, token, err := object.ExpireTokenByAccessToken(accessToken)
+		affected, application, token, err := object.ExpireTokenByAccessToken(goCtx, accessToken)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
 
@@ -384,7 +384,7 @@ func (c *ApiController) Logout() {
 		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
 		owner, username := util.GetOwnerAndNameFromId(user)
 
-		_, err = object.DeleteSessionId(util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
+		_, err = object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
 
@@ -534,8 +534,9 @@ func (c *ApiController) GetUserinfo2() {
 func (c *ApiController) GetCaptcha() {
 	applicationId := c.Input().Get("applicationId")
 	isCurrentProvider := c.Input().Get("isCurrentProvider")
+	goCtx := c.getRequestCtx()
 
-	captchaProvider, err := object.GetCaptchaProviderByApplication(applicationId, isCurrentProvider, c.GetAcceptLanguage())
+	captchaProvider, err := object.GetCaptchaProviderByApplication(goCtx, applicationId, isCurrentProvider, c.GetAcceptLanguage())
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

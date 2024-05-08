@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"time"
@@ -47,13 +48,13 @@ func resetUserSigninErrorTimes(user *User) error {
 	return err
 }
 
-func recordSigninErrorInfo(user *User, lang string, options ...bool) error {
+func recordSigninErrorInfo(ctx context.Context, user *User, lang string, options ...bool) error {
 	enableCaptcha := false
 	if len(options) > 0 {
 		enableCaptcha = options[0]
 	}
 
-	failedSigninLimit, failedSigninFrozenTime, errSignin := GetFailedSigninConfigByUser(user)
+	failedSigninLimit, failedSigninFrozenTime, errSignin := GetFailedSigninConfigByUser(ctx, user)
 	if errSignin != nil {
 		return errSignin
 	}
@@ -85,8 +86,8 @@ func recordSigninErrorInfo(user *User, lang string, options ...bool) error {
 	return fmt.Errorf(i18n.Translate(lang, "check:You have entered the wrong password or code too many times, please wait for %d minutes and try again"), failedSigninFrozenTime)
 }
 
-func GetFailedSigninConfigByUser(user *User) (int, int, error) {
-	application, err := GetApplicationByUser(user)
+func GetFailedSigninConfigByUser(ctx context.Context, user *User) (int, int, error) {
+	application, err := GetApplicationByUser(ctx, user)
 	if err != nil {
 		return 0, 0, err
 	}
