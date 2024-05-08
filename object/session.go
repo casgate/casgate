@@ -161,9 +161,6 @@ func DeleteSession(id string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	fmt.Println("------------------DEBUG---------------------")
-	fmt.Println(id, owner, name, applicationName, application, session)
-	fmt.Println("------------------DEBUG---------------------")
 	if (owner == CasdoorOrganization && applicationName == CasdoorApplication) || application.EnableSigninSession {
 		if session != nil {
 			DeleteBeegoSession(session.SessionId)

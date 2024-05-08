@@ -678,21 +678,14 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 		return 0, err
 	}
 
-	if oldUser.Name != user.Name || oldUser.Owner != user.Owner || oldUser.IsAdmin != user.IsAdmin {
-		oldRole := userRole
-		if oldUser.IsAdmin {
-			oldRole = adminRole
-		}
-		role := userRole
-		if user.IsAdmin {
-			role = adminRole
-		}
-		ok, err := casbinEnforcer.UpdateNamedGroupingPolicy(subjectGroupingPolicy,
-			[]string{oldUser.Name, oldRole, oldUser.Owner},
-			[]string{user.Name, role, user.Owner})
-		if !ok || err != nil {
-			return 0, err
-		}
+	ok, err := updateRoleForUserInDomain(oldUser.Name, oldUser.IsAdmin, oldUser.Owner, user.Name, user.IsAdmin, user.Owner)
+	if !ok || err != nil {
+		return 0, err
+	}
+
+	ok, err = updateCasbinObjectGroupingPolicy(oldUser.Name, oldUser.Owner, user.Name, user.Owner, userEntity)
+	if !ok || err != nil {
+		return 0, err
 	}
 
 	hasImpactOnPolicy :=
@@ -782,21 +775,14 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 		return false, err
 	}
 
-	if oldUser.Name != user.Name || oldUser.Owner != user.Owner || oldUser.IsAdmin != user.IsAdmin {
-		oldRole := userRole
-		if oldUser.IsAdmin {
-			oldRole = adminRole
-		}
-		role := userRole
-		if user.IsAdmin {
-			role = adminRole
-		}
-		ok, err := casbinEnforcer.UpdateNamedGroupingPolicy(subjectGroupingPolicy,
-			[]string{oldUser.Name, oldRole, oldUser.Owner},
-			[]string{user.Name, role, user.Owner})
-		if !ok || err != nil {
-			return ok, err
-		}
+	ok, err := updateRoleForUserInDomain(oldUser.Name, oldUser.IsAdmin, oldUser.Owner, user.Name, user.IsAdmin, user.Owner)
+	if !ok || err != nil {
+		return ok, err
+	}
+
+	ok, err = updateCasbinObjectGroupingPolicy(oldUser.Name, oldUser.Owner, user.Name, user.Owner, userEntity)
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	if affected != 0 &&
@@ -887,11 +873,12 @@ func AddUser(user *User) (bool, error) {
 		return false, err
 	}
 
-	role := userRole
-	if user.IsAdmin {
-		role = adminRole
+	ok, err := addRoleForUserInDomain(user.Name, user.IsAdmin, user.Owner)
+	if !ok || err != nil {
+		return ok, err
 	}
-	ok, err := casbinEnforcer.AddRoleForUserInDomain(user.Name, role, user.Owner)
+
+	ok, err = addCasbinObjectGroupingPolicy(user.Name, user.Owner, userEntity)
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -943,11 +930,12 @@ func AddUsers(users []*User) (bool, error) {
 	}
 
 	for _, user := range users {
-		role := userRole
-		if user.IsAdmin {
-			role = adminRole
+		ok, err := addRoleForUserInDomain(user.Name, user.IsAdmin, user.Owner)
+		if !ok || err != nil {
+			return ok, err
 		}
-		ok, err := casbinEnforcer.AddRoleForUserInDomain(user.Name, role, user.Owner)
+
+		ok, err = addCasbinObjectGroupingPolicy(user.Name, user.Owner, userEntity)
 		if !ok || err != nil {
 			return ok, err
 		}
@@ -1025,12 +1013,12 @@ func DeleteUser(user *User) (bool, error) {
 		return false, err
 	}
 
-	role := userRole
-	if user.IsAdmin {
-		role = adminRole
+	ok, err := deleteRoleForUserInDomain(user.Name, user.IsAdmin, user.Owner)
+	if !ok || err != nil {
+		return ok, err
 	}
-	ok, err := casbinEnforcer.RemoveNamedGroupingPolicy(subjectGroupingPolicy,
-		user.Name, role, user.Owner)
+
+	ok, err = removeCasbinObjectGroupingPolicy(user.Name, user.Owner, userEntity)
 	if !ok || err != nil {
 		return ok, err
 	}

@@ -17,7 +17,6 @@ package object
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 
 	"github.com/casdoor/casdoor/conf"
@@ -239,80 +238,19 @@ func UpdateOrganization(ctx context.Context, id string, organization *Organizati
 		}
 
 		ok, err := updateCasbinObjectGroupingPolicy(org.Name,
-			org.Owner, organization.Name, organization.Owner, organizationEntity)
+			org.Name, organization.Name, organization.Name, organizationEntity)
 		if !ok || err != nil {
 			return err
 		}
 
-		if org.Name != organization.Name {
-			var oldPolicies [][]string
-			var newPolicies [][]string
-			for _, endpoint := range endpoints {
-				name := org.Name
-				if endpoint.entity == organizationEntity {
-					name = "admin"
-				}
-				oldPolicies = append(oldPolicies, []string{org.Name, endpoint.role,
-					endpoint.method, endpoint.urlPath, name,
-					fmt.Sprintf("%s-%ss", org.Name, endpoint.entity)})
-				name = organization.Name
-				if endpoint.entity == organizationEntity {
-					name = "admin"
-				}
-				newPolicies = append(newPolicies, []string{organization.Name,
-					endpoint.role, endpoint.method, endpoint.urlPath, name,
-					fmt.Sprintf("%s-%ss", organization.Name, endpoint.entity)})
-			}
-			ok, err := casbinEnforcer.UpdatePolicies(oldPolicies, newPolicies)
-			if !ok || err != nil {
-				return fmt.Errorf("error updating organization policies: %s", err)
-			}
+		ok, err = updateRoleForUserInDomain(adminRole, false, org.Name, adminRole, false, organization.Name)
+		if !ok || err != nil {
+			return err
+		}
 
-			orgRoles := casbinEnforcer.GetFilteredNamedGroupingPolicy(
-				subjectGroupingPolicy, 2, org.Name)
-			var organizationRoles [][]string
-			for _, orgRole := range orgRoles {
-				organizationRole := []string{orgRole[0], orgRole[1], organization.Name}
-				organizationRoles = append(organizationRoles, organizationRole)
-			}
-			ok, err = casbinEnforcer.UpdateNamedGroupingPolicies(
-				subjectGroupingPolicy, orgRoles, organizationRoles)
-			if !ok || err != nil {
-				return fmt.Errorf("error updating organization roles policies: %s", err)
-			}
-
-			var orgGroups [][]string
-			updatedEntities := make(map[string]bool)
-			for _, endpoint := range endpoints {
-				entity := endpoint.entity
-				_, ok := updatedEntities[entity]
-				if !ok {
-					entityOrgGroups :=
-						casbinEnforcer.GetFilteredNamedGroupingPolicy(objectGroupingPolicy,
-							1, fmt.Sprintf("%s-%ss", org.Name, entity))
-					orgGroups = append(orgGroups, entityOrgGroups...)
-					updatedEntities[entity] = true
-				}
-			}
-
-			groupNameRegex := regexp.MustCompile(".*(-[^-]+$)")
-			var organizationGroups [][]string
-			for _, orgGroup := range orgGroups {
-				entityName := orgGroup[0]
-				newGroupName := groupNameRegex.ReplaceAllStringFunc(orgGroup[1],
-					func(match string) string {
-						matches := groupNameRegex.FindStringSubmatch(match)
-						entityName := matches[1]
-						return organization.Name + entityName
-					})
-				organizationGroup := []string{entityName, newGroupName}
-				organizationGroups = append(organizationGroups, organizationGroup)
-			}
-			ok, err = casbinEnforcer.UpdateNamedGroupingPolicies(
-				objectGroupingPolicy, orgGroups, organizationGroups)
-			if !ok || err != nil {
-				return fmt.Errorf("error updating organization grouping policies: %s", err)
-			}
+		ok, err = updateOrganizationPolicies(org, organization)
+		if !ok || err != nil {
+			return err
 		}
 
 		return nil
@@ -340,22 +278,18 @@ func AddOrganization(organization *Organization) (bool, error) {
 		return false, err
 	}
 
-	ok, err := addCasbinObjectGroupingPolicy(organization.Name, organization.Owner, organizationEntity)
+	ok, err := addCasbinObjectGroupingPolicy(organization.Name, organization.Name, organizationEntity)
 	if !ok || err != nil {
 		return ok, err
 	}
 
-	var newPolicies [][]string
-	for _, endpoint := range endpoints {
-		name := organization.Name
-		if endpoint.entity == organizationEntity {
-			name = "admin"
-		}
-		newPolicies = append(newPolicies, []string{organization.Name, endpoint.role,
-			endpoint.method, endpoint.urlPath, name,
-			fmt.Sprintf("%s-%ss", organization.Name, endpoint.entity)})
+	// add admin -> user role inheritance
+	ok, err = addRoleForUserInDomain(adminRole, false, organization.Name)
+	if !ok || err != nil {
+		return ok, err
 	}
-	ok, err = casbinEnforcer.AddPoliciesEx(newPolicies)
+
+	ok, err = addOrganizationPolicies(organization)
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -373,22 +307,18 @@ func DeleteOrganization(organization *Organization) (bool, error) {
 		return false, err
 	}
 
-	ok, err := removeCasbinObjectGroupingPolicy(organization.Name, organization.Owner, organizationEntity)
+	ok, err := removeCasbinObjectGroupingPolicy(organization.Name, organization.Name, organizationEntity)
 	if !ok || err != nil {
 		return ok, err
 	}
 
-	var policies [][]string
-	for _, endpoint := range endpoints {
-		name := organization.Name
-		if endpoint.entity == organizationEntity {
-			name = "admin"
-		}
-		policies = append(policies, []string{organization.Name, endpoint.role,
-			endpoint.method, endpoint.urlPath, name,
-			fmt.Sprintf("%s-%ss", organization.Name, endpoint.entity)})
+	// delete admin -> user role inheritance
+	ok, err = deleteRoleForUserInDomain(adminRole, false, organization.Name)
+	if !ok || err != nil {
+		return ok, err
 	}
-	ok, err = casbinEnforcer.RemovePolicies(policies)
+
+	ok, err = removeOrganizationPolicies(organization)
 	if !ok || err != nil {
 		return ok, err
 	}

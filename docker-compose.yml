@@ -10,11 +10,13 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       RUNNING_IN_DOCKER: "true"
     volumes:
       - ./conf:/conf/
+  
   db:
     restart: always
     image: mysql:8.0.25
@@ -25,3 +27,8 @@ services:
       MYSQL_ROOT_PASSWORD: 123456
     volumes:
       - /usr/local/docker/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+      interval: 5s
