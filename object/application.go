@@ -196,17 +196,21 @@ func getProviderMap(owner string) (m map[string]*Provider, err error) {
 	return m, err
 }
 
-func extendApplicationWithProviders(application *Application) (err error) {
+func extendApplicationWithProviders(ctx context.Context, application *Application) (err error) {
 	m, err := getProviderMap(application.Organization)
 	if err != nil {
 		return err
 	}
+
+	record := GetRecord(ctx)
 
 	for _, providerItem := range application.Providers {
 		if provider, ok := m[providerItem.Name]; ok {
 			if provider.Type == "OpenID" {
 				err := updateOpenIDWithUrls(provider)
 				if err != nil {
+					record.AddReason(fmt.Sprintf("failed updateOpenIDWithUrls for provider %s: %s", provider.Name, err.Error()))
+
 					logs.Error("failed updateOpenIDWithUrls for provider %s: %s", provider.Name, err.Error())
 				}
 			}
@@ -268,7 +272,7 @@ func extendApplicationWithSigninMethods(application *Application) (err error) {
 	return
 }
 
-func getApplication(owner string, name string) (*Application, error) {
+func getApplication(ctx context.Context, owner string, name string) (*Application, error) {
 	if owner == "" || name == "" {
 		return nil, nil
 	}
@@ -280,7 +284,7 @@ func getApplication(owner string, name string) (*Application, error) {
 	}
 
 	if existed {
-		err = extendApplicationWithProviders(&application)
+		err = extendApplicationWithProviders(ctx, &application)
 		if err != nil {
 			return nil, err
 		}
@@ -301,7 +305,7 @@ func getApplication(owner string, name string) (*Application, error) {
 	}
 }
 
-func GetApplicationByOrganizationName(organization string) (*Application, error) {
+func GetApplicationByOrganizationName(ctx context.Context, organization string) (*Application, error) {
 	application := Application{}
 	existed, err := ormer.Engine.Where("organization=?", organization).Get(&application)
 	if err != nil {
@@ -309,7 +313,7 @@ func GetApplicationByOrganizationName(organization string) (*Application, error)
 	}
 
 	if existed {
-		err = extendApplicationWithProviders(&application)
+		err = extendApplicationWithProviders(ctx, &application)
 		if err != nil {
 			return nil, err
 		}
@@ -330,18 +334,18 @@ func GetApplicationByOrganizationName(organization string) (*Application, error)
 	}
 }
 
-func GetApplicationByUser(user *User) (*Application, error) {
+func GetApplicationByUser(ctx context.Context, user *User) (*Application, error) {
 	if user.SignupApplication != "" {
-		return getApplication("admin", user.SignupApplication)
+		return getApplication(ctx, "admin", user.SignupApplication)
 	} else {
-		return GetApplicationByOrganizationName(user.Owner)
+		return GetApplicationByOrganizationName(ctx, user.Owner)
 	}
 }
 
-func GetApplicationByUserId(userId string) (application *Application, err error) {
+func GetApplicationByUserId(ctx context.Context, userId string) (application *Application, err error) {
 	owner, name := util.GetOwnerAndNameFromId(userId)
 	if owner == "app" {
-		application, err = getApplication("admin", name)
+		application, err = getApplication(ctx, "admin", name)
 		return
 	}
 
@@ -349,11 +353,11 @@ func GetApplicationByUserId(userId string) (application *Application, err error)
 	if err != nil {
 		return nil, err
 	}
-	application, err = GetApplicationByUser(user)
+	application, err = GetApplicationByUser(ctx, user)
 	return
 }
 
-func GetApplicationByClientId(clientId string) (*Application, error) {
+func GetApplicationByClientId(ctx context.Context, clientId string) (*Application, error) {
 	application := Application{}
 	existed, err := ormer.Engine.Where("client_id=?", clientId).Get(&application)
 	if err != nil {
@@ -361,7 +365,7 @@ func GetApplicationByClientId(clientId string) (*Application, error) {
 	}
 
 	if existed {
-		err = extendApplicationWithProviders(&application)
+		err = extendApplicationWithProviders(ctx, &application)
 		if err != nil {
 			return nil, err
 		}
@@ -382,9 +386,9 @@ func GetApplicationByClientId(clientId string) (*Application, error) {
 	}
 }
 
-func GetApplication(id string) (*Application, error) {
+func GetApplication(ctx context.Context, id string) (*Application, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	return getApplication(owner, name)
+	return getApplication(ctx, owner, name)
 }
 
 func GetMaskedApplication(application *Application, userId string) *Application {
@@ -450,7 +454,7 @@ func GetMaskedApplications(applications []*Application, userId string) []*Applic
 
 func UpdateApplication(ctx context.Context, id string, application *Application) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	oldApplication, err := getApplication(owner, name)
+	oldApplication, err := getApplication(ctx, owner, name)
 	if oldApplication == nil {
 		return false, err
 	}
@@ -466,7 +470,7 @@ func UpdateApplication(ctx context.Context, id string, application *Application)
 		}
 	}
 
-	applicationByClientId, err := GetApplicationByClientId(application.ClientId)
+	applicationByClientId, err := GetApplicationByClientId(ctx, application.ClientId)
 	if err != nil {
 		return false, err
 	}
@@ -511,7 +515,7 @@ func recordProvidersDiff(record *RecordBuilder, oldProviders, newProviders []*Pr
 	}
 }
 
-func AddApplication(application *Application) (bool, error) {
+func AddApplication(ctx context.Context, application *Application) (bool, error) {
 	if application.Owner == "" {
 		application.Owner = "admin"
 	}
@@ -525,7 +529,7 @@ func AddApplication(application *Application) (bool, error) {
 		application.ClientSecret = util.GenerateClientSecret()
 	}
 
-	app, err := GetApplicationByClientId(application.ClientId)
+	app, err := GetApplicationByClientId(ctx, application.ClientId)
 	if err != nil {
 		return false, err
 	}

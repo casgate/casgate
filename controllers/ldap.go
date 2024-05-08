@@ -223,7 +223,7 @@ func (c *ApiController) AddLdap() {
 	resp.Data2 = ldap
 
 	if ldap.AutoSync != 0 {
-		err = object.GetLdapAutoSynchronizer().StartAutoSync(ldap.Id, record)
+		err = object.GetLdapAutoSynchronizer().StartAutoSync(gCtx, ldap.Id, record)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Get LDAP syncronizer error: %v", err.Error()))
 
@@ -289,7 +289,7 @@ func (c *ApiController) UpdateLdap() {
 	}
 
 	if ldap.AutoSync != 0 {
-		err := object.GetLdapAutoSynchronizer().StartAutoSync(ldap.Id, record)
+		err := object.GetLdapAutoSynchronizer().StartAutoSync(gCtx, ldap.Id, record)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Get LDAP syncronizer error: %v", err.Error()))
 
@@ -356,7 +356,7 @@ func (c *ApiController) SyncLdapUsers() {
 		return
 	}
 
-	exist, failed, err := object.SyncLdapUsers(owner, users, ldapId)
+	exist, failed, err := object.SyncLdapUsers(goCtx, owner, users, ldapId)
 	if err != nil {
 		record.AddReason(fmt.Sprintf("LDAP error: %s", err.Error()))
 	}

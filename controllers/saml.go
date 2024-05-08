@@ -24,9 +24,10 @@ import (
 )
 
 func (c *ApiController) GetSamlMeta() {
+	ctx := c.getRequestCtx()
 	host := c.Ctx.Request.Host
 	paramApp := c.Input().Get("application")
-	application, err := object.GetApplication(paramApp)
+	application, err := object.GetApplication(ctx, paramApp)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

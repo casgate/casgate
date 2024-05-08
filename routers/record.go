@@ -42,13 +42,14 @@ func getUser(ctx *beeCtx.Context) (username string) {
 }
 
 func getUserByClientIdSecret(ctx *beeCtx.Context) string {
+	goCtx := ctx.Request.Context()
 	clientId := ctx.Input.Query("clientId")
 	clientSecret := ctx.Input.Query("clientSecret")
 	if clientId == "" || clientSecret == "" {
 		return ""
 	}
 
-	application, err := object.GetApplicationByClientId(clientId)
+	application, err := object.GetApplicationByClientId(goCtx, clientId)
 	if err != nil {
 		panic(err)
 	}

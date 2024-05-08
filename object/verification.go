@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -201,9 +202,9 @@ func DisableVerificationCode(dest string) (err error) {
 	return
 }
 
-func CheckSigninCode(user *User, dest, code, lang string) error {
+func CheckSigninCode(ctx context.Context, user *User, dest, code, lang string) error {
 	// check the login error times
-	err := checkSigninErrorTimes(user, lang)
+	err := checkSigninErrorTimes(ctx, user, lang)
 	if err != nil {
 		return err
 	}
@@ -213,7 +214,7 @@ func CheckSigninCode(user *User, dest, code, lang string) error {
 	case VerificationSuccess:
 		return resetUserSigninErrorTimes(user)
 	case wrongCodeError:
-		return recordSigninErrorInfo(user, lang)
+		return recordSigninErrorInfo(ctx, user, lang)
 	default:
 		return fmt.Errorf(result.Msg)
 	}

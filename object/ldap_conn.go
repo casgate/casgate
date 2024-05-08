@@ -353,7 +353,7 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 	return res
 }
 
-func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUsers []LdapUser, failedUsers []LdapUser, err error) {
+func SyncLdapUsers(ctx context.Context, owner string, syncUsers []LdapUser, ldapId string) (existUsers []LdapUser, failedUsers []LdapUser, err error) {
 	var uuids []string
 	for _, user := range syncUsers {
 		uuids = append(uuids, user.Uuid)
@@ -431,7 +431,7 @@ func SyncLdapUsers(owner string, syncUsers []LdapUser, ldapId string) (existUser
 				newUser.SignupApplication = organization.DefaultApplication
 			}
 
-			affected, err := AddUser(newUser)
+			affected, err := AddUser(ctx, newUser)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -558,7 +558,7 @@ func (user *User) getFieldFromLdapAttribute(attribute string) string {
 	}
 }
 
-func SyncUserFromLdap(organization string, ldapId string, userName string, password string, lang string) (*LdapUser, error) {
+func SyncUserFromLdap(ctx context.Context, organization string, ldapId string, userName string, password string, lang string) (*LdapUser, error) {
 	ldaps, err := GetLdaps(organization)
 	if err != nil {
 		return nil, err
@@ -590,7 +590,7 @@ func SyncUserFromLdap(organization string, ldapId string, userName string, passw
 			return nil, err
 		}
 
-		_, _, err = SyncLdapUsers(organization, AutoAdjustLdapUser(res), ldapServer.Id)
+		_, _, err = SyncLdapUsers(ctx, organization, AutoAdjustLdapUser(res), ldapServer.Id)
 		return &res[0], err
 	}
 

@@ -158,6 +158,7 @@ func (c *ApiController) DeleteToken() {
 // @Success 401 {object} object.TokenError The Response object
 // @router /login/oauth/access_token [post]
 func (c *ApiController) GetOAuthToken() {
+	ctx := c.getRequestCtx()
 	grantType := c.Input().Get("grant_type")
 	refreshToken := c.Input().Get("refresh_token")
 	clientId := c.Input().Get("client_id")
@@ -191,7 +192,7 @@ func (c *ApiController) GetOAuthToken() {
 		}
 	}
 	host := c.Ctx.Request.Host
-	oAuthtoken, err := object.GetOAuthToken(grantType, clientId, clientSecret, code, verifier, scope, username, password, host, refreshToken, tag, avatar, c.GetAcceptLanguage())
+	oAuthtoken, err := object.GetOAuthToken(ctx, grantType, clientId, clientSecret, code, verifier, scope, username, password, host, refreshToken, tag, avatar, c.GetAcceptLanguage())
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -216,6 +217,7 @@ func (c *ApiController) GetOAuthToken() {
 // @Success 401 {object} object.TokenError The Response object
 // @router /login/oauth/refresh_token [post]
 func (c *ApiController) RefreshToken() {
+	ctx := c.getRequestCtx()
 	grantType := c.Input().Get("grant_type")
 	refreshToken := c.Input().Get("refresh_token")
 	scope := c.Input().Get("scope")
@@ -235,7 +237,7 @@ func (c *ApiController) RefreshToken() {
 		}
 	}
 
-	refreshToken2, err := object.RefreshToken(grantType, refreshToken, scope, clientId, clientSecret, host)
+	refreshToken2, err := object.RefreshToken(ctx, grantType, refreshToken, scope, clientId, clientSecret, host)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -261,6 +263,7 @@ func (c *ApiController) RefreshToken() {
 // @Success 401 {object} object.TokenError The Response object
 // @router /login/oauth/introspect [post]
 func (c *ApiController) IntrospectToken() {
+	ctx := c.getRequestCtx()
 	tokenValue := c.Input().Get("token")
 	clientId, clientSecret, ok := c.Ctx.Request.BasicAuth()
 	if !ok {
@@ -276,7 +279,7 @@ func (c *ApiController) IntrospectToken() {
 			return
 		}
 	}
-	application, err := object.GetApplicationByClientId(clientId)
+	application, err := object.GetApplicationByClientId(ctx, clientId)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

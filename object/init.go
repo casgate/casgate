@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"encoding/gob"
 	"fmt"
 	"os"
@@ -24,13 +25,13 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
-func InitDb() {
+func InitDb(ctx context.Context) {
 	existed := initBuiltInOrganization()
 	if !existed {
 		initBuiltInPermission()
 		initBuiltInProvider()
-		initBuiltInUser()
-		initBuiltInApplication()
+		initBuiltInUser(ctx)
+		initBuiltInApplication(ctx)
 		initBuiltInCert()
 		initBuiltInLdap()
 	}
@@ -125,7 +126,7 @@ func initBuiltInOrganization() bool {
 	return false
 }
 
-func initBuiltInUser() {
+func initBuiltInUser(ctx context.Context) {
 	user, err := getUser("built-in", "admin")
 	if err != nil {
 		panic(err)
@@ -158,14 +159,14 @@ func initBuiltInUser() {
 		CreatedIp:         "127.0.0.1",
 		Properties:        make(map[string]string),
 	}
-	_, err = AddUser(user)
+	_, err = AddUser(ctx, user)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func initBuiltInApplication() {
-	application, err := getApplication("admin", "app-built-in")
+func initBuiltInApplication(ctx context.Context) {
+	application, err := getApplication(ctx, "admin", "app-built-in")
 	if err != nil {
 		panic(err)
 	}
@@ -205,7 +206,7 @@ func initBuiltInApplication() {
 		FormOffset:    2,
 		FooterText:    "Powered by Casgate",
 	}
-	_, err = AddApplication(application)
+	_, err = AddApplication(ctx, application)
 	if err != nil {
 		panic(err)
 	}

@@ -15,6 +15,8 @@
 package object
 
 import (
+	"context"
+
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
 )
@@ -38,7 +40,7 @@ type InitData struct {
 	Webhooks      []*Webhook      `json:"webhooks"`
 }
 
-func InitFromFile() {
+func InitFromFile(ctx context.Context) {
 	initDataFile := conf.GetConfigString("initDataFile")
 	if initDataFile == "" {
 		return
@@ -57,10 +59,10 @@ func InitFromFile() {
 			initDefinedProvider(provider)
 		}
 		for _, user := range initData.Users {
-			initDefinedUser(user)
+			initDefinedUser(ctx, user)
 		}
 		for _, application := range initData.Applications {
-			initDefinedApplication(application)
+			initDefinedApplication(ctx, application)
 		}
 		for _, cert := range initData.Certs {
 			initDefinedCert(cert)
@@ -219,8 +221,8 @@ func initDefinedOrganization(organization *Organization) {
 	}
 }
 
-func initDefinedApplication(application *Application) {
-	existed, err := getApplication(application.Owner, application.Name)
+func initDefinedApplication(ctx context.Context, application *Application) {
+	existed, err := getApplication(ctx, application.Owner, application.Name)
 	if err != nil {
 		panic(err)
 	}
@@ -229,13 +231,13 @@ func initDefinedApplication(application *Application) {
 		return
 	}
 	application.CreatedTime = util.GetCurrentTime()
-	_, err = AddApplication(application)
+	_, err = AddApplication(ctx, application)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func initDefinedUser(user *User) {
+func initDefinedUser(ctx context.Context, user *User) {
 	existed, err := getUser(user.Owner, user.Name)
 	if err != nil {
 		panic(err)
@@ -246,7 +248,7 @@ func initDefinedUser(user *User) {
 	user.CreatedTime = util.GetCurrentTime()
 	user.Id = util.GenerateId()
 	user.Properties = make(map[string]string)
-	_, err = AddUser(user)
+	_, err = AddUser(ctx, user)
 	if err != nil {
 		panic(err)
 	}

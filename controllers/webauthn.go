@@ -153,6 +153,7 @@ func (c *ApiController) WebAuthnSigninBegin() {
 // @Success 200 {object} controllers.Response "The Response object"
 // @router /webauthn/signin/finish [post]
 func (c *ApiController) WebAuthnSigninFinish() {
+	ctx := c.getRequestCtx()
 	responseType := c.Input().Get("responseType")
 	webauthnObj, err := object.GetWebAuthnObject(c.Ctx.Request.Host)
 	if err != nil {
@@ -182,7 +183,7 @@ func (c *ApiController) WebAuthnSigninFinish() {
 	c.SetSessionUsername(userId)
 	util.LogInfo(c.Ctx, "API: [%s] signed in", userId)
 
-	application, err := object.GetApplicationByUser(user)
+	application, err := object.GetApplicationByUser(ctx, user)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

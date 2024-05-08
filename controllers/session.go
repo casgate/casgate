@@ -135,6 +135,7 @@ func (c *ApiController) AddSession() {
 // @Success 200 {array} string The Response object
 // @router /delete-session [post]
 func (c *ApiController) DeleteSession() {
+	ctx := c.getRequestCtx()
 	var session object.Session
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &session)
 	if err != nil {
@@ -142,7 +143,7 @@ func (c *ApiController) DeleteSession() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.DeleteSession(util.GetSessionId(session.Owner, session.Name, session.Application)))
+	c.Data["json"] = wrapActionResponse(object.DeleteSession(ctx, util.GetSessionId(session.Owner, session.Name, session.Application)))
 	c.ServeJSON()
 }
 

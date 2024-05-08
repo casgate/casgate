@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strconv"
@@ -787,9 +788,9 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 	return affected != 0, nil
 }
 
-func AddUser(user *User) (bool, error) {
+func AddUser(ctx context.Context, user *User) (bool, error) {
 	if user.Id == "" {
-		application, err := GetApplicationByUser(user)
+		application, err := GetApplicationByUser(ctx, user)
 		if err != nil {
 			return false, err
 		}
@@ -945,9 +946,9 @@ func AddUsersInBatch(users []*User) (bool, error) {
 	return affected, nil
 }
 
-func DeleteUser(user *User) (bool, error) {
+func DeleteUser(ctx context.Context, user *User) (bool, error) {
 	// Forced offline the user first
-	_, err := DeleteSession(util.GetSessionId(user.Owner, user.Name, CasdoorApplication))
+	_, err := DeleteSession(ctx, util.GetSessionId(user.Owner, user.Name, CasdoorApplication))
 	if err != nil {
 		return false, err
 	}

@@ -23,6 +23,8 @@ import (
 )
 
 func AutoSigninFilter(ctx *context.Context) {
+	goCtx := ctx.Request.Context()
+
 	//if getSessionUser(ctx) != "" {
 	//	return
 	//}
@@ -55,7 +57,7 @@ func AutoSigninFilter(ctx *context.Context) {
 		}
 
 		userId := util.GetId(token.Organization, token.User)
-		application, err := object.GetApplicationByUserId(fmt.Sprintf("app/%s", token.Application))
+		application, err := object.GetApplicationByUserId(goCtx, fmt.Sprintf("app/%s", token.Application))
 		if err != nil {
 			panic(err)
 		}
@@ -77,7 +79,7 @@ func AutoSigninFilter(ctx *context.Context) {
 	password := ctx.Input.Query("password")
 	if userId != "" && password != "" && ctx.Input.Query("grant_type") == "" {
 		owner, name := util.GetOwnerAndNameFromId(userId)
-		_, err := object.CheckUserPassword(owner, name, password, "en")
+		_, err := object.CheckUserPassword(goCtx, owner, name, password, "en")
 		if err != nil {
 			msg := object.CheckPassErrorToMessage(err, "en")
 			responseError(ctx, msg)

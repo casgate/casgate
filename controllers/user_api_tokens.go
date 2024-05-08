@@ -29,6 +29,7 @@ import (
 // @Failure 500 Internal Server Error
 // @router /add-api-token [post]
 func (c *ApiController) AddApiToken() {
+	ctx := c.getRequestCtx()
 	owner := c.Input().Get("owner")
 	if !c.IsGlobalAdmin() && owner == "" {
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
@@ -45,7 +46,7 @@ func (c *ApiController) AddApiToken() {
 
 	tokenUser := object.MakeUserForToken(user)
 
-	affected, err := object.AddUser(tokenUser)
+	affected, err := object.AddUser(ctx, tokenUser)
 	if err != nil {
 		logs.Error("token creation: %s", err.Error())
 
