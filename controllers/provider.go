@@ -301,7 +301,7 @@ func (c *ApiController) TestProviderConnection() {
 		return
 	}
 	idpInfo := object.FromProviderToIdpInfo(nil, &provider)
-	idProvider := idp.GetIdProvider(idpInfo, idpInfo.RedirectUrl)
+	idProvider := idp.GetIdProvider(idpInfo, idpInfo.RedirectUrl, &object.HttpClientProvider{})
 
 	err = idProvider.TestConnection()
 	if err != nil {

@@ -30,9 +30,11 @@ import (
 
 type OpenIdProvider struct {
 	BaseProvider
-	Client *http.Client
-	Config *oauth2.Config
+	Client             *http.Client
+	Config             *oauth2.Config
+	HttpClientProvider util.HttpClientProvider
 
+	Cert        string
 	ConfURL     string
 	UserInfoURL string
 	TokenURL    string
@@ -47,7 +49,7 @@ type oidcConf struct {
 	UserinfoEndpoint      string `json:"userinfo_endpoint"`
 }
 
-func NewOpenIdProvider(idpInfo *ProviderInfo, redirectUrl string) *OpenIdProvider {
+func NewOpenIdProvider(idpInfo *ProviderInfo, redirectUrl string, httpClientProvider util.HttpClientProvider) *OpenIdProvider {
 	idp := &OpenIdProvider{}
 
 	idp.Config = &oauth2.Config{
@@ -55,8 +57,12 @@ func NewOpenIdProvider(idpInfo *ProviderInfo, redirectUrl string) *OpenIdProvide
 		ClientSecret: idpInfo.ClientSecret,
 		RedirectURL:  redirectUrl,
 	}
+
+	idp.HttpClientProvider = httpClientProvider
+
 	idp.ConfURL = idpInfo.ConfURL
 	idp.UserMapping = idpInfo.UserMapping
+	idp.Cert = idpInfo.Cert
 
 	return idp
 }
@@ -128,18 +134,22 @@ func (idp *OpenIdProvider) GetToken(code string) (*oauth2.Token, error) {
 }
 
 func (idp *OpenIdProvider) TestConnection() error {
-	if util.IsStringsEmpty(idp.Config.ClientID, idp.Config.ClientSecret, idp.AuthURL) {
+	if util.IsStringsEmpty(idp.Config.ClientID, idp.Config.ClientSecret) {
 		return NewMissingParameterError("Missing parameter")
 	}
 
-	httpClient := new(http.Client)
+	httpClient, err := idp.HttpClientProvider.GetProviderHttpClient(util.ProviderInfo{ //want to use GetProviderHttpClient from object package to get https client
+		Cert:     idp.Cert,
+		ConfURL:  idp.ConfURL,
+		TokenURL: idp.TokenURL,
+	})
 	data := url.Values{}
 	data.Add("grant_type", "client_credentials")
 	data.Add("client_id", idp.Config.ClientID)
 	data.Add("client_secret", idp.Config.ClientSecret)
 
 	idp.SetHttpClient(httpClient)
-	err := idp.EnrichOauthURLs()
+	err = idp.EnrichOauthURLs()
 	if err != nil {
 		return err
 	}

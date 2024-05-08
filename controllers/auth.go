@@ -281,7 +281,12 @@ func setHttpClient(idProvider idp.IdProvider, providerInfo idp.ProviderInfo) err
 	if isProxyProviderType(providerInfo.Type) {
 		idProvider.SetHttpClient(proxy.ProxyHttpClient)
 	} else {
-		client, err := object.GetProviderHttpClient(providerInfo)
+		httpClientProvider := &object.HttpClientProvider{}
+		client, err := httpClientProvider.GetProviderHttpClient(util.ProviderInfo{
+			Cert:     providerInfo.Cert,
+			ConfURL:  providerInfo.ConfURL,
+			TokenURL: providerInfo.TokenURL,
+		})
 		if err != nil {
 			return err
 		}
@@ -625,7 +630,7 @@ func (c *ApiController) Login() {
 		} else if provider.Category == "OAuth" || provider.Category == "Web3" {
 			// OAuth
 			idpInfo := object.FromProviderToIdpInfo(c.Ctx, provider)
-			idProvider := idp.GetIdProvider(idpInfo, authForm.RedirectUri)
+			idProvider := idp.GetIdProvider(idpInfo, authForm.RedirectUri, &object.HttpClientProvider{})
 			if idProvider == nil {
 				record.AddReason(fmt.Sprintf("Login error: provider type is not supported: %s", provider.Type))
 

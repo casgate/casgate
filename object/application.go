@@ -223,9 +223,14 @@ func extendApplicationWithProviders(ctx context.Context, application *Applicatio
 
 func updateOpenIDWithUrls(provider *Provider) error {
 	idpInfo := FromProviderToIdpInfo(nil, provider)
-	openIDProvider := idp.NewOpenIdProvider(idpInfo, idpInfo.RedirectUrl)
+	httpClientProvider := &HttpClientProvider{}
+	openIDProvider := idp.NewOpenIdProvider(idpInfo, idpInfo.RedirectUrl, httpClientProvider)
 
-	client, err := GetProviderHttpClient(*idpInfo)
+	client, err := httpClientProvider.GetProviderHttpClient(util.ProviderInfo{
+		Cert:     idpInfo.Cert,
+		TokenURL: idpInfo.TokenURL,
+		ConfURL:  idpInfo.ConfURL,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to GetProviderHttpClient for provider %s", provider.Name)
 	}

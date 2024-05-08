@@ -463,13 +463,15 @@ func FromProviderToIdpInfo(bCtx *bCtx.Context, provider *Provider) *idp.Provider
 	return providerInfo
 }
 
-func GetProviderHttpClient(providerInfo idp.ProviderInfo) (*http.Client, error) {
+type HttpClientProvider struct{}
+
+func (cp *HttpClientProvider) GetProviderHttpClient(info util.ProviderInfo) (*http.Client, error) {
 	transport := http.Transport{}
 
-	if (strings.HasPrefix(providerInfo.ConfURL, "https://") ||
-		strings.HasPrefix(providerInfo.TokenURL, "https://")) &&
-		providerInfo.Cert != "" {
-		tlsConf, err := GetTlsConfigForCert(providerInfo.Cert)
+	if (strings.HasPrefix(info.ConfURL, "https://") ||
+		strings.HasPrefix(info.TokenURL, "https://")) &&
+		info.Cert != "" {
+		tlsConf, err := GetTlsConfigForCert(info.Cert)
 		if err != nil {
 			return nil, err
 		}
