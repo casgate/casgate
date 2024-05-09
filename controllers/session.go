@@ -77,9 +77,16 @@ func (c *ApiController) GetSessions() {
 // @Success 200 {array} string The Response object
 // @router /get-session [get]
 func (c *ApiController) GetSingleSession() {
-	id := c.Input().Get("sessionPkId")
+	pkId := c.Input().Get("sessionPkId")
+	id := c.Input().Get("id")
+	idOwner, idName := util.GetOwnerAndNameFromId(id)
+	pkIdOwner, pkIdName, _ := util.GetOwnerAndNameAndOtherFromId(pkId)
+	if idOwner != pkIdOwner || idName != pkIdName {
+		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
+		return
+	}
 
-	session, err := object.GetSingleSession(id)
+	session, err := object.GetSingleSession(pkId)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

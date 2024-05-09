@@ -17,6 +17,7 @@ const (
 	AnonymousRole = "*"
 
 	adminOwner = "admin"
+	existGroup = "exist"
 
 	subjectGroupingPolicy = "g"
 	objectGroupingPolicy  = "g2"
@@ -321,10 +322,10 @@ e = some(where (p.eft == allow))
 
 [matchers]
 m = (g(r.subName, p.subName, r.subOwner) && r.subOwner == p.subOwner && \
-((g2(r.objName, p.objName) || r.objName == "") && r.objOwner == p.objOwner) || \
+((r.objOwner == p.objOwner || r.objOwner == "admin") && \
+(g2(r.objName, p.objName) || g2(r.objName, "exist") == false)) || \ 
 (p.subName == "*" && p.subOwner == "*" && p.objOwner == "*" && p.objName == "*")) && \
-regexMatch(r.method, p.method) && \
-keyMatch(r.urlPath, p.urlPath) || \
+regexMatch(r.method, p.method) && keyMatch(r.urlPath, p.urlPath) || \
 r.subOwner == "built-in"
 `)
 	if err != nil {
@@ -395,29 +396,37 @@ func removeCasbinObjectGroupingPolicy(name, owner, entity string) (bool, error) 
 
 func addOrganizationPolicies(organization *Organization) (bool, error) {
 	var newPolicies [][]string
+	uniqEnitities := make(map[string]bool)
 	for _, endpoint := range endpoints {
-		// skip anon endpoints
+		_, ok := uniqEnitities[endpoint.entity]
+		if !ok {
+			uniqEnitities[endpoint.entity] = true
+		}
+
 		if endpoint.role == AnonymousRole {
 			continue
 		}
 
-		// organization entity
-		name := organization.Name
-		if endpoint.entity == organizationEntity {
-			name = adminOwner
-		}
-
-		// organization entities
 		newPolicies = append(newPolicies, []string{organization.Name, endpoint.role,
-			endpoint.method, endpoint.urlPath, name,
+			endpoint.method, endpoint.urlPath, organization.Name,
 			fmt.Sprintf("%s-%ss", organization.Name, endpoint.entity)})
-
-		// shared entities
-		newPolicies = append(newPolicies, []string{organization.Name, endpoint.role,
-			endpoint.method, endpoint.urlPath, name,
-			fmt.Sprintf("%s-%ss", adminOwner, endpoint.entity)})
 	}
 	ok, err := casbinEnforcer.AddPoliciesEx(newPolicies)
+	if !ok || err != nil {
+		return ok, err
+	}
+
+	var sharedEntitiesGroupingPolicies [][]string
+	var allEnityGroups [][]string
+	for entity := range uniqEnitities {
+		sharedEntityGroup := fmt.Sprintf("%s-%ss", adminOwner, entity)
+		organizationEntityGroup := fmt.Sprintf("%s-%ss", organization.Name, entity)
+		sharedEntitiesGroupingPolicies = append(sharedEntitiesGroupingPolicies,
+			[]string{sharedEntityGroup, organizationEntityGroup})
+		allEnityGroups = append(allEnityGroups, []string{organizationEntityGroup, existGroup})
+	}
+	newGroupingPolicies := concatSlices(sharedEntitiesGroupingPolicies, allEnityGroups)
+	ok, err = casbinEnforcer.AddNamedGroupingPoliciesEx(objectGroupingPolicy, newGroupingPolicies)
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -427,29 +436,37 @@ func addOrganizationPolicies(organization *Organization) (bool, error) {
 
 func removeOrganizationPolicies(organization *Organization) (bool, error) {
 	var policies [][]string
+	uniqEnitities := make(map[string]bool)
 	for _, endpoint := range endpoints {
-		// skip anon endpoints
+		_, ok := uniqEnitities[endpoint.entity]
+		if !ok {
+			uniqEnitities[endpoint.entity] = true
+		}
+
 		if endpoint.role == AnonymousRole {
 			continue
 		}
 
-		// organization entity
-		name := organization.Name
-		if endpoint.entity == organizationEntity {
-			name = adminOwner
-		}
-
-		// organization entities
 		policies = append(policies, []string{organization.Name, endpoint.role,
-			endpoint.method, endpoint.urlPath, name,
+			endpoint.method, endpoint.urlPath, organization.Name,
 			fmt.Sprintf("%s-%ss", organization.Name, endpoint.entity)})
-
-		// shared entities
-		policies = append(policies, []string{organization.Name, endpoint.role,
-			endpoint.method, endpoint.urlPath, name,
-			fmt.Sprintf("%s-%ss", adminOwner, endpoint.entity)})
 	}
 	ok, err := casbinEnforcer.RemovePolicies(policies)
+	if !ok || err != nil {
+		return ok, err
+	}
+
+	var sharedEntitiesGroupingPolicies [][]string
+	var allEnityGroups [][]string
+	for entity := range uniqEnitities {
+		sharedEntityGroup := fmt.Sprintf("%s-%ss", adminOwner, entity)
+		organizationEntityGroup := fmt.Sprintf("%s-%ss", organization.Name, entity)
+		sharedEntitiesGroupingPolicies = append(sharedEntitiesGroupingPolicies,
+			[]string{sharedEntityGroup, organizationEntityGroup})
+		allEnityGroups = append(allEnityGroups, []string{organizationEntityGroup, existGroup})
+	}
+	groupingPolicies := concatSlices(sharedEntitiesGroupingPolicies, allEnityGroups)
+	ok, err = casbinEnforcer.RemoveNamedGroupingPolicies(objectGroupingPolicy, groupingPolicies)
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -462,42 +479,17 @@ func updateOrganizationPolicies(oldOrganization, newOrganization *Organization) 
 		var oldPolicies [][]string
 		var newPolicies [][]string
 		for _, endpoint := range endpoints {
-			// skip anon endpoints
 			if endpoint.role == AnonymousRole {
 				continue
 			}
 
-			// organization entity
-			name := oldOrganization.Name
-			if endpoint.entity == organizationEntity {
-				name = adminOwner
-			}
-
-			// old organization entities
 			oldPolicies = append(oldPolicies, []string{oldOrganization.Name, endpoint.role,
-				endpoint.method, endpoint.urlPath, name,
+				endpoint.method, endpoint.urlPath, oldOrganization.Name,
 				fmt.Sprintf("%s-%ss", oldOrganization.Name, endpoint.entity)})
 
-			// old shared entities
-			oldPolicies = append(oldPolicies, []string{oldOrganization.Name, endpoint.role,
-				endpoint.method, endpoint.urlPath, name,
-				fmt.Sprintf("%s-%ss", adminOwner, endpoint.entity)})
-
-			// organization entity
-			name = newOrganization.Name
-			if endpoint.entity == organizationEntity {
-				name = adminOwner
-			}
-
-			// new organization entities
 			newPolicies = append(newPolicies, []string{newOrganization.Name,
-				endpoint.role, endpoint.method, endpoint.urlPath, name,
+				endpoint.role, endpoint.method, endpoint.urlPath, newOrganization.Name,
 				fmt.Sprintf("%s-%ss", newOrganization.Name, endpoint.entity)})
-
-			// new shared entities
-			newPolicies = append(newPolicies, []string{newOrganization.Name,
-				endpoint.role, endpoint.method, endpoint.urlPath, name,
-				fmt.Sprintf("%s-%ss", adminOwner, endpoint.entity)})
 		}
 		ok, err := casbinEnforcer.UpdatePolicies(oldPolicies, newPolicies)
 		if !ok || err != nil {
@@ -518,6 +510,7 @@ func updateOrganizationPolicies(oldOrganization, newOrganization *Organization) 
 		}
 
 		var orgGroups [][]string
+		var orgExistedGroups [][]string
 		updatedEntities := make(map[string]bool)
 		for _, endpoint := range endpoints {
 			entity := endpoint.entity
@@ -526,13 +519,18 @@ func updateOrganizationPolicies(oldOrganization, newOrganization *Organization) 
 				entityOrgGroups :=
 					casbinEnforcer.GetFilteredNamedGroupingPolicy(objectGroupingPolicy,
 						1, fmt.Sprintf("%s-%ss", oldOrganization.Name, entity))
+				existedOrgGroups :=
+					casbinEnforcer.GetFilteredNamedGroupingPolicy(objectGroupingPolicy,
+						0, fmt.Sprintf("%s-%ss", oldOrganization.Name, entity))
 				orgGroups = append(orgGroups, entityOrgGroups...)
+				orgExistedGroups = append(orgExistedGroups, existedOrgGroups...)
 				updatedEntities[entity] = true
 			}
 		}
 
 		groupNameRegex := regexp.MustCompile(".*(-[^-]+$)")
 		var organizationGroups [][]string
+		var organizationExistedGroups [][]string
 		for _, orgGroup := range orgGroups {
 			entityName := orgGroup[0]
 			newGroupName := groupNameRegex.ReplaceAllStringFunc(orgGroup[1],
@@ -544,8 +542,20 @@ func updateOrganizationPolicies(oldOrganization, newOrganization *Organization) 
 			organizationGroup := []string{entityName, newGroupName}
 			organizationGroups = append(organizationGroups, organizationGroup)
 		}
+		for _, orgExistedGroup := range orgExistedGroups {
+			newExistedGroupName := groupNameRegex.ReplaceAllStringFunc(orgExistedGroup[0],
+				func(match string) string {
+					matches := groupNameRegex.FindStringSubmatch(match)
+					entityName := matches[1]
+					return newOrganization.Name + entityName
+				})
+			organizationExistedGroup := []string{newExistedGroupName, existGroup}
+			organizationExistedGroups = append(organizationExistedGroups, organizationExistedGroup)
+		}
+		oldGroupingPolicies := concatSlices(orgGroups, orgExistedGroups)
+		newGroupingPolicies := concatSlices(organizationGroups, organizationExistedGroups)
 		ok, err = casbinEnforcer.UpdateNamedGroupingPolicies(
-			objectGroupingPolicy, orgGroups, organizationGroups)
+			objectGroupingPolicy, oldGroupingPolicies, newGroupingPolicies)
 		if !ok || err != nil {
 			return ok, fmt.Errorf("error updating organization grouping policies: %s", err)
 		}
@@ -618,4 +628,18 @@ func InitCasbinPolicy() error {
 	}
 
 	return nil
+}
+
+func concatSlices[T any](slices ...[]T) []T {
+	var totalLen int
+	for _, slice := range slices {
+		totalLen += len(slice)
+	}
+
+	result := make([]T, 0, totalLen)
+	for _, slice := range slices {
+		result = append(result, slice...)
+	}
+
+	return result
 }
