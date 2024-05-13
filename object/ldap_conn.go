@@ -185,14 +185,13 @@ func isMicrosoftAD(Conn *goldap.Conn) (bool, error) {
 	return isMicrosoft, err
 }
 
-func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User) ([]LdapUser, error) {
+func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *RecordBuilder) ([]LdapUser, error) {
 	SearchAttributes := []string{
 		"uidNumber", "cn", "sn", "gidNumber", "entryUUID", "displayName", "mail", "email",
 		"emailAddress", "telephoneNumber", "mobile", "mobileTelephoneNumber", "registeredAddress", "postalAddress",
 	}
 	if l.IsAD {
-		SearchAttributes = append(SearchAttributes, "sAMAccountName")
-		SearchAttributes = append(SearchAttributes, "userPrincipalName")
+		SearchAttributes = append(SearchAttributes, "sAMAccountName", "userPrincipalName")
 	} else {
 		SearchAttributes = append(SearchAttributes, "uid")
 	}
@@ -232,6 +231,14 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User) ([]LdapUse
 	var ldapUsers []LdapUser
 	for _, entry := range searchResult.Entries {
 		var user LdapUser
+
+		if ldapServer.EnableAttributeMapping {
+			unmappedAttributes := MapAttributesToUser(entry, &user, attributeMappingMap)
+			if len(unmappedAttributes) > 0 {
+				rb.AddReason(fmt.Sprintf("User (%s) has unmapped attributes: %s", entry.DN, strings.Join(unmappedAttributes, ", ")))
+			}
+		}
+
 		for _, attribute := range entry.Attributes {
 			// check attribute value with role mapping rules
 			if ldapServer.EnableRoleMapping {
@@ -245,7 +252,6 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User) ([]LdapUse
 			}
 
 			if ldapServer.EnableAttributeMapping {
-				MapAttributeToUser(attribute, &user, attributeMappingMap)
 				continue
 			}
 
@@ -558,7 +564,7 @@ func (user *User) getFieldFromLdapAttribute(attribute string) string {
 	}
 }
 
-func SyncUserFromLdap(ctx context.Context, organization string, ldapId string, userName string, password string, lang string) (*LdapUser, error) {
+func SyncUserFromLdap(ctx context.Context, organization string, ldapId string, userName string, password string, lang string, rb *RecordBuilder) (*LdapUser, error) {
 	ldaps, err := GetLdaps(organization)
 	if err != nil {
 		return nil, err
@@ -578,7 +584,7 @@ func SyncUserFromLdap(ctx context.Context, organization string, ldapId string, u
 			continue
 		}
 
-		res, _ := conn.GetLdapUsers(ldapServer, user)
+		res, _ := conn.GetLdapUsers(ldapServer, user, rb)
 		if len(res) == 0 {
 			conn.Close()
 			continue

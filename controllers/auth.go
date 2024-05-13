@@ -464,7 +464,7 @@ func (c *ApiController) Login() {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 				}
 				if user == nil {
-					_, err = object.SyncUserFromLdap(goCtx, authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage())
+					_, err = object.SyncUserFromLdap(goCtx, authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage(), record)
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Ldap sync error: %s", err.Error()))
 					}

@@ -123,7 +123,7 @@ func syncUsers(ctx context.Context, ldap *Ldap) error {
 		return nil
 	}
 
-	users, err := conn.GetLdapUsers(ldap, nil)
+	users, err := conn.GetLdapUsers(ldap, nil, rb)
 	if err != nil {
 		logAndAddRecord(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err), logs.LevelWarning, rb)
 		return nil

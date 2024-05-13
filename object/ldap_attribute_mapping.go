@@ -39,30 +39,41 @@ func buildAttributeMappingMap(attributeMappingItems []*AttributeMappingItem) Att
 	return attributeMappingMap
 }
 
-func MapAttributeToUser(attribute *goldap.EntryAttribute, user *LdapUser, attributeMappingMap AttributeMappingMap) {
-	if attributeMappingMap == nil {
-		return
+func MapAttributesToUser(entry *goldap.Entry, user *LdapUser, attributeMappingMap AttributeMappingMap) []string {
+	unmappedAttributes := make([]string, 0)
+
+	// creating map for quick access to LDAP attributes by name
+	ldapAttributes := make(map[string]*goldap.EntryAttribute)
+	for _, attribute := range entry.Attributes {
+		ldapAttributes[attribute.Name] = attribute
 	}
 
-	if attribute == nil {
-		return
-	}
+	// iterating over expected attributes from attributeMappingMap
+	for mappingAttr, userFields := range attributeMappingMap {
+		attribute, ok := ldapAttributes[string(mappingAttr)]
+		if !ok {
+			// attribute from map was not found in LDAP, we add it to the list of unmapped
+			unmappedAttributes = append(unmappedAttributes, string(mappingAttr))
+			continue
+		}
 
-	userFields := attributeMappingMap[AttributeMappingAttribute(attribute.Name)]
-	attributeValue := attribute.Values[0]
-
-	for _, userField := range userFields {
-		switch userField {
-		case "uid":
-			user.Uid = util.TruncateIfTooLong(attributeValue, 100)
-		case "email":
-			user.Email = util.TruncateIfTooLong(attributeValue, 100)
-		case "displayName":
-			user.Cn = util.TruncateIfTooLong(attributeValue, 100)
-		case "Phone":
-			user.MobileTelephoneNumber = util.TruncateIfTooLong(attributeValue, 20)
-		case "Address":
-			user.Address = attributeValue
+		// if attribute is found, process its values
+		attributeValue := attribute.Values[0] // take first value as specified in original function
+		for _, userField := range userFields {
+			switch userField {
+			case "uid":
+				user.Uid = util.TruncateIfTooLong(attributeValue, 100)
+			case "email":
+				user.Email = util.TruncateIfTooLong(attributeValue, 100)
+			case "displayName":
+				user.Cn = util.TruncateIfTooLong(attributeValue, 100)
+			case "Phone":
+				user.MobileTelephoneNumber = util.TruncateIfTooLong(attributeValue, 20)
+			case "Address":
+				user.Address = attributeValue
+			}
 		}
 	}
+
+	return unmappedAttributes
 }
