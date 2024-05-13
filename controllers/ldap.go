@@ -198,10 +198,21 @@ func (c *ApiController) AddLdap() {
 		return
 	}
 
-	if util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
-		msg := c.T("general:Missing parameter")
-		record.AddReason(msg)
+	anyRequiredLdapFieldEmpty := util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.BaseDn)
+	enabledCryptoAndEmptyCert := ldap.EnableCryptographicAuth && ldap.ClientCert == ""
+	disabledCryptoAndEmptyCred := !ldap.EnableCryptographicAuth && util.IsStringsEmpty(ldap.Username, ldap.Password)
 
+	var msg string
+	if anyRequiredLdapFieldEmpty {
+		msg = c.T("general:Missing required parameter")
+	} else if enabledCryptoAndEmptyCert {
+		msg = c.T("general:Missing certificate")
+	} else if disabledCryptoAndEmptyCred {
+		msg = c.T("general:Missing administrator credentials")
+	}
+
+	if msg != "" {
+		record.AddReason(msg)
 		c.ResponseError(msg)
 		return
 	}
@@ -251,13 +262,20 @@ func (c *ApiController) UpdateLdap() {
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 
 	anyRequiredLdapFieldEmpty := util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.BaseDn)
-	enabledCryptoAndEmptyCert := ldap.EnableCryptographicAuth && len(ldap.ClientCert) == 0
+	enabledCryptoAndEmptyCert := ldap.EnableCryptographicAuth && ldap.ClientCert == ""
 	disabledCryptoAndEmptyCred := !ldap.EnableCryptographicAuth && util.IsStringsEmpty(ldap.Username, ldap.Password)
 
-	if err != nil || anyRequiredLdapFieldEmpty || enabledCryptoAndEmptyCert || disabledCryptoAndEmptyCred {
-		msg := c.T("general:Missing parameter")
-		record.AddReason(msg)
+	var msg string
+	if anyRequiredLdapFieldEmpty {
+		msg = c.T("general:Missing required parameter")
+	} else if enabledCryptoAndEmptyCert {
+		msg = c.T("general:Missing client certificate")
+	} else if disabledCryptoAndEmptyCred {
+		msg = c.T("general:Missing administrator credentials")
+	}
 
+	if msg != "" {
+		record.AddReason(msg)
 		c.ResponseError(msg)
 		return
 	}
