@@ -203,7 +203,7 @@ func getProvider(owner string, name string) (*Provider, error) {
 		return nil, nil
 	}
 
-	provider := Provider{Name: name}
+	provider := Provider{Owner: owner, Name: name}
 	existed, err := ormer.Engine.Get(&provider)
 	if err != nil {
 		return &provider, err
