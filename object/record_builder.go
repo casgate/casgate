@@ -118,7 +118,10 @@ func GetRecord(ctx goCtx.Context) *RecordBuilder {
 	return &RecordBuilder{}
 }
 
-var ErrExtractRecordFromCtx = errors.New("extract record from ctx")
+var (
+	ErrExtractRecordFromCtx = errors.New("record is not present")
+	ErrCastingToRecord      = errors.New("casting to record")
+)
 
 func extractRecordFromCtx(goCtx goCtx.Context) (*RecordBuilder, error) {
 	recordVal := goCtx.Value(RecordDataKey)
@@ -129,7 +132,7 @@ func extractRecordFromCtx(goCtx goCtx.Context) (*RecordBuilder, error) {
 
 	rb, ok := recordVal.(*RecordBuilder)
 	if !ok {
-		return nil, ErrExtractRecordFromCtx
+		return nil, ErrCastingToRecord
 	}
 
 	return rb, nil
