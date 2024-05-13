@@ -198,7 +198,11 @@ func (c *ApiController) AddLdap() {
 		return
 	}
 
-	if util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
+	anyRequiredLdapFieldEmpty := util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.BaseDn)
+	enabledCryptoAndEmptyCert := ldap.EnableCryptographicAuth && ldap.ClientCert == ""
+	disabledCryptoAndEmptyCred := !ldap.EnableCryptographicAuth && util.IsStringsEmpty(ldap.Username, ldap.Password)
+
+	if anyRequiredLdapFieldEmpty || enabledCryptoAndEmptyCert || disabledCryptoAndEmptyCred {
 		msg := c.T("general:Missing parameter")
 		record.AddReason(msg)
 
