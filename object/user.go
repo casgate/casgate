@@ -233,19 +233,19 @@ type ManagedAccount struct {
 	SigninUrl   string `xorm:"varchar(200)" json:"signinUrl"`
 }
 
-func (u *User) IsPasswordChangeRequired() bool {
-	return !u.PasswordChangeTime.IsZero() && u.PasswordChangeTime.Before(time.Now())
+func (user *User) IsPasswordChangeRequired() bool {
+	return !user.PasswordChangeTime.IsZero() && user.PasswordChangeTime.Before(time.Now())
 }
 
-func (u *User) checkPasswordChangeRequestAllowed() error {
-	if !u.isPasswordChangeRequestAllowed() && !u.PasswordChangeTime.IsZero() {
+func (user *User) checkPasswordChangeRequestAllowed() error {
+	if !user.isPasswordChangeRequestAllowed() && !user.PasswordChangeTime.IsZero() {
 		return fmt.Errorf("IsPasswordChangeRequired is not supported to be enabled for users from LDAP or Keycloak")
 	}
 	return nil
 }
 
-func (u *User) isPasswordChangeRequestAllowed() bool {
-	return u.Type != "" || u.Ldap == ""
+func (user *User) isPasswordChangeRequestAllowed() bool {
+	return user.Type != "" || user.Ldap == ""
 }
 
 func GetGlobalUserCount(field, value string) (int64, error) {
@@ -812,8 +812,8 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 		return false, nil
 	}
 
-	if user.PasswordType == "" || user.PasswordType == "plain" {
-		user.UpdateUserPassword(organization)
+	if err := user.UpdateUserPassword(organization); err != nil {
+		return false, err
 	}
 
 	err := user.UpdateUserHash()
