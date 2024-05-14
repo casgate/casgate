@@ -301,7 +301,7 @@ func getApplication(ctx context.Context, owner string, name string) (*Applicatio
 
 		return &application, nil
 	} else {
-		return nil, nil
+		return nil, fmt.Errorf("application %s does not exist", name)
 	}
 }
 
@@ -330,7 +330,7 @@ func GetApplicationByOrganizationName(ctx context.Context, organization string) 
 
 		return &application, nil
 	} else {
-		return nil, nil
+		return nil, fmt.Errorf("application for organization %s does not exist", organization)
 	}
 }
 
@@ -382,7 +382,7 @@ func GetApplicationByClientId(ctx context.Context, clientId string) (*Applicatio
 
 		return &application, nil
 	} else {
-		return nil, nil
+		return nil, fmt.Errorf("application for clientId %s does not exist", clientId)
 	}
 }
 
@@ -728,13 +728,13 @@ func applicationChangeTrigger(oldName string, newName string) error {
 		return err
 	}
 	for i := 0; i < len(permissions); i++ {
-		permissionResoureces := permissions[i].Resources
-		for j := 0; j < len(permissionResoureces); j++ {
-			if permissionResoureces[j] == oldName {
-				permissionResoureces[j] = newName
+		permissionResources := permissions[i].Resources
+		for j := 0; j < len(permissionResources); j++ {
+			if permissionResources[j] == oldName {
+				permissionResources[j] = newName
 			}
 		}
-		permissions[i].Resources = permissionResoureces
+		permissions[i].Resources = permissionResources
 		_, err = session.Where("owner=?", permissions[i].Owner).Where("name=?", permissions[i].Name).Update(permissions[i])
 		if err != nil {
 			return err
