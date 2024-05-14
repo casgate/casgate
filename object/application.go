@@ -301,7 +301,7 @@ func getApplication(ctx context.Context, owner string, name string) (*Applicatio
 
 		return &application, nil
 	} else {
-		return nil, fmt.Errorf("application %s does not exist", name)
+		return nil, nil
 	}
 }
 
@@ -330,7 +330,7 @@ func GetApplicationByOrganizationName(ctx context.Context, organization string) 
 
 		return &application, nil
 	} else {
-		return nil, fmt.Errorf("application for organization %s does not exist", organization)
+		return nil, nil
 	}
 }
 
@@ -382,7 +382,7 @@ func GetApplicationByClientId(ctx context.Context, clientId string) (*Applicatio
 
 		return &application, nil
 	} else {
-		return nil, fmt.Errorf("application for clientId %s does not exist", clientId)
+		return nil, nil
 	}
 }
 
