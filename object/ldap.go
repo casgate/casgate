@@ -43,6 +43,8 @@ type Ldap struct {
 	EnableRoleMapping bool               `xorm:"bool" json:"enableRoleMapping"`
 	RoleMappingItems  []*RoleMappingItem `xorm:"text" json:"roleMappingItems"`
 
+	EnableCaseInsensitivity bool `xorm:"bool" json:"enableCaseInsensitivity"`
+
 	AutoSync int    `json:"autoSync"`
 	LastSync string `xorm:"varchar(100)" json:"lastSync"`
 
@@ -165,7 +167,7 @@ func UpdateLdap(ldap *Ldap) (bool, error) {
 
 	affected, err := ormer.Engine.ID(ldap.Id).Cols("owner", "server_name", "host", "cert",
 		"port", "enable_ssl", "username", "password", "base_dn", "filter", "filter_fields", "auto_sync",
-		"role_mapping_items", "enable_role_mapping", "attribute_mapping_items", "enable_attribute_mapping",
+		"role_mapping_items", "enable_case_insensitivity", "enable_role_mapping", "attribute_mapping_items", "enable_attribute_mapping",
 		"enable_cryptographic_auth", "client_cert").Update(ldap)
 	if err != nil {
 		return false, nil

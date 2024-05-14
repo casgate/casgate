@@ -202,7 +202,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 
 	var attributeMappingMap AttributeMappingMap
 	if ldapServer.EnableAttributeMapping {
-		attributeMappingMap = buildAttributeMappingMap(ldapServer.AttributeMappingItems)
+		attributeMappingMap = buildAttributeMappingMap(ldapServer.AttributeMappingItems, ldapServer.EnableCaseInsensitivity)
 		SearchAttributes = append(SearchAttributes, attributeMappingMap.Keys()...)
 	}
 
@@ -233,7 +233,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 		var user LdapUser
 
 		if ldapServer.EnableAttributeMapping {
-			unmappedAttributes := MapAttributesToUser(entry, &user, attributeMappingMap)
+			unmappedAttributes := MapAttributesToUser(entry, &user, attributeMappingMap, ldapServer.EnableCaseInsensitivity)
 			if len(unmappedAttributes) > 0 {
 				rb.AddReason(fmt.Sprintf("User (%s) has unmapped attributes: %s", entry.DN, strings.Join(unmappedAttributes, ", ")))
 			}
