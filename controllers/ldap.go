@@ -55,9 +55,7 @@ func (c *ApiController) GetLdapUsers() {
 	gCtx := c.getRequestCtx()
 	record := object.GetRecord(gCtx)
 
-	id := c.Input().Get("id")
-
-	_, ldapId := util.GetOwnerAndNameFromId(id)
+	ldapId := c.Input().Get("ldapId")
 	ldapServer, err := object.GetLdap(ldapId)
 	if err != nil {
 		record.AddReason(fmt.Sprintf("Get LDAP: %s", err.Error()))
@@ -127,7 +125,7 @@ func (c *ApiController) GetLdaps() {
 	c.ResponseOk(object.GetMaskedLdaps(object.GetLdaps(owner)))
 }
 
-// GetLdaps
+// GetLdapServerNames
 // @Title GetLdapServerNames
 // @Tag Account API
 // @Description get ldaps
@@ -162,15 +160,14 @@ func (c *ApiController) GetLdapServerNames() {
 // @Success 200 {object} object.Ldap The Response object
 // @router /get-ldap [get]
 func (c *ApiController) GetLdap() {
-	id := c.Input().Get("id")
+	ldapId := c.Input().Get("ldapId")
 
-	if util.IsStringsEmpty(id) {
+	if util.IsStringsEmpty(ldapId) {
 		c.ResponseError(c.T("general:Missing parameter"))
 		return
 	}
 
-	_, name := util.GetOwnerAndNameFromId(id)
-	ldap, err := object.GetLdap(name)
+	ldap, err := object.GetLdap(ldapId)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

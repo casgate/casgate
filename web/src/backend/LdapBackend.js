@@ -34,8 +34,8 @@ export function getLdapServerNames(owner) {
   }).then(res => res.json());
 }
 
-export function getLdap(owner, name) {
-  return fetch(`${Setting.ServerUrl}/api/get-ldap?id=${owner}/${encodeURIComponent(name)}`, {
+export function getLdap(name) {
+  return fetch(`${Setting.ServerUrl}/api/get-ldap?ldapId=${encodeURIComponent(name)}`, {
     method: "GET",
     credentials: "include",
     headers: {
@@ -77,8 +77,8 @@ export function updateLdap(body) {
   }).then(res => res.json());
 }
 
-export function getLdapUser(owner, name) {
-  return fetch(`${Setting.ServerUrl}/api/get-ldap-users?id=${owner}/${encodeURIComponent(name)}`, {
+export function getLdapUser(name) {
+  return fetch(`${Setting.ServerUrl}/api/get-ldap-users?ldapId=${encodeURIComponent(name)}`, {
     method: "GET",
     credentials: "include",
     headers: {
