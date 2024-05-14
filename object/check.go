@@ -251,6 +251,7 @@ func CheckLdapUserPassword(user *User, password string, lang string) (string, er
 	ldapLoginSuccess := false
 	hit := false
 	var ldapServerId string
+	userDisabled := false
 
 	for _, ldapServer := range ldaps {
 		conn, err := ldapServer.GetLdapConn()
@@ -276,6 +277,17 @@ func CheckLdapUserPassword(user *User, password string, lang string) (string, er
 			return ldapServer.Id, fmt.Errorf(i18n.Translate(lang, "check:Multiple accounts with same uid, please check your ldap server"))
 		}
 
+		userDisabled = checkIsUserDisabled(searchResult.Entries[0].Attributes)
+		if userDisabled {
+			user.IsForbidden = true
+			_, err = UpdateUser(user.GetId(), user, []string{"is_forbidden"}, false)
+			if err != nil {
+				return "", err
+			}
+			conn.Close()
+			break
+		}
+
 		hit = true
 		dn := searchResult.Entries[0].DN
 		if err = conn.Conn.Bind(dn, password); err == nil {
@@ -286,6 +298,10 @@ func CheckLdapUserPassword(user *User, password string, lang string) (string, er
 		}
 
 		conn.Close()
+	}
+
+	if userDisabled {
+		return "", fmt.Errorf("user is disabled")
 	}
 
 	if !ldapLoginSuccess {
@@ -394,6 +410,10 @@ func CheckUserPassword(ctx context.Context, organization string, username string
 		if err != nil {
 			if err.Error() == "user not exist" {
 				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
+			}
+
+			if err.Error() == "user is disabled" {
+				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator"))
 			}
 
 			return nil, recordSigninErrorInfo(ctx, user, lang, enableCaptcha)
@@ -597,4 +617,16 @@ func CheckUserIdProviderOrigin(userIdProvider UserIdProvider) bool {
 	isLdapIdEmpty := userIdProvider.LdapId == ""
 
 	return isProviderNameEmpty != isLdapIdEmpty
+}
+
+func checkIsUserDisabled(userAttributes []*goldap.EntryAttribute) bool {
+	isDisabled := false
+
+	for _, attr := range userAttributes {
+		if attr.Name == "userAccountControl" && attr.Values[0] == "514" {
+			isDisabled = true
+		}
+	}
+
+	return isDisabled
 }
