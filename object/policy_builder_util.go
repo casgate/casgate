@@ -3,6 +3,7 @@ package object
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/casdoor/casdoor/util"
@@ -306,10 +307,15 @@ func getAncestorEntitiesById[T NodeValueType](entityId string, treeMap map[strin
 	}
 
 	result = append(result, curnode.value)
-	if len(curnode.ancestors) > 0 {
-		for _, ancestor := range curnode.ancestors {
-			result = append(result, getAncestorEntitiesById(ancestor.value.GetId(), treeMap)...)
+	
+	for _, ancestor := range curnode.ancestors {
+		if !slices.ContainsFunc(result, func(item T) bool {
+			return item.GetId() == ancestor.value.GetId()
+		}) {
+			continue
 		}
+
+		result = append(result, getAncestorEntitiesById(ancestor.value.GetId(), treeMap)...)
 	}
 
 	return result
