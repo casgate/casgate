@@ -605,12 +605,7 @@ func SyncUserFromLdap(ctx context.Context, organization string, ldapId string, u
 		}
 
 		_, _, err = SyncLdapUsers(ctx, organization, AutoAdjustLdapUser(res), ldapServer.Id)
-
-		if ldapServer.EnableCaseInsensitivity {
-			return &res[0], err
-		}
-		
-		return nil, err
+		return &res[0], err
 	}
 
 	return nil, nil
