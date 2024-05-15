@@ -225,7 +225,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 
 	var roleMappingMap RoleMappingMap
 	if ldapServer.EnableRoleMapping {
-		roleMappingMap = buildRoleMappingMap(ldapServer.RoleMappingItems)
+		roleMappingMap = buildRoleMappingMap(ldapServer.RoleMappingItems, ldapServer.EnableCaseInsensitivity)
 	}
 
 	var ldapUsers []LdapUser
@@ -242,8 +242,16 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 		for _, attribute := range entry.Attributes {
 			// check attribute value with role mapping rules
 			if ldapServer.EnableRoleMapping {
-				if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attribute.Name)]; ok {
+				attributeName := attribute.Name
+				if ldapServer.EnableCaseInsensitivity {
+					attributeName = strings.ToLower(attributeName)
+				}
+
+				if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attributeName)]; ok {
 					for _, value := range attribute.Values {
+						if ldapServer.EnableCaseInsensitivity {
+							value = strings.ToLower(value)
+						}
 						if roleMappingMapRoles, ok := roleMappingMapItem[RoleMappingItemValue(value)]; ok {
 							user.Roles = append(user.Roles, roleMappingMapRoles.StrRoles()...)
 						}
@@ -597,7 +605,12 @@ func SyncUserFromLdap(ctx context.Context, organization string, ldapId string, u
 		}
 
 		_, _, err = SyncLdapUsers(ctx, organization, AutoAdjustLdapUser(res), ldapServer.Id)
-		return &res[0], err
+
+		if ldapServer.EnableCaseInsensitivity {
+			return &res[0], err
+		}
+		
+		return nil, err
 	}
 
 	return nil, nil
