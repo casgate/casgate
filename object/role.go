@@ -114,6 +114,7 @@ func GetRole(id string) (*Role, error) {
 	return getRole(owner, name)
 }
 
+
 func UpdateRole(id string, role *Role) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
 	oldRole, err := getRole(owner, name)
@@ -123,6 +124,16 @@ func UpdateRole(id string, role *Role) (bool, error) {
 
 	if oldRole == nil {
 		return false, nil
+	}
+	
+
+	allParentRoles, _ := GetAncestorRoles(id)
+	for _, r := range allParentRoles {
+		for _, roleId := range r.Roles {
+			if id == roleId {
+				return false, fmt.Errorf("role %s is in the child roles of %s", id, r.GetId())
+			}
+		}
 	}
 
 	if name != role.Name {
