@@ -861,13 +861,15 @@ func (c *ApiController) SendInvite() {
 		}
 	}
 
-	content, err := url.JoinPath(provider.InviteContent, link)
+	link, err = url.JoinPath(link)
 	if err != nil {
 		logs.Error("join path: %s", err.Error())
 		c.ResponseInternalServerError("internal server error")
 
 		return
 	}
+
+	content := fmt.Sprintf(provider.InviteContent, link)
 
 	err = object.SendEmail(provider, provider.InviteTitle, content, user.Email, sender)
 	if err != nil {
