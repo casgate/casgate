@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/casdoor/casdoor/util"
@@ -102,21 +103,31 @@ func GetWebhook(id string) (*Webhook, error) {
 }
 
 func UpdateWebhook(id string, webhook *Webhook) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	w, err := getWebhook(owner, name)
-	if err != nil {
-		return false, err
-	} else if w == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		w, err := getWebhook(owner, name)
+		if err != nil {
+			return err
+		} else if w == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(webhook)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(webhook)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(w.Name,
-		w.Organization, webhook.Name, webhook.Organization, webhookEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(w.Name,
+			w.Organization, webhook.Name, webhook.Organization, webhookEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -125,12 +136,22 @@ func UpdateWebhook(id string, webhook *Webhook) (bool, error) {
 }
 
 func AddWebhook(webhook *Webhook) (bool, error) {
-	affected, err := ormer.Engine.Insert(webhook)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(webhook)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(webhook.Name, webhook.Organization, webhookEntity)
+		ok, err = addCasbinObjectGroupingPolicy(webhook.Name, webhook.Organization, webhookEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -139,12 +160,22 @@ func AddWebhook(webhook *Webhook) (bool, error) {
 }
 
 func DeleteWebhook(webhook *Webhook) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{webhook.Owner, webhook.Name}).Delete(&Webhook{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{webhook.Owner, webhook.Name}).Delete(&Webhook{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(webhook.Name, webhook.Organization, webhookEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(webhook.Name, webhook.Organization, webhookEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

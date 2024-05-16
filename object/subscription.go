@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -199,21 +200,31 @@ func GetSubscription(id string) (*Subscription, error) {
 }
 
 func UpdateSubscription(id string, subscription *Subscription) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	s, err := getSubscription(owner, name)
-	if err != nil {
-		return false, err
-	} else if s == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		s, err := getSubscription(owner, name)
+		if err != nil {
+			return err
+		} else if s == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(subscription)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(subscription)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(s.Name,
-		s.Owner, subscription.Name, subscription.Owner, subscriptionEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(s.Name,
+			s.Owner, subscription.Name, subscription.Owner, subscriptionEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -222,12 +233,22 @@ func UpdateSubscription(id string, subscription *Subscription) (bool, error) {
 }
 
 func AddSubscription(subscription *Subscription) (bool, error) {
-	affected, err := ormer.Engine.Insert(subscription)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(subscription)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(subscription.Name, subscription.Owner, subscriptionEntity)
+		ok, err = addCasbinObjectGroupingPolicy(subscription.Name, subscription.Owner, subscriptionEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -236,12 +257,22 @@ func AddSubscription(subscription *Subscription) (bool, error) {
 }
 
 func DeleteSubscription(subscription *Subscription) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{subscription.Owner, subscription.Name}).Delete(&Subscription{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{subscription.Owner, subscription.Name}).Delete(&Subscription{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(subscription.Name, subscription.Owner, subscriptionEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(subscription.Name, subscription.Owner, subscriptionEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

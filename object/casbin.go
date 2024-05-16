@@ -9,6 +9,7 @@ import (
 	casbinmodel "github.com/casbin/casbin/v2/model"
 	xormadapter "github.com/casbin/xorm-adapter/v2"
 	"github.com/casdoor/casdoor/conf"
+	"github.com/casdoor/casdoor/util"
 )
 
 const (
@@ -148,7 +149,6 @@ var endpoints = []Endpoint{
 	{role: adminRole, method: methodGet, urlPath: "/api/get-models", entity: modelEntity},
 	{role: adminRole, method: methodPost, urlPath: "/api/update-model", entity: modelEntity},
 	// organization
-	{role: adminRole, method: methodPost, urlPath: "/api/add-organization", entity: organizationEntity},
 	{role: adminRole, method: methodPost, urlPath: "/api/delete-organization", entity: organizationEntity},
 	{role: adminRole, method: methodGet, urlPath: "/api/get-organization", entity: organizationEntity},
 	{role: AnonymousRole, method: methodGet, urlPath: "/api/get-organization-names", entity: organizationEntity},
@@ -302,7 +302,7 @@ var endpoints = []Endpoint{
 	{role: userRole, method: methodPost, urlPath: "/api/webhook", entity: handleOfficialAccountEventEntity},
 }
 
-var casbinEnforcer *casbin.Enforcer
+var casbinEnforcer *casbin.SyncedEnforcer
 var casbinEnforcerErr = "Error init casbin: %s"
 
 func initCasbinModel() (casbinmodel.Model, error) {
@@ -345,7 +345,7 @@ func initCasbinAdapter() (*xormadapter.Adapter, error) {
 	return adapter, nil
 }
 
-func InitCasbinEnforcer() (*casbin.Enforcer, error) {
+func InitCasbinEnforcer() (*casbin.SyncedEnforcer, error) {
 	model, err := initCasbinModel()
 	if err != nil {
 		return nil, fmt.Errorf(casbinEnforcerErr, err)
@@ -356,7 +356,7 @@ func InitCasbinEnforcer() (*casbin.Enforcer, error) {
 		return nil, fmt.Errorf(casbinEnforcerErr, err)
 	}
 
-	casbinEnforcer, err = casbin.NewEnforcer(model, adapter)
+	casbinEnforcer, err = casbin.NewSyncedEnforcer(model, adapter)
 	if err != nil {
 		return nil, fmt.Errorf(casbinEnforcerErr, err)
 	}
@@ -396,11 +396,11 @@ func removeCasbinObjectGroupingPolicy(name, owner, entity string) (bool, error) 
 
 func addOrganizationPolicies(organization *Organization) (bool, error) {
 	var newPolicies [][]string
-	uniqEnitities := make(map[string]bool)
+	uniqEntities := make(map[string]bool)
 	for _, endpoint := range endpoints {
-		_, ok := uniqEnitities[endpoint.entity]
+		_, ok := uniqEntities[endpoint.entity]
 		if !ok {
-			uniqEnitities[endpoint.entity] = true
+			uniqEntities[endpoint.entity] = true
 		}
 
 		if endpoint.role == AnonymousRole {
@@ -416,16 +416,16 @@ func addOrganizationPolicies(organization *Organization) (bool, error) {
 		return ok, err
 	}
 
-	var sharedEntitiesGroupingPolicies [][]string
-	var allEnityGroups [][]string
-	for entity := range uniqEnitities {
+	var sharedEntityGroupingPolicies [][]string
+	var existEntityGroups [][]string
+	for entity := range uniqEntities {
 		sharedEntityGroup := fmt.Sprintf("%s-%ss", adminOwner, entity)
 		organizationEntityGroup := fmt.Sprintf("%s-%ss", organization.Name, entity)
-		sharedEntitiesGroupingPolicies = append(sharedEntitiesGroupingPolicies,
+		sharedEntityGroupingPolicies = append(sharedEntityGroupingPolicies,
 			[]string{sharedEntityGroup, organizationEntityGroup})
-		allEnityGroups = append(allEnityGroups, []string{organizationEntityGroup, existGroup})
+		existEntityGroups = append(existEntityGroups, []string{organizationEntityGroup, existGroup})
 	}
-	newGroupingPolicies := concatSlices(sharedEntitiesGroupingPolicies, allEnityGroups)
+	newGroupingPolicies := util.ConcatSlices(sharedEntityGroupingPolicies, existEntityGroups)
 	ok, err = casbinEnforcer.AddNamedGroupingPoliciesEx(objectGroupingPolicy, newGroupingPolicies)
 	if !ok || err != nil {
 		return ok, err
@@ -436,11 +436,11 @@ func addOrganizationPolicies(organization *Organization) (bool, error) {
 
 func removeOrganizationPolicies(organization *Organization) (bool, error) {
 	var policies [][]string
-	uniqEnitities := make(map[string]bool)
+	uniqEntities := make(map[string]bool)
 	for _, endpoint := range endpoints {
-		_, ok := uniqEnitities[endpoint.entity]
+		_, ok := uniqEntities[endpoint.entity]
 		if !ok {
-			uniqEnitities[endpoint.entity] = true
+			uniqEntities[endpoint.entity] = true
 		}
 
 		if endpoint.role == AnonymousRole {
@@ -456,16 +456,16 @@ func removeOrganizationPolicies(organization *Organization) (bool, error) {
 		return ok, err
 	}
 
-	var sharedEntitiesGroupingPolicies [][]string
-	var allEnityGroups [][]string
-	for entity := range uniqEnitities {
+	var sharedEntityGroupingPolicies [][]string
+	var existEntityGroups [][]string
+	for entity := range uniqEntities {
 		sharedEntityGroup := fmt.Sprintf("%s-%ss", adminOwner, entity)
 		organizationEntityGroup := fmt.Sprintf("%s-%ss", organization.Name, entity)
-		sharedEntitiesGroupingPolicies = append(sharedEntitiesGroupingPolicies,
+		sharedEntityGroupingPolicies = append(sharedEntityGroupingPolicies,
 			[]string{sharedEntityGroup, organizationEntityGroup})
-		allEnityGroups = append(allEnityGroups, []string{organizationEntityGroup, existGroup})
+		existEntityGroups = append(existEntityGroups, []string{organizationEntityGroup, existGroup})
 	}
-	groupingPolicies := concatSlices(sharedEntitiesGroupingPolicies, allEnityGroups)
+	groupingPolicies := util.ConcatSlices(sharedEntityGroupingPolicies, existEntityGroups)
 	ok, err = casbinEnforcer.RemoveNamedGroupingPolicies(objectGroupingPolicy, groupingPolicies)
 	if !ok || err != nil {
 		return ok, err
@@ -510,7 +510,7 @@ func updateOrganizationPolicies(oldOrganization, newOrganization *Organization) 
 		}
 
 		var orgGroups [][]string
-		var orgExistedGroups [][]string
+		var orgExistGroups [][]string
 		updatedEntities := make(map[string]bool)
 		for _, endpoint := range endpoints {
 			entity := endpoint.entity
@@ -523,14 +523,14 @@ func updateOrganizationPolicies(oldOrganization, newOrganization *Organization) 
 					casbinEnforcer.GetFilteredNamedGroupingPolicy(objectGroupingPolicy,
 						0, fmt.Sprintf("%s-%ss", oldOrganization.Name, entity))
 				orgGroups = append(orgGroups, entityOrgGroups...)
-				orgExistedGroups = append(orgExistedGroups, existedOrgGroups...)
+				orgExistGroups = append(orgExistGroups, existedOrgGroups...)
 				updatedEntities[entity] = true
 			}
 		}
 
 		groupNameRegex := regexp.MustCompile(".*(-[^-]+$)")
 		var organizationGroups [][]string
-		var organizationExistedGroups [][]string
+		var organizationExistGroups [][]string
 		for _, orgGroup := range orgGroups {
 			entityName := orgGroup[0]
 			newGroupName := groupNameRegex.ReplaceAllStringFunc(orgGroup[1],
@@ -542,18 +542,18 @@ func updateOrganizationPolicies(oldOrganization, newOrganization *Organization) 
 			organizationGroup := []string{entityName, newGroupName}
 			organizationGroups = append(organizationGroups, organizationGroup)
 		}
-		for _, orgExistedGroup := range orgExistedGroups {
-			newExistedGroupName := groupNameRegex.ReplaceAllStringFunc(orgExistedGroup[0],
+		for _, orgExistGroup := range orgExistGroups {
+			newExistGroupName := groupNameRegex.ReplaceAllStringFunc(orgExistGroup[0],
 				func(match string) string {
 					matches := groupNameRegex.FindStringSubmatch(match)
 					entityName := matches[1]
 					return newOrganization.Name + entityName
 				})
-			organizationExistedGroup := []string{newExistedGroupName, existGroup}
-			organizationExistedGroups = append(organizationExistedGroups, organizationExistedGroup)
+			organizationExistGroup := []string{newExistGroupName, existGroup}
+			organizationExistGroups = append(organizationExistGroups, organizationExistGroup)
 		}
-		oldGroupingPolicies := concatSlices(orgGroups, orgExistedGroups)
-		newGroupingPolicies := concatSlices(organizationGroups, organizationExistedGroups)
+		oldGroupingPolicies := util.ConcatSlices(orgGroups, orgExistGroups)
+		newGroupingPolicies := util.ConcatSlices(organizationGroups, organizationExistGroups)
 		ok, err = casbinEnforcer.UpdateNamedGroupingPolicies(
 			objectGroupingPolicy, oldGroupingPolicies, newGroupingPolicies)
 		if !ok || err != nil {
@@ -628,18 +628,4 @@ func InitCasbinPolicy() error {
 	}
 
 	return nil
-}
-
-func concatSlices[T any](slices ...[]T) []T {
-	var totalLen int
-	for _, slice := range slices {
-		totalLen += len(slice)
-	}
-
-	result := make([]T, 0, totalLen)
-	for _, slice := range slices {
-		result = append(result, slice...)
-	}
-
-	return result
 }

@@ -16,6 +16,7 @@ package object
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	"github.com/casbin/casbin/v2/model"
@@ -102,57 +103,77 @@ func UpdateModelWithCheck(id string, modelObj *Model) error {
 }
 
 func UpdateModel(id string, modelObj *Model) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	m, err := getModel(owner, name)
-	if err != nil {
-		return false, err
-	} else if m == nil {
-		return false, nil
-	}
-
-	if name != modelObj.Name {
-		err := modelChangeTrigger(name, modelObj.Name)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		m, err := getModel(owner, name)
 		if err != nil {
-			return false, err
+			return err
+		} else if m == nil {
+			return nil
 		}
-	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(modelObj)
-	if err != nil {
-		return false, err
-	}
+		if name != modelObj.Name {
+			err := modelChangeTrigger(name, modelObj.Name)
+			if err != nil {
+				return err
+			}
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(m.Name,
-		m.Owner, modelObj.Name, modelObj.Owner, modelEntity)
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(modelObj)
+		if err != nil {
+			return err
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(m.Name,
+			m.Owner, modelObj.Name, modelObj.Owner, modelEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected > 0 {
+			if !equalRules(m.CustomPolicyMappingRules, modelObj.CustomPolicyMappingRules) ||
+				m.CustomPolicyMapping != modelObj.CustomPolicyMapping {
+				permissions, err := GetPermissionsByModel(modelObj.Owner, modelObj.Name)
+				if err != nil {
+					return err
+				}
+
+				err = ProcessPolicyDifference(permissions)
+				if err != nil {
+					return fmt.Errorf("ProcessPolicyDifference: %w", err)
+				}
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected > 0 {
-		if !equalRules(m.CustomPolicyMappingRules, modelObj.CustomPolicyMappingRules) ||
-			m.CustomPolicyMapping != modelObj.CustomPolicyMapping {
-			permissions, err := GetPermissionsByModel(modelObj.Owner, modelObj.Name)
-			if err != nil {
-				return false, err
-			}
-
-			err = ProcessPolicyDifference(permissions)
-			if err != nil {
-				return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-			}
-		}
 	}
 
 	return affected != 0, err
 }
 
 func AddModel(model *Model) (bool, error) {
-	affected, err := ormer.Engine.Insert(model)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(model)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(model.Name, model.Owner, modelEntity)
+		ok, err = addCasbinObjectGroupingPolicy(model.Name, model.Owner, modelEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -161,12 +182,22 @@ func AddModel(model *Model) (bool, error) {
 }
 
 func DeleteModel(model *Model) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{model.Owner, model.Name}).Delete(&Model{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{model.Owner, model.Name}).Delete(&Model{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(model.Name, model.Owner, modelEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(model.Name, model.Owner, modelEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -93,30 +94,39 @@ func GetAdapter(id string) (*Adapter, error) {
 }
 
 func UpdateAdapter(id string, adapter *Adapter) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	oldAdapter, err := getAdapter(owner, name)
-	if oldAdapter == nil || err != nil {
-		return false, err
-	}
-
-	if name != adapter.Name {
-		err := adapterChangeTrigger(name, adapter.Name)
-		if err != nil {
-			return false, err
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		oldAdapter, err := getAdapter(owner, name)
+		if oldAdapter == nil || err != nil {
+			return err
 		}
-	}
 
-	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
-	if adapter.Password == "***" {
-		session.Omit("password")
-	}
-	affected, err := session.Update(adapter)
-	if err != nil {
-		return false, err
-	}
+		if name != adapter.Name {
+			err = adapterChangeTrigger(name, adapter.Name)
+			if err != nil {
+				return err
+			}
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(oldAdapter.Name, oldAdapter.Owner,
-		adapter.Name, adapter.Owner, adapterEntity)
+		session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
+		if adapter.Password == "***" {
+			session.Omit("password")
+		}
+		affected, err = session.Update(adapter)
+		if err != nil {
+			return err
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(oldAdapter.Name, oldAdapter.Owner,
+			adapter.Name, adapter.Owner, adapterEntity)
+		if !ok || err != nil {
+			return err
+		}
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -125,12 +135,22 @@ func UpdateAdapter(id string, adapter *Adapter) (bool, error) {
 }
 
 func AddAdapter(adapter *Adapter) (bool, error) {
-	affected, err := ormer.Engine.Insert(adapter)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(adapter)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(adapter.Name, adapter.Owner, adapterEntity)
+		ok, err = addCasbinObjectGroupingPolicy(adapter.Name, adapter.Owner, adapterEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -139,12 +159,22 @@ func AddAdapter(adapter *Adapter) (bool, error) {
 }
 
 func DeleteAdapter(adapter *Adapter) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{adapter.Owner, adapter.Name}).Delete(&Adapter{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{adapter.Owner, adapter.Name}).Delete(&Adapter{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(adapter.Name, adapter.Owner, adapterEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(adapter.Name, adapter.Owner, adapterEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

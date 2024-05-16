@@ -15,6 +15,7 @@
 package object
 
 import (
+	goContext "context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -231,41 +232,51 @@ func GetWechatMiniProgramProvider(application *Application) *Provider {
 }
 
 func UpdateProvider(id string, provider *Provider) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	p, err := getProvider(owner, name)
-	if err != nil {
-		return false, err
-	} else if p == nil {
-		return false, nil
-	}
-
-	if name != provider.Name {
-		err := providerChangeTrigger(name, provider.Name)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(goContext.Background(), func(ctx goContext.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		p, err := getProvider(owner, name)
 		if err != nil {
-			return false, err
+			return err
+		} else if p == nil {
+			return nil
 		}
-	}
 
-	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
-	if provider.ClientSecret == "***" {
-		session = session.Omit("client_secret")
-	}
-	if provider.ClientSecret2 == "***" {
-		session = session.Omit("client_secret2")
-	}
+		if name != provider.Name {
+			err := providerChangeTrigger(name, provider.Name)
+			if err != nil {
+				return err
+			}
+		}
 
-	if provider.Type == "Tencent Cloud COS" {
-		provider.Endpoint = util.GetEndPoint(provider.Endpoint)
-		provider.IntranetEndpoint = util.GetEndPoint(provider.IntranetEndpoint)
-	}
+		session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
+		if provider.ClientSecret == "***" {
+			session = session.Omit("client_secret")
+		}
+		if provider.ClientSecret2 == "***" {
+			session = session.Omit("client_secret2")
+		}
 
-	affected, err := session.Update(provider)
-	if err != nil {
-		return false, err
-	}
+		if provider.Type == "Tencent Cloud COS" {
+			provider.Endpoint = util.GetEndPoint(provider.Endpoint)
+			provider.IntranetEndpoint = util.GetEndPoint(provider.IntranetEndpoint)
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(p.Name,
-		p.Owner, provider.Name, provider.Owner, providerEntity)
+		affected, err = session.Update(provider)
+		if err != nil {
+			return err
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(p.Name,
+			p.Owner, provider.Name, provider.Owner, providerEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -274,17 +285,27 @@ func UpdateProvider(id string, provider *Provider) (bool, error) {
 }
 
 func AddProvider(provider *Provider) (bool, error) {
-	if provider.Type == "Tencent Cloud COS" {
-		provider.Endpoint = util.GetEndPoint(provider.Endpoint)
-		provider.IntranetEndpoint = util.GetEndPoint(provider.IntranetEndpoint)
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(goContext.Background(), func(ctx goContext.Context) error {
+		var err error
+		if provider.Type == "Tencent Cloud COS" {
+			provider.Endpoint = util.GetEndPoint(provider.Endpoint)
+			provider.IntranetEndpoint = util.GetEndPoint(provider.IntranetEndpoint)
+		}
 
-	affected, err := ormer.Engine.Insert(provider)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.Insert(provider)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(provider.Name, provider.Owner, providerEntity)
+		ok, err = addCasbinObjectGroupingPolicy(provider.Name, provider.Owner, providerEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -293,12 +314,22 @@ func AddProvider(provider *Provider) (bool, error) {
 }
 
 func DeleteProvider(provider *Provider) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{provider.Owner, provider.Name}).Delete(&Provider{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(goContext.Background(), func(ctx goContext.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{provider.Owner, provider.Name}).Delete(&Provider{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(provider.Name, provider.Owner, providerEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(provider.Name, provider.Owner, providerEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -109,21 +110,31 @@ func GetPlan(id string) (*Plan, error) {
 }
 
 func UpdatePlan(id string, plan *Plan) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	p, err := getPlan(owner, name)
-	if err != nil {
-		return false, err
-	} else if p == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		p, err := getPlan(owner, name)
+		if err != nil {
+			return err
+		} else if p == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(plan)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(plan)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(p.Name,
-		p.Owner, plan.Name, plan.Owner, planEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(p.Name,
+			p.Owner, plan.Name, plan.Owner, planEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -132,12 +143,22 @@ func UpdatePlan(id string, plan *Plan) (bool, error) {
 }
 
 func AddPlan(plan *Plan) (bool, error) {
-	affected, err := ormer.Engine.Insert(plan)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(plan)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(plan.Name, plan.Owner, planEntity)
+		ok, err = addCasbinObjectGroupingPolicy(plan.Name, plan.Owner, planEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -146,12 +167,22 @@ func AddPlan(plan *Plan) (bool, error) {
 }
 
 func DeletePlan(plan *Plan) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{plan.Owner, plan.Name}).Delete(plan)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{plan.Owner, plan.Name}).Delete(plan)
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(plan.Name, plan.Owner, planEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(plan.Name, plan.Owner, planEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

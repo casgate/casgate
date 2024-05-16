@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -115,75 +116,95 @@ func GetRole(id string) (*Role, error) {
 }
 
 func UpdateRole(id string, role *Role) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
-	oldRole, err := getRole(owner, name)
-	if err != nil {
-		return false, err
-	}
-
-	if oldRole == nil {
-		return false, nil
-	}
-
-	if name != role.Name {
-		err := roleChangeTrigger(name, role.Name)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+		oldRole, err := getRole(owner, name)
 		if err != nil {
-			return false, err
+			return err
 		}
-	}
 
-	oldRoleReachablePermissions, err := subRolePermissions(oldRole)
-	if err != nil {
-		return false, fmt.Errorf("subRolePermissions: %w", err)
-	}
+		if oldRole == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(role)
-	if err != nil {
-		return false, err
-	}
+		if name != role.Name {
+			err := roleChangeTrigger(name, role.Name)
+			if err != nil {
+				return err
+			}
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(oldRole.Name,
-		oldRole.Owner, role.Name, role.Owner, roleEntity)
+		oldRoleReachablePermissions, err := subRolePermissions(oldRole)
+		if err != nil {
+			return fmt.Errorf("subRolePermissions: %w", err)
+		}
+
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(role)
+		if err != nil {
+			return err
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(oldRole.Name,
+			oldRole.Owner, role.Name, role.Owner, roleEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			roleReachablePermissions, err := subRolePermissions(role)
+			if err != nil {
+				return fmt.Errorf("subRolePermissions: %w", err)
+			}
+			roleReachablePermissions = append(roleReachablePermissions, oldRoleReachablePermissions...)
+			err = ProcessPolicyDifference(roleReachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		roleReachablePermissions, err := subRolePermissions(role)
-		if err != nil {
-			return false, fmt.Errorf("subRolePermissions: %w", err)
-		}
-		roleReachablePermissions = append(roleReachablePermissions, oldRoleReachablePermissions...)
-		err = ProcessPolicyDifference(roleReachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected != 0, nil
 }
 
 func AddRole(role *Role) (bool, error) {
-	affected, err := ormer.Engine.Insert(role)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(role)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(role.Name, role.Owner, roleEntity)
+		ok, err = addCasbinObjectGroupingPolicy(role.Name, role.Owner, roleEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			roleReachablePermissions, err := subRolePermissions(role)
+			if err != nil {
+				return fmt.Errorf("subRolePermissions: %w", err)
+			}
+
+			err = ProcessPolicyDifference(roleReachablePermissions)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		roleReachablePermissions, err := subRolePermissions(role)
-		if err != nil {
-			return false, fmt.Errorf("subRolePermissions: %w", err)
-		}
-
-		err = ProcessPolicyDifference(roleReachablePermissions)
-		if err != nil {
-			return false, err
-		}
 	}
 
 	return affected != 0, nil
@@ -193,34 +214,44 @@ func AddRoles(roles []*Role) bool {
 	if len(roles) == 0 {
 		return false
 	}
-	affected, err := ormer.Engine.Insert(roles)
-	if err != nil {
-		if !strings.Contains(err.Error(), "Duplicate entry") {
-			panic(err)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(roles)
+		if err != nil {
+			if !strings.Contains(err.Error(), "Duplicate entry") {
+				panic(err)
+			}
 		}
-	}
 
-	for _, role := range roles {
-		ok, err := addCasbinObjectGroupingPolicy(role.Name, role.Owner, roleEntity)
-		if !ok || err != nil {
-			panic(err)
-		}
-	}
-
-	if affected != 0 {
-		rolesReachablePermissions := make([]*Permission, 0)
 		for _, role := range roles {
-			roleReachablePermissions, err := subRolePermissions(role)
+			ok, err = addCasbinObjectGroupingPolicy(role.Name, role.Owner, roleEntity)
+			if !ok || err != nil {
+				panic(err)
+			}
+		}
+
+		if affected != 0 {
+			rolesReachablePermissions := make([]*Permission, 0)
+			for _, role := range roles {
+				roleReachablePermissions, err := subRolePermissions(role)
+				if err != nil {
+					panic(err)
+				}
+				rolesReachablePermissions = append(rolesReachablePermissions, roleReachablePermissions...)
+			}
+
+			err = ProcessPolicyDifference(rolesReachablePermissions)
 			if err != nil {
 				panic(err)
 			}
-			rolesReachablePermissions = append(rolesReachablePermissions, roleReachablePermissions...)
 		}
 
-		err = ProcessPolicyDifference(rolesReachablePermissions)
-		if err != nil {
-			panic(err)
-		}
+		return nil
+	})
+	if !ok || err != nil {
+		panic(err)
 	}
 
 	return affected != 0
@@ -252,55 +283,65 @@ func AddRolesInBatch(roles []*Role) bool {
 }
 
 func DeleteRole(role *Role) (bool, error) {
-	roleId := role.GetId()
-	oldRoleReachablePermissions, err := subRolePermissions(role)
-	if err != nil {
-		return false, fmt.Errorf("subRolePermissions: %w", err)
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		roleId := role.GetId()
+		oldRoleReachablePermissions, err := subRolePermissions(role)
+		if err != nil {
+			return fmt.Errorf("subRolePermissions: %w", err)
+		}
 
-	ancestorRoles, err := GetAncestorRoles(roleId)
-	if err != nil {
-		return false, err
-	}
+		ancestorRoles, err := GetAncestorRoles(roleId)
+		if err != nil {
+			return err
+		}
 
-	for _, permission := range oldRoleReachablePermissions {
-		if util.InSlice(permission.Roles, roleId) {
-			permission.Roles = util.DeleteVal(permission.Roles, roleId)
-			_, err := UpdatePermission(permission.GetId(), permission)
+		for _, permission := range oldRoleReachablePermissions {
+			if util.InSlice(permission.Roles, roleId) {
+				permission.Roles = util.DeleteVal(permission.Roles, roleId)
+				_, err := UpdatePermission(permission.GetId(), permission)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		for _, ancestorRole := range ancestorRoles {
+			if ancestorRole.GetId() == roleId {
+				continue
+			}
+			if util.InSlice(ancestorRole.Roles, roleId) {
+				ancestorRole.Roles = util.DeleteVal(ancestorRole.Roles, roleId)
+				affected, err := UpdateRole(ancestorRole.GetId(), ancestorRole)
+				if err != nil || !affected {
+					return err
+				}
+			}
+		}
+
+		affected, err = ormer.Engine.ID(core.PK{role.Owner, role.Name}).Delete(&Role{})
+		if err != nil {
+			return err
+		}
+
+		ok, err = removeCasbinObjectGroupingPolicy(role.Name, role.Owner, roleEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			err = ProcessPolicyDifference(oldRoleReachablePermissions)
 			if err != nil {
-				return false, err
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
 			}
 		}
-	}
 
-	for _, ancestorRole := range ancestorRoles {
-		if ancestorRole.GetId() == roleId {
-			continue
-		}
-		if util.InSlice(ancestorRole.Roles, roleId) {
-			ancestorRole.Roles = util.DeleteVal(ancestorRole.Roles, roleId)
-			affected, err := UpdateRole(ancestorRole.GetId(), ancestorRole)
-			if err != nil || !affected {
-				return false, err
-			}
-		}
-	}
-
-	affected, err := ormer.Engine.ID(core.PK{role.Owner, role.Name}).Delete(&Role{})
-	if err != nil {
-		return false, err
-	}
-
-	ok, err := removeCasbinObjectGroupingPolicy(role.Name, role.Owner, roleEntity)
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		err = ProcessPolicyDifference(oldRoleReachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected != 0, nil

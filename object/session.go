@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/beego/beego"
@@ -83,22 +84,32 @@ func GetSingleSession(id string) (*Session, error) {
 }
 
 func UpdateSession(id string, session *Session) (bool, error) {
-	owner, name, application := util.GetOwnerAndNameAndOtherFromId(id)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name, application := util.GetOwnerAndNameAndOtherFromId(id)
 
-	ss, err := GetSingleSession(id)
-	if err != nil {
-		return false, err
-	} else if ss == nil {
-		return false, nil
-	}
+		ss, err := GetSingleSession(id)
+		if err != nil {
+			return err
+		} else if ss == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name, application}).Update(session)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name, application}).Update(session)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(ss.Name,
-		ss.Owner, session.Name, session.Owner, sessionEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(ss.Name,
+			ss.Owner, session.Name, session.Owner, sessionEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -119,14 +130,24 @@ func AddSession(session *Session) (bool, error) {
 	}
 
 	if dbSession == nil {
-		session.CreatedTime = util.GetCurrentTime()
+		var ok bool
+		var affected int64
+		err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+			var err error
+			session.CreatedTime = util.GetCurrentTime()
 
-		affected, err := ormer.Engine.Insert(session)
-		if err != nil {
-			return false, err
-		}
+			affected, err = ormer.Engine.Insert(session)
+			if err != nil {
+				return err
+			}
 
-		ok, err := addCasbinObjectGroupingPolicy(session.Name, session.Owner, sessionEntity)
+			ok, err = addCasbinObjectGroupingPolicy(session.Name, session.Owner, sessionEntity)
+			if !ok || err != nil {
+				return err
+			}
+
+			return nil
+		})
 		if !ok || err != nil {
 			return ok, err
 		}
@@ -150,33 +171,43 @@ func AddSession(session *Session) (bool, error) {
 }
 
 func DeleteSession(id string) (bool, error) {
-	owner, name, applicationName := util.GetOwnerAndNameAndOtherFromId(id)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name, applicationName := util.GetOwnerAndNameAndOtherFromId(id)
 
-	application, err := GetApplication(util.GetId("admin", applicationName))
-	if err != nil {
-		return false, err
-	}
+		application, err := GetApplication(util.GetId("admin", applicationName))
+		if err != nil {
+			return err
+		}
 
-	session, err := GetSingleSession(id)
-	if err != nil {
-		return false, err
-	}
-	if (owner == CasdoorOrganization && applicationName == CasdoorApplication) || application.EnableSigninSession {
+		session, err := GetSingleSession(id)
+		if err != nil {
+			return err
+		}
+		if (owner == CasdoorOrganization && applicationName == CasdoorApplication) || application.EnableSigninSession {
+			if session != nil {
+				DeleteBeegoSession(session.SessionId)
+			}
+		}
+
+		affected, err = ormer.Engine.ID(core.PK{owner, name, application.Name}).Delete(&Session{})
+		if err != nil {
+			return err
+		}
+
 		if session != nil {
-			DeleteBeegoSession(session.SessionId)
+			ok, err = removeCasbinObjectGroupingPolicy(session.Name, session.Owner, sessionEntity)
+			if !ok || err != nil {
+				return err
+			}
 		}
-	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name, application.Name}).Delete(&Session{})
-	if err != nil {
-		return false, err
-	}
-
-	if session != nil {
-		ok, err := removeCasbinObjectGroupingPolicy(session.Name, session.Owner, sessionEntity)
-		if !ok || err != nil {
-			return ok, err
-		}
+		return nil
+	})
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

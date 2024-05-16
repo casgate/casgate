@@ -15,7 +15,6 @@
 package authz
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/casbin/casbin/v2"
@@ -24,9 +23,9 @@ import (
 	"github.com/casdoor/casdoor/util"
 )
 
-var casbinEnforcer *casbin.Enforcer
+var casbinEnforcer *casbin.SyncedEnforcer
 
-func InitApi(enforcer *casbin.Enforcer) error {
+func InitApi(enforcer *casbin.SyncedEnforcer) error {
 	casbinEnforcer = enforcer
 
 	err := object.InitCasbinPolicy()
@@ -55,9 +54,6 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 		}
 	}
 
-	fmt.Println(casbinEnforcer.GetPolicy())
-	fmt.Println(casbinEnforcer.GetNamedGroupingPolicy("g"))
-	fmt.Println(casbinEnforcer.GetNamedGroupingPolicy("g2"))
 	res, err := casbinEnforcer.Enforce(subOwner, subName, method, urlPath, objOwner, objName)
 	if err != nil {
 		panic(err)

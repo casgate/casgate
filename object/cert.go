@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -178,27 +179,37 @@ func GetCert(id string) (*Cert, error) {
 }
 
 func UpdateCert(id string, cert *Cert) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	c, err := getCert(owner, name)
-	if err != nil {
-		return false, err
-	} else if c == nil {
-		return false, nil
-	}
-
-	if name != cert.Name {
-		err := certChangeTrigger(name, cert.Name)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		c, err := getCert(owner, name)
 		if err != nil {
-			return false, err
+			return err
+		} else if c == nil {
+			return nil
 		}
-	}
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(cert)
-	if err != nil {
-		return false, err
-	}
 
-	ok, err := updateCasbinObjectGroupingPolicy(c.Name,
-		c.Owner, cert.Name, cert.Owner, certEntity)
+		if name != cert.Name {
+			err := certChangeTrigger(name, cert.Name)
+			if err != nil {
+				return err
+			}
+		}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(cert)
+		if err != nil {
+			return err
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(c.Name,
+			c.Owner, cert.Name, cert.Owner, certEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -207,18 +218,28 @@ func UpdateCert(id string, cert *Cert) (bool, error) {
 }
 
 func AddCert(cert *Cert) (bool, error) {
-	if cert.Scope == scopeCertJWT && (cert.Certificate == "" || cert.PrivateKey == "") {
-		certificate, privateKey := generateRsaKeys(cert.BitSize, cert.ExpireInYears, cert.Name, cert.Owner)
-		cert.Certificate = certificate
-		cert.PrivateKey = privateKey
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		if cert.Scope == scopeCertJWT && (cert.Certificate == "" || cert.PrivateKey == "") {
+			certificate, privateKey := generateRsaKeys(cert.BitSize, cert.ExpireInYears, cert.Name, cert.Owner)
+			cert.Certificate = certificate
+			cert.PrivateKey = privateKey
+		}
 
-	affected, err := ormer.Engine.Insert(cert)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.Insert(cert)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(cert.Name, cert.Owner, certEntity)
+		ok, err = addCasbinObjectGroupingPolicy(cert.Name, cert.Owner, certEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -227,12 +248,21 @@ func AddCert(cert *Cert) (bool, error) {
 }
 
 func DeleteCert(cert *Cert) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{cert.Owner, cert.Name}).Delete(&Cert{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{cert.Owner, cert.Name}).Delete(&Cert{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(cert.Name, cert.Owner, certEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(cert.Name, cert.Owner, certEntity)
+		if !ok || err != nil {
+			return err
+		}
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -101,155 +102,195 @@ func GetGroup(id string) (*Group, error) {
 }
 
 func UpdateGroup(id string, group *Group) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	oldGroup, err := getGroup(owner, name)
-	if oldGroup == nil {
-		return false, err
-	}
-
-	err = checkGroupName(group.Name)
-	if err != nil {
-		return false, err
-	}
-
-	if name != group.Name {
-		err := GroupChangeTrigger(util.GetId(owner, name), util.GetId(group.Owner, group.Name))
-		if err != nil {
-			return false, err
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		oldGroup, err := getGroup(owner, name)
+		if oldGroup == nil {
+			return err
 		}
-	}
 
-	oldGroupReachablePermissions, err := subGroupPermissions(oldGroup)
-	if err != nil {
-		return false, fmt.Errorf("subGroupPermissions: %w", err)
-	}
+		err = checkGroupName(group.Name)
+		if err != nil {
+			return err
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(group)
-	if err != nil {
-		return false, err
-	}
+		if name != group.Name {
+			err := GroupChangeTrigger(util.GetId(owner, name), util.GetId(group.Owner, group.Name))
+			if err != nil {
+				return err
+			}
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(oldGroup.Name,
-		oldGroup.Owner, group.Name, group.Owner, groupEntity)
+		oldGroupReachablePermissions, err := subGroupPermissions(oldGroup)
+		if err != nil {
+			return fmt.Errorf("subGroupPermissions: %w", err)
+		}
+
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(group)
+		if err != nil {
+			return err
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(oldGroup.Name,
+			oldGroup.Owner, group.Name, group.Owner, groupEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			groupReachablePermissions, err := subGroupPermissions(group)
+			if err != nil {
+				return fmt.Errorf("subGroupPermissions: %w", err)
+			}
+			groupReachablePermissions = append(groupReachablePermissions, oldGroupReachablePermissions...)
+			err = ProcessPolicyDifference(groupReachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		groupReachablePermissions, err := subGroupPermissions(group)
-		if err != nil {
-			return false, fmt.Errorf("subGroupPermissions: %w", err)
-		}
-		groupReachablePermissions = append(groupReachablePermissions, oldGroupReachablePermissions...)
-		err = ProcessPolicyDifference(groupReachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected != 0, nil
 }
 
 func AddGroup(group *Group) (bool, error) {
-	err := checkGroupName(group.Name)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		err = checkGroupName(group.Name)
+		if err != nil {
+			return err
+		}
 
-	affected, err := ormer.Engine.Insert(group)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.Insert(group)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(group.Name, group.Owner, groupEntity)
+		ok, err = addCasbinObjectGroupingPolicy(group.Name, group.Owner, groupEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			domainReachablePermissions, err := subGroupPermissions(group)
+			if err != nil {
+				return fmt.Errorf("subGroupPermissions: %w", err)
+			}
+
+			err = ProcessPolicyDifference(domainReachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		domainReachablePermissions, err := subGroupPermissions(group)
-		if err != nil {
-			return false, fmt.Errorf("subGroupPermissions: %w", err)
-		}
-
-		err = ProcessPolicyDifference(domainReachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected != 0, nil
 }
 
 func AddGroups(groups []*Group) (bool, error) {
-	if len(groups) == 0 {
-		return false, nil
-	}
-	affected, err := ormer.Engine.Insert(groups)
-	if err != nil {
-		return false, err
-	}
-
-	for _, group := range groups {
-		ok, err := addCasbinObjectGroupingPolicy(group.Name, group.Owner, groupEntity)
-		if !ok || err != nil {
-			return ok, err
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		if len(groups) == 0 {
+			return nil
 		}
+		affected, err = ormer.Engine.Insert(groups)
+		if err != nil {
+			return err
+		}
+
+		for _, group := range groups {
+			ok, err = addCasbinObjectGroupingPolicy(group.Name, group.Owner, groupEntity)
+			if !ok || err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
 }
 
 func DeleteGroup(group *Group) (bool, error) {
-	_, err := ormer.Engine.Get(group)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		_, err = ormer.Engine.Get(group)
+		if err != nil {
+			return err
+		}
 
-	if count, err := ormer.Engine.Where("parent_id = ?", group.Name).Count(&Group{}); err != nil {
-		return false, err
-	} else if count > 0 {
-		return false, errors.New("group has children group")
-	}
+		if count, err := ormer.Engine.Where("parent_id = ?", group.Name).Count(&Group{}); err != nil {
+			return err
+		} else if count > 0 {
+			return errors.New("group has children group")
+		}
 
-	if count, err := GetGroupUserCount(group.GetId(), "", ""); err != nil {
-		return false, err
-	} else if count > 0 {
-		return false, errors.New("group has users")
-	}
+		if count, err := GetGroupUserCount(group.GetId(), "", ""); err != nil {
+			return err
+		} else if count > 0 {
+			return errors.New("group has users")
+		}
 
-	if count, err := GetRoleCount(group.Owner, "`groups`", group.GetId()); err != nil {
-		return false, err
-	} else if count > 0 {
-		return false, errors.New("group has linked roles")
-	}
+		if count, err := GetRoleCount(group.Owner, "`groups`", group.GetId()); err != nil {
+			return err
+		} else if count > 0 {
+			return errors.New("group has linked roles")
+		}
 
-	if count, err := GetPermissionCount(group.Owner, "`groups`", group.GetId()); err != nil {
-		return false, err
-	} else if count > 0 {
-		return false, errors.New("group has linked permissions")
-	}
+		if count, err := GetPermissionCount(group.Owner, "`groups`", group.GetId()); err != nil {
+			return err
+		} else if count > 0 {
+			return errors.New("group has linked permissions")
+		}
 
-	groupReachablePermissions, err := subGroupPermissions(group)
-	if err != nil {
-		return false, fmt.Errorf("subGroupPermissions: %w", err)
-	}
+		groupReachablePermissions, err := subGroupPermissions(group)
+		if err != nil {
+			return fmt.Errorf("subGroupPermissions: %w", err)
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{group.Owner, group.Name}).Delete(&Group{})
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{group.Owner, group.Name}).Delete(&Group{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(group.Name, group.Owner, groupEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(group.Name, group.Owner, groupEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			err = ProcessPolicyDifference(groupReachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		err = ProcessPolicyDifference(groupReachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected != 0, nil

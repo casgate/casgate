@@ -182,6 +182,7 @@ func GetMaskedOrganizations(organizations []*Organization, errs ...error) ([]*Or
 }
 
 func UpdateOrganization(ctx context.Context, id string, organization *Organization, lang string) (bool, error) {
+	var ok bool
 	var affected int64
 	err := trm.WithTx(ctx, func(ctx context.Context) error {
 		owner, name := util.GetOwnerAndNameFromId(id)
@@ -237,7 +238,7 @@ func UpdateOrganization(ctx context.Context, id string, organization *Organizati
 			return err
 		}
 
-		ok, err := updateCasbinObjectGroupingPolicy(org.Name,
+		ok, err = updateCasbinObjectGroupingPolicy(org.Name,
 			org.Name, organization.Name, organization.Name, organizationEntity)
 		if !ok || err != nil {
 			return err
@@ -255,70 +256,93 @@ func UpdateOrganization(ctx context.Context, id string, organization *Organizati
 
 		return nil
 	})
+	if !ok || err != nil {
+		return ok, err
+	}
 
 	return affected != 0, err
 }
 
 func AddOrganization(organization *Organization) (bool, error) {
-	if organization.PasswordMaxLength <= 0 {
-		maxLen, err := GetUserTablePasswordMaxLength()
-		if err != nil {
-			return false, err
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		if organization.PasswordMaxLength <= 0 {
+			maxLen, err := GetUserTablePasswordMaxLength()
+			if err != nil {
+				return err
+			}
+			organization.PasswordMaxLength = maxLen
 		}
-		organization.PasswordMaxLength = maxLen
-	}
-	if organization.PasswordMinLength <= 0 {
-		organization.PasswordMinLength = 1
-	}
-	if organization.PasswordSpecialChars == "" {
-		organization.PasswordSpecialChars = DefaultOrganizationPasswordSpecialChars
-	}
-	affected, err := ormer.Engine.Insert(organization)
-	if err != nil {
-		return false, err
-	}
+		if organization.PasswordMinLength <= 0 {
+			organization.PasswordMinLength = 1
+		}
+		if organization.PasswordSpecialChars == "" {
+			organization.PasswordSpecialChars = DefaultOrganizationPasswordSpecialChars
+		}
+		affected, err = ormer.Engine.Insert(organization)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(organization.Name, organization.Name, organizationEntity)
-	if !ok || err != nil {
-		return ok, err
-	}
+		ok, err = addCasbinObjectGroupingPolicy(organization.Name, organization.Name, organizationEntity)
+		if !ok || err != nil {
+			return err
+		}
 
-	// add admin -> user role inheritance
-	ok, err = addRoleForUserInDomain(adminRole, false, organization.Name)
-	if !ok || err != nil {
-		return ok, err
-	}
+		// add admin -> user role inheritance
+		ok, err = addRoleForUserInDomain(adminRole, false, organization.Name)
+		if !ok || err != nil {
+			return err
+		}
 
-	ok, err = addOrganizationPolicies(organization)
+		ok, err = addOrganizationPolicies(organization)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
-		return ok, err
+		return ok, nil
 	}
 
 	return affected != 0, nil
 }
 
 func DeleteOrganization(organization *Organization) (bool, error) {
-	if organization.Name == "built-in" {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		if organization.Name == "built-in" {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{organization.Owner, organization.Name}).Delete(&Organization{})
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{organization.Owner, organization.Name}).Delete(&Organization{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(organization.Name, organization.Name, organizationEntity)
-	if !ok || err != nil {
-		return ok, err
-	}
+		ok, err = removeCasbinObjectGroupingPolicy(organization.Name, organization.Name, organizationEntity)
+		if !ok || err != nil {
+			return err
+		}
 
-	// delete admin -> user role inheritance
-	ok, err = deleteRoleForUserInDomain(adminRole, false, organization.Name)
-	if !ok || err != nil {
-		return ok, err
-	}
+		// delete admin -> user role inheritance
+		ok, err = deleteRoleForUserInDomain(adminRole, false, organization.Name)
+		if !ok || err != nil {
+			return err
+		}
 
-	ok, err = removeOrganizationPolicies(organization)
+		ok, err = removeOrganizationPolicies(organization)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

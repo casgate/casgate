@@ -83,133 +83,163 @@ func GetDomain(id string) (*Domain, error) {
 }
 
 func UpdateDomain(id string, domain *Domain) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
-	oldDomain, err := getDomain(owner, name)
-	if err != nil {
-		return false, err
-	}
-
-	if oldDomain == nil {
-		return false, nil
-	}
-
-	if name != domain.Name {
-		err := domainChangeTrigger(name, domain.Name)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+		oldDomain, err := getDomain(owner, name)
 		if err != nil {
-			return false, err
+			return err
 		}
-	}
 
-	oldDomainReachablePermissions, err := subDomainPermissions(oldDomain)
-	if err != nil {
-		return false, fmt.Errorf("subRolePermissions: %w", err)
-	}
+		if oldDomain == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(domain)
-	if err != nil {
-		return false, err
-	}
+		if name != domain.Name {
+			err := domainChangeTrigger(name, domain.Name)
+			if err != nil {
+				return err
+			}
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(oldDomain.Name,
-		oldDomain.Owner, domain.Name, domain.Owner, domainEntity)
+		oldDomainReachablePermissions, err := subDomainPermissions(oldDomain)
+		if err != nil {
+			return fmt.Errorf("subRolePermissions: %w", err)
+		}
+
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(domain)
+		if err != nil {
+			return err
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(oldDomain.Name,
+			oldDomain.Owner, domain.Name, domain.Owner, domainEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			domainReachablePermissions, err := subDomainPermissions(domain)
+			if err != nil {
+				return fmt.Errorf("subDomainPermissions: %w", err)
+			}
+			domainReachablePermissions = append(domainReachablePermissions, oldDomainReachablePermissions...)
+			err = ProcessPolicyDifference(domainReachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		domainReachablePermissions, err := subDomainPermissions(domain)
-		if err != nil {
-			return false, fmt.Errorf("subDomainPermissions: %w", err)
-		}
-		domainReachablePermissions = append(domainReachablePermissions, oldDomainReachablePermissions...)
-		err = ProcessPolicyDifference(domainReachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected != 0, nil
 }
 
 func AddDomain(domain *Domain) (bool, error) {
-	affected, err := ormer.Engine.Insert(domain)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(domain)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(domain.Name, domain.Owner, domainEntity)
+		ok, err = addCasbinObjectGroupingPolicy(domain.Name, domain.Owner, domainEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			domainReachablePermissions, err := subDomainPermissions(domain)
+			if err != nil {
+				return fmt.Errorf("subDomainPermissions: %w", err)
+			}
+
+			err = ProcessPolicyDifference(domainReachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		domainReachablePermissions, err := subDomainPermissions(domain)
-		if err != nil {
-			return false, fmt.Errorf("subDomainPermissions: %w", err)
-		}
-
-		err = ProcessPolicyDifference(domainReachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected != 0, nil
 }
 
 func DeleteDomain(domain *Domain) (bool, error) {
-	domainId := domain.GetId()
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		domainId := domain.GetId()
 
-	domainReachablePermissions, err := subDomainPermissions(domain)
-	if err != nil {
-		return false, fmt.Errorf("subDomainPermissions: %w", err)
-	}
+		domainReachablePermissions, err := subDomainPermissions(domain)
+		if err != nil {
+			return fmt.Errorf("subDomainPermissions: %w", err)
+		}
 
-	roles, err := GetRolesByDomain(domainId)
-	if err != nil {
-		return false, fmt.Errorf("GetRolesByDomain: %w", err)
-	}
+		roles, err := GetRolesByDomain(domainId)
+		if err != nil {
+			return fmt.Errorf("GetRolesByDomain: %w", err)
+		}
 
-	for _, role := range roles {
-		if util.InSlice(role.Domains, domainId) {
-			role.Domains = util.DeleteVal(role.Domains, domainId)
-			_, err := UpdateRole(role.GetId(), role)
-			if err != nil {
-				return false, err
+		for _, role := range roles {
+			if util.InSlice(role.Domains, domainId) {
+				role.Domains = util.DeleteVal(role.Domains, domainId)
+				_, err := UpdateRole(role.GetId(), role)
+				if err != nil {
+					return err
+				}
 			}
 		}
-	}
 
-	permissions, err := GetPermissionsByDomain(domainId)
-	if err != nil {
-		return false, fmt.Errorf("GetPermissionsByDomain: %w", err)
-	}
+		permissions, err := GetPermissionsByDomain(domainId)
+		if err != nil {
+			return fmt.Errorf("GetPermissionsByDomain: %w", err)
+		}
 
-	for _, permission := range permissions {
-		if util.InSlice(permission.Domains, domainId) {
-			permission.Domains = util.DeleteVal(permission.Domains, domainId)
-			_, err := UpdatePermission(permission.GetId(), permission)
-			if err != nil {
-				return false, err
+		for _, permission := range permissions {
+			if util.InSlice(permission.Domains, domainId) {
+				permission.Domains = util.DeleteVal(permission.Domains, domainId)
+				_, err := UpdatePermission(permission.GetId(), permission)
+				if err != nil {
+					return err
+				}
 			}
 		}
-	}
 
-	affected, err := ormer.Engine.ID(core.PK{domain.Owner, domain.Name}).Delete(&Domain{})
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{domain.Owner, domain.Name}).Delete(&Domain{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(domain.Name, domain.Owner, domainEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(domain.Name, domain.Owner, domainEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			err = ProcessPolicyDifference(domainReachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		err = ProcessPolicyDifference(domainReachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected != 0, nil

@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/casdoor/casdoor/util"
@@ -116,21 +117,31 @@ func GetApplicationDefaultPricing(owner, appName string) (*Pricing, error) {
 }
 
 func UpdatePricing(id string, pricing *Pricing) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	p, err := getPricing(owner, name)
-	if err != nil {
-		return false, err
-	} else if p == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		p, err := getPricing(owner, name)
+		if err != nil {
+			return err
+		} else if p == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(pricing)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(pricing)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(p.Name,
-		p.Owner, pricing.Name, pricing.Owner, pricingEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(p.Name,
+			p.Owner, pricing.Name, pricing.Owner, pricingEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -139,12 +150,22 @@ func UpdatePricing(id string, pricing *Pricing) (bool, error) {
 }
 
 func AddPricing(pricing *Pricing) (bool, error) {
-	affected, err := ormer.Engine.Insert(pricing)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(pricing)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(pricing.Name, pricing.Owner, pricingEntity)
+		ok, err = addCasbinObjectGroupingPolicy(pricing.Name, pricing.Owner, pricingEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -153,12 +174,22 @@ func AddPricing(pricing *Pricing) (bool, error) {
 }
 
 func DeletePricing(pricing *Pricing) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{pricing.Owner, pricing.Name}).Delete(pricing)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{pricing.Owner, pricing.Name}).Delete(pricing)
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(pricing.Name, pricing.Owner, pricingEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(pricing.Name, pricing.Owner, pricingEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

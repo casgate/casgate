@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/casdoor/casdoor/pp"
@@ -95,21 +96,31 @@ func GetProduct(id string) (*Product, error) {
 }
 
 func UpdateProduct(id string, product *Product) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	p, err := getProduct(owner, name)
-	if err != nil {
-		return false, err
-	} else if p == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		p, err := getProduct(owner, name)
+		if err != nil {
+			return err
+		} else if p == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(product)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(product)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(p.Name,
-		p.Owner, product.Name, product.Owner, productEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(p.Name,
+			p.Owner, product.Name, product.Owner, productEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -118,12 +129,22 @@ func UpdateProduct(id string, product *Product) (bool, error) {
 }
 
 func AddProduct(product *Product) (bool, error) {
-	affected, err := ormer.Engine.Insert(product)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(product)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(product.Name, product.Owner, productEntity)
+		ok, err = addCasbinObjectGroupingPolicy(product.Name, product.Owner, productEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -132,12 +153,22 @@ func AddProduct(product *Product) (bool, error) {
 }
 
 func DeleteProduct(product *Product) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{product.Owner, product.Name}).Delete(&Product{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{product.Owner, product.Name}).Delete(&Product{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(product.Name, product.Owner, productEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(product.Name, product.Owner, productEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

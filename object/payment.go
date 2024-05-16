@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/casdoor/casdoor/pp"
@@ -119,21 +120,31 @@ func GetPayment(id string) (*Payment, error) {
 }
 
 func UpdatePayment(id string, payment *Payment) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	p, err := getPayment(owner, name)
-	if err != nil {
-		return false, err
-	} else if p == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		p, err := getPayment(owner, name)
+		if err != nil {
+			return err
+		} else if p == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(payment)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(payment)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(p.Name,
-		p.Owner, payment.Name, payment.Owner, paymentEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(p.Name,
+			p.Owner, payment.Name, payment.Owner, paymentEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -142,12 +153,22 @@ func UpdatePayment(id string, payment *Payment) (bool, error) {
 }
 
 func AddPayment(payment *Payment) (bool, error) {
-	affected, err := ormer.Engine.Insert(payment)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(payment)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(payment.Name, payment.Owner, paymentEntity)
+		ok, err = addCasbinObjectGroupingPolicy(payment.Name, payment.Owner, paymentEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -156,12 +177,22 @@ func AddPayment(payment *Payment) (bool, error) {
 }
 
 func DeletePayment(payment *Payment) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{payment.Owner, payment.Name}).Delete(&Payment{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{payment.Owner, payment.Name}).Delete(&Payment{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(payment.Name, payment.Owner, paymentEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(payment.Name, payment.Owner, paymentEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

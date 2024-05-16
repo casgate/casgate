@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/casdoor/casdoor/util"
@@ -135,32 +136,42 @@ func GetMaskedSyncers(syncers []*Syncer) []*Syncer {
 }
 
 func UpdateSyncer(id string, syncer *Syncer) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	s, err := getSyncer(owner, name)
-	if err != nil {
-		return false, err
-	} else if s == nil {
-		return false, nil
-	}
-
-	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
-	if syncer.Password == "***" {
-		session.Omit("password")
-	}
-	affected, err := session.Update(syncer)
-	if err != nil {
-		return false, err
-	}
-
-	if affected == 1 {
-		err = addSyncerJob(syncer)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		s, err := getSyncer(owner, name)
 		if err != nil {
-			return false, err
+			return err
+		} else if s == nil {
+			return nil
 		}
-	}
 
-	ok, err := updateCasbinObjectGroupingPolicy(s.Name, s.Organization,
-		syncer.Name, syncer.Organization, syncerEntity)
+		session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
+		if syncer.Password == "***" {
+			session.Omit("password")
+		}
+		affected, err = session.Update(syncer)
+		if err != nil {
+			return err
+		}
+
+		if affected == 1 {
+			err = addSyncerJob(syncer)
+			if err != nil {
+				return err
+			}
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(s.Name, s.Organization,
+			syncer.Name, syncer.Organization, syncerEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -189,19 +200,29 @@ func updateSyncerErrorText(syncer *Syncer, line string) (bool, error) {
 }
 
 func AddSyncer(syncer *Syncer) (bool, error) {
-	affected, err := ormer.Engine.Insert(syncer)
-	if err != nil {
-		return false, err
-	}
-
-	if affected == 1 {
-		err = addSyncerJob(syncer)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(syncer)
 		if err != nil {
-			return false, err
+			return err
 		}
-	}
 
-	ok, err := addCasbinObjectGroupingPolicy(syncer.Name, syncer.Organization, syncerEntity)
+		if affected == 1 {
+			err = addSyncerJob(syncer)
+			if err != nil {
+				return err
+			}
+		}
+
+		ok, err = addCasbinObjectGroupingPolicy(syncer.Name, syncer.Organization, syncerEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -210,16 +231,26 @@ func AddSyncer(syncer *Syncer) (bool, error) {
 }
 
 func DeleteSyncer(syncer *Syncer) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{syncer.Owner, syncer.Name}).Delete(&Syncer{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{syncer.Owner, syncer.Name}).Delete(&Syncer{})
+		if err != nil {
+			return err
+		}
 
-	if affected == 1 {
-		deleteSyncerJob(syncer)
-	}
+		if affected == 1 {
+			deleteSyncerJob(syncer)
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(syncer.Name, syncer.Organization, syncerEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(syncer.Name, syncer.Organization, syncerEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

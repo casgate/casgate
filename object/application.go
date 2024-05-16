@@ -449,50 +449,60 @@ func GetMaskedApplications(applications []*Application, userId string) []*Applic
 }
 
 func UpdateApplication(ctx context.Context, id string, application *Application) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	oldApplication, err := getApplication(owner, name)
-	if oldApplication == nil {
-		return false, err
-	}
-
-	if name == "app-built-in" {
-		application.Name = name
-	}
-
-	if name != application.Name {
-		err = applicationChangeTrigger(name, application.Name)
-		if err != nil {
-			return false, err
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		oldApplication, err := getApplication(owner, name)
+		if oldApplication == nil {
+			return err
 		}
-	}
 
-	applicationByClientId, err := GetApplicationByClientId(application.ClientId)
-	if err != nil {
-		return false, err
-	}
+		if name == "app-built-in" {
+			application.Name = name
+		}
 
-	if oldApplication.ClientId != application.ClientId && applicationByClientId != nil {
-		return false, err
-	}
+		if name != application.Name {
+			err = applicationChangeTrigger(name, application.Name)
+			if err != nil {
+				return err
+			}
+		}
 
-	record := GetRecord(ctx)
-	for _, providerItem := range application.Providers {
-		providerItem.Provider = nil
-	}
+		applicationByClientId, err := GetApplicationByClientId(application.ClientId)
+		if err != nil {
+			return err
+		}
 
-	recordProvidersDiff(record, oldApplication.Providers, application.Providers)
+		if oldApplication.ClientId != application.ClientId && applicationByClientId != nil {
+			return err
+		}
 
-	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
-	if application.ClientSecret == "***" {
-		session.Omit("client_secret")
-	}
-	affected, err := session.Update(application)
-	if err != nil {
-		return false, err
-	}
+		record := GetRecord(ctx)
+		for _, providerItem := range application.Providers {
+			providerItem.Provider = nil
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(oldApplication.Name,
-		oldApplication.Organization, application.Name, application.Organization, applicationEntity)
+		recordProvidersDiff(record, oldApplication.Providers, application.Providers)
+
+		session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
+		if application.ClientSecret == "***" {
+			session.Omit("client_secret")
+		}
+		affected, err = session.Update(application)
+		if err != nil {
+			return err
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(oldApplication.Name,
+			oldApplication.Organization, application.Name, application.Organization, applicationEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -518,38 +528,48 @@ func recordProvidersDiff(record *RecordBuilder, oldProviders, newProviders []*Pr
 }
 
 func AddApplication(application *Application) (bool, error) {
-	if application.Owner == "" {
-		application.Owner = "admin"
-	}
-	if application.Organization == "" {
-		application.Organization = "built-in"
-	}
-	if application.ClientId == "" {
-		application.ClientId = util.GenerateClientId()
-	}
-	if application.ClientSecret == "" {
-		application.ClientSecret = util.GenerateClientSecret()
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		if application.Owner == "" {
+			application.Owner = "admin"
+		}
+		if application.Organization == "" {
+			application.Organization = "built-in"
+		}
+		if application.ClientId == "" {
+			application.ClientId = util.GenerateClientId()
+		}
+		if application.ClientSecret == "" {
+			application.ClientSecret = util.GenerateClientSecret()
+		}
 
-	app, err := GetApplicationByClientId(application.ClientId)
-	if err != nil {
-		return false, err
-	}
+		app, err := GetApplicationByClientId(application.ClientId)
+		if err != nil {
+			return err
+		}
 
-	if app != nil {
-		return false, nil
-	}
+		if app != nil {
+			return nil
+		}
 
-	for _, providerItem := range application.Providers {
-		providerItem.Provider = nil
-	}
+		for _, providerItem := range application.Providers {
+			providerItem.Provider = nil
+		}
 
-	affected, err := ormer.Engine.Insert(application)
-	if err != nil {
-		return false, nil
-	}
+		affected, err = ormer.Engine.Insert(application)
+		if err != nil {
+			return nil
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(application.Name, application.Organization, applicationEntity)
+		ok, err = addCasbinObjectGroupingPolicy(application.Name, application.Organization, applicationEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -558,16 +578,26 @@ func AddApplication(application *Application) (bool, error) {
 }
 
 func DeleteApplication(application *Application) (bool, error) {
-	if application.Name == "app-built-in" {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		if application.Name == "app-built-in" {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{application.Owner, application.Name}).Delete(&Application{})
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{application.Owner, application.Name}).Delete(&Application{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(application.Name, application.Organization, applicationEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(application.Name, application.Organization, applicationEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

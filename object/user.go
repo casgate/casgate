@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strconv"
@@ -657,304 +658,342 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 }
 
 func updateUser(id string, user *User, columns []string) (int64, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
-	err := user.UpdateUserHash()
-	if err != nil {
-		return 0, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+		err = user.UpdateUserHash()
+		if err != nil {
+			return err
+		}
 
-	err = user.checkPasswordChangeRequestAllowed()
-	if err != nil {
-		return 0, err
-	}
+		err = user.checkPasswordChangeRequestAllowed()
+		if err != nil {
+			return err
+		}
 
-	oldUser, err := getUser(owner, name)
-	if err != nil {
-		return 0, err
-	}
+		oldUser, err := getUser(owner, name)
+		if err != nil {
+			return err
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).Cols(columns...).Update(user)
-	if err != nil {
-		return 0, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).Cols(columns...).Update(user)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateRoleForUserInDomain(oldUser.Name, oldUser.IsAdmin, oldUser.Owner, user.Name, user.IsAdmin, user.Owner)
+		ok, err = updateRoleForUserInDomain(oldUser.Name, oldUser.IsAdmin, oldUser.Owner, user.Name, user.IsAdmin, user.Owner)
+		if !ok || err != nil {
+			return err
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(oldUser.Name, oldUser.Owner, user.Name, user.Owner, userEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		hasImpactOnPolicy :=
+			(util.InSlice(columns, "groups") && !slices.Equal(oldUser.Groups, user.Groups)) ||
+				(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
+				(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
+
+		if affected != 0 && hasImpactOnPolicy {
+			oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
+			if err != nil {
+				return fmt.Errorf("reachablePermissionsByUser: %w", err)
+			}
+
+			reachablePermissions, err := reachablePermissionsByUser(user)
+			if err != nil {
+				return fmt.Errorf("reachablePermissionsByUser: %w", err)
+			}
+
+			reachablePermissions = append(reachablePermissions, oldReachablePermissions...)
+
+			err = ProcessPolicyDifference(reachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return 0, err
-	}
-
-	ok, err = updateCasbinObjectGroupingPolicy(oldUser.Name, oldUser.Owner, user.Name, user.Owner, userEntity)
-	if !ok || err != nil {
-		return 0, err
-	}
-
-	hasImpactOnPolicy :=
-		(util.InSlice(columns, "groups") && !slices.Equal(oldUser.Groups, user.Groups)) ||
-			(util.InSlice(columns, "name") && oldUser.Name != user.Name) ||
-			(util.InSlice(columns, "owner") && oldUser.Owner != user.Owner)
-
-	if affected != 0 && hasImpactOnPolicy {
-		oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
-		if err != nil {
-			return 0, fmt.Errorf("reachablePermissionsByUser: %w", err)
-		}
-
-		reachablePermissions, err := reachablePermissionsByUser(user)
-		if err != nil {
-			return 0, fmt.Errorf("reachablePermissionsByUser: %w", err)
-		}
-
-		reachablePermissions = append(reachablePermissions, oldReachablePermissions...)
-
-		err = ProcessPolicyDifference(reachablePermissions)
-		if err != nil {
-			return 0, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected, nil
 }
 
 func UpdateUserForAllFields(id string, user *User) (bool, error) {
-	var err error
-	owner, name := util.GetOwnerAndNameFromId(id)
-	oldUser, err := getUser(owner, name)
-	if err != nil {
-		return false, err
-	}
-
-	if oldUser == nil {
-		return false, nil
-	}
-
-	if name != user.Name {
-		err := userChangeTrigger(name, user.Name)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		oldUser, err := getUser(owner, name)
 		if err != nil {
-			return false, err
+			return err
 		}
-	}
 
-	err = user.UpdateUserHash()
-	if err != nil {
-		return false, err
-	}
+		if oldUser == nil {
+			return nil
+		}
 
-	organization, err := GetOrganization(util.GetId("admin", owner))
-	if err != nil {
-		return false, err
-	}
-	if organization.PasswordChangeInterval != 0 && user.PasswordChangeTime.IsZero() {
-		user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
-	}
+		if name != user.Name {
+			err := userChangeTrigger(name, user.Name)
+			if err != nil {
+				return err
+			}
+		}
 
-	if user.Avatar != oldUser.Avatar && user.Avatar != "" {
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
+		err = user.UpdateUserHash()
 		if err != nil {
-			return false, err
+			return err
 		}
-	}
-	err = user.checkPasswordChangeRequestAllowed()
-	if err != nil {
-		return false, err
-	}
 
-	user.PasswordChangeTime = oldUser.PasswordChangeTime
-	if oldUser.PasswordChangeRequired != user.PasswordChangeRequired {
-		user.PasswordChangeTime = time.Time{}
-		if user.PasswordChangeRequired {
-			user.PasswordChangeTime = time.Now()
+		organization, err := GetOrganization(util.GetId("admin", owner))
+		if err != nil {
+			return err
 		}
-	}
+		if organization.PasswordChangeInterval != 0 && user.PasswordChangeTime.IsZero() {
+			user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
+		}
 
-	if organization.PasswordChangeInterval != 0 && user.PasswordChangeTime.IsZero() {
-		user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
-	}
+		if user.Avatar != oldUser.Avatar && user.Avatar != "" {
+			user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
+			if err != nil {
+				return err
+			}
+		}
+		err = user.checkPasswordChangeRequestAllowed()
+		if err != nil {
+			return err
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(user)
-	if err != nil {
-		return false, err
-	}
+		user.PasswordChangeTime = oldUser.PasswordChangeTime
+		if oldUser.PasswordChangeRequired != user.PasswordChangeRequired {
+			user.PasswordChangeTime = time.Time{}
+			if user.PasswordChangeRequired {
+				user.PasswordChangeTime = time.Now()
+			}
+		}
 
-	ok, err := updateRoleForUserInDomain(oldUser.Name, oldUser.IsAdmin, oldUser.Owner, user.Name, user.IsAdmin, user.Owner)
+		if organization.PasswordChangeInterval != 0 && user.PasswordChangeTime.IsZero() {
+			user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
+		}
+
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(user)
+		if err != nil {
+			return err
+		}
+
+		ok, err = updateRoleForUserInDomain(oldUser.Name, oldUser.IsAdmin, oldUser.Owner, user.Name, user.IsAdmin, user.Owner)
+		if !ok || err != nil {
+			return err
+		}
+
+		ok, err = updateCasbinObjectGroupingPolicy(oldUser.Name, oldUser.Owner, user.Name, user.Owner, userEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 &&
+			(!slices.Equal(oldUser.Groups, user.Groups) || oldUser.Owner != user.Owner || oldUser.Name != user.Name) {
+			oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
+			if err != nil {
+				return fmt.Errorf("reachablePermissionsByUser: %w", err)
+			}
+
+			reachablePermissions, err := reachablePermissionsByUser(user)
+			if err != nil {
+				return fmt.Errorf("reachablePermissionsByUser: %w", err)
+			}
+			reachablePermissions = append(reachablePermissions, oldReachablePermissions...)
+
+			err = ProcessPolicyDifference(reachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	ok, err = updateCasbinObjectGroupingPolicy(oldUser.Name, oldUser.Owner, user.Name, user.Owner, userEntity)
-	if !ok || err != nil {
-		return ok, err
-	}
-
-	if affected != 0 &&
-		(!slices.Equal(oldUser.Groups, user.Groups) || oldUser.Owner != user.Owner || oldUser.Name != user.Name) {
-		oldReachablePermissions, err := reachablePermissionsByUser(oldUser)
-		if err != nil {
-			return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
-		}
-
-		reachablePermissions, err := reachablePermissionsByUser(user)
-		if err != nil {
-			return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
-		}
-		reachablePermissions = append(reachablePermissions, oldReachablePermissions...)
-
-		err = ProcessPolicyDifference(reachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected != 0, nil
 }
 
 func AddUser(user *User) (bool, error) {
-	if user.Id == "" {
-		application, err := GetApplicationByUser(user)
-		if err != nil {
-			return false, err
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		if user.Id == "" {
+			application, err := GetApplicationByUser(user)
+			if err != nil {
+				return err
+			}
+
+			id, err := GenerateIdForNewUser(application)
+			if err != nil {
+				return err
+			}
+
+			user.Id = id
 		}
 
-		id, err := GenerateIdForNewUser(application)
-		if err != nil {
-			return false, err
+		if user.Owner == "" || user.Name == "" {
+			return nil
 		}
 
-		user.Id = id
-	}
-
-	if user.Owner == "" || user.Name == "" {
-		return false, nil
-	}
-
-	organization, _ := GetOrganizationByUser(user)
-	if organization == nil {
-		return false, nil
-	}
-
-	if user.PasswordType == "" || user.PasswordType == "plain" {
-		user.UpdateUserPassword(organization)
-	}
-
-	err := user.UpdateUserHash()
-	if err != nil {
-		return false, err
-	}
-
-	user.PreHash = user.Hash
-
-	if user.PasswordChangeTime.IsZero() && organization.PasswordChangeInterval != 0 {
-		user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
-	}
-
-	if user.PasswordChangeRequired {
-		user.PasswordChangeTime = time.Now()
-	}
-
-	updated, err := user.refreshAvatar()
-	if err != nil {
-		return false, err
-	}
-
-	if updated && user.PermanentAvatar != "*" {
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
-		if err != nil {
-			return false, err
+		organization, _ := GetOrganizationByUser(user)
+		if organization == nil {
+			return nil
 		}
-	}
 
-	count, err := GetUserCount(user.Owner, "", "", "")
-	if err != nil {
-		return false, err
-	}
-	user.Ranking = int(count + 1)
+		if user.PasswordType == "" || user.PasswordType == "plain" {
+			user.UpdateUserPassword(organization)
+		}
 
-	affected, err := ormer.Engine.Insert(user)
-	if err != nil {
-		return false, err
-	}
+		err = user.UpdateUserHash()
+		if err != nil {
+			return err
+		}
 
-	ok, err := addRoleForUserInDomain(user.Name, user.IsAdmin, user.Owner)
+		user.PreHash = user.Hash
+
+		if user.PasswordChangeTime.IsZero() && organization.PasswordChangeInterval != 0 {
+			user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
+		}
+
+		if user.PasswordChangeRequired {
+			user.PasswordChangeTime = time.Now()
+		}
+
+		updated, err := user.refreshAvatar()
+		if err != nil {
+			return err
+		}
+
+		if updated && user.PermanentAvatar != "*" {
+			user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
+			if err != nil {
+				return err
+			}
+		}
+
+		count, err := GetUserCount(user.Owner, "", "", "")
+		if err != nil {
+			return err
+		}
+		user.Ranking = int(count + 1)
+
+		affected, err = ormer.Engine.Insert(user)
+		if err != nil {
+			return err
+		}
+
+		ok, err = addRoleForUserInDomain(user.Name, user.IsAdmin, user.Owner)
+		if !ok || err != nil {
+			return err
+		}
+
+		ok, err = addCasbinObjectGroupingPolicy(user.Name, user.Owner, userEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			reachablePermissions, err := reachablePermissionsByUser(user)
+			if err != nil {
+				return fmt.Errorf("reachablePermissionsByUser: %w", err)
+			}
+
+			err = ProcessPolicyDifference(reachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	ok, err = addCasbinObjectGroupingPolicy(user.Name, user.Owner, userEntity)
-	if !ok || err != nil {
-		return ok, err
-	}
-
-	if affected != 0 {
-		reachablePermissions, err := reachablePermissionsByUser(user)
-		if err != nil {
-			return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
-		}
-
-		err = ProcessPolicyDifference(reachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
 	}
 
 	return affected != 0, nil
 }
 
 func AddUsers(users []*User) (bool, error) {
-	var err error
 	if len(users) == 0 {
 		return false, nil
 	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
 
-	// organization := GetOrganizationByUser(users[0])
-	for _, user := range users {
-		// this function is only used for syncer or batch upload, so no need to encrypt the password
-		// user.UpdateUserPassword(organization)
-
-		err = user.UpdateUserHash()
-		if err != nil {
-			return false, err
-		}
-
-		user.PreHash = user.Hash
-
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, true)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	affected, err := ormer.Engine.Insert(users)
-	if err != nil {
-		if !strings.Contains(err.Error(), "Duplicate entry") {
-			return false, err
-		}
-	}
-
-	for _, user := range users {
-		ok, err := addRoleForUserInDomain(user.Name, user.IsAdmin, user.Owner)
-		if !ok || err != nil {
-			return ok, err
-		}
-
-		ok, err = addCasbinObjectGroupingPolicy(user.Name, user.Owner, userEntity)
-		if !ok || err != nil {
-			return ok, err
-		}
-	}
-
-	if affected != 0 {
-		reachablePermissions := make([]*Permission, 0)
+		// organization := GetOrganizationByUser(users[0])
 		for _, user := range users {
-			reachablePermissionsByUser, err := reachablePermissionsByUser(user)
+			// this function is only used for syncer or batch upload, so no need to encrypt the password
+			// user.UpdateUserPassword(organization)
+
+			err = user.UpdateUserHash()
 			if err != nil {
-				return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
+				return err
 			}
-			reachablePermissions = append(reachablePermissions, reachablePermissionsByUser...)
+
+			user.PreHash = user.Hash
+
+			user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, true)
+			if err != nil {
+				return err
+			}
 		}
 
-		err = ProcessPolicyDifference(reachablePermissions)
+		affected, err = ormer.Engine.Insert(users)
 		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
+			if !strings.Contains(err.Error(), "Duplicate entry") {
+				return err
+			}
 		}
+
+		for _, user := range users {
+			ok, err = addRoleForUserInDomain(user.Name, user.IsAdmin, user.Owner)
+			if !ok || err != nil {
+				return err
+			}
+
+			ok, err = addCasbinObjectGroupingPolicy(user.Name, user.Owner, userEntity)
+			if !ok || err != nil {
+				return err
+			}
+		}
+
+		if affected != 0 {
+			reachablePermissions := make([]*Permission, 0)
+			for _, user := range users {
+				reachablePermissionsByUser, err := reachablePermissionsByUser(user)
+				if err != nil {
+					return fmt.Errorf("reachablePermissionsByUser: %w", err)
+				}
+				reachablePermissions = append(reachablePermissions, reachablePermissionsByUser...)
+			}
+
+			err = ProcessPolicyDifference(reachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil
@@ -988,46 +1027,56 @@ func AddUsersInBatch(users []*User) (bool, error) {
 }
 
 func DeleteUser(user *User) (bool, error) {
-	// Forced offline the user first
-	userOwnerSessions, err := GetSessions(user.Owner)
-	if err != nil {
-		return false, err
-	}
-	for _, userOwnerSession := range userOwnerSessions {
-		if userOwnerSession.Name == user.Name {
-			_, err := DeleteSession(util.GetSessionId(user.Owner, user.Name,
-				userOwnerSession.Application))
-			if err != nil {
-				return false, err
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		// Forced offline the user first
+		userOwnerSessions, err := GetSessions(user.Owner)
+		if err != nil {
+			return err
+		}
+		for _, userOwnerSession := range userOwnerSessions {
+			if userOwnerSession.Name == user.Name {
+				_, err := DeleteSession(util.GetSessionId(user.Owner, user.Name,
+					userOwnerSession.Application))
+				if err != nil {
+					return err
+				}
 			}
 		}
-	}
 
-	oldReachablePermissions, err := reachablePermissionsByUser(user)
-	if err != nil {
-		return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
-	}
-
-	affected, err := ormer.Engine.ID(core.PK{user.Owner, user.Name}).Delete(&User{})
-	if err != nil {
-		return false, err
-	}
-
-	ok, err := deleteRoleForUserInDomain(user.Name, user.IsAdmin, user.Owner)
-	if !ok || err != nil {
-		return ok, err
-	}
-
-	ok, err = removeCasbinObjectGroupingPolicy(user.Name, user.Owner, userEntity)
-	if !ok || err != nil {
-		return ok, err
-	}
-
-	if affected != 0 {
-		err = ProcessPolicyDifference(oldReachablePermissions)
+		oldReachablePermissions, err := reachablePermissionsByUser(user)
 		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
+			return fmt.Errorf("reachablePermissionsByUser: %w", err)
 		}
+
+		affected, err = ormer.Engine.ID(core.PK{user.Owner, user.Name}).Delete(&User{})
+		if err != nil {
+			return err
+		}
+
+		ok, err = deleteRoleForUserInDomain(user.Name, user.IsAdmin, user.Owner)
+		if !ok || err != nil {
+			return err
+		}
+
+		ok, err = removeCasbinObjectGroupingPolicy(user.Name, user.Owner, userEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			err = ProcessPolicyDifference(oldReachablePermissions)
+			if err != nil {
+				return fmt.Errorf("ProcessPolicyDifference: %w", err)
+			}
+		}
+
+		return nil
+	})
+	if !ok || err != nil {
+		return ok, err
 	}
 
 	return affected != 0, nil

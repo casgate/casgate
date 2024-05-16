@@ -65,3 +65,17 @@ func ReturnAnyNotEmpty(strs ...string) string {
 	}
 	return ""
 }
+
+func ConcatSlices[T any](slices ...[]T) []T {
+	var totalLen int
+	for _, slice := range slices {
+		totalLen += len(slice)
+	}
+
+	result := make([]T, 0, totalLen)
+	for _, slice := range slices {
+		result = append(result, slice...)
+	}
+
+	return result
+}

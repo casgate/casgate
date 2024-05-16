@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
@@ -111,49 +112,69 @@ func GetPermission(id string) (*Permission, error) {
 }
 
 func UpdatePermission(id string, permission *Permission) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
-	oldPermission, err := getPermission(owner, name)
-	if oldPermission == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+		oldPermission, err := getPermission(owner, name)
+		if oldPermission == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(permission)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(permission)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(oldPermission.Name,
-		oldPermission.Owner, permission.Name, permission.Owner, permissionEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(oldPermission.Name,
+			oldPermission.Owner, permission.Name, permission.Owner, permissionEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			err = ProcessPolicyDifference([]*Permission{permission})
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		err = ProcessPolicyDifference([]*Permission{permission})
-		if err != nil {
-			return false, err
-		}
 	}
 
 	return affected != 0, nil
 }
 
 func AddPermission(permission *Permission) (bool, error) {
-	affected, err := ormer.Engine.Insert(permission)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(permission)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(permission.Name, permission.Owner, permissionEntity)
+		ok, err = addCasbinObjectGroupingPolicy(permission.Name, permission.Owner, permissionEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			err = ProcessPolicyDifference([]*Permission{permission})
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		err = ProcessPolicyDifference([]*Permission{permission})
-		if err != nil {
-			return false, err
-		}
 	}
 
 	return affected != 0, nil
@@ -163,27 +184,36 @@ func AddPermissions(permissions []*Permission) bool {
 	if len(permissions) == 0 {
 		return false
 	}
-
-	affected, err := ormer.Engine.Insert(permissions)
-	if err != nil {
-		if !strings.Contains(err.Error(), "Duplicate entry") {
-			panic(err)
-		}
-	}
-
-	for _, permission := range permissions {
-		ok, err := addCasbinObjectGroupingPolicy(permission.Name, permission.Owner, permissionEntity)
-		if !ok || err != nil {
-			panic(err)
-		}
-	}
-
-	if affected != 0 {
-		err = ProcessPolicyDifference(permissions)
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(permissions)
 		if err != nil {
-			panic(err)
+			if !strings.Contains(err.Error(), "Duplicate entry") {
+				panic(err)
+			}
 		}
+
+		for _, permission := range permissions {
+			ok, err = addCasbinObjectGroupingPolicy(permission.Name, permission.Owner, permissionEntity)
+			if !ok || err != nil {
+				panic(err)
+			}
+		}
+
+		if affected != 0 {
+			err = ProcessPolicyDifference(permissions)
+			if err != nil {
+				panic(err)
+			}
+		}
+		return nil
+	})
+	if !ok || err != nil {
+		panic(err)
 	}
+
 	return affected != 0
 }
 
@@ -212,26 +242,36 @@ func AddPermissionsInBatch(permissions []*Permission) bool {
 }
 
 func DeletePermission(permission *Permission) (bool, error) {
-	oldPermission, err := getPermission(permission.Owner, permission.Name)
-	if oldPermission == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		oldPermission, err := getPermission(permission.Owner, permission.Name)
+		if oldPermission == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{permission.Owner, permission.Name}).Delete(&Permission{})
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{permission.Owner, permission.Name}).Delete(&Permission{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(permission.Name, permission.Owner, permissionEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(permission.Name, permission.Owner, permissionEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		if affected != 0 {
+			err = ProcessPolicyDifference([]*Permission{oldPermission})
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
-	}
-
-	if affected != 0 {
-		err = ProcessPolicyDifference([]*Permission{oldPermission})
-		if err != nil {
-			return false, err
-		}
 	}
 
 	return affected != 0, nil

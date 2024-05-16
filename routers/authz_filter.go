@@ -96,9 +96,6 @@ func getObject(ctx *context.Context) (string, string) {
 			objOwner = organization
 		}
 
-		if id == "" && organizationName != "" {
-			objName = organizationName
-		}
 		if id == "" && owner == "" && organizationName != "" {
 			objOwner = organizationName
 		}

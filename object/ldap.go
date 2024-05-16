@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"github.com/casdoor/casdoor/util"
 )
@@ -54,20 +55,30 @@ type Ldap struct {
 }
 
 func AddLdap(ldap *Ldap) (bool, error) {
-	if len(ldap.Id) == 0 {
-		ldap.Id = util.GenerateId()
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		if len(ldap.Id) == 0 {
+			ldap.Id = util.GenerateId()
+		}
 
-	if len(ldap.CreatedTime) == 0 {
-		ldap.CreatedTime = util.GetCurrentTime()
-	}
+		if len(ldap.CreatedTime) == 0 {
+			ldap.CreatedTime = util.GetCurrentTime()
+		}
 
-	affected, err := ormer.Engine.Insert(ldap)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.Insert(ldap)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(ldap.Id, ldap.Owner, ldapEntity)
+		ok, err = addCasbinObjectGroupingPolicy(ldap.Id, ldap.Owner, ldapEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -156,29 +167,38 @@ func GetMaskedLdaps(ldaps []*Ldap, errs ...error) ([]*Ldap, error) {
 }
 
 func UpdateLdap(ldap *Ldap) (bool, error) {
-	var l *Ldap
-	var err error
-	l, err = GetLdap(ldap.Id)
-	if err != nil {
-		return false, nil
-	} else if l == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var l *Ldap
+		var err error
+		l, err = GetLdap(ldap.Id)
+		if err != nil {
+			return nil
+		} else if l == nil {
+			return nil
+		}
 
-	if ldap.Password == "***" {
-		ldap.Password = l.Password
-	}
+		if ldap.Password == "***" {
+			ldap.Password = l.Password
+		}
 
-	affected, err := ormer.Engine.ID(ldap.Id).Cols("owner", "server_name", "host", "cert",
-		"port", "enable_ssl", "username", "password", "base_dn", "filter", "filter_fields", "auto_sync",
-		"role_mapping_items", "enable_role_mapping", "attribute_mapping_items", "enable_attribute_mapping",
-		"enable_cryptographic_auth", "client_cert").Update(ldap)
-	if err != nil {
-		return false, nil
-	}
+		affected, err = ormer.Engine.ID(ldap.Id).Cols("owner", "server_name", "host", "cert",
+			"port", "enable_ssl", "username", "password", "base_dn", "filter", "filter_fields", "auto_sync",
+			"role_mapping_items", "enable_role_mapping", "attribute_mapping_items", "enable_attribute_mapping",
+			"enable_cryptographic_auth", "client_cert").Update(ldap)
+		if err != nil {
+			return nil
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(l.Id,
-		l.Owner, ldap.Id, ldap.Owner, ldapEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(l.Id,
+			l.Owner, ldap.Id, ldap.Owner, ldapEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -187,12 +207,22 @@ func UpdateLdap(ldap *Ldap) (bool, error) {
 }
 
 func DeleteLdap(ldap *Ldap) (bool, error) {
-	affected, err := ormer.Engine.ID(ldap.Id).Delete(&Ldap{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(ldap.Id).Delete(&Ldap{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(ldap.Id, ldap.Owner, ldapEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(ldap.Id, ldap.Owner, ldapEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

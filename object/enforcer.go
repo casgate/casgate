@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/casbin/casbin/v2"
@@ -89,21 +90,31 @@ func GetEnforcer(id string) (*Enforcer, error) {
 }
 
 func UpdateEnforcer(id string, enforcer *Enforcer) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	oldEnforcer, err := getEnforcer(owner, name)
-	if err != nil {
-		return false, err
-	} else if oldEnforcer == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		oldEnforcer, err := getEnforcer(owner, name)
+		if err != nil {
+			return err
+		} else if oldEnforcer == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(enforcer)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(enforcer)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(oldEnforcer.Name,
-		oldEnforcer.Owner, enforcer.Name, enforcer.Owner, enforcerEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(oldEnforcer.Name,
+			oldEnforcer.Owner, enforcer.Name, enforcer.Owner, enforcerEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -112,12 +123,22 @@ func UpdateEnforcer(id string, enforcer *Enforcer) (bool, error) {
 }
 
 func AddEnforcer(enforcer *Enforcer) (bool, error) {
-	affected, err := ormer.Engine.Insert(enforcer)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(enforcer)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(enforcer.Name, enforcer.Owner, enforcerEntity)
+		ok, err = addCasbinObjectGroupingPolicy(enforcer.Name, enforcer.Owner, enforcerEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -126,12 +147,22 @@ func AddEnforcer(enforcer *Enforcer) (bool, error) {
 }
 
 func DeleteEnforcer(enforcer *Enforcer) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{enforcer.Owner, enforcer.Name}).Delete(&Enforcer{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{enforcer.Owner, enforcer.Name}).Delete(&Enforcer{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(enforcer.Name, enforcer.Owner, enforcerEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(enforcer.Name, enforcer.Owner, enforcerEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

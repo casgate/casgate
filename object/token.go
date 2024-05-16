@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
@@ -160,21 +161,31 @@ func (token *Token) GetId() string {
 }
 
 func UpdateToken(id string, token *Token) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	t, err := getToken(owner, name)
-	if err != nil {
-		return false, err
-	} else if t == nil {
-		return false, nil
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromId(id)
+		t, err := getToken(owner, name)
+		if err != nil {
+			return err
+		} else if t == nil {
+			return nil
+		}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(token)
-	if err != nil {
-		return false, err
-	}
+		affected, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(token)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(t.Name,
-		t.Organization, token.Name, token.Organization, tokenEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(t.Name,
+			t.Organization, token.Name, token.Organization, tokenEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -183,12 +194,22 @@ func UpdateToken(id string, token *Token) (bool, error) {
 }
 
 func AddToken(token *Token) (bool, error) {
-	affected, err := ormer.Engine.Insert(token)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(token)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(token.Name, token.Organization, tokenEntity)
+		ok, err = addCasbinObjectGroupingPolicy(token.Name, token.Organization, tokenEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -197,12 +218,22 @@ func AddToken(token *Token) (bool, error) {
 }
 
 func DeleteToken(token *Token) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{token.Owner, token.Name}).Delete(&Token{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{token.Owner, token.Name}).Delete(&Token{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(token.Name, token.Organization, tokenEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(token.Name, token.Organization, tokenEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

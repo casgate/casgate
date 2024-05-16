@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -100,21 +101,30 @@ func GetResource(id string) (*Resource, error) {
 }
 
 func UpdateResource(id string, resource *Resource) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
-	r, err := getResource(owner, name)
-	if err != nil {
-		return false, err
-	} else if r == nil {
-		return false, nil
-	}
+	var ok bool
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+		r, err := getResource(owner, name)
+		if err != nil {
+			return err
+		} else if r == nil {
+			return nil
+		}
 
-	_, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(resource)
-	if err != nil {
-		return false, err
-	}
+		_, err = ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(resource)
+		if err != nil {
+			return err
+		}
 
-	ok, err := updateCasbinObjectGroupingPolicy(r.Name,
-		r.Owner, resource.Name, resource.Owner, resourceEntity)
+		ok, err = updateCasbinObjectGroupingPolicy(r.Name,
+			r.Owner, resource.Name, resource.Owner, resourceEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -124,12 +134,22 @@ func UpdateResource(id string, resource *Resource) (bool, error) {
 }
 
 func AddResource(resource *Resource) (bool, error) {
-	affected, err := ormer.Engine.Insert(resource)
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.Insert(resource)
+		if err != nil {
+			return err
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(resource.Name, resource.Owner, resourceEntity)
+		ok, err = addCasbinObjectGroupingPolicy(resource.Name, resource.Owner, resourceEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}
@@ -138,12 +158,22 @@ func AddResource(resource *Resource) (bool, error) {
 }
 
 func DeleteResource(resource *Resource) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{resource.Owner, resource.Name}).Delete(&Resource{})
-	if err != nil {
-		return false, err
-	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(context.Background(), func(ctx context.Context) error {
+		var err error
+		affected, err = ormer.Engine.ID(core.PK{resource.Owner, resource.Name}).Delete(&Resource{})
+		if err != nil {
+			return err
+		}
 
-	ok, err := removeCasbinObjectGroupingPolicy(resource.Name, resource.Owner, resourceEntity)
+		ok, err = removeCasbinObjectGroupingPolicy(resource.Name, resource.Owner, resourceEntity)
+		if !ok || err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if !ok || err != nil {
 		return ok, err
 	}

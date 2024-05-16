@@ -15,6 +15,7 @@
 package object
 
 import (
+	goContext "context"
 	"encoding/json"
 	"strconv"
 	"strings"
@@ -117,24 +118,33 @@ func AddRecord(record *Record) bool {
 
 		return false
 	}
+	var ok bool
+	var affected int64
+	err := trm.WithTx(goContext.Background(), func(ctx goContext.Context) error {
+		var err error
+		record.Owner = record.Organization
 
-	record.Owner = record.Organization
+		errWebhook := SendWebhooks(record)
+		if errWebhook == nil {
+			record.IsTriggered = true
+		} else {
+			logs.Info("webhook: ", errWebhook)
+		}
 
-	errWebhook := SendWebhooks(record)
-	if errWebhook == nil {
-		record.IsTriggered = true
-	} else {
-		logs.Info("webhook: ", errWebhook)
-	}
+		affected, err = ormer.Engine.Insert(record)
+		if err != nil {
+			logs.Error("record not saved: %s", err.Error())
 
-	affected, err := ormer.Engine.Insert(record)
-	if err != nil {
-		logs.Error("record not saved: %s", err.Error())
+			panic(err)
+		}
 
-		panic(err)
-	}
+		ok, err = addCasbinObjectGroupingPolicy(record.Name, record.Organization, recordEntity)
+		if !ok || err != nil {
+			panic(err)
+		}
 
-	ok, err := addCasbinObjectGroupingPolicy(record.Name, record.Organization, recordEntity)
+		return nil
+	})
 	if !ok || err != nil {
 		panic(err)
 	}
