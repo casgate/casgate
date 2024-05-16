@@ -305,6 +305,13 @@ var endpoints = []Endpoint{
 var casbinEnforcer *casbin.SyncedEnforcer
 var casbinEnforcerErr = "Error init casbin: %s"
 
+// MATCHERS EXPLANATION
+// the first line checks if the user has a role in the domain
+// the second line checks if the user is the owner of the object or if the owner of the object is ‘admin’ (legacy)
+// the third line checks if the object belongs to the user's domain or does not exist (add case)
+// the fourth line allows anonymous access for certain endpoints
+// fifth line checks if the method and path match
+// the last line is needed for global administrator authorisation
 func initCasbinModel() (casbinmodel.Model, error) {
 	model, err := casbinmodel.NewModelFromString(
 		`[request_definition]
@@ -416,6 +423,8 @@ func addOrganizationPolicies(organization *Organization) (bool, error) {
 		return ok, err
 	}
 
+	// all entity groups include the administrator entity group of the same name (common entities)
+	// all entity groups are added to the ‘exist’ group
 	var sharedEntityGroupingPolicies [][]string
 	var existEntityGroups [][]string
 	for entity := range uniqEntities {
@@ -434,6 +443,8 @@ func addOrganizationPolicies(organization *Organization) (bool, error) {
 	return true, nil
 }
 
+// remove all relations beetwen enity groups and shared admin groups
+// all entity groups are removed from the ‘exist’ group
 func removeOrganizationPolicies(organization *Organization) (bool, error) {
 	var policies [][]string
 	uniqEntities := make(map[string]bool)
@@ -474,6 +485,7 @@ func removeOrganizationPolicies(organization *Organization) (bool, error) {
 	return true, nil
 }
 
+// update org name in all rows
 func updateOrganizationPolicies(oldOrganization, newOrganization *Organization) (bool, error) {
 	if oldOrganization.Name != newOrganization.Name {
 		var oldPolicies [][]string

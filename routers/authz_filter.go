@@ -26,6 +26,7 @@ import (
 )
 
 type Object struct {
+	Id           string `json:"id"`
 	Owner        string `json:"owner"`
 	Name         string `json:"name"`
 	Organization string `json:"organization"`
@@ -129,7 +130,12 @@ func getObject(ctx *context.Context) (string, string) {
 			}
 		}
 
-		return obj.Owner, obj.Name
+		objName := obj.Name
+		if objName == "" {
+			objName = obj.Id
+		}
+
+		return obj.Owner, objName
 	}
 }
 
