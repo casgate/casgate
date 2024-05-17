@@ -28,8 +28,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/RobotsAndPencils/go-saml"
 	"github.com/beevik/etree"
+	"github.com/crewjam/saml"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	dsig "github.com/russellhaering/goxmldsig"
@@ -278,8 +278,8 @@ func GetSamlResponse(application *Application, user *User, samlRequest string, h
 	}
 
 	// verify samlRequest
-	if isValid := application.IsRedirectUriValid(authnRequest.Issuer.Url); !isValid {
-		return "", "", method, fmt.Errorf("err: Issuer URI: %s doesn't exist in the allowed Redirect URI list", authnRequest.Issuer.Url)
+	if isValid := application.IsRedirectUriValid(authnRequest.Issuer.Value); !isValid {
+		return "", "", method, fmt.Errorf("err: Issuer URI: %s doesn't exist in the allowed Redirect URI list", authnRequest.Issuer.Value)
 	}
 
 	// get certificate string
@@ -301,18 +301,17 @@ func GetSamlResponse(application *Application, user *User, samlRequest string, h
 
 	_, originBackend := getOriginFromHost(host)
 	// build signedResponse
-	samlResponse, _ := NewSamlResponse(user, originBackend, certificate, authnRequest.AssertionConsumerServiceURL, authnRequest.Issuer.Url, authnRequest.ID, application.RedirectUris)
+	samlResponse, _ := NewSamlResponse(user, originBackend, certificate, authnRequest.AssertionConsumerServiceURL, authnRequest.Issuer.Value, authnRequest.ID, application.RedirectUris)
 	randomKeyStore := &X509Key{
 		PrivateKey:      cert.PrivateKey,
 		X509Certificate: certificate,
 	}
 	ctx := dsig.NewDefaultSigningContext(randomKeyStore)
 	ctx.Hash = crypto.SHA256
-	//signedXML, err := ctx.SignEnvelopedLimix(samlResponse)
-	//if err != nil {
-	//	return "", "", fmt.Errorf("err: %s", err.Error())
-	//}
 	sig, err := ctx.ConstructSignature(samlResponse, true)
+	if err != nil {
+		return "", "", method, fmt.Errorf("err: %s", err.Error())
+	}
 	samlResponse.InsertChildAt(1, sig)
 
 	doc := etree.NewDocument()

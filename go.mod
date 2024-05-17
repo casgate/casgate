@@ -4,7 +4,6 @@ go 1.21
 
 require (
 	github.com/Masterminds/squirrel v1.5.3
-	github.com/RobotsAndPencils/go-saml v0.0.0-20170520135329-fb13cb52a46b
 	github.com/alexedwards/argon2id v0.0.0-20211130144151-3585854a6387
 	github.com/aws/aws-sdk-go v1.45.5
 	github.com/beego/beego v1.12.12
@@ -27,7 +26,6 @@ require (
 	github.com/go-webauthn/webauthn v0.6.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.3.1
-	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/lestrrat-go/jwx v1.2.29
 	github.com/lib/pq v1.10.9
 	github.com/lor00x/goldap v0.0.0-20180618054307-a546dffdd1a3
@@ -40,7 +38,7 @@ require (
 	github.com/qiangmzsx/string-adapter/v2 v2.1.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/russellhaering/gosaml2 v0.9.0
-	github.com/russellhaering/goxmldsig v1.2.0
+	github.com/russellhaering/goxmldsig v1.3.0
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/siddontang/go-log v0.0.0-20190221022429-1e957dd83bed
@@ -92,6 +90,7 @@ require (
 	github.com/bwmarrin/discordgo v0.27.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/crewjam/saml v0.4.14
 	github.com/cschomburg/go-pushbullet v0.0.0-20171206132031-67759df45fbb // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
@@ -144,7 +143,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mrjones/oauth v0.0.0-20180629183705-f4e24b6d100c // indirect
-	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b // indirect
 	github.com/pingcap/errors v0.11.5-0.20210425183316-da1aaba5fb63 // indirect
 	github.com/pingcap/log v0.0.0-20210625125904-98ed8e2eb1c7 // indirect
