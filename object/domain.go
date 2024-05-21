@@ -93,14 +93,14 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 		return false, nil
 	}
 
-	allParentDomains, _ := GetAncestorDomains(ctx, id)
-	for _, d := range allParentDomains {
-		for _, domainId := range d.Domains {
-			if id == domainId {
-				return false, fmt.Errorf("role %s is in the child domain of %s", id, d.GetId())
-			}
-		}
-	}
+	// allParentDomains, _ := GetAncestorDomains(ctx, id)
+	// for _, d := range allParentDomains {
+	// 	for _, domainId := range d.Domains {
+	// 		if id == domainId {
+	// 			return false, fmt.Errorf("role %s is in the child domain of %s", id, d.GetId())
+	// 		}
+	// 	}
+	// }
 
 	if name != domain.Name {
 		err := domainChangeTrigger(name, domain.Name)
