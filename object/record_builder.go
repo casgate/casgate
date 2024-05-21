@@ -82,6 +82,17 @@ func (rb *RecordBuilder) WithResponse(response string) *RecordBuilder {
 }
 
 func (rb *RecordBuilder) AddReason(detail string) *RecordBuilder {
+	if rb.record == nil {
+		rb.record = &Record{
+			Name:        util.GenerateId(),
+			CreatedTime: util.GetCurrentTime(),
+		}
+	}
+
+	if rb.record.Detail == nil {
+		rb.setDefaultFieldValues()
+	}
+
 	rb.record.Detail.Reasons = append(rb.record.Detail.Reasons, detail)
 
 	return rb
