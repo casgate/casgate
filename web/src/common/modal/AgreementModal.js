@@ -47,10 +47,6 @@ export const AgreementModal = (props) => {
 };
 
 function getTermsOfUseContent(url) {
-  if (!url.startsWith("http")) {
-    Setting.showMessage("error", `${i18next.t("general:Invalid TermsOfUse URL protocol")}: ${url}`);
-    return Promise.reject("Invalid TermsOfUse URL protocol");
-  }
   return fetch(url, {
     method: "GET",
   })

@@ -708,11 +708,7 @@ export function openLinkSafe(link) {
 }
 
 export function goToLink(link) {
-  if (link.startsWith("http")) {
-    window.location.href = link;
-    return;
-  }
-  showMessage("error", "bad return url");
+  window.location.href = link;
 }
 
 export function goToLinkSoft(ths, link) {
