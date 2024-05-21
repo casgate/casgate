@@ -254,7 +254,7 @@ func GetSamlResponse(application *Application, user *User, samlRequest string, h
 	// base64 decode
 	defated, err := base64.StdEncoding.DecodeString(samlRequest)
 	if err != nil {
-		return "", "", method, fmt.Errorf("err: Failed to decode SAML request , %s", err.Error())
+		return "", "", method, fmt.Errorf("failed to decode SAML request: %w", err)
 	}
 
 	// decompress
@@ -274,7 +274,7 @@ func GetSamlResponse(application *Application, user *User, samlRequest string, h
 	var authnRequest saml.AuthnRequest
 	err = xml.Unmarshal(buffer.Bytes(), &authnRequest)
 	if err != nil {
-		return "", "", method, fmt.Errorf("err: Failed to unmarshal AuthnRequest, please check the SAML request. %s", err.Error())
+		return "", "", method, fmt.Errorf("failed to unmarshal AuthnRequest: %w", err)
 	}
 
 	// verify samlRequest
@@ -310,7 +310,7 @@ func GetSamlResponse(application *Application, user *User, samlRequest string, h
 	ctx.Hash = crypto.SHA256
 	sig, err := ctx.ConstructSignature(samlResponse, true)
 	if err != nil {
-		return "", "", method, fmt.Errorf("err: %s", err.Error())
+		return "", "", method, fmt.Errorf("failed to construct signature: %w", err)
 	}
 	samlResponse.InsertChildAt(1, sig)
 
@@ -318,7 +318,7 @@ func GetSamlResponse(application *Application, user *User, samlRequest string, h
 	doc.SetRoot(samlResponse)
 	xmlBytes, err := doc.WriteToBytes()
 	if err != nil {
-		return "", "", method, fmt.Errorf("err: Failed to serializes the SAML request into bytes, %s", err.Error())
+		return "", "", method, fmt.Errorf("failed to serializes SAML request into bytes: %w", err)
 	}
 
 	// compress
