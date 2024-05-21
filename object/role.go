@@ -127,14 +127,14 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	}
 	
 
-	allParentRoles, _ := GetAncestorRoles(id)
-	for _, r := range allParentRoles {
-		for _, roleId := range r.Roles {
-			if id == roleId {
-				return false, fmt.Errorf("role %s is in the child roles of %s", id, r.GetId())
-			}
-		}
-	}
+	// allParentRoles, _ := GetAncestorRoles(id)
+	// for _, r := range allParentRoles {
+	// 	for _, roleId := range r.Roles {
+	// 		if id == roleId {
+	// 			return false, fmt.Errorf("role %s is in the child roles of %s", id, r.GetId())
+	// 		}
+	// 	}
+	// }
 
 	if name != role.Name {
 		err := roleChangeTrigger(name, role.Name)
