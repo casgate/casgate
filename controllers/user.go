@@ -659,7 +659,7 @@ func (c *ApiController) CheckUserPassword() {
 		return
 	}
 
-	_, err = object.CheckUserPassword(ctx, user.Owner, user.Name, user.Password, c.GetAcceptLanguage())
+	_, err = object.CheckUserPassword(ctx, user.Owner, user.Name, user.Password, c.GetAcceptLanguage(), "")
 	if err == nil {
 		c.ResponseOk()
 	} else {

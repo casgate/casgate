@@ -79,7 +79,7 @@ func AutoSigninFilter(ctx *context.Context) {
 	password := ctx.Input.Query("password")
 	if userId != "" && password != "" && ctx.Input.Query("grant_type") == "" {
 		owner, name := util.GetOwnerAndNameFromId(userId)
-		_, err := object.CheckUserPassword(goCtx, owner, name, password, "en")
+		_, err := object.CheckUserPassword(goCtx, owner, name, password, "en", "")
 		if err != nil {
 			msg := object.CheckPassErrorToMessage(err, "en")
 			responseError(ctx, msg)

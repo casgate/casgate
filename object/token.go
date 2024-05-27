@@ -631,7 +631,7 @@ func GetPasswordToken(ctx context.Context, application *Application, username st
 	}
 
 	if user.Ldap != "" {
-		_, err = CheckLdapUserPassword(user, password, "en")
+		_, err = CheckLdapUserPassword(user, password, "en", "")
 	} else {
 		err = CheckPassword(ctx, user, password, "en")
 	}
