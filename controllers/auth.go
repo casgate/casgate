@@ -471,16 +471,22 @@ func (c *ApiController) Login() {
 				}
 			}
 
+
+	
+			options := object.CheckUserPasswordOptions{
+				Lang: c.GetAcceptLanguage(),
+				LdapId:         authForm.LdapId,
+				EnableCaptcha:  enableCaptcha,
+				IsSigninViaLdap: isSigninViaLdap,
+				IsPasswordWithLdapEnabled: isPasswordWithLdapEnabled,
+			}
+
 			user, err = object.CheckUserPassword(
 				goCtx, 
 				authForm.Organization, 
 				authForm.Username, 
-				authForm.Password, 
-				c.GetAcceptLanguage(), 
-				authForm.LdapId,
-				enableCaptcha, 
-				isSigninViaLdap, 
-				isPasswordWithLdapEnabled)
+				authForm.Password,
+				options)
 
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())

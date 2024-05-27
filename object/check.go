@@ -29,6 +29,15 @@ import (
 	goldap "github.com/go-ldap/ldap/v3"
 )
 
+
+type CheckUserPasswordOptions struct {
+	Lang         		      string
+	LdapId       		      string
+	EnableCaptcha 	    	  bool
+	IsSigninViaLdap 		  bool
+	IsPasswordWithLdapEnabled bool	
+}
+
 const (
 	SigninWrongTimesLimit     = 4
 	LastSignWrongTimeDuration = time.Minute * 5
@@ -371,62 +380,62 @@ func (err *CheckUserPasswordError) RealError() error {
 	return err.err
 }
 
-func CheckUserPassword(ctx context.Context, organization string, username string, password string, lang string, ldapId string, options ...bool) (*User, error) {
+func CheckUserPassword(ctx context.Context, organization string, username string, password string, options CheckUserPasswordOptions) (*User, error) {
 	enableCaptcha := false
 	isSigninViaLdap := false
 	isPasswordWithLdapEnabled := false
-	if len(options) > 0 {
-		enableCaptcha = options[0]
-		isSigninViaLdap = options[1]
-		isPasswordWithLdapEnabled = options[2]
-	}
+	
+	enableCaptcha = options.EnableCaptcha
+	isSigninViaLdap = options.IsSigninViaLdap
+	isPasswordWithLdapEnabled = options.IsPasswordWithLdapEnabled
+	
 	user, err := GetUserByFields(organization, username)
 	if err != nil {
 		return nil, err
 	}
 
 	if user == nil || user.IsDeleted {
-		return nil, fmt.Errorf(i18n.Translate(lang, "general:The user: %s doesn't exist"), util.GetId(organization, username))
+		return nil, fmt.Errorf(i18n.Translate(options.Lang, "general:The user: %s doesn't exist"), util.GetId(organization, username))
 	}
 
 	if user.IsForbidden {
-		return nil, fmt.Errorf(i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator"))
+		return nil, fmt.Errorf(i18n.Translate(options.Lang, "check:The user is forbidden to sign in, please contact the administrator"))
 	}
 
 	if isSigninViaLdap {
 		if user.Ldap == "" {
-			return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
+			return nil, fmt.Errorf(i18n.Translate(options.Lang, "check:The user: %s doesn't exist in LDAP server"), username)
 		}
 	}
 
 	if user.Ldap != "" {
 		if !isSigninViaLdap && !isPasswordWithLdapEnabled {
-			return nil, fmt.Errorf(i18n.Translate(lang, "check:password or code is incorrect"))
+			return nil, fmt.Errorf(i18n.Translate(options.Lang, "check:password or code is incorrect"))
 		}
 
 		// check the login error times
 		if !enableCaptcha {
-			err = checkSigninErrorTimes(ctx, user, lang)
+			err = checkSigninErrorTimes(ctx, user, options.Lang)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		// only for LDAP users
-		_, err = CheckLdapUserPassword(user, password, lang, ldapId)
+		_, err = CheckLdapUserPassword(user, password, options.Lang, options.LdapId)
 		if err != nil {
 			if err.Error() == "user not exist" {
-				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
+				return nil, fmt.Errorf(i18n.Translate(options.Lang, "check:The user: %s doesn't exist in LDAP server"), username)
 			}
 
 			if err.Error() == "user is disabled" {
-				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator"))
+				return nil, fmt.Errorf(i18n.Translate(options.Lang, "check:The user is forbidden to sign in, please contact the administrator"))
 			}
 
-			return nil, recordSigninErrorInfo(ctx, user, lang, enableCaptcha)
+			return nil, recordSigninErrorInfo(ctx, user, options.Lang, enableCaptcha)
 		}
 	} else {
-		err = CheckPassword(ctx, user, password, lang, enableCaptcha)
+		err = CheckPassword(ctx, user, password, options.Lang, enableCaptcha)
 		if err != nil {
 			return nil, err
 		}
