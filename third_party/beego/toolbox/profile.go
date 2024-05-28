@@ -60,36 +60,48 @@ func ProcessInput(input string, w io.Writer) {
 
 // MemProf record memory profile in pprof
 func MemProf(w io.Writer) {
-	filename := "mem-" + strconv.Itoa(pid) + ".memprof"
-	if f, err := os.Create(filename); err != nil {
-		fmt.Fprintf(w, "create file %s error %s\n", filename, err.Error())
-		log.Fatal("record heap profile failed: ", err)
-	} else {
-		runtime.GC()
-		pprof.WriteHeapProfile(f)
-		f.Close()
-		fmt.Fprintf(w, "create heap profile %s \n", filename)
-		_, fl := path.Split(os.Args[0])
-		fmt.Fprintf(w, "Now you can use this to check it: go tool pprof %s %s\n", fl, filename)
-	}
+    filename := "mem-" + strconv.Itoa(pid) + ".memprof"
+    if fileExists(filename) {
+        fmt.Fprintf(w, "file %s already exists\n", filename)
+        log.Fatal("file already exists, profile creation aborted")
+    }
+
+    f, err := os.Create(filename)
+    if err != nil {
+        fmt.Fprintf(w, "create file %s error %s\n", filename, err.Error())
+        log.Fatal("record heap profile failed: ", err)
+    } else {
+        runtime.GC()
+        pprof.WriteHeapProfile(f)
+        f.Close()
+        fmt.Fprintf(w, "create heap profile %s \n", filename)
+        _, fl := path.Split(os.Args[0])
+        fmt.Fprintf(w, "Now you can use this to check it: go tool pprof %s %s\n", fl, filename)
+    }
 }
 
 // GetCPUProfile start cpu profile monitor
 func GetCPUProfile(w io.Writer) {
-	sec := 30
-	filename := "cpu-" + strconv.Itoa(pid) + ".pprof"
-	f, err := os.Create(filename)
-	if err != nil {
-		fmt.Fprintf(w, "Could not enable CPU profiling: %s\n", err)
-		log.Fatal("record cpu profile failed: ", err)
-	}
-	pprof.StartCPUProfile(f)
-	time.Sleep(time.Duration(sec) * time.Second)
-	pprof.StopCPUProfile()
+    sec := 30
+    filename := "cpu-" + strconv.Itoa(pid) + ".pprof"
+    
+    if fileExists(filename) {
+        fmt.Fprintf(w, "file %s already exists\n", filename)
+        log.Fatal("file already exists, profile creation aborted")
+    }
 
-	fmt.Fprintf(w, "create cpu profile %s \n", filename)
-	_, fl := path.Split(os.Args[0])
-	fmt.Fprintf(w, "Now you can use this to check it: go tool pprof %s %s\n", fl, filename)
+    f, err := os.Create(filename)
+    if err != nil {
+        fmt.Fprintf(w, "Could not enable CPU profiling: %s\n", err)
+        log.Fatal("record cpu profile failed: ", err)
+    }
+    pprof.StartCPUProfile(f)
+    time.Sleep(time.Duration(sec) * time.Second)
+    pprof.StopCPUProfile()
+
+    fmt.Fprintf(w, "create cpu profile %s \n", filename)
+    _, fl := path.Split(os.Args[0])
+    fmt.Fprintf(w, "Now you can use this to check it: go tool pprof %s %s\n", fl, filename)
 }
 
 // PrintGCSummary print gc information to io.Writer
@@ -181,4 +193,10 @@ func toS(d time.Duration) string {
 		}
 	}
 
+}
+
+// checking if file exists
+func fileExists(filename string) bool {
+    info, err := os.Stat(filename)
+    return err == nil && !info.IsDir()
 }
