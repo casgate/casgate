@@ -494,6 +494,26 @@ class ApplicationEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("application:User mapping strategy"), i18next.t("application:User mapping strategy - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} style={{width: "100%"}}
+              options={[
+                {label: "all", value: "all"},
+                {label: "attribute", value: "attribute"},
+                {label: "role", value: "role"},
+              ].map((item) => {
+                return Setting.getOption(item.label, item.value);
+              })}
+              value={this.state.application.userMappingStrategy ?? "all"}
+              onChange={(value => {
+                this.updateApplicationField("userMappingStrategy", value);
+              })} >
+            </Select>
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
             {Setting.getLabel(i18next.t("application:is Public"), i18next.t("application:is Public - Tooltip"))} :
           </Col>
           <Col span={1} >

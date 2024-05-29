@@ -28,18 +28,18 @@ import (
 )
 
 type Role struct {
-	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
-	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
-	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
-	DisplayName string `xorm:"varchar(100)" json:"displayName"`
-	Description string `xorm:"varchar(100)" json:"description"`
-
-	Users     []string `xorm:"mediumtext" json:"users"`
-	Groups    []string `xorm:"mediumtext" json:"groups"`
-	Roles     []string `xorm:"mediumtext" json:"roles"`
-	Domains   []string `xorm:"mediumtext" json:"domains"`
-	Tags      []string `xorm:"mediumtext" json:"tags"`
-	IsEnabled bool     `json:"isEnabled"`
+	Owner       string   `xorm:"varchar(100) notnull pk" json:"owner"`
+	Name        string   `xorm:"varchar(100) notnull pk" json:"name"`
+	CreatedTime string   `xorm:"varchar(100)" json:"createdTime"`
+	DisplayName string   `xorm:"varchar(100)" json:"displayName"`
+	Description string   `xorm:"varchar(100)" json:"description"`
+	Users       []string `xorm:"mediumtext" json:"users"`
+	Groups      []string `xorm:"mediumtext" json:"groups"`
+	Roles       []string `xorm:"mediumtext" json:"roles"`
+	Domains     []string `xorm:"mediumtext" json:"domains"`
+	Tags        []string `xorm:"mediumtext" json:"tags"`
+	IsEnabled   bool     `json:"isEnabled"`
+	IsReadOnly  bool     `xorm:"bool" json:"isReadOnly"`
 }
 
 func GetRoleCount(owner, field, value string) (int64, error) {
@@ -114,7 +114,6 @@ func GetRole(id string) (*Role, error) {
 	return getRole(owner, name)
 }
 
-
 func UpdateRole(id string, role *Role) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
 	oldRole, err := getRole(owner, name)
@@ -125,7 +124,6 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	if oldRole == nil {
 		return false, nil
 	}
-	
 
 	// allParentRoles, _ := GetAncestorRoles(id)
 	// for _, r := range allParentRoles {

@@ -198,6 +198,8 @@ type User struct {
 	MfaEmailEnabled     bool                  `json:"mfaEmailEnabled"`
 	MultiFactorAuths    []*MfaProps           `xorm:"-" json:"multiFactorAuths,omitempty"`
 
+	MappingStrategy string `xorm:"varchar(50)" json:"mappingStrategy"`
+
 	Ldap       string            `xorm:"ldap varchar(100)" json:"ldap"`
 	Properties map[string]string `json:"properties"`
 
@@ -616,7 +618,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 			"eveonline", "fitbit", "gitea", "heroku", "influxcloud", "instagram", "intercom", "kakao", "lastfm", "mailru", "meetup",
 			"microsoftonline", "naver", "nextcloud", "onedrive", "oura", "patreon", "paypal", "salesforce", "shopify", "soundcloud",
 			"spotify", "strava", "stripe", "type", "tiktok", "tumblr", "twitch", "twitter", "typetalk", "uber", "vk", "wepay", "xero", "yahoo",
-			"yammer", "yandex", "zoom", "custom", "keycloak", "aliyunidaas",
+			"yammer", "yandex", "zoom", "custom", "keycloak", "aliyunidaas", "mapping_strategy",
 		}
 	}
 	if isAdmin {

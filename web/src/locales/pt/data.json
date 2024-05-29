@@ -113,7 +113,9 @@
     "Token format - Tooltip": "O formato do token de acesso",
     "You are unexpected to see this prompt page": "Você não deveria ver esta página de prompt",
     "is Public": "is Public",
-    "is Public - Tooltip": "is Public - Tooltip"
+    "is Public - Tooltip": "is Public - Tooltip",
+    "User mapping strategy": "User mapping strategy",
+    "User mapping strategy - Tooltip": "User mapping strategy - Tooltip"
   },
   "cert": {
     "Bit size": "Tamanho do bit",
@@ -384,7 +386,9 @@
     "You can only select one physical group": "You can only select one physical group",
     "empty": "vazio",
     "remove": "remove",
-    "{total} in total": "{total} no total"
+    "{total} in total": "{total} no total",
+    "Is read only": "Is read only",
+    "Is read only - Tooltip": "Is read only - Tooltip"
   },
   "group": {
     "Edit Group": "Edit Group",
@@ -1131,7 +1135,9 @@
     "Values": "Valores",
     "Verification code sent": "Código de verificação enviado",
     "WebAuthn credentials": "Credenciais WebAuthn",
-    "input password": "Digite a senha"
+    "input password": "Digite a senha",
+    "Mapping strategy": "Mapping strategy",
+    "Mapping strategy - Tooltip": "Mapping strategy - Tooltip"
   },
   "webhook": {
     "Content type": "Tipo de conteúdo",

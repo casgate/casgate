@@ -5895,11 +5895,11 @@
         }
     },
     "definitions": {
-        "195958.\u003cnil\u003e.string": {
+        "201507.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "319386.\u003cnil\u003e.string": {
+        "325021.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6119,6 +6119,12 @@
                 "enableCodeSignin": {
                     "type": "boolean"
                 },
+                "enableIdpSignUp": {
+                    "type": "boolean"
+                },
+                "enableInternalSignUp": {
+                    "type": "boolean"
+                },
                 "enableLinkWithEmail": {
                     "type": "boolean"
                 },
@@ -6129,12 +6135,6 @@
                     "type": "boolean"
                 },
                 "enableSamlCompress": {
-                    "type": "boolean"
-                },
-                "enableInternalSignUp": {
-                    "type": "boolean"
-                },
-                "enableIdpSignUp": {
                     "type": "boolean"
                 },
                 "enableSigninSession": {
@@ -6281,6 +6281,9 @@
                     }
                 },
                 "tokenFormat": {
+                    "type": "string"
+                },
+                "userMappingStrategy": {
                     "type": "string"
                 }
             }
@@ -6731,7 +6734,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/195958.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/201507.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -7458,7 +7461,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/319386.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/325021.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"
@@ -7646,6 +7649,9 @@
                     }
                 },
                 "isEnabled": {
+                    "type": "boolean"
+                },
+                "isReadOnly": {
                     "type": "boolean"
                 },
                 "name": {
@@ -8275,6 +8281,9 @@
                     "items": {
                         "$ref": "#/definitions/object.ManagedAccount"
                     }
+                },
+                "mappingStrategy": {
+                    "type": "string"
                 },
                 "meetup": {
                     "type": "string"

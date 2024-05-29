@@ -71,6 +71,7 @@ class ApplicationListPage extends BaseListPage {
       refreshExpireInHours: 24 * 7,
       formOffset: 2,
       footerText: "Powered by Casgate",
+      userMappingStrategy: "all",
     };
   }
 

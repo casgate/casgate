@@ -113,7 +113,9 @@
     "Token format - Tooltip": "Định dạng của mã thông báo truy cập",
     "You are unexpected to see this prompt page": "Bạn không mong đợi thấy trang này hiện lên",
     "is Public": "is Public",
-    "is Public - Tooltip": "is Public - Tooltip"
+    "is Public - Tooltip": "is Public - Tooltip",
+    "User mapping strategy": "User mapping strategy",
+    "User mapping strategy - Tooltip": "User mapping strategy - Tooltip"
   },
   "cert": {
     "Bit size": "Kích cỡ bit",
@@ -384,7 +386,9 @@
     "You can only select one physical group": "You can only select one physical group",
     "empty": "trống",
     "remove": "remove",
-    "{total} in total": "Trong tổng số {total}"
+    "{total} in total": "Trong tổng số {total}",
+    "Is read only": "Is read only",
+    "Is read only - Tooltip": "Is read only - Tooltip"
   },
   "group": {
     "Edit Group": "Edit Group",
@@ -1131,7 +1135,9 @@
     "Values": "Giá trị",
     "Verification code sent": "Mã xác minh đã được gửi",
     "WebAuthn credentials": "Chứng chỉ WebAuthn",
-    "input password": "Nhập mật khẩu"
+    "input password": "Nhập mật khẩu",
+    "Mapping strategy": "Mapping strategy",
+    "Mapping strategy - Tooltip": "Mapping strategy - Tooltip"
   },
   "webhook": {
     "Content type": "Loại nội dung",

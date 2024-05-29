@@ -113,7 +113,9 @@
     "Token format - Tooltip": "접근 토큰의 형식",
     "You are unexpected to see this prompt page": "당신은 이 프롬프트 페이지를 볼 것을 예상하지 못했습니다",
     "is Public": "is Public",
-    "is Public - Tooltip": "is Public - Tooltip"
+    "is Public - Tooltip": "is Public - Tooltip",
+    "User mapping strategy": "User mapping strategy",
+    "User mapping strategy - Tooltip": "User mapping strategy - Tooltip"
   },
   "cert": {
     "Bit size": "비트 크기",
@@ -384,7 +386,9 @@
     "You can only select one physical group": "You can only select one physical group",
     "empty": "빈",
     "remove": "remove",
-    "{total} in total": "총 {total}개"
+    "{total} in total": "총 {total}개",
+    "Is read only": "Is read only",
+    "Is read only - Tooltip": "Is read only - Tooltip"
   },
   "group": {
     "Edit Group": "Edit Group",
@@ -1131,7 +1135,9 @@
     "Values": "가치들",
     "Verification code sent": "인증 코드가 전송되었습니다",
     "WebAuthn credentials": "웹 인증 자격증명",
-    "input password": "비밀번호를 입력해주세요"
+    "input password": "비밀번호를 입력해주세요",
+    "Mapping strategy": "Mapping strategy",
+    "Mapping strategy - Tooltip": "Mapping strategy - Tooltip"
   },
   "webhook": {
     "Content type": "콘텐츠 유형",

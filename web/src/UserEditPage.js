@@ -785,6 +785,19 @@ class UserEditPage extends React.Component {
           </Col>
         </Row>
       );
+    } else if (accountItem.name === "Mapping strategy") {
+      return (
+        <Row style={{marginTop: "20px", alignItems: "center"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("user:Mapping strategy"), i18next.t("user:Mapping strategy - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} style={{width: "100%"}} value={this.state.user.mappingStrategy} onChange={(value => {this.updateUserField("mappingStrategy", value);})}
+              options={["all", "attribute", "role"].map(item => Setting.getOption(item, item))}
+            />
+          </Col>
+        </Row>
+      );
     } else if (accountItem.name === "Roles") {
       return (
         <Row style={{marginTop: "20px", alignItems: "center"}} >

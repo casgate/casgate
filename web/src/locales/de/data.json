@@ -113,7 +113,9 @@
     "Token format - Tooltip": "Das Format des Access-Tokens",
     "You are unexpected to see this prompt page": "Sie sind unerwartet auf diese Aufforderungsseite gelangt",
     "is Public": "is Public",
-    "is Public - Tooltip": "is Public - Tooltip"
+    "is Public - Tooltip": "is Public - Tooltip",
+    "User mapping strategy": "User mapping strategy",
+    "User mapping strategy - Tooltip": "User mapping strategy - Tooltip"
   },
   "cert": {
     "Bit size": "Bitgröße",
@@ -384,7 +386,9 @@
     "You can only select one physical group": "You can only select one physical group",
     "empty": "leere",
     "remove": "remove",
-    "{total} in total": "Insgesamt {total}"
+    "{total} in total": "Insgesamt {total}",
+    "Is read only": "Is read only",
+    "Is read only - Tooltip": "Is read only - Tooltip"
   },
   "group": {
     "Edit Group": "Edit Group",
@@ -1131,7 +1135,9 @@
     "Values": "Werte",
     "Verification code sent": "Bestätigungscode gesendet",
     "WebAuthn credentials": "WebAuthn-Anmeldeinformationen",
-    "input password": "Passwort eingeben"
+    "input password": "Passwort eingeben",
+    "Mapping strategy": "Mapping strategy",
+    "Mapping strategy - Tooltip": "Mapping strategy - Tooltip"
   },
   "webhook": {
     "Content type": "Content-Type",

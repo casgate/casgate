@@ -113,7 +113,9 @@
     "Token format - Tooltip": "Format dari token akses",
     "You are unexpected to see this prompt page": "Anda tidak mengharapkan untuk melihat halaman prompt ini",
     "is Public": "is Public",
-    "is Public - Tooltip": "is Public - Tooltip"
+    "is Public - Tooltip": "is Public - Tooltip",
+    "User mapping strategy": "User mapping strategy",
+    "User mapping strategy - Tooltip": "User mapping strategy - Tooltip"
   },
   "cert": {
     "Bit size": "Ukuran bit",
@@ -384,7 +386,9 @@
     "You can only select one physical group": "You can only select one physical group",
     "empty": "kosong",
     "remove": "remove",
-    "{total} in total": "{total} secara keseluruhan"
+    "{total} in total": "{total} secara keseluruhan",
+    "Is read only": "Is read only",
+    "Is read only - Tooltip": "Is read only - Tooltip"
   },
   "group": {
     "Edit Group": "Edit Group",
@@ -1131,7 +1135,9 @@
     "Values": "Nilai-nilai",
     "Verification code sent": "Kode verifikasi telah dikirim",
     "WebAuthn credentials": "Kredensial WebAuthn",
-    "input password": "masukkan kata sandi"
+    "input password": "masukkan kata sandi",
+    "mapping strategy": "mapping strategy",
+    "mapping strategy - tooltip": "mapping strategy - tooltip"
   },
   "webhook": {
     "Content type": "Jenis konten",

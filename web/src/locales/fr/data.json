@@ -113,7 +113,9 @@
     "Token format - Tooltip": "Le format du jeton d'accès",
     "You are unexpected to see this prompt page": "Vous ne vous attendiez pas à voir cette page de saisie",
     "is Public": "is Public",
-    "is Public - Tooltip": "is Public - Tooltip"
+    "is Public - Tooltip": "is Public - Tooltip",
+    "User mapping strategy": "User mapping strategy",
+    "User mapping strategy - Tooltip": "User mapping strategy - Tooltip"
   },
   "cert": {
     "Bit size": "Taille de bit",
@@ -384,7 +386,9 @@
     "You can only select one physical group": "You can only select one physical group",
     "empty": "vide",
     "remove": "remove",
-    "{total} in total": "{total} au total"
+    "{total} in total": "{total} au total",
+    "Is read only": "Is read only",
+    "Is read only - Tooltip": "Is read only - Tooltip"
   },
   "group": {
     "Edit Group": "Edit Group",
@@ -1131,7 +1135,9 @@
     "Values": "Valeurs",
     "Verification code sent": "Code de vérification envoyé",
     "WebAuthn credentials": "les identifiants WebAuthn",
-    "input password": "Entrer le mot de passe"
+    "input password": "Entrer le mot de passe",
+    "Mapping strategy": "Mapping strategy",
+    "Mapping strategy - Tooltip": "Mapping strategy - Tooltip"
   },
   "webhook": {
     "Content type": "Type de contenu",

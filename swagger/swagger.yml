@@ -3848,10 +3848,10 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  195958.<nil>.string:
+  201507.<nil>.string:
     title: string
     type: object
-  319386.<nil>.string:
+  325021.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -4003,6 +4003,10 @@ definitions:
         type: boolean
       enableCodeSignin:
         type: boolean
+      enableIdpSignUp:
+        type: boolean
+      enableInternalSignUp:
+        type: boolean
       enableLinkWithEmail:
         type: boolean
       enablePassword:
@@ -4010,10 +4014,6 @@ definitions:
       enablePasswordRecovery:
         type: boolean
       enableSamlCompress:
-        type: boolean
-      enableInternalSignUp:
-        type: boolean
-      enableIdpSignUp:
         type: boolean
       enableSigninSession:
         type: boolean
@@ -4113,6 +4113,8 @@ definitions:
         items:
           type: string
       tokenFormat:
+        type: string
+      userMappingStrategy:
         type: string
   object.AttributeMappingItem:
     title: AttributeMappingItem
@@ -4417,7 +4419,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/195958.<nil>.string'
+          $ref: '#/definitions/201507.<nil>.string'
       description:
         type: string
       displayName:
@@ -4905,7 +4907,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/319386.<nil>.string'
+        $ref: '#/definitions/325021.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:
@@ -5031,6 +5033,8 @@ definitions:
         items:
           type: string
       isEnabled:
+        type: boolean
+      isReadOnly:
         type: boolean
       name:
         type: string
@@ -5456,6 +5460,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/object.ManagedAccount'
+      mappingStrategy:
+        type: string
       meetup:
         type: string
       metamask:

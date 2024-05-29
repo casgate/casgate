@@ -113,7 +113,9 @@
     "Token format - Tooltip": "Access Token格式",
     "You are unexpected to see this prompt page": "错误：该提醒页面不应出现",
     "is Public": "is Public",
-    "is Public - Tooltip": "is Public - Tooltip"
+    "is Public - Tooltip": "is Public - Tooltip",
+    "User mapping strategy": "User mapping strategy",
+    "User mapping strategy - Tooltip": "User mapping strategy - Tooltip"
   },
   "cert": {
     "Bit size": "位大小",
@@ -384,7 +386,9 @@
     "You can only select one physical group": "只能选择一个实体组",
     "empty": "无",
     "remove": "移除",
-    "{total} in total": "{total} 总计"
+    "{total} in total": "{total} 总计",
+    "Is read only": "Is read only",
+    "Is read only - Tooltip": "Is read only - Tooltip"
   },
   "group": {
     "Edit Group": "编辑群组",
@@ -1131,7 +1135,9 @@
     "Values": "值",
     "Verification code sent": "验证码已发送",
     "WebAuthn credentials": "WebAuthn凭据",
-    "input password": "输入密码"
+    "input password": "输入密码",
+    "Mapping strategy": "Mapping strategy",
+    "Mapping strategy - Tooltip": "Mapping strategy - Tooltip"
   },
   "webhook": {
     "Content type": "内容类型",

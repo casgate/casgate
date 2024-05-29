@@ -272,6 +272,16 @@ class RoleEditPage extends React.Component {
             }} />
           </Col>
         </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("general:Is read only"), i18next.t("general:Is read only - Tooltip"))} :
+          </Col>
+          <Col span={1} >
+            <Switch checked={this.state.role.isReadOnly} disabled={true} onChange={checked => {
+              this.updateRoleField("isReadOnly", checked);
+            }} />
+          </Col>
+        </Row>
       </Card>
     );
   }

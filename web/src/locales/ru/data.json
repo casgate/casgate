@@ -113,7 +113,9 @@
     "Token format - Tooltip": "Формат токена доступа",
     "You are unexpected to see this prompt page": "Вы не ожидали увидеть эту страницу-подсказку",
     "is Public": "Общедоступное",
-    "is Public - Tooltip": "На странице приложений показываются только общедоступные приложения"
+    "is Public - Tooltip": "На странице приложений показываются только общедоступные приложения",
+    "User mapping strategy": "User mapping strategy",
+    "User mapping strategy - Tooltip": "User mapping strategy - Tooltip"
   },
   "cert": {
     "Bit size": "Размер бита",
@@ -384,7 +386,9 @@
     "You can only select one physical group": "You can only select one physical group",
     "empty": "пустые",
     "remove": "remove",
-    "{total} in total": "{total} в общей сложности"
+    "{total} in total": "{total} в общей сложности",
+    "Is read only": "Is read only",
+    "Is read only - Tooltip": "Is read only - Tooltip"
   },
   "group": {
     "Edit Group": "Edit Group",
@@ -1132,7 +1136,9 @@
     "Values": "Значения",
     "Verification code sent": "Код подтверждения отправлен",
     "WebAuthn credentials": "WebAuthn удостоверения",
-    "input password": "введите пароль"
+    "input password": "введите пароль",
+    "mapping strategy": "mapping strategy",
+    "mapping strategy - tooltip": "mapping strategy - tooltip"
   },
   "webhook": {
     "Content type": "Тип содержания",
