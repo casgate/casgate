@@ -130,11 +130,17 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 		return true
 	}
 
+	// check if object in id is equal to object in body of request
 	if id != "" {
 		objIdOwner, _ := util.GetOwnerAndNameFromIdNoCheck(id)
-		if subOwner != "built-in" && objIdOwner != objOwner {
+		if subOwner != "built-in" && objIdOwner != objOwner && objIdOwner != "admin" {
 			return false
 		}
+	}
+
+	// object and owner can't be anonymous
+	if objOwner == "anonymous" || objName == "anonymous" {
+		return false
 	}
 
 	if user != nil {
