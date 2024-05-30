@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -110,6 +111,7 @@ func (c *ApiController) UpdateEnforcer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	enforcer.Name = strings.ReplaceAll(enforcer.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.UpdateEnforcer(id, &enforcer))
 	c.ServeJSON()
@@ -129,6 +131,7 @@ func (c *ApiController) AddEnforcer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	enforcer.Name = strings.ReplaceAll(enforcer.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.AddEnforcer(&enforcer))
 	c.ServeJSON()

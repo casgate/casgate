@@ -171,6 +171,7 @@ func (c *ApiController) UpdateProvider() {
 		c.ResponseError(err.Error())
 		return
 	}
+	provider.Name = strings.ReplaceAll(provider.Name, "/", "")
 
 	for _, roleMappingItem := range provider.RoleMappingItems {
 		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
@@ -205,6 +206,7 @@ func (c *ApiController) AddProvider() {
 		c.ResponseError(err.Error())
 		return
 	}
+	provider.Name = strings.ReplaceAll(provider.Name, "/", "")
 
 	count, err := object.GetProviderCount("", "", "")
 	if err != nil {

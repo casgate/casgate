@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -102,6 +103,7 @@ func (c *ApiController) UpdateSyncer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	syncer.Name = strings.ReplaceAll(syncer.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.UpdateSyncer(id, &syncer))
 	c.ServeJSON()
@@ -121,6 +123,7 @@ func (c *ApiController) AddSyncer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	syncer.Name = strings.ReplaceAll(syncer.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.AddSyncer(&syncer))
 	c.ServeJSON()

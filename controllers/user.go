@@ -323,6 +323,7 @@ func (c *ApiController) UpdateUser() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	user.Name = strings.ReplaceAll(user.Name, "/", "")
 
 	if id == "" {
 		id = c.GetSessionUsername()
@@ -409,6 +410,7 @@ func (c *ApiController) AddUser() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	user.Name = strings.ReplaceAll(user.Name, "/", "")
 
 	count, err := object.GetUserCount("", "", "", "")
 	if err != nil {
@@ -426,6 +428,7 @@ func (c *ApiController) AddUser() {
 		c.ResponseUnprocessableEntity(msg)
 		return
 	}
+	user.Name = strings.ReplaceAll(user.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.AddUser(ctx, &user))
 	c.ServeJSON()

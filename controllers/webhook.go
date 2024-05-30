@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -104,6 +105,7 @@ func (c *ApiController) UpdateWebhook() {
 		c.ResponseError(err.Error())
 		return
 	}
+	webhook.Name = strings.ReplaceAll(webhook.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.UpdateWebhook(id, &webhook))
 	c.ServeJSON()
@@ -123,6 +125,7 @@ func (c *ApiController) AddWebhook() {
 		c.ResponseError(err.Error())
 		return
 	}
+	webhook.Name = strings.ReplaceAll(webhook.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.AddWebhook(&webhook))
 	c.ServeJSON()
