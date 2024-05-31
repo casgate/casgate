@@ -279,7 +279,7 @@ func CheckLdapUserPassword(user *User, password string, lang string) (string, er
 			return ldapServer.Id, fmt.Errorf(i18n.Translate(lang, "check:Multiple accounts with same uid, please check your ldap server"))
 		}
 
-		userDisabled, err = checkIsUserDisabled(searchResult.Entries[0].Attributes)
+		userDisabled, err = CheckIsUserDisabled(searchResult.Entries[0].Attributes)
 		if err != nil {
 			conn.Close()
 			return "", err
@@ -626,7 +626,7 @@ func CheckUserIdProviderOrigin(userIdProvider UserIdProvider) bool {
 	return isProviderNameEmpty != isLdapIdEmpty
 }
 
-func checkIsUserDisabled(userAttributes []*goldap.EntryAttribute) (bool, error) {
+func CheckIsUserDisabled(userAttributes []*goldap.EntryAttribute) (bool, error) {
 	isDisabled := false
 
 	for _, attr := range userAttributes {
@@ -635,7 +635,7 @@ func checkIsUserDisabled(userAttributes []*goldap.EntryAttribute) (bool, error) 
 			if err != nil {
 				return false, err
 			}
-			
+
 			accountContolFlags := ConvertUserAccountControl(intValue)
 			if slices.Contains(accountContolFlags, "ACCOUNTDISABLE") {
 				isDisabled = true
