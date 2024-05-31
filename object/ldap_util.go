@@ -3,7 +3,7 @@ package object
 import (
 	"math"
 )
- 
+
 var UacPropertyFlags = []string{
 	"SCRIPT",
 	"ACCOUNTDISABLE",
@@ -42,9 +42,9 @@ var UacPropertyFlags = []string{
 func ConvertUserAccountControl(uac int) []string {
 	var flags []string
 
-	for i := 0; i < len(UacPropertyFlags); i++ {
+	for i, uacFlag := range UacPropertyFlags {
 		if uac&int(math.Pow(2, float64(i))) != 0 {
-			flags = append(flags, UacPropertyFlags[i])
+			flags = append(flags, uacFlag)
 		}
 	}
 
