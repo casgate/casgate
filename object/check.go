@@ -18,6 +18,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -277,7 +279,12 @@ func CheckLdapUserPassword(user *User, password string, lang string) (string, er
 			return ldapServer.Id, fmt.Errorf(i18n.Translate(lang, "check:Multiple accounts with same uid, please check your ldap server"))
 		}
 
-		userDisabled = checkIsUserDisabled(searchResult.Entries[0].Attributes)
+		userDisabled, err = checkIsUserDisabled(searchResult.Entries[0].Attributes)
+		if err != nil {
+			conn.Close()
+			return "", err
+		}
+
 		if userDisabled {
 			user.IsForbidden = true
 			_, err = UpdateUser(user.GetId(), user, []string{"is_forbidden"}, false)
@@ -619,14 +626,22 @@ func CheckUserIdProviderOrigin(userIdProvider UserIdProvider) bool {
 	return isProviderNameEmpty != isLdapIdEmpty
 }
 
-func checkIsUserDisabled(userAttributes []*goldap.EntryAttribute) bool {
+func checkIsUserDisabled(userAttributes []*goldap.EntryAttribute) (bool, error) {
 	isDisabled := false
 
 	for _, attr := range userAttributes {
-		if attr.Name == "userAccountControl" && attr.Values[0] == "514" {
-			isDisabled = true
+		if attr.Name == "userAccountControl" {
+			intValue, err := strconv.Atoi(attr.Values[0])
+			if err != nil {
+				return false, err
+			}
+			
+			accountContolFlags := ConvertUserAccountControl(intValue)
+			if slices.Contains(accountContolFlags, "ACCOUNTDISABLE") {
+				isDisabled = true
+			}
 		}
 	}
 
-	return isDisabled
+	return isDisabled, nil
 }
