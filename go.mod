@@ -39,7 +39,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/russellhaering/gosaml2 v0.9.0
 	github.com/russellhaering/goxmldsig v1.3.0
-	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18 // indirect
+	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/siddontang/go-log v0.0.0-20190221022429-1e957dd83bed
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
@@ -65,7 +65,12 @@ require (
 	modernc.org/sqlite v1.18.2
 )
 
-require github.com/r3labs/diff/v3 v3.0.1
+require (
+	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
+	github.com/elastic/go-elasticsearch/v6 v6.8.5
+	github.com/gogo/protobuf v1.3.2
+	github.com/r3labs/diff/v3 v3.0.1
+)
 
 require (
 	cloud.google.com/go v0.110.7 // indirect
