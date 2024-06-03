@@ -168,18 +168,12 @@ func MakeUserApiToken(user *User) UserApiToken {
 func GetUserTokens(user *User) ([]User, error) {
 	var tokens []User
 
-	err := ormer.Engine.Where("owner = ?", user.Owner).Find(&tokens)
+	tagPattern := fmt.Sprintf("<access-token><access-token-user-id:%s>", user.Id)
+
+	err := ormer.Engine.Where("tag LIKE ?", tagPattern).Find(&tokens)
 	if err != nil {
 		return nil, err
 	}
 
-	var userTokens []User
-	for _, token := range tokens {
-		matches := tagExtractionRegexp.FindStringSubmatch(token.Tag)
-		if len(matches) == 2 && matches[1] == user.Id {
-			userTokens = append(userTokens, token)
-		}
-	}
-
-	return userTokens, nil
+	return tokens, nil
 }
