@@ -203,3 +203,39 @@ func (c *ApiController) GetUserByApiToken() {
 
 	c.ResponseOk(owner)
 }
+
+// GetUserTokens
+// @Title GetUserTokens
+// @Tag Api Token API
+// @Description get user tokens
+// @Param owner query string true "The owner of token"
+// @Success 200 {object} object.User[] The Response object
+// @Failure 403 Unauthorized operation
+// @Failure 422 Unprocessable entity
+// @Failure 500 Internal Server Error
+// @router /get-user-tokens [get]
+func (c *ApiController) GetUserTokens() {
+	owner := c.Input().Get("owner")
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	tokenOwner, err := object.GetUser(owner)
+	if err != nil {
+		logs.Error("get user: %s", err.Error())
+
+		c.ResponseInternalServerError("Internal server error")
+		return
+	}
+
+	tokens, err := object.GetUserTokens(tokenOwner)
+	if err != nil {
+		logs.Error("get user tokens: %s", err.Error())
+
+		c.ResponseInternalServerError("Internal server error")
+		return
+	}
+
+	c.ResponseOk(tokens)
+}
