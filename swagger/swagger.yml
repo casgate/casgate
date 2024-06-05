@@ -2443,6 +2443,31 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Payment'
+  /api/get-user-tokens:
+    get:
+      tags:
+      - api
+      description: |-
+        get user tokens
+        <br>
+      operationId: ApiController.GetUserTokens
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.User[]'
+        "403":
+          description: Unauthorized operation
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal Server Error
   /api/get-users:
     get:
       tags:
