@@ -101,12 +101,19 @@ func SnakeToCamel(snake string) string {
 }
 
 func GetOwnerAndNameFromId(id string) (string, string) {
-	tokens := strings.Split(id, "/")
-	if len(tokens) != 2 {
-		panic(errors.New("GetOwnerAndNameFromId() error, wrong token count for ID: " + id))
+	if id == "" {
+		panic(errors.New("GetOwnerAndNameFromId() error, ID is empty or nil"))
 	}
 
-	return tokens[0], tokens[1]
+	firstSlashIndex := strings.Index(id, "/")
+	if firstSlashIndex == -1 {
+		panic(errors.New("GetOwnerAndNameFromId() error, ID does not contain '/': " + id))
+	}
+
+	owner := id[:firstSlashIndex]
+	name := id[firstSlashIndex+1:]
+
+	return owner, name
 }
 
 func GetOwnerAndNameFromIdWithError(id string) (string, string, error) {
