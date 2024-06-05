@@ -73,12 +73,7 @@ func AddLdap(ldap *Ldap) (bool, error) {
 func CheckLdapExist(ldap *Ldap) (bool, error) {
 	var result []*Ldap
 	err := ormer.Engine.Find(&result, &Ldap{
-		Owner:    ldap.Owner,
-		Host:     ldap.Host,
-		Port:     ldap.Port,
-		Username: ldap.Username,
-		Password: ldap.Password,
-		BaseDn:   ldap.BaseDn,
+		Id: ldap.Id,
 	})
 	if err != nil {
 		return false, err
