@@ -17,8 +17,10 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 
+	"github.com/beego/beego/logs"
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/captcha"
 	"github.com/casdoor/casdoor/conf"
@@ -178,21 +180,28 @@ func (c *ApiController) GetUser() {
 	fillUserIdProvider := util.ParseBool(c.Input().Get("fillUserIdProvider"))
 
 	var err error
-	var userFromUserId *object.User
-	if userId != "" && owner != "" {
-		userFromUserId, err = object.GetUserByUserId(owner, userId)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		if userFromUserId == nil {
-			c.ResponseNotFound("user not found")
-			return
-		}
-
-		id = util.GetId(userFromUserId.Owner, userFromUserId.Name)
+	var user *object.User
+	switch {
+	case email != "":
+		user, err = object.GetUserByEmail(owner, email)
+	case phone != "":
+		user, err = object.GetUserByPhone(owner, phone)
+	case userId != "":
+		user, err = object.GetUserByUserId(owner, userId)
+	default:
+		user, err = object.GetUser(id)
 	}
+
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+	if user == nil {
+		c.ResponseNotFound("user not found")
+		return
+	}
+
+	id = util.GetId(user.Owner, user.Name)
 
 	if owner == "" {
 		owner = util.GetOwnerFromId(id)
@@ -218,26 +227,7 @@ func (c *ApiController) GetUser() {
 		}
 	}
 
-	var user *object.User
-	switch {
-	case email != "":
-		user, err = object.GetUserByEmail(owner, email)
-	case phone != "":
-		user, err = object.GetUserByPhone(owner, phone)
-	case userId != "":
-		user = userFromUserId
-	default:
-		user, err = object.GetUser(id)
-	}
-
-	if err != nil {
-		c.ResponseInternalServerError(err.Error())
-		return
-	}
-
-	if user != nil {
-		user.MultiFactorAuths = object.GetAllMfaProps(user, true)
-	}
+	user.MultiFactorAuths = object.GetAllMfaProps(user, true)
 
 	err = object.ExtendUserWithRolesAndPermissions(user)
 	if err != nil {
@@ -263,6 +253,48 @@ func (c *ApiController) GetUser() {
 	}
 
 	c.ResponseOk(maskedUser)
+}
+
+// AddUserIdProvider
+// @Title AddUserIdProvider
+// @Tag User API
+// @Description add user id provider
+// @Param   body    body   object.UserIdProvider  true        "The details of the user id provider"
+// @Success 200 {object} controllers.Response The Response object
+// @router /add-user-id-provider [post]
+func (c *ApiController) AddUserIdProvider() {
+	goCtx := c.getRequestCtx()
+	record := object.GetRecord(goCtx)
+
+	var userIdProvider object.UserIdProvider
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &userIdProvider)
+	if err != nil {
+		c.ResponseBadRequest(err.Error())
+		return
+	}
+
+	if !c.IsGlobalAdmin() {
+		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	if userIdProvider.Owner == "" || !object.CheckUserIdProviderOrigin(userIdProvider) || userIdProvider.UsernameFromIdp == "" {
+		record.AddReason("Add UserIdProvider: Failed to add userIdProvider. Missing parameter")
+		c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
+		return
+	}
+
+	userIdProvider.CreatedTime = util.GetCurrentTime()
+
+	affected, err := object.AddUserIdProvider(c.Ctx.Request.Context(), &userIdProvider)
+	if err != nil || !affected {
+		record.AddReason("Add UserIdProvider: Failed to add userIdProvider")
+		c.ResponseInternalServerError(c.T("user:Failed to add userIdProvider"))
+		return
+	}
+
+	c.Data["json"] = wrapActionResponse(affected)
+	c.ServeJSON()
 }
 
 // UpdateUser
@@ -370,6 +402,7 @@ func (c *ApiController) UpdateUser() {
 // @Failure 500 Internal server error
 // @router /add-user [post]
 func (c *ApiController) AddUser() {
+	ctx := c.getRequestCtx()
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
@@ -394,7 +427,7 @@ func (c *ApiController) AddUser() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.AddUser(&user))
+	c.Data["json"] = wrapActionResponse(object.AddUser(ctx, &user))
 	c.ServeJSON()
 }
 
@@ -408,6 +441,7 @@ func (c *ApiController) AddUser() {
 // @Failure 403 Forbidden
 // @router /delete-user [post]
 func (c *ApiController) DeleteUser() {
+	ctx := c.getRequestCtx()
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
@@ -420,7 +454,7 @@ func (c *ApiController) DeleteUser() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.DeleteUser(&user))
+	c.Data["json"] = wrapActionResponse(object.DeleteUser(ctx, &user))
 	c.ServeJSON()
 }
 
@@ -436,13 +470,14 @@ func (c *ApiController) DeleteUser() {
 // @Failure 500 Internal server error
 // @router /get-email-and-phone [get]
 func (c *ApiController) GetEmailAndPhone() {
+	ctx := c.getRequestCtx()
 	organization := c.Ctx.Request.Form.Get("organization")
 	applicationId := c.Ctx.Request.Form.Get("applicationId")
 	username := c.Ctx.Request.Form.Get("username")
 	clientSecret := c.Ctx.Request.Form.Get("captchaCode")
 	captchaToken := c.Ctx.Request.Form.Get("captchaToken")
 
-	applicationCaptchaProvider, err := object.GetCaptchaProviderByApplication(applicationId, "false", c.GetAcceptLanguage())
+	applicationCaptchaProvider, err := object.GetCaptchaProviderByApplication(ctx, applicationId, "false", c.GetAcceptLanguage())
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
@@ -510,6 +545,7 @@ func (c *ApiController) GetEmailAndPhone() {
 // @Failure 500 Internal server error
 // @router /set-password [post]
 func (c *ApiController) SetPassword() {
+	ctx := c.getRequestCtx()
 	userOwner := c.Ctx.Request.Form.Get("userOwner")
 	userName := c.Ctx.Request.Form.Get("userName")
 	oldPassword := c.Ctx.Request.Form.Get("oldPassword")
@@ -572,14 +608,14 @@ func (c *ApiController) SetPassword() {
 	isAdmin := c.IsAdmin()
 	if isAdmin {
 		if oldPassword != "" {
-			err := object.CheckPassword(targetUser, oldPassword, c.GetAcceptLanguage())
+			err := object.CheckPassword(ctx, targetUser, oldPassword, c.GetAcceptLanguage())
 			if err != nil {
 				c.ResponseUnauthorized(err.Error())
 				return
 			}
 		}
 	} else if code == "" {
-		err := object.CheckPassword(targetUser, oldPassword, c.GetAcceptLanguage())
+		err := object.CheckPassword(ctx, targetUser, oldPassword, c.GetAcceptLanguage())
 		if err != nil {
 			c.ResponseUnauthorized(err.Error())
 			return
@@ -615,6 +651,7 @@ func (c *ApiController) SetPassword() {
 // @Failure 401 Unauthorized
 // @Tag User API
 func (c *ApiController) CheckUserPassword() {
+	ctx := c.getRequestCtx()
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
@@ -622,7 +659,7 @@ func (c *ApiController) CheckUserPassword() {
 		return
 	}
 
-	_, err = object.CheckUserPassword(user.Owner, user.Name, user.Password, c.GetAcceptLanguage())
+	_, err = object.CheckUserPassword(ctx, user.Owner, user.Name, user.Password, c.GetAcceptLanguage())
 	if err == nil {
 		c.ResponseOk()
 	} else {
@@ -746,6 +783,7 @@ func (c *ApiController) RemoveUserFromGroup() {
 // @Failure 500 Internal server error
 // @Tag User API
 func (c *ApiController) SendInvite() {
+	ctx := c.getRequestCtx()
 	owner := c.Input().Get("owner")
 	username := c.Input().Get("name")
 
@@ -756,7 +794,9 @@ func (c *ApiController) SendInvite() {
 
 	user, err := object.GetUser(util.GetId(owner, username))
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		logs.Error("get user: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
 		return
 	}
 
@@ -772,19 +812,25 @@ func (c *ApiController) SendInvite() {
 
 	organization, err := object.GetOrganization(util.GetId("admin", owner))
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		logs.Error("get organization: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
 		return
 	}
 
-	application, err := object.GetApplicationByUser(user)
+	application, err := object.GetApplicationByUser(ctx, user)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		logs.Error("get application by user: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
 		return
 	}
 
 	provider, err := application.GetEmailProvider()
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		logs.Error("get email provider: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
 		return
 	}
 
@@ -815,11 +861,21 @@ func (c *ApiController) SendInvite() {
 		}
 	}
 
+	link, err = url.JoinPath(link)
+	if err != nil {
+		logs.Error("join path: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
+		return
+	}
+
 	content := fmt.Sprintf(provider.InviteContent, link)
 
 	err = object.SendEmail(provider, provider.InviteTitle, content, user.Email, sender)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		logs.Error("send email: %s", err.Error())
+		c.ResponseInternalServerError("internal server error")
+
 		return
 	}
 

@@ -15,6 +15,7 @@
 package routers
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -47,6 +48,8 @@ func CorsFilter(ctx *context.Context) {
 	originHostname := getHostname(origin)
 	host := removePort(ctx.Request.Host)
 
+	record := object.GetRecord(ctx.Request.Context())
+
 	if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "https://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") || strings.HasPrefix(origin, "http://casdoor-app") {
 		setCorsHeaders(ctx, origin)
 		return
@@ -72,14 +75,20 @@ func CorsFilter(ctx *context.Context) {
 		} else {
 			ok, err := object.IsOriginAllowed(origin)
 			if err != nil {
+				errMessage := "check IsOriginAllowed error"
+				logs.Error(errMessage)
+				record.AddReason(errMessage)
+
 				panic(err)
 			}
 
 			if ok {
 				setCorsHeaders(ctx, origin)
 			} else {
-				logs.Error("Cors origin mismatch: origin: %s, originConf: %s, originHostname: %s, host: %s, isHostIntranet: %s, isOriginAllowed: %s",
+				errMessage := fmt.Sprintf("Cors origin mismatch: origin: %s, originConf: %s, originHostname: %s, host: %s, isHostIntranet: %v, isOriginAllowed: %v",
 					origin, originConf, originHostname, host, isHostIntranet(host), ok)
+				logs.Error(errMessage)
+				record.AddReason(errMessage)
 
 				ctx.ResponseWriter.WriteHeader(http.StatusForbidden)
 				return

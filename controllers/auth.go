@@ -240,18 +240,19 @@ func (c *ApiController) GetApplicationLogin() {
 	state := c.Input().Get("state")
 	id := c.Input().Get("id")
 	loginType := c.Input().Get("type")
+	ctx := c.Ctx.Request.Context()
 
 	var application *object.Application
 	var msg string
 	var err error
 	if loginType == "code" {
-		msg, application, err = object.CheckOAuthLogin(clientId, responseType, redirectUri, scope, state, c.GetAcceptLanguage())
+		msg, application, err = object.CheckOAuthLogin(ctx, clientId, responseType, redirectUri, scope, state, c.GetAcceptLanguage())
 		if err != nil {
 			c.ResponseInternalServerError("internal server error")
 			return
 		}
 	} else if loginType == "cas" {
-		application, err = object.GetApplication(id)
+		application, err = object.GetApplication(ctx, id)
 		if err != nil {
 			c.ResponseInternalServerError("internal server error")
 			return
@@ -385,7 +386,7 @@ func (c *ApiController) Login() {
 			}
 
 			// check result through Email or Phone
-			err := object.CheckSigninCode(user, checkDest, authForm.Code, c.GetAcceptLanguage())
+			err := object.CheckSigninCode(goCtx, user, checkDest, authForm.Code, c.GetAcceptLanguage())
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s - %s", verificationCodeType, err.Error()))
 
@@ -402,7 +403,7 @@ func (c *ApiController) Login() {
 				return
 			}
 		} else {
-			application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
+			application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
@@ -449,7 +450,6 @@ func (c *ApiController) Login() {
 				}
 			}
 
-			password := authForm.Password
 			isSigninViaLdap := authForm.SigninMethod == "LDAP"
 			var isPasswordWithLdapEnabled bool
 			if authForm.SigninMethod == "Password" {
@@ -464,14 +464,24 @@ func (c *ApiController) Login() {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 				}
 				if user == nil {
-					_, err = object.SyncUserFromLdap(authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage())
+					_, err = object.SyncUserFromLdap(goCtx, authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage(), record)
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Ldap sync error: %s", err.Error()))
 					}
 				}
 			}
 
-			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
+			user, err = object.CheckUserPassword(goCtx, authForm.Organization, authForm.Username, authForm.Password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
+
+			if err != nil {
+				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
+				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
+			}
+
+			if user != nil && user.Ldap != "" && (isSigninViaLdap || isPasswordWithLdapEnabled) {
+				authForm.LdapId, err = object.CheckLdapUserPassword(user, authForm.Password, c.GetAcceptLanguage())
+			}
+
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
 				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
@@ -481,7 +491,7 @@ func (c *ApiController) Login() {
 		if msg != "" {
 			resp = &Response{Status: "error", Msg: msg}
 		} else {
-			application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
+			application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
@@ -501,6 +511,14 @@ func (c *ApiController) Login() {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
 				c.ResponseInternalServerError("internal server error")
+				return
+			}
+
+			if organization == nil {
+				record.AddReason(fmt.Sprintf("Login error: Organization does not exist"))
+
+				c.ResponseInternalServerError(c.T("check:Organization does not exist"))
+				return
 			}
 
 			if object.IsNeedPromptMfa(organization, user) {
@@ -523,12 +541,31 @@ func (c *ApiController) Login() {
 			}
 
 			resp = c.HandleLoggedIn(application, user, &authForm)
+
+			if user.Ldap != "" {
+				userIdProvider := &object.UserIdProvider{
+					Owner:           organization.Name,
+					LdapId:          authForm.LdapId,
+					UsernameFromIdp: user.Name,
+					LastSignInTime:  util.GetCurrentTime(),
+				}
+
+				err = object.UpdateUserIdProvider(c.Ctx.Request.Context(), userIdProvider, "ldap_id")
+
+				if err != nil {
+					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
+					c.ResponseInternalServerError("internal server error")
+					return
+				}
+			}
+
 			record.WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User logged in")
 		}
 	} else if authForm.Provider != "" {
 		var application *object.Application
 		if authForm.ClientId != "" {
-			application, err = object.GetApplicationByClientId(authForm.ClientId)
+			application, err = object.GetApplicationByClientId(goCtx, authForm.ClientId)
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
@@ -536,7 +573,7 @@ func (c *ApiController) Login() {
 				return
 			}
 		} else {
-			application, err = object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
+			application, err = object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
@@ -616,7 +653,7 @@ func (c *ApiController) Login() {
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
-				c.ResponseInternalServerError("internal server error")
+				c.ResponseUnauthorized("wrong client id")
 				return
 			}
 
@@ -649,7 +686,20 @@ func (c *ApiController) Login() {
 				}
 
 				if provider.Type == "OpenID" && len(userInfo.AdditionalInfo) != 0 {
+					//add userInfo and tokenId to authData
+
 					maps.Copy(authData, userInfo.AdditionalInfo)
+
+					idToken, _ := token.Extra("id_token").(string)
+					jwtIdToken, _ := jwt.ParseSigned(idToken)
+
+					err = jwtIdToken.UnsafeClaimsWithoutVerification(&authData)
+					if err != nil {
+						record.AddReason("Login error: invalid id token")
+
+						c.ResponseError(c.T("auth:Invalid id token"))
+						return
+					}
 				}
 			}
 		}
@@ -687,7 +737,7 @@ func (c *ApiController) Login() {
 					ProviderName:    provider.Name,
 					UsernameFromIdp: userInfo.Username,
 					LastSignInTime:  util.GetCurrentTime(),
-				})
+				}, "provider_name")
 				if err != nil {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
@@ -721,7 +771,7 @@ func (c *ApiController) Login() {
 				}
 
 				if user == nil || user.IsDeleted {
-					if !application.EnableSignUp {
+					if !application.EnableInternalSignUp && !application.EnableIdpSignUp {
 						record.AddReason(fmt.Sprintf("Login error: provider: %s, username: %s, (%s) does not allowed to sign up as new account", provider.Type, userInfo.Username, userInfo.DisplayName))
 
 						c.ResponseError(fmt.Sprintf(c.T("auth:The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support"), provider.Type, userInfo.Username, userInfo.DisplayName))
@@ -804,7 +854,7 @@ func (c *ApiController) Login() {
 						Properties:        properties,
 					}
 
-					affected, err := object.AddUser(user)
+					affected, err := object.AddUser(goCtx, user)
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
@@ -980,7 +1030,7 @@ func (c *ApiController) Login() {
 			return
 		}
 
-		application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
+		application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
@@ -1026,7 +1076,7 @@ func (c *ApiController) Login() {
 			return
 		}
 
-		application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
+		application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
@@ -1048,7 +1098,7 @@ func (c *ApiController) Login() {
 	} else {
 		if c.GetSessionUsername() != "" {
 			// user already signed in to Casdoor, so let the user click the avatar button to do the quick sign-in
-			application, err := object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
+			application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 

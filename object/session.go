@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/beego/beego"
@@ -137,10 +138,10 @@ func AddSession(session *Session) (bool, error) {
 	}
 }
 
-func DeleteSession(id string) (bool, error) {
+func DeleteSession(ctx context.Context, id string) (bool, error) {
 	owner, name, applicationName := util.GetOwnerAndNameAndOtherFromId(id)
 
-	application, err := GetApplication(util.GetId("admin", applicationName))
+	application, err := GetApplication(ctx, util.GetId("admin", applicationName))
 	if err != nil {
 		return false, err
 	}
@@ -164,7 +165,7 @@ func DeleteSession(id string) (bool, error) {
 	return affected != 0, nil
 }
 
-func DeleteSessionId(id string, sessionId string) (bool, error) {
+func DeleteSessionId(ctx context.Context, id string, sessionId string) (bool, error) {
 	session, err := GetSingleSession(id)
 	if err != nil {
 		return false, err
@@ -180,7 +181,7 @@ func DeleteSessionId(id string, sessionId string) (bool, error) {
 
 	session.SessionId = util.DeleteVal(session.SessionId, sessionId)
 	if len(session.SessionId) == 0 {
-		return DeleteSession(id)
+		return DeleteSession(ctx, id)
 	} else {
 		return UpdateSession(id, session)
 	}

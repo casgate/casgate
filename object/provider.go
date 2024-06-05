@@ -15,12 +15,13 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/beego/beego/context"
+	bCtx "github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/pp"
@@ -202,7 +203,7 @@ func getProvider(owner string, name string) (*Provider, error) {
 		return nil, nil
 	}
 
-	provider := Provider{Name: name}
+	provider := Provider{Owner: owner, Name: name}
 	existed, err := ormer.Engine.Get(&provider)
 	if err != nil {
 		return &provider, err
@@ -373,11 +374,11 @@ func GetCaptchaProviderByOwnerName(applicationId, lang string) (*Provider, error
 	return &provider, nil
 }
 
-func GetCaptchaProviderByApplication(applicationId, isCurrentProvider, lang string) (*Provider, error) {
+func GetCaptchaProviderByApplication(ctx context.Context, applicationId, isCurrentProvider, lang string) (*Provider, error) {
 	if isCurrentProvider == "true" {
 		return GetCaptchaProviderByOwnerName(applicationId, lang)
 	}
-	application, err := GetApplication(applicationId)
+	application, err := GetApplication(ctx, applicationId)
 	if err != nil {
 		return nil, err
 	}
@@ -434,7 +435,7 @@ func providerChangeTrigger(oldName string, newName string) error {
 	return session.Commit()
 }
 
-func FromProviderToIdpInfo(ctx *context.Context, provider *Provider) *idp.ProviderInfo {
+func FromProviderToIdpInfo(bCtx *bCtx.Context, provider *Provider) *idp.ProviderInfo {
 	providerInfo := &idp.ProviderInfo{
 		Type:         provider.Type,
 		SubType:      provider.SubType,
@@ -451,7 +452,7 @@ func FromProviderToIdpInfo(ctx *context.Context, provider *Provider) *idp.Provid
 	}
 
 	if provider.Type == "WeChat" {
-		if ctx != nil && strings.Contains(ctx.Request.UserAgent(), "MicroMessenger") {
+		if bCtx != nil && strings.Contains(bCtx.Request.UserAgent(), "MicroMessenger") {
 			providerInfo.ClientId = provider.ClientId2
 			providerInfo.ClientSecret = provider.ClientSecret2
 		}

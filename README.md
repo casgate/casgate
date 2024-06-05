@@ -24,6 +24,10 @@ This fork retains all the core features of the original Casdoor project.
 
 Important Note: This repository is currently a work in progress while we're preparing it for the first stable release and fine-tuning the community contribution process.
 
+## Security
+
+For information on reporting security vulnerabilities in CasGate, see [SECURITY.md](./SECURITY.md).
+
 ## License
 
 [Apache-2.0](https://github.com/casgate/casgate/blob/master/LICENSE)

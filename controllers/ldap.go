@@ -52,17 +52,22 @@ type LdapIdWithNameResp struct {
 // @Success 200 {object} LdapResp The Response object
 // @router /get-ldap-users [get]
 func (c *ApiController) GetLdapUsers() {
-	id := c.Input().Get("id")
+	gCtx := c.getRequestCtx()
+	record := object.GetRecord(gCtx)
 
-	_, ldapId := util.GetOwnerAndNameFromId(id)
+	ldapId := c.Input().Get("ldapId")
 	ldapServer, err := object.GetLdap(ldapId)
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Get LDAP: %s", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
 
 	conn, err := ldapServer.GetLdapConn()
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Get LDAP connection: %s", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
@@ -80,8 +85,10 @@ func (c *ApiController) GetLdapUsers() {
 	//	})
 	//}
 
-	users, err := conn.GetLdapUsers(ldapServer, nil)
+	users, err := conn.GetLdapUsers(ldapServer, nil, record)
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Get LDAP users: %s", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
@@ -92,6 +99,8 @@ func (c *ApiController) GetLdapUsers() {
 	}
 	existUuids, err := object.GetExistUuids(ldapServer.Owner, uuids)
 	if err != nil {
+		record.AddReason(fmt.Sprintf("Find existed LDAP users: %s", err.Error()))
+
 		c.ResponseError(err.Error())
 		return
 	}
@@ -116,7 +125,7 @@ func (c *ApiController) GetLdaps() {
 	c.ResponseOk(object.GetMaskedLdaps(object.GetLdaps(owner)))
 }
 
-// GetLdaps
+// GetLdapServerNames
 // @Title GetLdapServerNames
 // @Tag Account API
 // @Description get ldaps
@@ -151,15 +160,14 @@ func (c *ApiController) GetLdapServerNames() {
 // @Success 200 {object} object.Ldap The Response object
 // @router /get-ldap [get]
 func (c *ApiController) GetLdap() {
-	id := c.Input().Get("id")
+	ldapId := c.Input().Get("ldapId")
 
-	if util.IsStringsEmpty(id) {
+	if util.IsStringsEmpty(ldapId) {
 		c.ResponseError(c.T("general:Missing parameter"))
 		return
 	}
 
-	_, name := util.GetOwnerAndNameFromId(id)
-	ldap, err := object.GetLdap(name)
+	ldap, err := object.GetLdap(ldapId)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -187,10 +195,21 @@ func (c *ApiController) AddLdap() {
 		return
 	}
 
-	if util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
-		msg := c.T("general:Missing parameter")
-		record.AddReason(msg)
+	anyRequiredLdapFieldEmpty := util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.BaseDn)
+	enabledCryptoAndEmptyCert := ldap.EnableCryptographicAuth && ldap.ClientCert == ""
+	disabledCryptoAndEmptyCred := !ldap.EnableCryptographicAuth && util.IsStringsEmpty(ldap.Username, ldap.Password)
 
+	var msg string
+	if anyRequiredLdapFieldEmpty {
+		msg = c.T("general:Missing required parameter")
+	} else if enabledCryptoAndEmptyCert {
+		msg = c.T("general:Missing certificate")
+	} else if disabledCryptoAndEmptyCred {
+		msg = c.T("general:Missing administrator credentials")
+	}
+
+	if msg != "" {
+		record.AddReason(msg)
 		c.ResponseError(msg)
 		return
 	}
@@ -212,7 +231,7 @@ func (c *ApiController) AddLdap() {
 	resp.Data2 = ldap
 
 	if ldap.AutoSync != 0 {
-		err = object.GetLdapAutoSynchronizer().StartAutoSync(ldap.Id, record)
+		err = object.GetLdapAutoSynchronizer().StartAutoSync(gCtx, ldap.Id, record)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Get LDAP syncronizer error: %v", err.Error()))
 
@@ -240,13 +259,20 @@ func (c *ApiController) UpdateLdap() {
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 
 	anyRequiredLdapFieldEmpty := util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.BaseDn)
-	enabledCryptoAndEmptyCert := ldap.EnableCryptographicAuth && len(ldap.ClientCert) == 0
+	enabledCryptoAndEmptyCert := ldap.EnableCryptographicAuth && ldap.ClientCert == ""
 	disabledCryptoAndEmptyCred := !ldap.EnableCryptographicAuth && util.IsStringsEmpty(ldap.Username, ldap.Password)
 
-	if err != nil || anyRequiredLdapFieldEmpty || enabledCryptoAndEmptyCert || disabledCryptoAndEmptyCred {
-		msg := c.T("general:Missing parameter")
-		record.AddReason(msg)
+	var msg string
+	if anyRequiredLdapFieldEmpty {
+		msg = c.T("general:Missing required parameter")
+	} else if enabledCryptoAndEmptyCert {
+		msg = c.T("general:Missing client certificate")
+	} else if disabledCryptoAndEmptyCred {
+		msg = c.T("general:Missing administrator credentials")
+	}
 
+	if msg != "" {
+		record.AddReason(msg)
 		c.ResponseError(msg)
 		return
 	}
@@ -278,7 +304,7 @@ func (c *ApiController) UpdateLdap() {
 	}
 
 	if ldap.AutoSync != 0 {
-		err := object.GetLdapAutoSynchronizer().StartAutoSync(ldap.Id, record)
+		err := object.GetLdapAutoSynchronizer().StartAutoSync(gCtx, ldap.Id, record)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Get LDAP syncronizer error: %v", err.Error()))
 
@@ -345,7 +371,7 @@ func (c *ApiController) SyncLdapUsers() {
 		return
 	}
 
-	exist, failed, err := object.SyncLdapUsers(owner, users, ldapId)
+	exist, failed, err := object.SyncLdapUsers(goCtx, owner, users, ldapId)
 	if err != nil {
 		record.AddReason(fmt.Sprintf("LDAP error: %s", err.Error()))
 	}
@@ -379,6 +405,15 @@ func (c *ApiController) TestLdapConnection() {
 	if err != nil || util.IsStringsEmpty(ldap.Owner, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
 		c.ResponseError(c.T("general:Missing parameter"))
 		return
+	}
+
+	if ldap.Password == "***" {
+		pwdFromDB, err := object.GetLdapPassword(ldap)
+		if err != nil {
+			c.ResponseError(err.Error())
+		}
+
+		ldap.Password = pwdFromDB
 	}
 
 	for _, roleMappingItem := range ldap.RoleMappingItems {

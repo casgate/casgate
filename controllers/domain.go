@@ -107,7 +107,7 @@ func (c *ApiController) UpdateDomain() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateDomain(id, &domain))
+	c.Data["json"] = wrapActionResponse(object.UpdateDomain(c.getRequestCtx(), id, &domain))
 	c.ServeJSON()
 }
 

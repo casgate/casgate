@@ -75,7 +75,7 @@ class LdapSyncPage extends React.Component {
   }
 
   getLdap() {
-    LdapBackend.getLdap(this.state.organizationName, this.state.ldapId)
+    LdapBackend.getLdap(this.state.ldapId)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({
@@ -89,7 +89,7 @@ class LdapSyncPage extends React.Component {
   }
 
   getLdapUser() {
-    LdapBackend.getLdapUser(this.state.organizationName, this.state.ldapId)
+    LdapBackend.getLdapUser(this.state.ldapId)
       .then((res) => {
         if (res.status === "ok") {
           this.setState((prevState) => {

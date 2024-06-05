@@ -67,6 +67,8 @@ func denyRequest(ctx *context.Context) {
 }
 
 func getUsernameByClientIdSecret(ctx *context.Context) string {
+	goCtx := ctx.Request.Context()
+
 	clientId, clientSecret, ok := ctx.Request.BasicAuth()
 	if !ok {
 		clientId = ctx.Input.Query("clientId")
@@ -77,7 +79,7 @@ func getUsernameByClientIdSecret(ctx *context.Context) string {
 		return ""
 	}
 
-	application, err := object.GetApplicationByClientId(clientId)
+	application, err := object.GetApplicationByClientId(goCtx, clientId)
 	if err != nil {
 		panic(err)
 	}

@@ -17,6 +17,7 @@ package routers
 import (
 	goCtx "context"
 	"encoding/json"
+	"reflect"
 
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
@@ -41,13 +42,14 @@ func getUser(ctx *beeCtx.Context) (username string) {
 }
 
 func getUserByClientIdSecret(ctx *beeCtx.Context) string {
+	goCtx := ctx.Request.Context()
 	clientId := ctx.Input.Query("clientId")
 	clientSecret := ctx.Input.Query("clientSecret")
 	if clientId == "" || clientSecret == "" {
 		return ""
 	}
 
-	application, err := object.GetApplicationByClientId(clientId)
+	application, err := object.GetApplicationByClientId(goCtx, clientId)
 	if err != nil {
 		panic(err)
 	}
@@ -77,6 +79,9 @@ func LogRecordMessage(bCtx *beeCtx.Context) {
 	}
 
 	if resp, ok := bCtx.Input.Data()["json"]; ok {
+		sensitiveResponseFields := []string{"access_token", "id_token", "refresh_token"}
+		sanitizeData(resp, sensitiveResponseFields, "***")
+
 		if jsonResp, err := json.Marshal(resp); err == nil {
 			record.Response = string(jsonResp)
 		}
@@ -98,4 +103,33 @@ func defaultRecordLog(ctx *beeCtx.Context) *object.Record {
 	}
 
 	return record
+}
+
+func sanitizeData(data interface{}, sensitiveResponseFields []string, stringToReplace string) {
+	v := reflect.ValueOf(data)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem() // dereference if it is a pointer
+	}
+
+	if v.Kind() == reflect.Struct {
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			fieldType := v.Type().Field(i)
+
+			// check if the field is a struct and recursively call sanitizeData
+			if field.Kind() == reflect.Struct || (field.Kind() == reflect.Ptr && field.Elem().Kind() == reflect.Struct) {
+				sanitizeData(field.Addr().Interface(), sensitiveResponseFields, stringToReplace)
+			} else {
+				// check if the field name or its tag is in the list of sensitive fields
+				for _, sensitiveField := range sensitiveResponseFields {
+					if (fieldType.Name == sensitiveField || fieldType.Tag.Get("json") == sensitiveField) && field.CanSet() {
+						if field.Kind() == reflect.String {
+							field.SetString(stringToReplace)
+						}
+						break
+					}
+				}
+			}
+		}
+	}
 }

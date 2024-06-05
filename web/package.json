@@ -12,12 +12,12 @@
     "@emotion/react": "^11.10.5",
     "@metamask/eth-sig-util": "^6.0.0",
     "@web3-onboard/coinbase": "^2.2.5",
-    "@web3-onboard/core": "^2.20.5",
+    "@web3-onboard/core": "^2.21.6",
     "@web3-onboard/frontier": "^2.0.4",
     "@web3-onboard/gnosis": "^2.1.10",
     "@web3-onboard/infinity-wallet": "^2.0.4",
     "@web3-onboard/injected-wallets": "^2.10.4",
-    "@web3-onboard/react": "^2.8.10",
+    "@web3-onboard/react": "^2.8.17",
     "@web3-onboard/sequence": "^2.0.8",
     "@web3-onboard/taho": "^2.0.5",
     "@web3-onboard/trust": "^2.0.4",
@@ -28,6 +28,7 @@
     "copy-to-clipboard": "^3.3.1",
     "core-js": "^3.25.0",
     "craco-less": "^2.0.0",
+    "crypto-es": "^2.1.0",
     "echarts": "^5.4.3",
     "ethers": "5.6.9",
     "file-saver": "^2.0.5",
@@ -88,7 +89,7 @@
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
     "cross-env": "^7.0.3",
-    "cypress": "^12.5.1",
+    "cypress": "13.0.0",
     "eslint": "8.22.0",
     "eslint-plugin-react": "^7.31.1",
     "eslint-plugin-unused-imports": "^2.0.0",
@@ -110,5 +111,11 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
+  },
+  "resolutions": {
+    "css-select": "^4.0.0",
+    "svgo": "^2.8.0",
+    "**/postcss": "^8.4.31",
+    "**/crypto-es": "^2.1.0"
   }
 }

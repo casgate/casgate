@@ -189,10 +189,11 @@ func (c *ApiController) DeleteOrganization() {
 // @Failure 500 Internal server error
 // @router /get-default-application [get]
 func (c *ApiController) GetDefaultApplication() {
+	ctx := c.getRequestCtx()
 	userId := c.GetSessionUsername()
 	id := c.Input().Get("id")
 
-	application, err := object.GetDefaultApplication(id)
+	application, err := object.GetDefaultApplication(ctx, id)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return

@@ -31,27 +31,6 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/object.OidcDiscovery'
-  /api/add-access-token:
-    post:
-      tags:
-      - Access Token API
-      description: add access token
-      operationId: ApiController.AddAccessToken
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of token
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.UserAccessToken'
-        "403":
-          description: Unauthorized operation
-        "500":
-          description: Internal Server Error
   /api/add-adapter:
     post:
       tags:
@@ -70,6 +49,27 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/add-api-token:
+    post:
+      tags:
+      - Api Token API
+      description: add api token
+      operationId: ApiController.AddApiToken
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.UserApiToken'
+        "403":
+          description: Unauthorized operation
+        "500":
+          description: Internal Server Error
   /api/add-application:
     post:
       tags:
@@ -487,6 +487,24 @@ paths:
           description: Unprocessable entity
         "500":
           description: Internal server error
+  /api/add-user-id-provider:
+    post:
+      tags:
+      - User API
+      description: add user id provider
+      operationId: ApiController.AddUserIdProvider
+      parameters:
+      - in: body
+        name: body
+        description: The details of the user id provider
+        required: true
+        schema:
+          $ref: '#/definitions/object.UserIdProvider'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/add-user-keys:
     post:
       tags:
@@ -584,32 +602,6 @@ paths:
           description: Bad request
         "401":
           description: Unauthorized
-  /api/delete-access-token:
-    post:
-      tags:
-      - Access Token API
-      description: delete access token
-      operationId: ApiController.DeleteAccessToken
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of token
-        required: true
-        type: string
-      - in: string
-        name: user_access_token
-        description: The user access token
-        schema:
-          $ref: '#/definitions/true'
-      responses:
-        "200":
-          description: Ok
-        "403":
-          description: Unauthorized operation
-        "422":
-          description: Unprocessable entity
-        "500":
-          description: Internal Server Error
   /api/delete-adapter:
     post:
       tags:
@@ -628,6 +620,32 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
+  /api/delete-api-token:
+    post:
+      tags:
+      - Api Token API
+      description: delete api token
+      operationId: ApiController.DeleteApiToken
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of token
+        required: true
+        type: string
+      - in: string
+        name: api_token
+        description: The user api token
+        schema:
+          $ref: '#/definitions/true'
+      responses:
+        "200":
+          description: Ok
+        "403":
+          description: Unauthorized operation
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal Server Error
   /api/delete-application:
     post:
       tags:
@@ -2352,21 +2370,16 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Application'
-  /api/get-user-by-access-token:
+  /api/get-user-by-api-token:
     post:
       tags:
-      - Access Token API
-      description: get user by access token
-      operationId: ApiController.GetUserByAccessToken
+      - Api Token API
+      description: get user by API token
+      operationId: ApiController.GetUserByApiToken
       parameters:
-      - in: query
-        name: owner
-        description: The owner of token
-        required: true
-        type: string
       - in: string
-        name: user_access_token
-        description: The user access token
+        name: api_token
+        description: The user api token
         schema:
           $ref: '#/definitions/true'
       responses:
@@ -2430,6 +2443,31 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Payment'
+  /api/get-user-tokens:
+    get:
+      tags:
+      - api
+      description: |-
+        get user tokens
+        <br>
+      operationId: ApiController.GetUserTokens
+      parameters:
+      - in: query
+        name: owner
+        description: The owner of token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/object.User[]'
+        "403":
+          description: Unauthorized operation
+        "422":
+          description: Unprocessable entity
+        "500":
+          description: Internal Server Error
   /api/get-users:
     get:
       tags:
@@ -2827,12 +2865,12 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
-  /api/recreate-access-token:
+  /api/recreate-api-token:
     post:
       tags:
-      - Access Token API
-      description: recreate access token
-      operationId: ApiController.RecreateAccessToken
+      - Api Token API
+      description: recreate api token
+      operationId: ApiController.RecreateApiToken
       parameters:
       - in: query
         name: owner
@@ -2840,15 +2878,15 @@ paths:
         required: true
         type: string
       - in: string
-        name: user_access_token
-        description: The user access token
+        name: api_token
+        description: The user api token
         schema:
           $ref: '#/definitions/true'
       responses:
         "200":
           description: The Response object
           schema:
-            $ref: '#/definitions/object.UserAccessToken'
+            $ref: '#/definitions/object.UserApiToken'
         "403":
           description: Unauthorized operation
         "422":
@@ -3835,10 +3873,10 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  198563.<nil>.string:
+  195958.<nil>.string:
     title: string
     type: object
-  321740.<nil>.string:
+  319386.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -3998,7 +4036,9 @@ definitions:
         type: boolean
       enableSamlCompress:
         type: boolean
-      enableSignUp:
+      enableInternalSignUp:
+        type: boolean
+      enableIdpSignUp:
         type: boolean
       enableSigninSession:
         type: boolean
@@ -4402,7 +4442,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/198563.<nil>.string'
+          $ref: '#/definitions/195958.<nil>.string'
       description:
         type: string
       displayName:
@@ -4890,7 +4930,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/321740.<nil>.string'
+        $ref: '#/definitions/319386.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:
@@ -5587,11 +5627,11 @@ definitions:
         type: string
       zoom:
         type: string
-  object.UserAccessToken:
-    title: UserAccessToken
+  object.UserApiToken:
+    title: UserApiToken
     type: object
     properties:
-      access_token:
+      api_token:
         type: string
       owner:
         type: string
@@ -5602,6 +5642,10 @@ definitions:
       createdTime:
         type: string
       lastSignInTime:
+        type: string
+      ldapId:
+        type: string
+      ldapServerName:
         type: string
       owner:
         type: string

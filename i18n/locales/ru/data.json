@@ -11,16 +11,19 @@
   },
   "auth": {
     "Challenge method should be S256": "Метод испытаний должен быть S256",
-    "Failed to create user, user information is invalid: %s": "Не удалось создать пользователя, информация о пользователе недействительна: %s",
+    "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Не удалось войти в систему: %s",
+    "Forbidden operation": "Forbidden operation",
     "Invalid token": "Недействительный токен",
     "State expected: %s, but got: %s": "Ожидался статус: %s, но получен: %s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "Аккаунт провайдера: %s и имя пользователя: %s (%s) не существует и не может быть зарегистрирован через %%s, пожалуйста, используйте другой способ регистрации",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support": "Аккаунт для провайдера: %s и имя пользователя: %s (%s) не существует и не может быть зарегистрирован как новый аккаунт. Пожалуйста, обратитесь в службу поддержки IT",
     "The account for provider: %s and username: %s (%s) is already linked to another account: %s (%s)": "Аккаунт поставщика: %s и имя пользователя: %s (%s) уже связаны с другим аккаунтом: %s (%s)",
     "The application: %s does not exist": "Приложение: %s не существует",
+    "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "Метод входа: вход с паролем не включен для приложения",
     "The provider: %s is not enabled for the application": "Провайдер: %s не включен для приложения",
+    "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Несанкционированная операция",
     "Unknown authentication type (not password or provider), form = %s": "Неизвестный тип аутентификации (не пароль и не провайдер), форма = %s",
     "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
@@ -48,10 +51,11 @@
     "Phone cannot be empty": "Телефон не может быть пустым",
     "Phone number is invalid": "Номер телефона является недействительным",
     "Session outdated, please login again": "Сессия устарела, пожалуйста, войдите снова",
+    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
     "The user is forbidden to sign in, please contact the administrator": "Пользователю запрещен вход, пожалуйста, обратитесь к администратору",
+    "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "Имя пользователя может состоять только из буквенно-цифровых символов, нижних подчеркиваний или дефисов, не может содержать последовательные дефисы или подчеркивания, а также не может начинаться или заканчиваться на дефис или подчеркивание.",
     "Username already exists": "Имя пользователя уже существует",
-    "Username cannot be an email address": "Имя пользователя не может быть адресом электронной почты",
     "Username cannot contain white spaces": "Имя пользователя не может содержать пробелы",
     "Username cannot start with a digit": "Имя пользователя не может начинаться с цифры",
     "Username is too long (maximum is 255 characters).": "Имя пользователя слишком длинное (максимальная длина - 255 символов).",
@@ -59,9 +63,9 @@
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "Вы ввели неправильный пароль или код слишком много раз, пожалуйста, подождите %d минут и попробуйте снова",
     "Your region is not allow to signup by phone": "Ваш регион не разрешает регистрацию по телефону",
     "password must not be same as previous": "пароль не должен быть такой же как предыдущий",
-    "unsupported password type: %s": "неподдерживаемый тип пароля: %s",
-    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
-    "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on": "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on"
+    "password or code is incorrect": "password or code is incorrect",
+    "password or code is incorrect, you have %d remaining chances": "password or code is incorrect, you have %d remaining chances",
+    "unsupported password type: %s": "неподдерживаемый тип пароля: %s"
   },
   "general": {
     "Invalid username or password/code": "Неправильное имя пользователя или пароль/код",
@@ -126,6 +130,7 @@
   },
   "user": {
     "Display name cannot be empty": "Отображаемое имя не может быть пустым",
+    "Failed to add userIdProvider": "Failed to add userIdProvider",
     "New password cannot contain blank space.": "Новый пароль не может содержать пробелы."
   },
   "util": {

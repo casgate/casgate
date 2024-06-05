@@ -317,7 +317,7 @@ func CheckAccountItemModifyRule(accountItem *AccountItem, isAdmin bool, lang str
 	return true, ""
 }
 
-func GetDefaultApplication(id string) (*Application, error) {
+func GetDefaultApplication(ctx context.Context, id string) (*Application, error) {
 	organization, err := GetOrganization(id)
 	if err != nil {
 		return nil, err
@@ -328,7 +328,7 @@ func GetDefaultApplication(id string) (*Application, error) {
 	}
 
 	if organization.DefaultApplication != "" {
-		defaultApplication, err := getApplication("admin", organization.DefaultApplication)
+		defaultApplication, err := getApplication(ctx, "admin", organization.DefaultApplication)
 		if err != nil {
 			return nil, err
 		}
@@ -352,13 +352,13 @@ func GetDefaultApplication(id string) (*Application, error) {
 
 	defaultApplication := applications[0]
 	for _, application := range applications {
-		if application.EnableSignUp {
+		if application.EnableInternalSignUp || application.EnableIdpSignUp {
 			defaultApplication = application
 			break
 		}
 	}
 
-	err = extendApplicationWithProviders(defaultApplication)
+	err = extendApplicationWithProviders(ctx, defaultApplication)
 	if err != nil {
 		return nil, err
 	}

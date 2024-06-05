@@ -164,3 +164,16 @@ func MakeUserApiToken(user *User) UserApiToken {
 		ApiToken: user.AccessKey + user.AccessSecret,
 	}
 }
+
+func GetUserTokens(user *User) ([]User, error) {
+	var tokens []User
+
+	tagPattern := fmt.Sprintf("<access-token><access-token-user-id:%s>", user.Id)
+
+	err := ormer.Engine.Where("tag LIKE ?", tagPattern).Find(&tokens)
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
+}

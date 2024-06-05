@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
@@ -193,7 +194,7 @@ func DeleteToken(token *Token) (bool, error) {
 	return affected != 0, nil
 }
 
-func ExpireTokenByAccessToken(accessToken string) (bool, *Application, *Token, error) {
+func ExpireTokenByAccessToken(ctx context.Context, accessToken string) (bool, *Application, *Token, error) {
 	token := Token{AccessToken: accessToken}
 	existed, err := ormer.Engine.Get(&token)
 	if err != nil {
@@ -210,7 +211,7 @@ func ExpireTokenByAccessToken(accessToken string) (bool, *Application, *Token, e
 		return false, nil, nil, err
 	}
 
-	application, err := getApplication(token.Owner, token.Application)
+	application, err := getApplication(ctx, token.Owner, token.Application)
 	if err != nil {
 		return false, nil, nil, err
 	}
@@ -247,12 +248,12 @@ func GetTokenByTokenAndApplication(token string, application string) (*Token, er
 	return &tokenResult, nil
 }
 
-func CheckOAuthLogin(clientId string, responseType string, redirectUri string, scope string, state string, lang string) (string, *Application, error) {
+func CheckOAuthLogin(ctx context.Context, clientId string, responseType string, redirectUri string, scope string, state string, lang string) (string, *Application, error) {
 	if responseType != "code" && responseType != "token" && responseType != "id_token" {
 		return fmt.Sprintf(i18n.Translate(lang, "token:Grant_type: %s is not supported in this application"), responseType), nil, nil
 	}
 
-	application, err := GetApplicationByClientId(clientId)
+	application, err := GetApplicationByClientId(ctx, clientId)
 	if err != nil {
 		return "", nil, err
 	}
@@ -289,7 +290,7 @@ func GetOAuthCode(userId string, clientId string, responseType string, redirectU
 		}, nil
 	}
 
-	msg, application, err := CheckOAuthLogin(clientId, responseType, redirectUri, scope, state, lang)
+	msg, application, err := CheckOAuthLogin(context.Background(), clientId, responseType, redirectUri, scope, state, lang)
 	if err != nil {
 		return nil, err
 	}
@@ -342,8 +343,8 @@ func GetOAuthCode(userId string, clientId string, responseType string, redirectU
 	}, nil
 }
 
-func GetOAuthToken(grantType string, clientId string, clientSecret string, code string, verifier string, scope string, username string, password string, host string, refreshToken string, tag string, avatar string, lang string) (interface{}, error) {
-	application, err := GetApplicationByClientId(clientId)
+func GetOAuthToken(ctx context.Context, grantType string, clientId string, clientSecret string, code string, verifier string, scope string, username string, password string, host string, refreshToken string, tag string, avatar string, lang string) (interface{}, error) {
+	application, err := GetApplicationByClientId(ctx, clientId)
 	if err != nil {
 		return nil, err
 	}
@@ -370,11 +371,11 @@ func GetOAuthToken(grantType string, clientId string, clientSecret string, code 
 	case "authorization_code": // Authorization Code Grant
 		token, tokenError, err = GetAuthorizationCodeToken(application, clientSecret, code, verifier)
 	case "password": //	Resource Owner Password Credentials Grant
-		token, tokenError, err = GetPasswordToken(application, username, password, scope, host)
+		token, tokenError, err = GetPasswordToken(ctx, application, username, password, scope, host)
 	case "client_credentials": // Client Credentials Grant
 		token, tokenError, err = GetClientCredentialsToken(application, clientSecret, scope, host)
 	case "refresh_token":
-		refreshToken2, err := RefreshToken(grantType, refreshToken, scope, clientId, clientSecret, host)
+		refreshToken2, err := RefreshToken(ctx, grantType, refreshToken, scope, clientId, clientSecret, host)
 		if err != nil {
 			return nil, err
 		}
@@ -387,7 +388,7 @@ func GetOAuthToken(grantType string, clientId string, clientSecret string, code 
 
 	if tag == "wechat_miniprogram" {
 		// Wechat Mini Program
-		token, tokenError, err = GetWechatMiniProgramToken(application, code, host, username, avatar, lang)
+		token, tokenError, err = GetWechatMiniProgramToken(ctx, application, code, host, username, avatar, lang)
 		if err != nil {
 			return nil, err
 		}
@@ -413,7 +414,7 @@ func GetOAuthToken(grantType string, clientId string, clientSecret string, code 
 	return tokenWrapper, nil
 }
 
-func RefreshToken(grantType string, refreshToken string, scope string, clientId string, clientSecret string, host string) (interface{}, error) {
+func RefreshToken(ctx context.Context, grantType string, refreshToken string, scope string, clientId string, clientSecret string, host string) (interface{}, error) {
 	// check parameters
 	if grantType != "refresh_token" {
 		return &TokenError{
@@ -421,7 +422,7 @@ func RefreshToken(grantType string, refreshToken string, scope string, clientId 
 			ErrorDescription: "grant_type should be refresh_token",
 		}, nil
 	}
-	application, err := GetApplicationByClientId(clientId)
+	application, err := GetApplicationByClientId(ctx, clientId)
 	if err != nil {
 		return nil, err
 	}
@@ -616,7 +617,7 @@ func GetAuthorizationCodeToken(application *Application, clientSecret string, co
 
 // GetPasswordToken
 // Resource Owner Password Credentials flow
-func GetPasswordToken(application *Application, username string, password string, scope string, host string) (*Token, *TokenError, error) {
+func GetPasswordToken(ctx context.Context, application *Application, username string, password string, scope string, host string) (*Token, *TokenError, error) {
 	user, err := getUser(application.Organization, username)
 	if err != nil {
 		return nil, nil, err
@@ -630,9 +631,9 @@ func GetPasswordToken(application *Application, username string, password string
 	}
 
 	if user.Ldap != "" {
-		err = checkLdapUserPassword(user, password, "en")
+		_, err = CheckLdapUserPassword(user, password, "en")
 	} else {
-		err = CheckPassword(user, password, "en")
+		err = CheckPassword(ctx, user, password, "en")
 	}
 	if err != nil {
 		return nil, &TokenError{
@@ -644,6 +645,12 @@ func GetPasswordToken(application *Application, username string, password string
 		return nil, &TokenError{
 			Error:            InvalidGrant,
 			ErrorDescription: "the user is forbidden to sign in, please contact the administrator",
+		}, nil
+	}
+	if user.IsPasswordChangeRequired() {
+		return nil, &TokenError{
+			Error:            InvalidGrant,
+			ErrorDescription: "the user must change password first",
 		}, nil
 	}
 
@@ -765,7 +772,7 @@ func GetTokenByUser(application *Application, user *User, scope string, host str
 
 // GetWechatMiniProgramToken
 // Wechat Mini Program flow
-func GetWechatMiniProgramToken(application *Application, code string, host string, username string, avatar string, lang string) (*Token, *TokenError, error) {
+func GetWechatMiniProgramToken(ctx context.Context, application *Application, code string, host string, username string, avatar string, lang string) (*Token, *TokenError, error) {
 	mpProvider := GetWechatMiniProgramProvider(application)
 	if mpProvider == nil {
 		return nil, &TokenError{
@@ -800,7 +807,7 @@ func GetWechatMiniProgramToken(application *Application, code string, host strin
 	}
 
 	if user == nil {
-		if !application.EnableSignUp {
+		if !application.EnableInternalSignUp && !application.EnableIdpSignUp {
 			return nil, &TokenError{
 				Error:            InvalidGrant,
 				ErrorDescription: "the application does not allow to sign up new account",
@@ -831,7 +838,7 @@ func GetWechatMiniProgramToken(application *Application, code string, host strin
 				UserPropertiesWechatUnionId: unionId,
 			},
 		}
-		_, err = AddUser(user)
+		_, err = AddUser(ctx, user)
 		if err != nil {
 			return nil, nil, err
 		}

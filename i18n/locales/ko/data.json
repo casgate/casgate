@@ -11,16 +11,19 @@
   },
   "auth": {
     "Challenge method should be S256": "도전 방식은 S256이어야 합니다",
-    "Failed to create user, user information is invalid: %s": "사용자를 만들지 못했습니다. 사용자 정보가 잘못되었습니다: %s",
+    "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "로그인에 실패했습니다.: %s",
+    "Forbidden operation": "Forbidden operation",
     "Invalid token": "유효하지 않은 토큰",
     "State expected: %s, but got: %s": "예상한 상태: %s, 실제 상태: %s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "제공자 계정: %s와 사용자 이름: %s (%s)은(는) 존재하지 않으며 %%s를 통해 새 계정으로 가입하는 것이 허용되지 않습니다. 다른 방법으로 가입하십시오",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support": "공급자 계정 %s과 사용자 이름 %s (%s)는 존재하지 않으며 새 계정으로 등록할 수 없습니다. IT 지원팀에 문의하십시오",
     "The account for provider: %s and username: %s (%s) is already linked to another account: %s (%s)": "공급자 계정 %s과 사용자 이름 %s(%s)는 이미 다른 계정 %s(%s)에 연결되어 있습니다",
     "The application: %s does not exist": "해당 애플리케이션(%s)이 존재하지 않습니다",
+    "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "어플리케이션에서는 암호를 사용한 로그인 방법이 활성화되어 있지 않습니다",
     "The provider: %s is not enabled for the application": "제공자 %s은(는) 응용 프로그램에서 활성화되어 있지 않습니다",
+    "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "무단 조작",
     "Unknown authentication type (not password or provider), form = %s": "알 수 없는 인증 유형(암호 또는 공급자가 아님), 폼 = %s",
     "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
@@ -48,10 +51,11 @@
     "Phone cannot be empty": "전화는 비워 둘 수 없습니다",
     "Phone number is invalid": "전화번호가 유효하지 않습니다",
     "Session outdated, please login again": "세션이 만료되었습니다. 다시 로그인해주세요",
+    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
     "The user is forbidden to sign in, please contact the administrator": "사용자는 로그인이 금지되어 있습니다. 관리자에게 문의하십시오",
+    "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "사용자 이름은 알파벳, 숫자, 밑줄 또는 하이픈만 포함할 수 있으며, 연속된 하이픈 또는 밑줄을 가질 수 없으며, 하이픈 또는 밑줄로 시작하거나 끝날 수 없습니다.",
     "Username already exists": "사용자 이름이 이미 존재합니다",
-    "Username cannot be an email address": "사용자 이름은 이메일 주소가 될 수 없습니다",
     "Username cannot contain white spaces": "사용자 이름에는 공백이 포함될 수 없습니다",
     "Username cannot start with a digit": "사용자 이름은 숫자로 시작할 수 없습니다",
     "Username is too long (maximum is 255 characters).": "사용자 이름이 너무 깁니다 (최대 255자).",
@@ -59,9 +63,9 @@
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "올바르지 않은 비밀번호나 코드를 여러 번 입력했습니다. %d분 동안 기다리신 후 다시 시도해주세요",
     "Your region is not allow to signup by phone": "당신의 지역은 전화로 가입할 수 없습니다",
     "password must not be same as previous": "password must not be same as previous",
-    "unsupported password type: %s": "지원되지 않는 암호 유형: %s",
-    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
-    "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on": "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on"
+    "password or code is incorrect": "password or code is incorrect",
+    "password or code is incorrect, you have %d remaining chances": "password or code is incorrect, you have %d remaining chances",
+    "unsupported password type: %s": "지원되지 않는 암호 유형: %s"
   },
   "general": {
     "Invalid username or password/code": "Invalid username or password/code",
@@ -126,6 +130,7 @@
   },
   "user": {
     "Display name cannot be empty": "디스플레이 이름은 비어 있을 수 없습니다",
+    "Failed to add userIdProvider": "Failed to add userIdProvider",
     "New password cannot contain blank space.": "새 비밀번호에는 공백이 포함될 수 없습니다."
   },
   "util": {

@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -42,10 +43,12 @@ func main() {
 	object.CreateTables()
 	object.DoMigration()
 
-	object.InitDb()
-	object.InitFromFile()
+	ctx := context.Background()
+
+	object.InitDb(ctx)
+	object.InitFromFile(ctx)
 	object.InitDefaultStorageProvider()
-	object.InitLdapAutoSynchronizer()
+	object.InitLdapAutoSynchronizer(ctx)
 	proxy.InitHttpClient()
 	authz.InitApi()
 	object.InitUserManager()
@@ -60,11 +63,11 @@ func main() {
 	beego.SetStaticPath("/files", "files")
 	// https://studygolang.com/articles/2303
 	beego.InsertFilter("*", beego.BeforeRouter, routers.StaticFilter)
+	beego.InsertFilter("*", beego.BeforeRouter, routers.InitRecordMessage, false)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.AutoSigninFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.CorsFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.ApiFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PrometheusFilter)
-	beego.InsertFilter("*", beego.BeforeExec, routers.InitRecordMessage, false)
 	beego.InsertFilter("*", beego.AfterExec, routers.LogRecordMessage, false)
 
 	beego.BConfig.WebConfig.Session.SessionOn = true

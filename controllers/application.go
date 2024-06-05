@@ -89,8 +89,9 @@ func (c *ApiController) GetApplications() {
 func (c *ApiController) GetApplication() {
 	userId := c.GetSessionUsername()
 	id := c.Input().Get("id")
+	goCtx := c.getRequestCtx()
 
-	application, err := object.GetApplication(id)
+	application, err := object.GetApplication(goCtx, id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -129,6 +130,7 @@ func (c *ApiController) GetApplication() {
 func (c *ApiController) GetUserApplication() {
 	userId := c.GetSessionUsername()
 	id := c.Input().Get("id")
+	goCtx := c.getRequestCtx()
 
 	user, err := object.GetUser(id)
 	if err != nil {
@@ -140,7 +142,7 @@ func (c *ApiController) GetUserApplication() {
 		return
 	}
 
-	application, err := object.GetApplicationByUser(user)
+	application, err := object.GetApplicationByUser(goCtx, user)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -232,6 +234,8 @@ func (c *ApiController) UpdateApplication() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-application [post]
 func (c *ApiController) AddApplication() {
+	goCtx := c.getRequestCtx()
+
 	var application object.Application
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &application)
 	if err != nil {
@@ -250,7 +254,7 @@ func (c *ApiController) AddApplication() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.AddApplication(&application))
+	c.Data["json"] = wrapActionResponse(object.AddApplication(goCtx, &application))
 	c.ServeJSON()
 }
 

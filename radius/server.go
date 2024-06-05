@@ -15,6 +15,7 @@
 package radius
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -50,6 +51,7 @@ func handlerRadius(w radius.ResponseWriter, r *radius.Request) {
 	}
 }
 func handleAccessRequest(w radius.ResponseWriter, r *radius.Request) {
+	ctx := context.Background()
 	username := rfc2865.UserName_GetString(r.Packet)
 	password := rfc2865.UserPassword_GetString(r.Packet)
 	organization := rfc2865.Class_GetString(r.Packet)
@@ -59,7 +61,7 @@ func handleAccessRequest(w radius.ResponseWriter, r *radius.Request) {
 		w.Write(r.Response(radius.CodeAccessReject))
 		return
 	}
-	_, err := object.CheckUserPassword(organization, username, password, "en")
+	_, err := object.CheckUserPassword(ctx, organization, username, password, "en")
 	if err != nil {
 		w.Write(r.Response(radius.CodeAccessReject))
 		return

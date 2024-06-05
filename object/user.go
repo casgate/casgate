@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strconv"
@@ -81,7 +82,7 @@ type User struct {
 	IdCardType             string    `xorm:"varchar(100)" json:"idCardType"`
 	IdCard                 string    `xorm:"varchar(100) index" json:"idCard"`
 	Homepage               string    `xorm:"varchar(100)" json:"homepage"`
-	Bio                    string    `xorm:"varchar(1024)" json:"bio"`
+	Bio                    string    `xorm:"varchar(100)" json:"bio"`
 	Tag                    string    `xorm:"varchar(100)" json:"tag"`
 	Language               string    `xorm:"varchar(100)" json:"language"`
 	Gender                 string    `xorm:"varchar(100)" json:"gender"`
@@ -232,19 +233,19 @@ type ManagedAccount struct {
 	SigninUrl   string `xorm:"varchar(200)" json:"signinUrl"`
 }
 
-func (u *User) IsPasswordChangeRequired() bool {
-	return !u.PasswordChangeTime.IsZero() && u.PasswordChangeTime.Before(time.Now())
+func (user *User) IsPasswordChangeRequired() bool {
+	return !user.PasswordChangeTime.IsZero() && user.PasswordChangeTime.Before(time.Now())
 }
 
-func (u *User) checkPasswordChangeRequestAllowed() error {
-	if !u.isPasswordChangeRequestAllowed() && !u.PasswordChangeTime.IsZero() {
+func (user *User) checkPasswordChangeRequestAllowed() error {
+	if !user.isPasswordChangeRequestAllowed() && !user.PasswordChangeTime.IsZero() {
 		return fmt.Errorf("IsPasswordChangeRequired is not supported to be enabled for users from LDAP or Keycloak")
 	}
 	return nil
 }
 
-func (u *User) isPasswordChangeRequestAllowed() bool {
-	return u.Type != "" || u.Ldap == ""
+func (user *User) isPasswordChangeRequestAllowed() bool {
+	return user.Type != "" || user.Ldap == ""
 }
 
 func GetGlobalUserCount(field, value string) (int64, error) {
@@ -334,6 +335,11 @@ func GetSortedUsers(owner string, sorter string, limit int) ([]*User, error) {
 	users := []*User{}
 
 	notUserAccesToken := builder.Not{builder.Like{"tag", "<access-token>"}}
+	sorter = strings.ReplaceAll(strings.ReplaceAll(sorter, "\"", ""), "'", "")
+	_, errExist := ormer.Engine.SQL("SELECT ? from USER", sorter).Exist()
+	if errExist != nil {
+		return nil, nil
+	}
 
 	err := ormer.Engine.Desc(sorter).And(notUserAccesToken).Limit(limit, 0).Find(&users, &User{Owner: owner})
 	if err != nil {
@@ -782,9 +788,9 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 	return affected != 0, nil
 }
 
-func AddUser(user *User) (bool, error) {
+func AddUser(ctx context.Context, user *User) (bool, error) {
 	if user.Id == "" {
-		application, err := GetApplicationByUser(user)
+		application, err := GetApplicationByUser(ctx, user)
 		if err != nil {
 			return false, err
 		}
@@ -806,8 +812,8 @@ func AddUser(user *User) (bool, error) {
 		return false, nil
 	}
 
-	if user.PasswordType == "" || user.PasswordType == "plain" {
-		user.UpdateUserPassword(organization)
+	if err := user.UpdateUserPassword(organization); err != nil {
+		return false, err
 	}
 
 	err := user.UpdateUserHash()
@@ -940,9 +946,9 @@ func AddUsersInBatch(users []*User) (bool, error) {
 	return affected, nil
 }
 
-func DeleteUser(user *User) (bool, error) {
+func DeleteUser(ctx context.Context, user *User) (bool, error) {
 	// Forced offline the user first
-	_, err := DeleteSession(util.GetSessionId(user.Owner, user.Name, CasdoorApplication))
+	_, err := DeleteSession(ctx, util.GetSessionId(user.Owner, user.Name, CasdoorApplication))
 	if err != nil {
 		return false, err
 	}

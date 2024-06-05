@@ -1,24 +1,20 @@
 package role_mapper
 
 import (
-	"fmt"
+	"slices"
 
 	"github.com/casdoor/casdoor/object"
 )
 
 type SamlMapper struct {
 	rules []*object.RoleMappingItem
-	data  map[string]string
+	data  map[string]interface{}
 }
 
 func NewSamlMapper(rules []*object.RoleMappingItem, data map[string]interface{}) (*SamlMapper, error) {
-	strData := make(map[string]string, len(data))
+	strData := make(map[string]interface{}, len(data))
 	for k, v := range data {
-		value, ok := v.(string)
-		if !ok {
-			return nil, fmt.Errorf("wrong value type (not string) for saml mapper: %v", v)
-		}
-		strData[k] = value
+		strData[k] = v
 	}
 
 	return &SamlMapper{
@@ -29,14 +25,13 @@ func NewSamlMapper(rules []*object.RoleMappingItem, data map[string]interface{})
 
 func (m *SamlMapper) GetRoles() []string {
 	roles := make([]string, 0)
+
 	for _, rule := range m.rules {
-		value := m.data[rule.Attribute]
-		if value == "" {
-			continue
-		}
-		for _, ruleValue := range rule.Values {
-			if value == ruleValue {
-				roles = append(roles, rule.Role)
+		if idpRoles, ok := m.data[rule.Attribute].([]string); ok {
+			for _, idpRole := range idpRoles {
+				if slices.Contains(rule.Values, idpRole) {
+					roles = append(roles, rule.Role)
+				}
 			}
 		}
 	}

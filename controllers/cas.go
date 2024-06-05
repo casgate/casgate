@@ -199,6 +199,8 @@ func (c *RootController) CasProxy() {
 }
 
 func (c *RootController) SamlValidate() {
+	ctx := c.getRequestCtx()
+
 	c.Ctx.Output.Header("Content-Type", "text/xml; charset=utf-8")
 	target := c.Input().Get("TARGET")
 	body := c.Ctx.Input.RequestBody
@@ -216,7 +218,7 @@ func (c *RootController) SamlValidate() {
 		return
 	}
 
-	response, service, err := object.GetValidationBySaml(envelopRequest.Body.Content, c.Ctx.Request.Host)
+	response, service, err := object.GetValidationBySaml(ctx, envelopRequest.Body.Content, c.Ctx.Request.Host)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

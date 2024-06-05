@@ -19,16 +19,17 @@ import (
 	"github.com/casdoor/casdoor/object"
 )
 
-// AddAccessToken
-// @Title AddAccessToken
-// @Tag Access Token API
-// @Description add access token
+// AddApiToken
+// @Title AddApiToken
+// @Tag Api Token API
+// @Description add api token
 // @Param owner query string true "The owner of token"
-// @Success 200 {object} object.UserAccessToken The Response object
+// @Success 200 {object} object.UserApiToken The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 500 Internal Server Error
-// @router /add-access-token [post]
-func (c *ApiController) AddAccessToken() {
+// @router /add-api-token [post]
+func (c *ApiController) AddApiToken() {
+	ctx := c.getRequestCtx()
 	owner := c.Input().Get("owner")
 	if !c.IsGlobalAdmin() && owner == "" {
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
@@ -45,7 +46,7 @@ func (c *ApiController) AddAccessToken() {
 
 	tokenUser := object.MakeUserForToken(user)
 
-	affected, err := object.AddUser(tokenUser)
+	affected, err := object.AddUser(ctx, tokenUser)
 	if err != nil {
 		logs.Error("token creation: %s", err.Error())
 
@@ -62,25 +63,25 @@ func (c *ApiController) AddAccessToken() {
 	c.ResponseOk(object.MakeUserApiToken(tokenUser))
 }
 
-// DeleteAccessToken
-// @Title DeleteAccessToken
-// @Tag Access Token API
-// @Description delete access token
+// DeleteApiToken
+// @Title DeleteApiToken
+// @Tag Api Token API
+// @Description delete api token
 // @Param owner query string true "The owner of token"
-// @Param user_access_token string true "The user access token"
+// @Param api_token string true "The user api token"
 // @Success 200 Ok
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
 // @Failure 500 Internal Server Error
-// @router /delete-access-token [post]
-func (c *ApiController) DeleteAccessToken() {
+// @router /delete-api-token [post]
+func (c *ApiController) DeleteApiToken() {
 	owner := c.Input().Get("owner")
 	if !c.IsGlobalAdmin() && owner == "" {
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
 
-	token := c.Input().Get("user_access_token")
+	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
 		return
@@ -96,13 +97,13 @@ func (c *ApiController) DeleteAccessToken() {
 
 	affected, err := object.DeleteApiToken(user, token)
 	if err != nil {
-		logs.Error("delete access token: %s", err.Error())
+		logs.Error("delete api token: %s", err.Error())
 
 		c.ResponseInternalServerError("delete token error")
 		return
 	}
 	if !affected {
-		logs.Error("delete access token: does not affected")
+		logs.Error("delete api token: does not affected")
 
 		c.ResponseInternalServerError("token does not deleted")
 		return
@@ -111,25 +112,25 @@ func (c *ApiController) DeleteAccessToken() {
 	c.ResponseOk()
 }
 
-// RecreateAccessToken
-// @Title RecreateAccessToken
-// @Tag Access Token API
-// @Description recreate access token
+// RecreateApiToken
+// @Title RecreateApiToken
+// @Tag Api Token API
+// @Description recreate api token
 // @Param owner query string true "The owner of token"
-// @Param user_access_token string true "The user access token"
-// @Success 200 {object} object.UserAccessToken The Response object
+// @Param api_token string true "The user api token"
+// @Success 200 {object} object.UserApiToken The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
 // @Failure 500 Internal Server Error
-// @router /recreate-access-token [post]
-func (c *ApiController) RecreateAccessToken() {
+// @router /recreate-api-token [post]
+func (c *ApiController) RecreateApiToken() {
 	owner := c.Input().Get("owner")
 	if !c.IsGlobalAdmin() && owner == "" {
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
 
-	token := c.Input().Get("user_access_token")
+	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
 		return
@@ -137,7 +138,7 @@ func (c *ApiController) RecreateAccessToken() {
 
 	apiTokenUser, err := object.GetApiKeyUser(token)
 	if err != nil {
-		logs.Error("get access token: %s", err.Error())
+		logs.Error("get api token: %s", err.Error())
 
 		c.ResponseInternalServerError("token not provided")
 		return
@@ -166,7 +167,7 @@ func (c *ApiController) RecreateAccessToken() {
 
 	err = object.RecreateApiToken(tokenOwner, apiTokenUser)
 	if err != nil {
-		logs.Error("recreate access token: %s", err.Error())
+		logs.Error("recreate api token: %s", err.Error())
 
 		c.ResponseInternalServerError("Token not affected")
 		return
@@ -175,18 +176,18 @@ func (c *ApiController) RecreateAccessToken() {
 	c.ResponseOk(object.MakeUserApiToken(apiTokenUser))
 }
 
-// GetUserByAccessToken
-// @Title GetUserByAccessToken
-// @Tag Access Token API
-// @Description get user by access token
-// @Param user_access_token string true "The user access token"
+// GetUserByApiToken
+// @Title GetUserByApiToken
+// @Tag Api Token API
+// @Description get user by API token
+// @Param api_token string true "The user api token"
 // @Success 200 {object} object.User The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
 // @Failure 500 Internal Server Error
-// @router /get-user-by-access-token [post]
-func (c *ApiController) GetUserByAccessToken() {
-	token := c.Input().Get("user_access_token")
+// @router /get-user-by-api-token [post]
+func (c *ApiController) GetUserByApiToken() {
+	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
 		return
@@ -201,4 +202,40 @@ func (c *ApiController) GetUserByAccessToken() {
 	}
 
 	c.ResponseOk(owner)
+}
+
+// GetUserTokens
+// @Title GetUserTokens
+// @Tag Api Token API
+// @Description get user tokens
+// @Param owner query string true "The owner of token"
+// @Success 200 {object} object.User[] The Response object
+// @Failure 403 Unauthorized operation
+// @Failure 422 Unprocessable entity
+// @Failure 500 Internal Server Error
+// @router /get-user-tokens [get]
+func (c *ApiController) GetUserTokens() {
+	owner := c.Input().Get("owner")
+	if !c.IsGlobalAdmin() && owner == "" {
+		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	tokenOwner, err := object.GetUser(owner)
+	if err != nil {
+		logs.Error("get user: %s", err.Error())
+
+		c.ResponseInternalServerError("Internal server error")
+		return
+	}
+
+	tokens, err := object.GetUserTokens(tokenOwner)
+	if err != nil {
+		logs.Error("get user tokens: %s", err.Error())
+
+		c.ResponseInternalServerError("Internal server error")
+		return
+	}
+
+	c.ResponseOk(tokens)
 }

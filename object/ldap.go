@@ -15,6 +15,7 @@
 package object
 
 import (
+	"fmt"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -180,4 +181,24 @@ func DeleteLdap(ldap *Ldap) (bool, error) {
 	}
 
 	return affected != 0, nil
+}
+
+func GetLdapPassword(ldap Ldap) (string, error) {
+	ldapFromDB := Ldap{
+		Owner:    ldap.Owner,
+		Host:     ldap.Host,
+		Port:     ldap.Port,
+		Username: ldap.Username,
+	}
+
+	existed, err := ormer.Engine.Get(&ldapFromDB)
+	if err != nil {
+		return "", err
+	}
+
+	if !existed {
+		return "", fmt.Errorf("ldap does not exist")
+	}
+
+	return ldapFromDB.Password, nil
 }

@@ -430,11 +430,21 @@ class ApplicationEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
-            {Setting.getLabel(i18next.t("application:Enable signup"), i18next.t("application:Enable signup - Tooltip"))} :
+            {Setting.getLabel(i18next.t("application:Enable internal signup"), i18next.t("application:Enable internal signup - Tooltip"))} :
           </Col>
           <Col span={1} >
-            <Switch checked={this.state.application.enableSignUp} onChange={checked => {
-              this.updateApplicationField("enableSignUp", checked);
+            <Switch checked={this.state.application.enableInternalSignUp} onChange={checked => {
+              this.updateApplicationField("enableInternalSignUp", checked);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("application:Enable idp signup"), i18next.t("application:Enable idp signup - Tooltip"))} :
+          </Col>
+          <Col span={1} >
+            <Switch checked={this.state.application.enableIdpSignUp} onChange={checked => {
+              this.updateApplicationField("enableIdpSignUp", checked);
             }} />
           </Col>
         </Row>
@@ -840,7 +850,7 @@ class ApplicationEditPage extends React.Component {
           </Col>
         </Row>
         {
-          !this.state.application.enableSignUp ? null : (
+          !this.state.application.enableInternalSignUp ? null : (
             <React.Fragment>
               <Row style={{marginTop: "20px"}} >
                 <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>

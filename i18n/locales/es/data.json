@@ -11,16 +11,19 @@
   },
   "auth": {
     "Challenge method should be S256": "El método de desafío debe ser S256",
-    "Failed to create user, user information is invalid: %s": "No se pudo crear el usuario, la información del usuario es inválida: %s",
+    "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "No se ha podido iniciar sesión en: %s",
+    "Forbidden operation": "Forbidden operation",
     "Invalid token": "Token inválido",
     "State expected: %s, but got: %s": "Estado esperado: %s, pero se obtuvo: %s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "La cuenta para el proveedor: %s y nombre de usuario: %s (%s) no existe y no está permitido registrarse como una cuenta nueva a través de %%s, por favor use otro método para registrarse",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support": "La cuenta para el proveedor: %s y el nombre de usuario: %s (%s) no existe y no se permite registrarse como una nueva cuenta, por favor contacte a su soporte de TI",
     "The account for provider: %s and username: %s (%s) is already linked to another account: %s (%s)": "La cuenta para proveedor: %s y nombre de usuario: %s (%s) ya está vinculada a otra cuenta: %s (%s)",
     "The application: %s does not exist": "La aplicación: %s no existe",
+    "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "El método de inicio de sesión: inicio de sesión con contraseña no está habilitado para la aplicación",
     "The provider: %s is not enabled for the application": "El proveedor: %s no está habilitado para la aplicación",
+    "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Operación no autorizada",
     "Unknown authentication type (not password or provider), form = %s": "Tipo de autenticación desconocido (no es contraseña o proveedor), formulario = %s",
     "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
@@ -48,10 +51,11 @@
     "Phone cannot be empty": "Teléfono no puede estar vacío",
     "Phone number is invalid": "El número de teléfono no es válido",
     "Session outdated, please login again": "Sesión expirada, por favor vuelva a iniciar sesión",
+    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
     "The user is forbidden to sign in, please contact the administrator": "El usuario no está autorizado a iniciar sesión, por favor contacte al administrador",
+    "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "El nombre de usuario solo puede contener caracteres alfanuméricos, guiones bajos o guiones, no puede tener guiones o subrayados consecutivos, y no puede comenzar ni terminar con un guión o subrayado.",
     "Username already exists": "El nombre de usuario ya existe",
-    "Username cannot be an email address": "Nombre de usuario no puede ser una dirección de correo electrónico",
     "Username cannot contain white spaces": "Nombre de usuario no puede contener espacios en blanco",
     "Username cannot start with a digit": "El nombre de usuario no puede empezar con un dígito",
     "Username is too long (maximum is 255 characters).": "El nombre de usuario es demasiado largo (el máximo es de 255 caracteres).",
@@ -59,9 +63,9 @@
     "You have entered the wrong password or code too many times, please wait for %d minutes and try again": "Has ingresado la contraseña o código incorrecto demasiadas veces, por favor espera %d minutos e intenta de nuevo",
     "Your region is not allow to signup by phone": "Tu región no está permitida para registrarse por teléfono",
     "password must not be same as previous": "password must not be same as previous",
-    "unsupported password type: %s": "Tipo de contraseña no compatible: %s",
-    "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
-    "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on": "You must fill 'Password special chars' if option 'The password must contain at least one special character' was set on"
+    "password or code is incorrect": "password or code is incorrect",
+    "password or code is incorrect, you have %d remaining chances": "password or code is incorrect, you have %d remaining chances",
+    "unsupported password type: %s": "Tipo de contraseña no compatible: %s"
   },
   "general": {
     "Invalid username or password/code": "Nombre de usuario o contraseña/código no válido",
@@ -126,6 +130,7 @@
   },
   "user": {
     "Display name cannot be empty": "El nombre de pantalla no puede estar vacío",
+    "Failed to add userIdProvider": "Failed to add userIdProvider",
     "New password cannot contain blank space.": "La nueva contraseña no puede contener espacios en blanco."
   },
   "util": {

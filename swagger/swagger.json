@@ -47,38 +47,6 @@
                 }
             }
         },
-        "/api/add-access-token": {
-            "post": {
-                "tags": [
-                    "Access Token API"
-                ],
-                "description": "add access token",
-                "operationId": "ApiController.AddAccessToken",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "owner",
-                        "description": "The owner of token",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/object.UserAccessToken"
-                        }
-                    },
-                    "403": {
-                        "description": "Unauthorized operation"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
         "/api/add-adapter": {
             "post": {
                 "tags": [
@@ -103,6 +71,38 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    }
+                }
+            }
+        },
+        "/api/add-api-token": {
+            "post": {
+                "tags": [
+                    "Api Token API"
+                ],
+                "description": "add api token",
+                "operationId": "ApiController.AddApiToken",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "owner",
+                        "description": "The owner of token",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/object.UserApiToken"
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized operation"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
@@ -754,6 +754,34 @@
                 }
             }
         },
+        "/api/add-user-id-provider": {
+            "post": {
+                "tags": [
+                    "User API"
+                ],
+                "description": "add user id provider",
+                "operationId": "ApiController.AddUserIdProvider",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "The details of the user id provider",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/object.UserIdProvider"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/add-user-keys": {
             "post": {
                 "tags": [
@@ -904,46 +932,6 @@
                 }
             }
         },
-        "/api/delete-access-token": {
-            "post": {
-                "tags": [
-                    "Access Token API"
-                ],
-                "description": "delete access token",
-                "operationId": "ApiController.DeleteAccessToken",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "owner",
-                        "description": "The owner of token",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "in": "string",
-                        "name": "user_access_token",
-                        "description": "The user access token",
-                        "schema": {
-                            "$ref": "#/definitions/true"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Ok"
-                    },
-                    "403": {
-                        "description": "Unauthorized operation"
-                    },
-                    "422": {
-                        "description": "Unprocessable entity"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
         "/api/delete-adapter": {
             "post": {
                 "tags": [
@@ -968,6 +956,46 @@
                         "schema": {
                             "$ref": "#/definitions/controllers.Response"
                         }
+                    }
+                }
+            }
+        },
+        "/api/delete-api-token": {
+            "post": {
+                "tags": [
+                    "Api Token API"
+                ],
+                "description": "delete api token",
+                "operationId": "ApiController.DeleteApiToken",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "owner",
+                        "description": "The owner of token",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "string",
+                        "name": "api_token",
+                        "description": "The user api token",
+                        "schema": {
+                            "$ref": "#/definitions/true"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok"
+                    },
+                    "403": {
+                        "description": "Unauthorized operation"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
@@ -3612,25 +3640,18 @@
                 }
             }
         },
-        "/api/get-user-by-access-token": {
+        "/api/get-user-by-api-token": {
             "post": {
                 "tags": [
-                    "Access Token API"
+                    "Api Token API"
                 ],
-                "description": "get user by access token",
-                "operationId": "ApiController.GetUserByAccessToken",
+                "description": "get user by API token",
+                "operationId": "ApiController.GetUserByApiToken",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "owner",
-                        "description": "The owner of token",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
                         "in": "string",
-                        "name": "user_access_token",
-                        "description": "The user access token",
+                        "name": "api_token",
+                        "description": "The user api token",
                         "schema": {
                             "$ref": "#/definitions/true"
                         }
@@ -3726,6 +3747,41 @@
                                 "$ref": "#/definitions/object.Payment"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/get-user-tokens": {
+            "get": {
+                "tags": [
+                    "api"
+                ],
+                "description": "get user tokens\n\u003cbr\u003e",
+                "operationId": "ApiController.GetUserTokens",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "owner",
+                        "description": "The owner of token",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/object.User[]"
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized operation"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
@@ -4334,13 +4390,13 @@
                 }
             }
         },
-        "/api/recreate-access-token": {
+        "/api/recreate-api-token": {
             "post": {
                 "tags": [
-                    "Access Token API"
+                    "Api Token API"
                 ],
-                "description": "recreate access token",
-                "operationId": "ApiController.RecreateAccessToken",
+                "description": "recreate api token",
+                "operationId": "ApiController.RecreateApiToken",
                 "parameters": [
                     {
                         "in": "query",
@@ -4351,8 +4407,8 @@
                     },
                     {
                         "in": "string",
-                        "name": "user_access_token",
-                        "description": "The user access token",
+                        "name": "api_token",
+                        "description": "The user api token",
                         "schema": {
                             "$ref": "#/definitions/true"
                         }
@@ -4362,7 +4418,7 @@
                     "200": {
                         "description": "The Response object",
                         "schema": {
-                            "$ref": "#/definitions/object.UserAccessToken"
+                            "$ref": "#/definitions/object.UserApiToken"
                         }
                     },
                     "403": {
@@ -5874,11 +5930,11 @@
         }
     },
     "definitions": {
-        "198563.\u003cnil\u003e.string": {
+        "195958.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "321740.\u003cnil\u003e.string": {
+        "319386.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6110,7 +6166,10 @@
                 "enableSamlCompress": {
                     "type": "boolean"
                 },
-                "enableSignUp": {
+                "enableInternalSignUp": {
+                    "type": "boolean"
+                },
+                "enableIdpSignUp": {
                     "type": "boolean"
                 },
                 "enableSigninSession": {
@@ -6707,7 +6766,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/198563.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/195958.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -7434,7 +7493,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/321740.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/319386.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"
@@ -8472,11 +8531,11 @@
                 }
             }
         },
-        "object.UserAccessToken": {
-            "title": "UserAccessToken",
+        "object.UserApiToken": {
+            "title": "UserApiToken",
             "type": "object",
             "properties": {
-                "access_token": {
+                "api_token": {
                     "type": "string"
                 },
                 "owner": {
@@ -8492,6 +8551,12 @@
                     "type": "string"
                 },
                 "lastSignInTime": {
+                    "type": "string"
+                },
+                "ldapId": {
+                    "type": "string"
+                },
+                "ldapServerName": {
                     "type": "string"
                 },
                 "owner": {

@@ -339,7 +339,7 @@ func (c *ApiController) UploadResource() {
 		}
 
 		_, applicationId := util.GetOwnerAndNameFromIdNoCheck(strings.TrimSuffix(fullFilePath, ".html"))
-		applicationObj, err := object.GetApplication(applicationId)
+		applicationObj, err := object.GetApplication(goCtx, applicationId)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
