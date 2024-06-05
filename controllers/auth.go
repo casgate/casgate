@@ -915,7 +915,7 @@ func (c *ApiController) Login() {
 					}
 
 					userRoles := mapper.GetRoles()
-					err = object.AddRolesToUser(user.GetId(), userRoles)
+					err = object.AddRolesToUser(user, userRoles)
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Role mapping error: %s", err.Error()))
 

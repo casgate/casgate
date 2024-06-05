@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -154,6 +155,9 @@ func MakeUserForToken(owner *User) *User {
 	tokenUser.CreatedTime = util.GetCurrentTime()
 	tokenUser.UpdatedTime = ""
 	tokenUser.Type = TokenUser
+	
+	tokenUser.Roles = owner.Roles
+	tokenUser.Permissions = owner.Permissions
 
 	return &tokenUser
 }
@@ -176,4 +180,28 @@ func GetUserTokens(user *User) ([]User, error) {
 	}
 
 	return tokens, nil
+}
+
+func GetUsersTokens(userIds []string) ([]User, error) {
+	var tokens []User
+
+	tagPatterns := make([]string, len(userIds))
+	for i, userId := range userIds {
+		tagPatterns[i] = fmt.Sprintf("<access-token><access-token-user-id:%s>", userId)
+	}
+
+	err := ormer.Engine.In("tag", tagPatterns).Find(&tokens)
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
+}
+
+func UpdateTokens(ctx context.Context, tokens []User, columns []string) error {
+	err := trm.WithTx(ctx, func(ctx context.Context) error {
+		return repo.UpdateTokens(ctx, tokens, columns)
+	})
+
+	return err
 }

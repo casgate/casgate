@@ -371,6 +371,25 @@ func (c *ApiController) UpdateUser() {
 		columns = strings.Split(columnsStr, ",")
 	}
 
+	userTokens, err := object.GetUserTokens(&user)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	if len(userTokens) > 0 {
+		for _, token := range userTokens {
+			token.Permissions = user.Permissions
+			token.Roles = user.Roles
+		}
+		
+		err = object.UpdateTokens(goCtx, userTokens, []string{"permissions", "roles"})
+		if err != nil {
+			c.ResponseInternalServerError(err.Error())
+			return
+		}
+	}
+
 	affected, err := object.UpdateUser(id, &user, columns, isAdmin)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
