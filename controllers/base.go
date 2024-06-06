@@ -40,6 +40,30 @@ type SessionData struct {
 	ExpireTime int64
 }
 
+func (c *ApiController) ContinueIfHasRightsOrDenyRequest() {
+	
+	globalAdminOrApp, _ := c.isGlobalAdmin()
+	if  globalAdminOrApp {
+		return
+	}
+
+	user, ok := c.RequireSignedInUser()
+	if !ok {
+		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	if user.IsForbidden || user.IsDeleted {
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+		return
+	}
+
+	if !c.IsAdmin() {
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+		return
+	}
+}
+
 func (c *ApiController) IsGlobalAdmin() bool {
 	isGlobalAdmin, _ := c.isGlobalAdmin()
 

@@ -30,6 +30,7 @@ import (
 // @Success 200 {array} object.Adapter The Response object
 // @router /get-adapters [get]
 func (c *ApiController) GetAdapters() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -73,6 +74,7 @@ func (c *ApiController) GetAdapters() {
 // @Success 200 {object} object.Adapter The Response object
 // @router /get-adapter [get]
 func (c *ApiController) GetAdapter() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	adapter, err := object.GetAdapter(id)
@@ -93,6 +95,7 @@ func (c *ApiController) GetAdapter() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-adapter [post]
 func (c *ApiController) UpdateAdapter() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	var adapter object.Adapter
@@ -114,6 +117,7 @@ func (c *ApiController) UpdateAdapter() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-adapter [post]
 func (c *ApiController) AddAdapter() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var adapter object.Adapter
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &adapter)
 	if err != nil {
@@ -133,6 +137,7 @@ func (c *ApiController) AddAdapter() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-adapter [post]
 func (c *ApiController) DeleteAdapter() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var adapter object.Adapter
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &adapter)
 	if err != nil {

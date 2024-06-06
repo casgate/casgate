@@ -31,6 +31,7 @@ import (
 // @Success 200 {array} object.Application The Response object
 // @router /get-applications [get]
 func (c *ApiController) GetApplications() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	userId := c.GetSessionUsername()
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
@@ -87,6 +88,7 @@ func (c *ApiController) GetApplications() {
 // @Success 200 {object} object.Application The Response object
 // @router /get-application [get]
 func (c *ApiController) GetApplication() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	userId := c.GetSessionUsername()
 	id := c.Input().Get("id")
 	goCtx := c.getRequestCtx()
@@ -128,6 +130,7 @@ func (c *ApiController) GetApplication() {
 // @Success 200 {object} object.Application The Response object
 // @router /get-user-application [get]
 func (c *ApiController) GetUserApplication() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	userId := c.GetSessionUsername()
 	id := c.Input().Get("id")
 	goCtx := c.getRequestCtx()
@@ -159,6 +162,7 @@ func (c *ApiController) GetUserApplication() {
 // @Success 200 {array} object.Application The Response object
 // @router /get-organization-applications [get]
 func (c *ApiController) GetOrganizationApplications() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	userId := c.GetSessionUsername()
 	organization := c.Input().Get("organization")
 	owner := c.Input().Get("owner")
@@ -212,6 +216,7 @@ func (c *ApiController) GetOrganizationApplications() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-application [post]
 func (c *ApiController) UpdateApplication() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 	goCtx := c.getRequestCtx()
 
@@ -234,6 +239,7 @@ func (c *ApiController) UpdateApplication() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-application [post]
 func (c *ApiController) AddApplication() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	goCtx := c.getRequestCtx()
 
 	var application object.Application
@@ -266,6 +272,7 @@ func (c *ApiController) AddApplication() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-application [post]
 func (c *ApiController) DeleteApplication() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var application object.Application
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &application)
 	if err != nil {

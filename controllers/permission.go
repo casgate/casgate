@@ -32,6 +32,7 @@ import (
 // @Failure 401 Unauthorized
 // @router /get-permissions [get]
 func (c *ApiController) GetPermissions() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -81,6 +82,7 @@ func (c *ApiController) GetPermissions() {
 // @Failure 401 Unauthorized
 // @router /get-permissions-by-submitter [get]
 func (c *ApiController) GetPermissionsBySubmitter() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	user, ok := c.RequireSignedInUser()
 	if !ok {
 		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
@@ -105,6 +107,7 @@ func (c *ApiController) GetPermissionsBySubmitter() {
 // @Failure 500 Internal server error
 // @router /get-permissions-by-role [get]
 func (c *ApiController) GetPermissionsByRole() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 	permissions, err := object.GetPermissionsByRole(id)
 	if err != nil {
@@ -124,6 +127,7 @@ func (c *ApiController) GetPermissionsByRole() {
 // @Failure 500 Internal server error
 // @router /get-permission [get]
 func (c *ApiController) GetPermission() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	permission, err := object.GetPermission(id)
@@ -145,6 +149,7 @@ func (c *ApiController) GetPermission() {
 // @Failure 400 Bad request
 // @router /update-permission [post]
 func (c *ApiController) UpdatePermission() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	var permission object.Permission
@@ -167,6 +172,7 @@ func (c *ApiController) UpdatePermission() {
 // @Failure 400 Bad request
 // @router /add-permission [post]
 func (c *ApiController) AddPermission() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var permission object.Permission
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &permission)
 	if err != nil {
@@ -187,6 +193,7 @@ func (c *ApiController) AddPermission() {
 // @Failure 400 Bad request
 // @router /delete-permission [post]
 func (c *ApiController) DeletePermission() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var permission object.Permission
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &permission)
 	if err != nil {

@@ -32,6 +32,8 @@ import (
 // @Success 200 {array} object.Cert The Response object
 // @router /get-certs [get]
 func (c *ApiController) GetCerts() {
+	c.ContinueIfHasRightsOrDenyRequest()
+
 	owner := c.Input().Get("owner")
 	limitParam := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -70,6 +72,8 @@ func (c *ApiController) GetCerts() {
 // @Success 200 {array} object.Cert The Response object
 // @router /get-globle-certs [get]
 func (c *ApiController) GetGlobleCerts() {
+	c.ContinueIfHasRightsOrDenyRequest()
+
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 	field := c.Input().Get("field")
@@ -112,6 +116,8 @@ func (c *ApiController) GetGlobleCerts() {
 // @Success 200 {object} object.Cert The Response object
 // @router /get-cert [get]
 func (c *ApiController) GetCert() {
+	c.ContinueIfHasRightsOrDenyRequest()
+
 	id := c.Input().Get("id")
 	cert, err := object.GetCert(id)
 	if err != nil {
@@ -131,6 +137,8 @@ func (c *ApiController) GetCert() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-cert [post]
 func (c *ApiController) UpdateCert() {
+	c.ContinueIfHasRightsOrDenyRequest()
+
 	id := c.Input().Get("id")
 
 	var cert object.Cert
@@ -152,6 +160,8 @@ func (c *ApiController) UpdateCert() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-cert [post]
 func (c *ApiController) AddCert() {
+	c.ContinueIfHasRightsOrDenyRequest()
+
 	var cert object.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {
@@ -174,6 +184,8 @@ func (c *ApiController) AddCert() {
 // @Failure 500 Internal Server Error
 // @router /delete-cert [post]
 func (c *ApiController) DeleteCert() {
+	c.ContinueIfHasRightsOrDenyRequest()
+	
 	var cert object.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {

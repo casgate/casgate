@@ -31,6 +31,7 @@ import (
 // @Failure 500 Internal server error
 // @router /get-roles [get]
 func (c *ApiController) GetRoles() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	limitParam := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -71,6 +72,7 @@ func (c *ApiController) GetRoles() {
 // @Failure 500 Internal server error
 // @router /get-role [get]
 func (c *ApiController) GetRole() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	role, err := object.GetRole(id)
@@ -92,6 +94,7 @@ func (c *ApiController) GetRole() {
 // @Failure 400 Bad request
 // @router /update-role [post]
 func (c *ApiController) UpdateRole() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	var role object.Role
@@ -114,6 +117,7 @@ func (c *ApiController) UpdateRole() {
 // @Failure 400 Bad request
 // @router /add-role [post]
 func (c *ApiController) AddRole() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {
@@ -134,6 +138,7 @@ func (c *ApiController) AddRole() {
 // @Failure 400 Bad request
 // @router /delete-role [post]
 func (c *ApiController) DeleteRole() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {

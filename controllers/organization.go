@@ -31,6 +31,7 @@ import (
 // @Failure 500 Internal server error
 // @router /get-organizations [get]
 func (c *ApiController) GetOrganizations() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -94,6 +95,7 @@ func (c *ApiController) GetOrganizations() {
 // @Failure 500 Internal server error
 // @router /get-organization [get]
 func (c *ApiController) GetOrganization() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 	maskedOrganization, err := object.GetMaskedOrganization(object.GetOrganization(id))
 	if err != nil {
@@ -114,6 +116,7 @@ func (c *ApiController) GetOrganization() {
 // @Failure 400 Bad request
 // @router /update-organization [post]
 func (c *ApiController) UpdateOrganization() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	var organization object.Organization
@@ -138,6 +141,7 @@ func (c *ApiController) UpdateOrganization() {
 // @Failure 500 Internal server error
 // @router /add-organization [post]
 func (c *ApiController) AddOrganization() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
@@ -169,6 +173,7 @@ func (c *ApiController) AddOrganization() {
 // @Failure 400 Bad request
 // @router /delete-organization [post]
 func (c *ApiController) DeleteOrganization() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {

@@ -31,6 +31,7 @@ import (
 // @Success 200 {array} object.Enforcer
 // @router /get-enforcers [get]
 func (c *ApiController) GetEnforcers() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -74,6 +75,7 @@ func (c *ApiController) GetEnforcers() {
 // @Success 200 {object} object
 // @router /get-enforcer [get]
 func (c *ApiController) GetEnforcer() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 	loadModelCfg := c.Input().Get("loadModelCfg")
 
@@ -102,6 +104,7 @@ func (c *ApiController) GetEnforcer() {
 // @Success 200 {object} object
 // @router /update-enforcer [post]
 func (c *ApiController) UpdateEnforcer() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	enforcer := object.Enforcer{}
@@ -123,6 +126,7 @@ func (c *ApiController) UpdateEnforcer() {
 // @Success 200 {object} object
 // @router /add-enforcer [post]
 func (c *ApiController) AddEnforcer() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	enforcer := object.Enforcer{}
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &enforcer)
 	if err != nil {
@@ -142,6 +146,7 @@ func (c *ApiController) AddEnforcer() {
 // @Success 200 {object} object
 // @router /delete-enforcer [post]
 func (c *ApiController) DeleteEnforcer() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var enforcer object.Enforcer
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &enforcer)
 	if err != nil {
@@ -182,6 +187,7 @@ func (c *ApiController) GetPolicies() {
 }
 
 func (c *ApiController) UpdatePolicy() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	var policies []xormadapter.CasbinRule
@@ -201,6 +207,7 @@ func (c *ApiController) UpdatePolicy() {
 }
 
 func (c *ApiController) AddPolicy() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	var policy xormadapter.CasbinRule
@@ -220,6 +227,7 @@ func (c *ApiController) AddPolicy() {
 }
 
 func (c *ApiController) RemovePolicy() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	var policy xormadapter.CasbinRule

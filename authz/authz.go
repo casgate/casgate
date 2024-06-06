@@ -144,7 +144,7 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 	}
 
 	if user != nil {
-		if user.IsDeleted {
+		if user.IsDeleted || user.IsForbidden {
 			return false
 		}
 

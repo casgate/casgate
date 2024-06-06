@@ -105,6 +105,7 @@ func (c *ApiController) GetRecords() {
 // @Success 200 {object} object.Record The Response object
 // @router /get-records-filter [post]
 func (c *ApiController) GetRecordsByFilter() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	body := string(c.Ctx.Input.RequestBody)
 
 	record := &object.Record{}
@@ -131,6 +132,7 @@ func (c *ApiController) GetRecordsByFilter() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-record [post]
 func (c *ApiController) AddRecord() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var record object.Record
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &record)
 	if err != nil {

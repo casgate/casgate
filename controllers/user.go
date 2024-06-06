@@ -45,6 +45,7 @@ type GetEmailAndPhoneResp struct {
 // @Failure 500 Internal server error
 // @router /get-global-users [get]
 func (c *ApiController) GetGlobalUsers() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	limitParam := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 	field := c.Input().Get("field")
@@ -107,6 +108,7 @@ func (c *ApiController) GetGlobalUsers() {
 // @Failure 500 Internal server error
 // @router /get-users [get]
 func (c *ApiController) GetUsers() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	groupName := c.Input().Get("groupName")
 	limitParam := c.Input().Get("pageSize")
@@ -172,6 +174,7 @@ func (c *ApiController) GetUsers() {
 // @Failure 500 Internal server error
 // @router /get-user [get]
 func (c *ApiController) GetUser() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 	email := c.Input().Get("email")
 	phone := c.Input().Get("phone")
@@ -263,6 +266,7 @@ func (c *ApiController) GetUser() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-user-id-provider [post]
 func (c *ApiController) AddUserIdProvider() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
 
@@ -311,6 +315,7 @@ func (c *ApiController) AddUserIdProvider() {
 // @Failure 500 Internal server error
 // @router /update-user [post]
 func (c *ApiController) UpdateUser() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 	columnsStr := c.Input().Get("columns")
 
@@ -402,6 +407,7 @@ func (c *ApiController) UpdateUser() {
 // @Failure 500 Internal server error
 // @router /add-user [post]
 func (c *ApiController) AddUser() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	ctx := c.getRequestCtx()
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
@@ -441,6 +447,7 @@ func (c *ApiController) AddUser() {
 // @Failure 403 Forbidden
 // @router /delete-user [post]
 func (c *ApiController) DeleteUser() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	ctx := c.getRequestCtx()
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
@@ -470,6 +477,7 @@ func (c *ApiController) DeleteUser() {
 // @Failure 500 Internal server error
 // @router /get-email-and-phone [get]
 func (c *ApiController) GetEmailAndPhone() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	ctx := c.getRequestCtx()
 	organization := c.Ctx.Request.Form.Get("organization")
 	applicationId := c.Ctx.Request.Form.Get("applicationId")
@@ -679,6 +687,7 @@ func (c *ApiController) CheckUserPassword() {
 // @Failure 500 Internal server error
 // @router /get-sorted-users [get]
 func (c *ApiController) GetSortedUsers() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	sorter := c.Input().Get("sorter")
 	limit := util.ParseInt(c.Input().Get("limit"))
@@ -702,6 +711,7 @@ func (c *ApiController) GetSortedUsers() {
 // @Failure 500 Internal server error
 // @router /get-user-count [get]
 func (c *ApiController) GetUserCount() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	isOnline := c.Input().Get("isOnline")
 
@@ -727,6 +737,7 @@ func (c *ApiController) GetUserCount() {
 // @Failure 500 Internal server error
 // @Tag User API
 func (c *ApiController) AddUserkeys() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
@@ -750,6 +761,7 @@ func (c *ApiController) AddUserkeys() {
 // @Failure 500 Internal server error
 // @Tag User API
 func (c *ApiController) RemoveUserFromGroup() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Ctx.Request.Form.Get("owner")
 	name := c.Ctx.Request.Form.Get("name")
 	groupName := c.Ctx.Request.Form.Get("groupName")
@@ -783,6 +795,7 @@ func (c *ApiController) RemoveUserFromGroup() {
 // @Failure 500 Internal server error
 // @Tag User API
 func (c *ApiController) SendInvite() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	ctx := c.getRequestCtx()
 	owner := c.Input().Get("owner")
 	username := c.Input().Get("name")

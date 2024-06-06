@@ -32,6 +32,7 @@ import (
 // @Success 200 {array} object.Token The Response object
 // @router /get-tokens [get]
 func (c *ApiController) GetTokens() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -75,6 +76,7 @@ func (c *ApiController) GetTokens() {
 // @Success 200 {object} object.Token The Response object
 // @router /get-token [get]
 func (c *ApiController) GetToken() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 	token, err := object.GetToken(id)
 	if err != nil {
@@ -94,6 +96,7 @@ func (c *ApiController) GetToken() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-token [post]
 func (c *ApiController) UpdateToken() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	var token object.Token
@@ -115,6 +118,7 @@ func (c *ApiController) UpdateToken() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-token [post]
 func (c *ApiController) AddToken() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var token object.Token
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &token)
 	if err != nil {
@@ -134,6 +138,7 @@ func (c *ApiController) AddToken() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-token [post]
 func (c *ApiController) DeleteToken() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var token object.Token
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &token)
 	if err != nil {
