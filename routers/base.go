@@ -17,7 +17,6 @@ package routers
 import (
 	"fmt"
 	"net"
-	"net/http"
 	"net/url"
 	"strings"
 
@@ -35,8 +34,8 @@ type Response struct {
 	Data2  interface{} `json:"data2"`
 }
 
-func responseError(ctx *context.Context, error string, data ...interface{}) {
-	ctx.ResponseWriter.WriteHeader(http.StatusForbidden)
+func responseError(ctx *context.Context, error string, code int, data ...interface{}) {
+	ctx.ResponseWriter.WriteHeader(code)
 
 	resp := Response{Status: "error", Msg: error}
 	switch len(data) {
@@ -60,10 +59,6 @@ func getAcceptLanguage(ctx *context.Context) string {
 
 func T(ctx *context.Context, error string) string {
 	return i18n.Translate(getAcceptLanguage(ctx), error)
-}
-
-func denyRequest(ctx *context.Context) {
-	responseError(ctx, T(ctx, "auth:Unauthorized operation"))
 }
 
 func getUsernameByClientIdSecret(ctx *context.Context) string {

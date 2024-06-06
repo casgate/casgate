@@ -117,7 +117,7 @@ func StaticFilter(ctx *context.Context) {
 	if urlPath == "/login/oauth/authorize" {
 		redirectUrl, err := fastAutoSignin(ctx)
 		if err != nil {
-			responseError(ctx, err.Error())
+			responseError(ctx, err.Error(), http.StatusForbidden)
 			return
 		}
 

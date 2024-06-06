@@ -204,6 +204,6 @@ func ApiFilter(ctx *context.Context) {
 	}
 
 	if !isAllowed {
-		denyRequest(ctx)
+		responseError(ctx, T(ctx, "auth:Unauthorized operation"), http.StatusUnauthorized)
 	}
 }
