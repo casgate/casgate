@@ -32,38 +32,34 @@ import (
 // @router /get-roles [get]
 func (c *ApiController) GetRoles() {
 	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
+	limitParam := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 	field := c.Input().Get("field")
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
-	if limit == "" || page == "" {
-		roles, err := object.GetRoles(owner)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		c.ResponseOk(roles)
+	var limit int
+	if limitParam == "" || page == "" {
+		limit = -1
 	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetRoleCount(owner, field, value)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
+		limit = util.ParseInt(limitParam)
 
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		roles, err := object.GetPaginationRoles(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		c.ResponseOk(roles, paginator.Nums())
 	}
+	count, err := object.GetRoleCount(owner, field, value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	paginator := pagination.SetPaginator(c.Ctx, limit, count)
+	roles, err := object.GetPaginationRoles(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.ResponseOk(roles, paginator.Nums())
 }
 
 // GetRole
