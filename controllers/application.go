@@ -88,7 +88,6 @@ func (c *ApiController) GetApplications() {
 // @Success 200 {object} object.Application The Response object
 // @router /get-application [get]
 func (c *ApiController) GetApplication() {
-	c.ContinueIfHasRightsOrDenyRequest()
 	userId := c.GetSessionUsername()
 	id := c.Input().Get("id")
 	goCtx := c.getRequestCtx()
