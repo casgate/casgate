@@ -92,7 +92,7 @@ import {clearWeb3AuthToken} from "./auth/Web3Auth";
 import AccountAvatar from "./account/AccountAvatar";
 import OpenTour from "./common/OpenTour";
 
-const {Header, Footer, Content} = Layout;
+const {Header, Content} = Layout;
 
 import {setTwoToneColor} from "@ant-design/icons";
 import DomainListPage from "./DomainListPage";
@@ -645,19 +645,6 @@ class App extends Component {
     return (
       <React.Fragment>
         {!this.state.account ? null : <div style={{display: "none"}} id="CasdoorApplicationName" value={this.state.account.signupApplication} />}
-        <Footer id="footer" style={
-          {
-            textAlign: "center",
-          }
-        }>
-          {
-            Conf.CustomFooter !== null ? Conf.CustomFooter : (
-              <React.Fragment>
-                {this.state.application?.footerText}
-              </React.Fragment>
-            )
-          }
-        </Footer>
       </React.Fragment>
     );
   }
