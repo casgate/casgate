@@ -15,8 +15,10 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+
 	goldap "github.com/go-ldap/ldap/v3"
 
 	"github.com/casdoor/casdoor/object"
@@ -64,7 +66,7 @@ func (c *ApiController) GetLdapUsers() {
 		return
 	}
 
-	conn, err := ldapServer.GetLdapConn()
+	conn, err := ldapServer.GetLdapConn(context.Background())
 	if err != nil {
 		record.AddReason(fmt.Sprintf("Get LDAP connection: %s", err.Error()))
 
@@ -424,7 +426,7 @@ func (c *ApiController) TestLdapConnection() {
 	}
 
 	var connection *object.LdapConn
-	connection, err = ldap.GetLdapConn()
+	connection, err = ldap.GetLdapConn(context.Background())
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

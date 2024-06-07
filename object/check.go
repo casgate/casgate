@@ -254,7 +254,7 @@ func CheckLdapUserPassword(user *User, password string, lang string) (string, er
 	userDisabled := false
 
 	for _, ldapServer := range ldaps {
-		conn, err := ldapServer.GetLdapConn()
+		conn, err := ldapServer.GetLdapConn(context.Background())
 		if err != nil {
 			continue
 		}

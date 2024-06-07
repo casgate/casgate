@@ -89,6 +89,14 @@ func (l *LdapAutoSynchronizer) StopAutoSync(ldapId string) {
 
 // autosync goroutine
 func (l *LdapAutoSynchronizer) syncRoutine(ctx context.Context, ldap *Ldap, stopChan chan struct{}) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	util.SafeGoroutine(func() {
+		<-stopChan
+		cancel()
+	})
+
 	err := syncUsers(ctx, ldap)
 	if err != nil {
 		return err
@@ -117,7 +125,7 @@ func syncUsers(ctx context.Context, ldap *Ldap) error {
 	rb.AddReason(fmt.Sprintf("autoSync started for %s", ldap.Id))
 
 	// fetch all users
-	conn, err := ldap.GetLdapConn()
+	conn, err := ldap.GetLdapConn(ctx)
 	if err != nil {
 		logAndAddRecord(fmt.Sprintf("autoSync failed for %s, error %s", ldap.Id, err), logs.LevelWarning, rb)
 		return nil
