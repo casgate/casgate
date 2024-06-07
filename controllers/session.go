@@ -79,7 +79,7 @@ func (c *ApiController) GetSessions() {
 // @router /get-session [get]
 func (c *ApiController) GetSingleSession() {
 	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("sessionPkId")
+	id := c.Input().Get("id")
 
 	session, err := object.GetSingleSession(id)
 	if err != nil {
