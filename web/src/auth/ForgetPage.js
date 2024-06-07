@@ -21,7 +21,6 @@ import * as Setting from "../Setting";
 import i18next from "i18next";
 import {SendCodeInput} from "../common/SendCodeInput";
 import * as UserBackend from "../backend/UserBackend";
-import {CheckCircleOutlined, KeyOutlined, LockOutlined, SolutionOutlined, UserOutlined} from "@ant-design/icons";
 import CustomGithubCorner from "../common/CustomGithubCorner";
 import {withRouter} from "react-router-dom";
 import * as PasswordChecker from "../common/PasswordChecker";
@@ -216,7 +215,6 @@ class ForgetPage extends React.Component {
               application: application.name,
               organization: application.organization,
             }}
-            style={{width: "300px"}}
             size="large"
           >
             <Form.Item
@@ -250,11 +248,10 @@ class ForgetPage extends React.Component {
               ]}
             >
               <Input
-                prefix={<UserOutlined />}
+                style={{marginTop: 24}}
                 placeholder={i18next.t("login:username, Email or phone")}
               />
             </Form.Item>
-            <br />
             <Form.Item>
               <Button block type="primary" htmlType="submit">
                 {i18next.t("forget:Next Step")}
@@ -285,11 +282,10 @@ class ForgetPage extends React.Component {
             organization: application.organization,
             dest: this.state.dest,
           }}
-          style={{width: "300px"}}
           size="large"
         >
           <Form.Item
-            style={{height: 0, visibility: "hidden"}}
+            style={{height: 0, visibility: "hidden", margin: 0}}
             name="application"
             rules={[
               {
@@ -341,7 +337,6 @@ class ForgetPage extends React.Component {
               oneTimeCode={this.state.oneTimeCode}
             />
           </Form.Item>
-          <br />
           <Form.Item>
             <Button
               block
@@ -370,7 +365,6 @@ class ForgetPage extends React.Component {
               application: application.name,
               organization: application.organization,
             }}
-            style={{width: "300px"}}
             size="large"
           >
             <Form.Item
@@ -413,7 +407,6 @@ class ForgetPage extends React.Component {
               hasFeedback
             >
               <Input.Password
-                prefix={<LockOutlined />}
                 placeholder={i18next.t("general:Password")}
               />
             </Form.Item>
@@ -439,11 +432,9 @@ class ForgetPage extends React.Component {
               ]}
             >
               <Input.Password
-                prefix={<CheckCircleOutlined />}
                 placeholder={i18next.t("signup:Confirm")}
               />
             </Form.Item>
-            <br />
             <Form.Item hidden={this.state.current !== 2}>
               <Button block type="primary" htmlType="submit">
                 {i18next.t("forget:Change Password")}
@@ -469,10 +460,10 @@ class ForgetPage extends React.Component {
         <div className="forget-wrapper">
           <div className="forget-content" style={{padding: Setting.isMobile() ? "0" : null, boxShadow: Setting.isMobile() ? "none" : null}}>
             <Row>
-              <Col span={24} style={{justifyContent: "center"}}>
+              <Col span={24}>
                 <Row>
                   <Col span={24}>
-                    <div style={{marginTop: "24px", marginBottom: "10px", textAlign: "center"}}>
+                    <div>
                       {
                         Setting.renderHelmet(application)
                       }
@@ -484,7 +475,7 @@ class ForgetPage extends React.Component {
                 </Row>
                 <Row>
                   <Col span={24}>
-                    <h1 style={{textAlign: "center"}}>{i18next.t("forget:Retrieve password")}</h1>
+                    <h1>{i18next.t("forget:Retrieve password")}</h1>
                   </Col>
                 </Row>
                 <Row>
@@ -494,30 +485,21 @@ class ForgetPage extends React.Component {
                       items={[
                         {
                           title: i18next.t("forget:Account"),
-                          icon: <UserOutlined />,
                         },
                         {
                           title: i18next.t("forget:Verify"),
-                          icon: <SolutionOutlined />,
                         },
                         {
                           title: i18next.t("forget:Reset"),
-                          icon: <KeyOutlined />,
                         },
                       ]}
-                      style={{
-                        width: "90%",
-                        maxWidth: "500px",
-                        margin: "auto",
-                        marginTop: "24px",
-                      }}
                     >
                     </Steps>
                   </Col>
                 </Row>
               </Col>
-              <Col span={24} style={{display: "flex", justifyContent: "center"}}>
-                <div style={{marginTop: "40px", textAlign: "center"}}>
+              <Col span={24}>
+                <div>
                   {this.renderForm(application)}
                 </div>
               </Col>
