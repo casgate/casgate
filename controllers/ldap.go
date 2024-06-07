@@ -214,6 +214,10 @@ func (c *ApiController) AddLdap() {
 		return
 	}
 
+	if len(ldap.Id) == 0 {
+		ldap.Id = util.GenerateId()
+	}
+
 	if ok, err := object.CheckLdapExist(&ldap); err != nil {
 		record.AddReason(fmt.Sprintf("Check LDAP exists: %v", err.Error()))
 
