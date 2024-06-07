@@ -99,6 +99,8 @@ import DomainListPage from "./DomainListPage";
 import DomainEditPage from "./DomainEditPage";
 import * as ApplicationBackend from "./backend/ApplicationBackend";
 
+import {appThemeComponents, appThemeToken} from "./theme";
+
 setTwoToneColor("rgb(87,52,211)");
 
 class App extends Component {
@@ -772,10 +774,12 @@ class App extends Component {
         }
         <ConfigProvider theme={{
           token: {
+            ...appThemeToken,
             colorPrimary: this.state.themeData.colorPrimary,
             colorInfo: this.state.themeData.colorPrimary,
             borderRadius: this.state.themeData.borderRadius,
           },
+          components: appThemeComponents,
           algorithm: Setting.getAlgorithm(this.state.themeAlgorithm),
         }}>
           <StyleProvider hashPriority="high" transformers={[legacyLogicalPropertiesTransformer]}>

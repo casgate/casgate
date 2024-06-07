@@ -36,6 +36,8 @@ import {Controlled as CodeMirror} from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
 import ThemeEditor from "./common/theme/ThemeEditor";
 
+import {appThemeComponents, appThemeToken} from "./theme";
+
 require("codemirror/theme/material-darker.css");
 require("codemirror/mode/htmlmixed/htmlmixed");
 require("codemirror/mode/xml/xml");
@@ -947,10 +949,12 @@ class ApplicationEditPage extends React.Component {
           <br />
           <ConfigProvider theme={{
             token: {
+              ...appThemeToken,
               colorPrimary: themeData.colorPrimary,
               colorInfo: themeData.colorPrimary,
               borderRadius: themeData.borderRadius,
             },
+            components: appThemeComponents,
           }}>
             <div style={{position: "relative", width: previewWidth, border: "1px solid rgb(217,217,217)", boxShadow: "10px 10px 5px #888888", overflow: "auto"}}>
               {
@@ -979,10 +983,12 @@ class ApplicationEditPage extends React.Component {
           <br />
           <ConfigProvider theme={{
             token: {
+              ...appThemeToken,
               colorPrimary: themeData.colorPrimary,
               colorInfo: themeData.colorPrimary,
               borderRadius: themeData.borderRadius,
             },
+            components: appThemeComponents,
           }}>
             <div style={{position: "relative", width: previewWidth, border: "1px solid rgb(217,217,217)", boxShadow: "10px 10px 5px #888888", overflow: "auto"}}>
               <div className="loginBackground" style={{backgroundImage: `url(${this.state.application?.formBackgroundUrl})`, overflow: "auto"}}>
@@ -1012,10 +1018,12 @@ class ApplicationEditPage extends React.Component {
         <br />
         <ConfigProvider theme={{
           token: {
+            ...appThemeToken,
             colorPrimary: themeData.colorPrimary,
             colorInfo: themeData.colorPrimary,
             borderRadius: themeData.borderRadius,
           },
+          components: appThemeComponents,
         }}>
           <div style={{position: "relative", width: previewWidth, border: "1px solid rgb(217,217,217)", boxShadow: "10px 10px 5px #888888", flexDirection: "column", flex: "auto"}}>
             <PromptPage application={this.state.application} account={this.props.account} />
