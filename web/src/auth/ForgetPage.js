@@ -394,6 +394,7 @@ class ForgetPage extends React.Component {
                 {
                   required: true,
                   validateTrigger: "onChange",
+                  message: i18next.t("signup:Please input your password!"),
                   validator: (rule, value) => {
                     const errorMsg = PasswordChecker.checkPasswordComplexity(value, application.organizationObj.passwordOptions, application.organizationObj.passwordSpecialChars);
                     if (errorMsg === "") {
@@ -407,7 +408,7 @@ class ForgetPage extends React.Component {
               hasFeedback
             >
               <Input.Password
-                placeholder={i18next.t("general:Password")}
+                placeholder={i18next.t("forget:New Password")}
               />
             </Form.Item>
             <Form.Item
@@ -432,7 +433,7 @@ class ForgetPage extends React.Component {
               ]}
             >
               <Input.Password
-                placeholder={i18next.t("signup:Confirm")}
+                placeholder={i18next.t("forget:Confirm Password")}
               />
             </Form.Item>
             <Form.Item hidden={this.state.current !== 2}>
