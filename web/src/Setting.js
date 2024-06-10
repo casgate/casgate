@@ -176,7 +176,7 @@ export const OtherProviderInfo = {
       url: "https://aws.amazon.com/s3",
     },
     "MinIO": {
-      logo: "https://min.io/resources/img/logo.svg",
+      logo: `${StaticBaseUrl}/img/logo.svg`,
       url: "https://min.io/",
     },
     "Aliyun OSS": {
