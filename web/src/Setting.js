@@ -431,8 +431,12 @@ export function isLdapEnabled(application) {
   }
 }
 
+export function getCountryImageUrl(country) {
+  return `${StaticBaseUrl}/flag-icons/${country}.svg`;
+}
+
 export function getCountryImage(country) {
-  return <img src={`${StaticBaseUrl}/flag-icons/${country.code}.svg`} alt={country.name} height={20} style={{marginRight: 10}} />;
+  return <img src={getCountryImageUrl(country.code)} alt={country.name} height={20} style={{marginRight: 10}} />;
 }
 
 export function initServerUrl(serverUrl) {
