@@ -55,8 +55,12 @@ func (c *ApiController) GetLdapUsers() {
 	c.ContinueIfHasRightsOrDenyRequest()
 	gCtx := c.getRequestCtx()
 	record := object.GetRecord(gCtx)
-
 	ldapId := c.Input().Get("ldapId")
+
+	if ldapId == "" {
+		c.ResponseBadRequest("ldapId is required")
+	}
+
 	ldapServer, err := object.GetLdap(ldapId)
 	if err != nil {
 		record.AddReason(fmt.Sprintf("Get LDAP: %s", err.Error()))
