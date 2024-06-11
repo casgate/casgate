@@ -8,7 +8,7 @@ export const TourObj = {
       cover: (
         <img
           alt="casdoor.png"
-          src="https://cdn.casbin.org/img/casdoor-logo_1185x256.png"
+          src="/assets/img/casdoor-logo_1185x256.png"
         />
       ),
     },
