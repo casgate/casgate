@@ -81,8 +81,15 @@ func (c *ApiController) GetGlobleCerts() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 
+	owner := ""
+
+	if !c.IsGlobalAdmin() {
+		user, _ := c.RequireSignedInUser()
+		owner = user.Owner
+	} 
+
 	if limit == "" || page == "" {
-		maskedCerts, err := object.GetMaskedCerts(object.GetGlobleCerts())
+		maskedCerts, err := object.GetMaskedCerts(object.GetGlobleCerts(owner))
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -98,7 +105,7 @@ func (c *ApiController) GetGlobleCerts() {
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		certs, err := object.GetMaskedCerts(object.GetPaginationGlobalCerts(paginator.Offset(), limit, field, value, sortField, sortOrder))
+		certs, err := object.GetMaskedCerts(object.GetPaginationGlobalCerts(owner, paginator.Offset(), limit, field, value, sortField, sortOrder))
 		if err != nil {
 			c.ResponseError(err.Error())
 			return

@@ -41,6 +41,16 @@ func (c *ApiController) GetTokens() {
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
 	organization := c.Input().Get("organization")
+
+	if !c.IsGlobalAdmin() {
+		user, _ := c.RequireSignedInUser()
+		if organization != "" && organization != user.Owner {
+			c.ResponseForbidden(c.T("auth:Unable to get tokens from other organization without global administrator role"))
+			return
+		}
+		organization = user.Owner
+	} 
+
 	if limit == "" || page == "" {
 		token, err := object.GetTokens(owner, organization)
 		if err != nil {
@@ -79,6 +89,15 @@ func (c *ApiController) GetToken() {
 	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 	token, err := object.GetToken(id)
+
+	if !c.IsGlobalAdmin() {
+		user, _ := c.RequireSignedInUser()
+		if token.Organization != user.Owner {
+			c.ResponseForbidden(c.T("auth:Unable to get tokens from other organization without global administrator role"))
+			return
+		}
+	} 
+
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -106,6 +125,14 @@ func (c *ApiController) UpdateToken() {
 		return
 	}
 
+	if !c.IsGlobalAdmin() {
+		user, _ := c.RequireSignedInUser()
+		if token.Organization != user.Owner {
+			c.ResponseForbidden(c.T("auth:Unable to update tokens from other organization without global administrator role"))
+			return
+		}
+	} 
+
 	c.Data["json"] = wrapActionResponse(object.UpdateToken(id, &token))
 	c.ServeJSON()
 }
@@ -126,6 +153,14 @@ func (c *ApiController) AddToken() {
 		return
 	}
 
+	if !c.IsGlobalAdmin() {
+		user, _ := c.RequireSignedInUser()
+		if token.Organization != user.Owner {
+			c.ResponseForbidden(c.T("auth:Unable to add tokens from other organization without global administrator role"))
+			return
+		}
+	}
+
 	c.Data["json"] = wrapActionResponse(object.AddToken(&token))
 	c.ServeJSON()
 }
@@ -144,6 +179,14 @@ func (c *ApiController) DeleteToken() {
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
+	}
+
+	if !c.IsGlobalAdmin() {
+		user, _ := c.RequireSignedInUser()
+		if token.Organization != user.Owner {
+			c.ResponseForbidden(c.T("auth:Unable to add tokens from other organization without global administrator role"))
+			return
+		}
 	}
 
 	c.Data["json"] = wrapActionResponse(object.DeleteToken(&token))

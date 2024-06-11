@@ -30,6 +30,7 @@ import (
 // @Success 200 {array} object.Syncer The Response object
 // @router /get-syncers [get]
 func (c *ApiController) GetSyncers() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -74,6 +75,7 @@ func (c *ApiController) GetSyncers() {
 // @Success 200 {object} object.Syncer The Response object
 // @router /get-syncer [get]
 func (c *ApiController) GetSyncer() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	syncer, err := object.GetSyncer(id)
@@ -94,6 +96,7 @@ func (c *ApiController) GetSyncer() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-syncer [post]
 func (c *ApiController) UpdateSyncer() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	var syncer object.Syncer
@@ -115,6 +118,7 @@ func (c *ApiController) UpdateSyncer() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-syncer [post]
 func (c *ApiController) AddSyncer() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var syncer object.Syncer
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &syncer)
 	if err != nil {
@@ -134,6 +138,7 @@ func (c *ApiController) AddSyncer() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-syncer [post]
 func (c *ApiController) DeleteSyncer() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var syncer object.Syncer
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &syncer)
 	if err != nil {
@@ -153,6 +158,7 @@ func (c *ApiController) DeleteSyncer() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /run-syncer [get]
 func (c *ApiController) RunSyncer() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 	syncer, err := object.GetSyncer(id)
 	if err != nil {

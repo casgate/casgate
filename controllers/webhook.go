@@ -31,6 +31,7 @@ import (
 // @router /get-webhooks [get]
 // @Security test_apiKey
 func (c *ApiController) GetWebhooks() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -76,6 +77,7 @@ func (c *ApiController) GetWebhooks() {
 // @Success 200 {object} object.Webhook The Response object
 // @router /get-webhook [get]
 func (c *ApiController) GetWebhook() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	webhook, err := object.GetWebhook(id)
@@ -96,6 +98,7 @@ func (c *ApiController) GetWebhook() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-webhook [post]
 func (c *ApiController) UpdateWebhook() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	id := c.Input().Get("id")
 
 	var webhook object.Webhook
@@ -117,6 +120,7 @@ func (c *ApiController) UpdateWebhook() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-webhook [post]
 func (c *ApiController) AddWebhook() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var webhook object.Webhook
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &webhook)
 	if err != nil {
@@ -136,6 +140,7 @@ func (c *ApiController) AddWebhook() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-webhook [post]
 func (c *ApiController) DeleteWebhook() {
+	c.ContinueIfHasRightsOrDenyRequest()
 	var webhook object.Webhook
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &webhook)
 	if err != nil {
