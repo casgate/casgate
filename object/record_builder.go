@@ -126,7 +126,7 @@ func GetRecord(ctx goCtx.Context) *RecordBuilder {
 
 	logs.Error("extract record from context: %s", err.Error())
 
-	return &RecordBuilder{}
+	return NewRecordBuilder()
 }
 
 var (
