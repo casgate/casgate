@@ -30,7 +30,9 @@ import (
 // @Success 200 {array} string The Response object
 // @router /get-sessions [get]
 func (c *ApiController) GetSessions() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 	field := c.Input().Get("field")
@@ -78,10 +80,10 @@ func (c *ApiController) GetSessions() {
 // @Success 200 {array} string The Response object
 // @router /get-session [get]
 func (c *ApiController) GetSingleSession() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	session, err := object.GetSingleSession(id)
+	session, err := object.GetSingleSession(request.Id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -98,7 +100,9 @@ func (c *ApiController) GetSingleSession() {
 // @Success 200 {array} string The Response object
 // @router /update-session [post]
 func (c *ApiController) UpdateSession() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var session object.Session
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &session)
 	if err != nil {
@@ -119,7 +123,9 @@ func (c *ApiController) UpdateSession() {
 // @Success 200 {array} string The Response object
 // @router /add-session [post]
 func (c *ApiController) AddSession() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var session object.Session
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &session)
 	if err != nil {
@@ -139,7 +145,9 @@ func (c *ApiController) AddSession() {
 // @Success 200 {array} string The Response object
 // @router /delete-session [post]
 func (c *ApiController) DeleteSession() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	ctx := c.getRequestCtx()
 	var session object.Session
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &session)
@@ -161,7 +169,9 @@ func (c *ApiController) DeleteSession() {
 // @Success 200 {array} string The Response object
 // @router /is-session-duplicated [get]
 func (c *ApiController) IsSessionDuplicated() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	id := c.Input().Get("sessionPkId")
 	sessionId := c.Input().Get("sessionId")
 

@@ -19,7 +19,6 @@ import (
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // GetRoles
@@ -31,30 +30,17 @@ import (
 // @Failure 500 Internal server error
 // @router /get-roles [get]
 func (c *ApiController) GetRoles() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	owner := c.Input().Get("owner")
-	limitParam := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-
-	var limit int
-	if limitParam == "" || page == "" {
-		limit = -1
-	} else {
-		limit = util.ParseInt(limitParam)
-
-	}
-	count, err := object.GetRoleCount(owner, field, value)
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
+	count, err := object.GetRoleCount(request.Owner, request.Field, request.Value)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
-	paginator := pagination.SetPaginator(c.Ctx, limit, count)
-	roles, err := object.GetPaginationRoles(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	roles, err := object.GetPaginationRoles(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
@@ -72,10 +58,11 @@ func (c *ApiController) GetRoles() {
 // @Failure 500 Internal server error
 // @router /get-role [get]
 func (c *ApiController) GetRole() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 
-	role, err := object.GetRole(id)
+	role, err := object.GetRole(request.Id)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
@@ -94,8 +81,8 @@ func (c *ApiController) GetRole() {
 // @Failure 400 Bad request
 // @router /update-role [post]
 func (c *ApiController) UpdateRole() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
@@ -103,8 +90,8 @@ func (c *ApiController) UpdateRole() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
-
-	c.Data["json"] = wrapActionResponse(object.UpdateRole(id, &role))
+	
+	c.Data["json"] = wrapActionResponse(object.UpdateRole(request.Id, &role))
 	c.ServeJSON()
 }
 
@@ -117,7 +104,8 @@ func (c *ApiController) UpdateRole() {
 // @Failure 400 Bad request
 // @router /add-role [post]
 func (c *ApiController) AddRole() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {
@@ -138,7 +126,8 @@ func (c *ApiController) AddRole() {
 // @Failure 400 Bad request
 // @router /delete-role [post]
 func (c *ApiController) DeleteRole() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {

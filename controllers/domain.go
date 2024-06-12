@@ -30,7 +30,9 @@ import (
 // @Success 200 {array} object.Domain The Response object
 // @router /get-domains [get]
 func (c *ApiController) GetDomains() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -79,10 +81,10 @@ func (c *ApiController) GetDomains() {
 // @Success 200 {object} object.Domain The Response object
 // @router /get-domain [get]
 func (c *ApiController) GetDomain() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	domain, err := object.GetDomain(id)
+	domain, err := object.GetDomain(request.Id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -100,8 +102,8 @@ func (c *ApiController) GetDomain() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-domain [post]
 func (c *ApiController) UpdateDomain() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var domain object.Domain
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &domain)
@@ -110,7 +112,7 @@ func (c *ApiController) UpdateDomain() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateDomain(c.getRequestCtx(), id, &domain))
+	c.Data["json"] = wrapActionResponse(object.UpdateDomain(c.getRequestCtx(), request.Id, &domain))
 	c.ServeJSON()
 }
 
@@ -122,7 +124,8 @@ func (c *ApiController) UpdateDomain() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-domain [post]
 func (c *ApiController) AddDomain() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var domain object.Domain
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &domain)
 	if err != nil {
@@ -142,7 +145,9 @@ func (c *ApiController) AddDomain() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-domain [post]
 func (c *ApiController) DeleteDomain() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	var domain object.Domain
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &domain)
 	if err != nil {

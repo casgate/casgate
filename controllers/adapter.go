@@ -19,7 +19,6 @@ import (
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // GetAdapters
@@ -30,40 +29,23 @@ import (
 // @Success 200 {array} object.Adapter The Response object
 // @router /get-adapters [get]
 func (c *ApiController) GetAdapters() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-
-	if limit == "" || page == "" {
-		adapters, err := object.GetAdapters(owner)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(adapters)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetAdapterCount(owner, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		adapters, err := object.GetPaginationAdapters(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(adapters, paginator.Nums())
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
+	count, err := object.GetAdapterCount(request.Owner, request.Field, request.Value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
 	}
+
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	adapters, err := object.GetPaginationAdapters(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.ResponseOk(adapters, paginator.Nums())
 }
 
 // GetAdapter
@@ -74,10 +56,10 @@ func (c *ApiController) GetAdapters() {
 // @Success 200 {object} object.Adapter The Response object
 // @router /get-adapter [get]
 func (c *ApiController) GetAdapter() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	adapter, err := object.GetAdapter(id)
+	adapter, err := object.GetAdapter(request.Id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -95,9 +77,9 @@ func (c *ApiController) GetAdapter() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-adapter [post]
 func (c *ApiController) UpdateAdapter() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
-
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	var adapter object.Adapter
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &adapter)
 	if err != nil {
@@ -105,7 +87,7 @@ func (c *ApiController) UpdateAdapter() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateAdapter(id, &adapter))
+	c.Data["json"] = wrapActionResponse(object.UpdateAdapter(request.Id, &adapter))
 	c.ServeJSON()
 }
 
@@ -117,7 +99,8 @@ func (c *ApiController) UpdateAdapter() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-adapter [post]
 func (c *ApiController) AddAdapter() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var adapter object.Adapter
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &adapter)
 	if err != nil {
@@ -137,7 +120,8 @@ func (c *ApiController) AddAdapter() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-adapter [post]
 func (c *ApiController) DeleteAdapter() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var adapter object.Adapter
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &adapter)
 	if err != nil {

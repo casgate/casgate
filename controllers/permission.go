@@ -32,7 +32,9 @@ import (
 // @Failure 401 Unauthorized
 // @router /get-permissions [get]
 func (c *ApiController) GetPermissions() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -82,7 +84,9 @@ func (c *ApiController) GetPermissions() {
 // @Failure 401 Unauthorized
 // @router /get-permissions-by-submitter [get]
 func (c *ApiController) GetPermissionsBySubmitter() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	user, ok := c.RequireSignedInUser()
 	if !ok {
 		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
@@ -107,9 +111,10 @@ func (c *ApiController) GetPermissionsBySubmitter() {
 // @Failure 500 Internal server error
 // @router /get-permissions-by-role [get]
 func (c *ApiController) GetPermissionsByRole() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
-	permissions, err := object.GetPermissionsByRole(id)
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
+	permissions, err := object.GetPermissionsByRole(request.Id)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
@@ -127,10 +132,10 @@ func (c *ApiController) GetPermissionsByRole() {
 // @Failure 500 Internal server error
 // @router /get-permission [get]
 func (c *ApiController) GetPermission() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	permission, err := object.GetPermission(id)
+	permission, err := object.GetPermission(request.Id)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
@@ -149,8 +154,8 @@ func (c *ApiController) GetPermission() {
 // @Failure 400 Bad request
 // @router /update-permission [post]
 func (c *ApiController) UpdatePermission() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var permission object.Permission
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &permission)
@@ -159,7 +164,7 @@ func (c *ApiController) UpdatePermission() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdatePermission(id, &permission))
+	c.Data["json"] = wrapActionResponse(object.UpdatePermission(request.Id, &permission))
 	c.ServeJSON()
 }
 
@@ -172,7 +177,9 @@ func (c *ApiController) UpdatePermission() {
 // @Failure 400 Bad request
 // @router /add-permission [post]
 func (c *ApiController) AddPermission() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var permission object.Permission
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &permission)
 	if err != nil {
@@ -193,7 +200,9 @@ func (c *ApiController) AddPermission() {
 // @Failure 400 Bad request
 // @router /delete-permission [post]
 func (c *ApiController) DeletePermission() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	var permission object.Permission
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &permission)
 	if err != nil {

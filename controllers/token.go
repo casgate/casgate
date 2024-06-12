@@ -1,4 +1,4 @@
-// Copyright 2021 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casgate Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,8 @@ package controllers
 
 import (
 	"encoding/json"
-
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // GetTokens
@@ -31,51 +29,24 @@ import (
 // @Param   p     query    string  true        "The number of the page"
 // @Success 200 {array} object.Token The Response object
 // @router /get-tokens [get]
-func (c *ApiController) GetTokens() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-	organization := c.Input().Get("organization")
+func (c *ApiController) GetTokens() {	
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	if !c.IsGlobalAdmin() {
-		user, _ := c.RequireSignedInUser()
-		if organization != "" && organization != user.Owner {
-			c.ResponseForbidden(c.T("auth:Unable to get tokens from other organization without global administrator role"))
-			return
-		}
-		organization = user.Owner
-	} 
-
-	if limit == "" || page == "" {
-		token, err := object.GetTokens(owner, organization)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(token)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetTokenCount(owner, organization, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		tokens, err := object.GetPaginationTokens(owner, organization, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(tokens, paginator.Nums())
+	count, err := object.GetTokenCount(request.Owner, request.Organization, request.Field, request.Value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
 	}
+
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	tokens, err := object.GetPaginationTokens(request.Owner, request.Organization, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.ResponseOk(tokens, paginator.Nums())
 }
 
 // GetToken
@@ -86,17 +57,11 @@ func (c *ApiController) GetTokens() {
 // @Success 200 {object} object.Token The Response object
 // @router /get-token [get]
 func (c *ApiController) GetToken() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
-	token, err := object.GetToken(id)
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	if !c.IsGlobalAdmin() {
-		user, _ := c.RequireSignedInUser()
-		if token.Organization != user.Owner {
-			c.ResponseForbidden(c.T("auth:Unable to get tokens from other organization without global administrator role"))
-			return
-		}
-	} 
+	token, err := object.GetToken(request.Id)
+	c.ValidateOrganization(token.Organization)
 
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -115,9 +80,9 @@ func (c *ApiController) GetToken() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-token [post]
 func (c *ApiController) UpdateToken() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
-
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	var token object.Token
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &token)
 	if err != nil {
@@ -125,15 +90,9 @@ func (c *ApiController) UpdateToken() {
 		return
 	}
 
-	if !c.IsGlobalAdmin() {
-		user, _ := c.RequireSignedInUser()
-		if token.Organization != user.Owner {
-			c.ResponseForbidden(c.T("auth:Unable to update tokens from other organization without global administrator role"))
-			return
-		}
-	} 
+	c.ValidateOrganization(token.Organization) 
 
-	c.Data["json"] = wrapActionResponse(object.UpdateToken(id, &token))
+	c.Data["json"] = wrapActionResponse(object.UpdateToken(request.Id, &token))
 	c.ServeJSON()
 }
 
@@ -145,7 +104,8 @@ func (c *ApiController) UpdateToken() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-token [post]
 func (c *ApiController) AddToken() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var token object.Token
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &token)
 	if err != nil {
@@ -153,13 +113,7 @@ func (c *ApiController) AddToken() {
 		return
 	}
 
-	if !c.IsGlobalAdmin() {
-		user, _ := c.RequireSignedInUser()
-		if token.Organization != user.Owner {
-			c.ResponseForbidden(c.T("auth:Unable to add tokens from other organization without global administrator role"))
-			return
-		}
-	}
+	c.ValidateOrganization(token.Organization) 
 
 	c.Data["json"] = wrapActionResponse(object.AddToken(&token))
 	c.ServeJSON()
@@ -173,7 +127,9 @@ func (c *ApiController) AddToken() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-token [post]
 func (c *ApiController) DeleteToken() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var token object.Token
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &token)
 	if err != nil {
@@ -181,13 +137,8 @@ func (c *ApiController) DeleteToken() {
 		return
 	}
 
-	if !c.IsGlobalAdmin() {
-		user, _ := c.RequireSignedInUser()
-		if token.Organization != user.Owner {
-			c.ResponseForbidden(c.T("auth:Unable to add tokens from other organization without global administrator role"))
-			return
-		}
-	}
+	c.ValidateOrganization(token.Organization) 
+
 
 	c.Data["json"] = wrapActionResponse(object.DeleteToken(&token))
 	c.ServeJSON()

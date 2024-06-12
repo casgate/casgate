@@ -29,7 +29,9 @@ import (
 // @Success 200 {array} object.Group The Response object
 // @router /get-groups [get]
 func (c *ApiController) GetGroups() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -78,10 +80,10 @@ func (c *ApiController) GetGroups() {
 // @Success 200 {object} object.Group The Response object
 // @router /get-group [get]
 func (c *ApiController) GetGroup() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	group, err := object.GetGroup(id)
+	group, err := object.GetGroup(request.Id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -98,8 +100,9 @@ func (c *ApiController) GetGroup() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-group [post]
 func (c *ApiController) UpdateGroup() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 
 	var group object.Group
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &group)
@@ -108,7 +111,7 @@ func (c *ApiController) UpdateGroup() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateGroup(id, &group))
+	c.Data["json"] = wrapActionResponse(object.UpdateGroup(request.Id, &group))
 	c.ServeJSON()
 }
 
@@ -120,7 +123,8 @@ func (c *ApiController) UpdateGroup() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-group [post]
 func (c *ApiController) AddGroup() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var group object.Group
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &group)
 	if err != nil {
@@ -140,7 +144,8 @@ func (c *ApiController) AddGroup() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-group [post]
 func (c *ApiController) DeleteGroup() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var group object.Group
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &group)
 	if err != nil {

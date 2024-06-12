@@ -36,12 +36,51 @@ type RootController struct {
 	ApiController
 }
 
+type BaseDataManageRequest struct {
+	Id           string
+	Owner 		 string
+	Limit 		 int
+	Page  		 string
+	Field 		 string
+	Value 		 string
+	SortField 	 string
+	SortOrder	 string
+	Organization string
+}
 type SessionData struct {
 	ExpireTime int64
 }
 
-func (c *ApiController) ContinueIfHasRightsOrDenyRequest() {
+func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
+	result := BaseDataManageRequest{
+		Id:           c.Input().Get("id"),
+		Owner:        c.Input().Get("owner"),
+		Field:        c.Input().Get("sortField"),
+		Value:        c.Input().Get("value"),
+		SortField:    c.Input().Get("sortField"),
+		SortOrder:    c.Input().Get("sortOrder"),
+		Organization: c.Input().Get("organization"),
+	}
+
+	limit := c.Input().Get("pageSize")
+	page := c.Input().Get("p")
+
+	if limit == "" || page == "" {
+		result.Limit = -1
+	} else {
+		result.Limit = util.ParseInt(limit)
+	}	
 	
+	globalAdminOrApp, _ := c.isGlobalAdmin()
+	if !globalAdminOrApp && result.Organization == "" {
+		user, _ := c.RequireSignedInUser()
+		result.Organization = user.Owner
+	}	
+
+	return result
+}
+
+func (c *ApiController) ContinueIfHasRightsOrDenyRequest(request BaseDataManageRequest) {	
 	globalAdminOrApp, _ := c.isGlobalAdmin()
 	if  globalAdminOrApp {
 		return
@@ -53,13 +92,25 @@ func (c *ApiController) ContinueIfHasRightsOrDenyRequest() {
 		return
 	}
 
-	if user.IsForbidden || user.IsDeleted {
+	if user.IsForbidden || user.IsDeleted || !c.IsAdmin() {
 		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 		return
 	}
 
-	if !c.IsAdmin() {
-		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+	if request.Organization != "" && request.Organization != user.Owner {
+		c.ResponseForbidden(c.T("auth:Unable to get data from other organization without global administrator role"))
+		return
+	}
+}
+
+func (c *ApiController) ValidateOrganization(organization string) {	
+	if !c.IsGlobalAdmin() {
+		return
+	}
+	
+	user, _ := c.RequireSignedInUser()
+	if organization != user.Owner {
+		c.ResponseForbidden(c.T("auth:Unable to get data from other organization without global administrator role"))
 		return
 	}
 }

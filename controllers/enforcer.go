@@ -31,7 +31,9 @@ import (
 // @Success 200 {array} object.Enforcer
 // @router /get-enforcers [get]
 func (c *ApiController) GetEnforcers() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -75,11 +77,12 @@ func (c *ApiController) GetEnforcers() {
 // @Success 200 {object} object
 // @router /get-enforcer [get]
 func (c *ApiController) GetEnforcer() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	loadModelCfg := c.Input().Get("loadModelCfg")
 
-	enforcer, err := object.GetEnforcer(id)
+	enforcer, err := object.GetEnforcer(request.Id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -104,8 +107,8 @@ func (c *ApiController) GetEnforcer() {
 // @Success 200 {object} object
 // @router /update-enforcer [post]
 func (c *ApiController) UpdateEnforcer() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	enforcer := object.Enforcer{}
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &enforcer)
@@ -114,7 +117,7 @@ func (c *ApiController) UpdateEnforcer() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateEnforcer(id, &enforcer))
+	c.Data["json"] = wrapActionResponse(object.UpdateEnforcer(request.Id, &enforcer))
 	c.ServeJSON()
 }
 
@@ -126,7 +129,9 @@ func (c *ApiController) UpdateEnforcer() {
 // @Success 200 {object} object
 // @router /add-enforcer [post]
 func (c *ApiController) AddEnforcer() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	enforcer := object.Enforcer{}
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &enforcer)
 	if err != nil {
@@ -146,7 +151,9 @@ func (c *ApiController) AddEnforcer() {
 // @Success 200 {object} object
 // @router /delete-enforcer [post]
 func (c *ApiController) DeleteEnforcer() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var enforcer object.Enforcer
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &enforcer)
 	if err != nil {
@@ -187,7 +194,9 @@ func (c *ApiController) GetPolicies() {
 }
 
 func (c *ApiController) UpdatePolicy() {
-	c.ContinueIfHasRightsOrDenyRequest()
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	id := c.Input().Get("id")
 
 	var policies []xormadapter.CasbinRule
@@ -207,8 +216,8 @@ func (c *ApiController) UpdatePolicy() {
 }
 
 func (c *ApiController) AddPolicy() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var policy xormadapter.CasbinRule
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &policy)
@@ -217,7 +226,7 @@ func (c *ApiController) AddPolicy() {
 		return
 	}
 
-	affected, err := object.AddPolicy(id, policy.Ptype, util.CasbinToSlice(policy))
+	affected, err := object.AddPolicy(request.Id, policy.Ptype, util.CasbinToSlice(policy))
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -227,8 +236,8 @@ func (c *ApiController) AddPolicy() {
 }
 
 func (c *ApiController) RemovePolicy() {
-	c.ContinueIfHasRightsOrDenyRequest()
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var policy xormadapter.CasbinRule
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &policy)
@@ -237,7 +246,7 @@ func (c *ApiController) RemovePolicy() {
 		return
 	}
 
-	affected, err := object.RemovePolicy(id, policy.Ptype, util.CasbinToSlice(policy))
+	affected, err := object.RemovePolicy(request.Id, policy.Ptype, util.CasbinToSlice(policy))
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
