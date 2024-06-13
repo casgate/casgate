@@ -27,7 +27,7 @@ import (
 // @Success 200 {object} object.UserApiToken The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 500 Internal Server Error
-// @router /add-api-token [post]
+// @router /add-api-token [get]
 func (c *ApiController) AddApiToken() {
 	ctx := c.getRequestCtx()
 	owner := c.Input().Get("owner")
@@ -68,7 +68,7 @@ func (c *ApiController) AddApiToken() {
 // @Tag Api Token API
 // @Description delete api token
 // @Param owner query string true "The owner of token"
-// @Param api_token string true "The user api token"
+// @Param api_token query string true "The user api token"
 // @Success 200 Ok
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
@@ -117,7 +117,7 @@ func (c *ApiController) DeleteApiToken() {
 // @Tag Api Token API
 // @Description recreate api token
 // @Param owner query string true "The owner of token"
-// @Param api_token string true "The user api token"
+// @Param api_token query string true "The user api token"
 // @Success 200 {object} object.UserApiToken The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
@@ -180,7 +180,7 @@ func (c *ApiController) RecreateApiToken() {
 // @Title GetUserByApiToken
 // @Tag Api Token API
 // @Description get user by API token
-// @Param api_token string true "The user api token"
+// @Param api_token query string true "The user api token"
 // @Success 200 {object} object.User The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
@@ -209,7 +209,7 @@ func (c *ApiController) GetUserByApiToken() {
 // @Tag Api Token API
 // @Description get user tokens
 // @Param owner query string true "The owner of token"
-// @Success 200 {object} object.User[] The Response object
+// @Success 200 {array} object.User The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
 // @Failure 500 Internal Server Error

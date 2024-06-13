@@ -50,7 +50,7 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
   /api/add-api-token:
-    post:
+    get:
       tags:
       - Api Token API
       description: add api token

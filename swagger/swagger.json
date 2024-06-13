@@ -76,7 +76,7 @@
             }
         },
         "/api/add-api-token": {
-            "post": {
+            "get": {
                 "tags": [
                     "Api Token API"
                 ],
