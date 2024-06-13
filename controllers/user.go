@@ -111,31 +111,26 @@ func (c *ApiController) GetGlobalUsers() {
 func (c *ApiController) GetUsers() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	owner := c.Input().Get("owner")
-	groupName := c.Input().Get("groupName")
+
 	limitParam := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
+	groupName := c.Input().Get("groupName")
 	fillUserIdProvider := util.ParseBool(c.Input().Get("fillUserIdProvider"))
 
 	var limit int
-	if limitParam == "" || page == "" {
+	if limitParam == "" || request.Page == "" {
 		limit = -1
 	} else {
 		limit = max(100, util.ParseInt(limitParam))
 	}
 
-	count, err := object.GetUserCount(owner, field, value, groupName)
+	count, err := object.GetUserCount(request.Owner, request.Field, request.Value, groupName)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
 	paginator := pagination.SetPaginator(c.Ctx, limit, count)
-	users, err := object.GetPaginationUsers(owner, paginator.Offset(), limit, field, value, sortField, sortOrder, groupName)
+	users, err := object.GetPaginationUsers(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder, groupName)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
@@ -148,7 +143,7 @@ func (c *ApiController) GetUsers() {
 	}
 
 	if fillUserIdProvider {
-		userIdProviders, err := object.GetUserIdProviders(owner)
+		userIdProviders, err := object.GetUserIdProviders(request.Owner)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return

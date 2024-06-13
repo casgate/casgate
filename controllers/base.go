@@ -75,7 +75,13 @@ func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
 	if !globalAdminOrApp && result.Organization == "" {
 		user, _ := c.RequireSignedInUser()
 		result.Organization = user.Owner
-	}	
+	}
+	
+	if !globalAdminOrApp && result.Owner == "" {
+		user, _ := c.RequireSignedInUser()
+		result.Owner = user.Owner
+	}
+
 
 	return result
 }
