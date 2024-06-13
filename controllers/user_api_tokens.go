@@ -36,6 +36,17 @@ func (c *ApiController) AddApiToken() {
 		return
 	}
 
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
+		return
+	}
+
 	user, err := object.GetUser(owner)
 	if err != nil {
 		logs.Error("get user: %s", err.Error())
@@ -81,9 +92,26 @@ func (c *ApiController) DeleteApiToken() {
 		return
 	}
 
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
+		return
+	}
+
 	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
+		return
+	}
+
+	isValid = object.ValidateToken(token)
+	if !isValid {
+		c.ResponseUnprocessableEntity("token is invalid")
 		return
 	}
 
@@ -130,9 +158,26 @@ func (c *ApiController) RecreateApiToken() {
 		return
 	}
 
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
+		return
+	}
+
 	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
+		return
+	}
+
+	isValid = object.ValidateToken(token)
+	if !isValid {
+		c.ResponseUnprocessableEntity("token is invalid")
 		return
 	}
 
@@ -193,6 +238,12 @@ func (c *ApiController) GetUserByApiToken() {
 		return
 	}
 
+	isValid := object.ValidateToken(token)
+	if !isValid {
+		c.ResponseUnprocessableEntity("token is invalid")
+		return
+	}
+
 	owner, err := object.GetApiKeyOwner(token)
 	if err != nil {
 		logs.Error("get api key owner : %s", err.Error())
@@ -218,6 +269,17 @@ func (c *ApiController) GetUserTokens() {
 	owner := c.Input().Get("owner")
 	if !c.IsGlobalAdmin() && owner == "" {
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
+		return
+	}
+
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
 		return
 	}
 

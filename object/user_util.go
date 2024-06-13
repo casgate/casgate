@@ -411,3 +411,13 @@ func getNextPasswordChangeTime(passwordChangeInterval int) time.Time {
 func getIntervalFromdays(days int) time.Duration {
 	return time.Hour * 24 * time.Duration(days)
 }
+
+func ValidateUserID(userID string) bool {
+	var userIDPattern = `^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$`
+	matched, err := regexp.MatchString(userIDPattern, userID)
+	if err != nil {
+		fmt.Println("Ошибка при проверке userID:", err)
+		return false
+	}
+	return matched
+}

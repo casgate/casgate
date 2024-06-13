@@ -29,6 +29,7 @@ const (
 
 var (
 	tagExtractionRegexp = regexp.MustCompile("<access-token><access-token-user-id:(.+)>")
+	tokenValidationRegexp = `^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`
 
 	ExtractOwnerIdError = errors.New("could not extract owner id from tag")
 )
@@ -176,4 +177,13 @@ func GetUserTokens(user *User) ([]User, error) {
 	}
 
 	return tokens, nil
+}
+
+func ValidateToken(token string) bool {
+	matched, err := regexp.MatchString(tokenValidationRegexp, token)
+	if err != nil {
+		fmt.Println("Ошибка при проверке токена:", err)
+		return false
+	}
+	return matched
 }
