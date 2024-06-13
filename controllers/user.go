@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/beego/beego/context"
 	"github.com/beego/beego/logs"
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/captcha"
@@ -124,20 +125,7 @@ func (c *ApiController) GetUsers() {
 		limit = max(100, util.ParseInt(limitParam))
 	}
 
-	count, err := object.GetUserCount(owner, field, value, groupName)
-	if err != nil {
-		c.ResponseInternalServerError(err.Error())
-		return
-	}
-
-	paginator := pagination.SetPaginator(c.Ctx, limit, count)
-	users, err := object.GetPaginationUsers(owner, paginator.Offset(), limit, field, value, sortField, sortOrder, groupName)
-	if err != nil {
-		c.ResponseInternalServerError(err.Error())
-		return
-	}
-
-	users, err = object.GetMaskedUsers(users)
+	users, count, err := getUsers(c.Ctx, limit, owner, field, value, groupName, sortField, sortOrder)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
@@ -153,7 +141,84 @@ func (c *ApiController) GetUsers() {
 		fillUserIdProviders(users, userIdProviders)
 	}
 
-	c.ResponseOk(users, paginator.Nums())
+	c.ResponseOk(users, count)
+}
+
+// GetExtendedUsers
+// @Title GetExtendedUsers
+// @Tag User API
+// @Description
+// @Param owner query string true "The owner of users"
+// @Success 200 {array} object.User The Response object
+// @Failure 500 Internal server error
+// @router /get-extended-users [get]
+func (c *ApiController) GetExtendedUsers() {
+	owner := c.Input().Get("owner")
+	groupName := c.Input().Get("groupName")
+	limitParam := c.Input().Get("pageSize")
+	page := c.Input().Get("p")
+	field := c.Input().Get("field")
+	value := c.Input().Get("value")
+	sortField := c.Input().Get("sortField")
+	sortOrder := c.Input().Get("sortOrder")
+
+	var limit int
+	if limitParam == "" || page == "" {
+		limit = -1
+	} else {
+		limit = max(100, util.ParseInt(limitParam))
+	}
+
+	users, count, err := getUsers(c.Ctx, limit, owner, field, value, groupName, sortField, sortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	userIdProviders, err := object.GetUserIdProviders(owner)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+	fillUserIdProviders(users, userIdProviders)
+
+	var organization *object.Organization
+	if owner != "" {
+		organization, err = object.GetOrganization(util.GetId("admin", owner))
+		if err != nil {
+			c.ResponseInternalServerError(err.Error())
+			return
+		}
+	}
+
+	for i := range users {
+		if owner == "" {
+			organization, err = object.GetOrganization(util.GetId("admin", users[i].Owner))
+			if err != nil {
+				c.ResponseInternalServerError(err.Error())
+				return
+			}
+		}
+
+		userId := util.GetId(users[i].Owner, users[i].Name)
+
+		if !organization.IsProfilePublic {
+			requestUserId := c.GetSessionUsername()
+			hasPermission, _ := object.CheckUserPermission(requestUserId, userId, false, c.GetAcceptLanguage())
+			if !hasPermission {
+				c.ResponseUnauthorized(err.Error())
+				return
+			}
+		}
+
+		err = object.ExtendUserWithRolesAndPermissions(users[i])
+		if err != nil {
+			c.ResponseInternalServerError(err.Error())
+			return
+		}
+	}
+
+	c.ResponseOk(users, count)
 }
 
 // GetUser
@@ -880,6 +945,26 @@ func (c *ApiController) SendInvite() {
 	}
 
 	c.ResponseOk()
+}
+
+func getUsers(ctx *context.Context, limit int, owner, field, value, groupName, sortField, sortOrder string) ([]*object.User, int64, error) {
+	count, err := object.GetUserCount(owner, field, value, groupName)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	paginator := pagination.SetPaginator(ctx, limit, count)
+	users, err := object.GetPaginationUsers(owner, paginator.Offset(), limit, field, value, sortField, sortOrder, groupName)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	users, err = object.GetMaskedUsers(users)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return users, paginator.Nums(), nil
 }
 
 func fillUserIdProviders(users []*object.User, userIdProviders []*object.UserIdProvider) {
