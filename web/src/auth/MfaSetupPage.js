@@ -19,7 +19,6 @@ import * as ApplicationBackend from "../backend/ApplicationBackend";
 import * as Setting from "../Setting";
 import i18next from "i18next";
 import * as MfaBackend from "../backend/MfaBackend";
-import {CheckOutlined, KeyOutlined, UserOutlined} from "@ant-design/icons";
 import CheckPasswordForm from "./mfa/CheckPasswordForm";
 import MfaEnableForm from "./mfa/MfaEnableForm";
 import {MfaVerifyForm} from "./mfa/MfaVerifyForm";
@@ -230,9 +229,9 @@ class MfaSetupPage extends React.Component {
           </Row>
           <Steps current={this.state.current}
             items={[
-              {title: i18next.t("mfa:Verify Password"), icon: <UserOutlined />},
-              {title: i18next.t("mfa:Verify Code"), icon: <KeyOutlined />},
-              {title: i18next.t("general:Enable"), icon: <CheckOutlined />},
+              {title: i18next.t("mfa:Verify Password")},
+              {title: i18next.t("mfa:Verify Code")},
+              {title: i18next.t("general:Enable")},
             ]}
             style={{width: "90%", maxWidth: "500px", margin: "auto", marginTop: "50px",
             }} >
