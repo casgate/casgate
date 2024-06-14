@@ -30,9 +30,10 @@ import (
 // @Success 200 {array} object.Token The Response object
 // @router /get-tokens [get]
 func (c *ApiController) GetTokens() {	
+	
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-
+    
 	count, err := object.GetTokenCount(request.Owner, request.Organization, request.Field, request.Value)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())

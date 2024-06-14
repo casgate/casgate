@@ -151,6 +151,8 @@ func (c *ApiController) GetUsers() {
 // @Failure 500 Internal server error
 // @router /get-user [get]
 func (c *ApiController) GetUser() {
+
+	//was allow for anonimus before authz drop
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 

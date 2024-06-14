@@ -125,9 +125,6 @@ func (c *ApiController) GetApplication() {
 // @Success 200 {object} object.Application The Response object
 // @router /get-user-application [get]
 func (c *ApiController) GetUserApplication() {
-	request := c.ReadRequestFromQueryParams()
-	c.ContinueIfHasRightsOrDenyRequest(request)
-
 	userId := c.GetSessionUsername()
 	id := c.Input().Get("id")
 	goCtx := c.getRequestCtx()
@@ -159,9 +156,6 @@ func (c *ApiController) GetUserApplication() {
 // @Success 200 {array} object.Application The Response object
 // @router /get-organization-applications [get]
 func (c *ApiController) GetOrganizationApplications() {
-	//request := c.ReadRequestFromQueryParams()
-	//c.ContinueIfHasRightsOrDenyRequest(request)
-
 	userId := c.GetSessionUsername()
 	organization := c.Input().Get("organization")
 	owner := c.Input().Get("owner")
