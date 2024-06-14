@@ -35,16 +35,10 @@ func (c *ApiController) GetApplications() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	userId := c.GetSessionUsername()
-	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-	organization := c.Input().Get("organization")
 
-	if !c.IsGlobalAdmin() && organization == "" {
+	if !c.IsGlobalAdmin() && request.Organization == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
@@ -52,10 +46,10 @@ func (c *ApiController) GetApplications() {
 	var err error
 	if limit == "" || page == "" {
 		var applications []*object.Application
-		if organization == "" {
-			applications, err = object.GetApplications(owner)
+		if request.Organization == "" {
+			applications, err = object.GetApplications(request.Owner)
 		} else {
-			applications, err = object.GetOrganizationApplications(owner, organization)
+			applications, err = object.GetOrganizationApplications(request.Owner, request.Organization)
 		}
 		if err != nil {
 			c.ResponseError(err.Error())
@@ -64,14 +58,14 @@ func (c *ApiController) GetApplications() {
 		c.ResponseOk(object.GetMaskedApplications(applications, userId))
 	} else {
 		limit := util.ParseInt(limit)
-		count, err := object.GetApplicationCount(owner, field, value)
+		count, err := object.GetApplicationCount(request.Owner, request.Field, request.Value)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		application, err := object.GetPaginationApplications(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
+		application, err := object.GetPaginationApplications(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -165,8 +159,8 @@ func (c *ApiController) GetUserApplication() {
 // @Success 200 {array} object.Application The Response object
 // @router /get-organization-applications [get]
 func (c *ApiController) GetOrganizationApplications() {
-	request := c.ReadRequestFromQueryParams()
-	c.ContinueIfHasRightsOrDenyRequest(request)
+	//request := c.ReadRequestFromQueryParams()
+	//c.ContinueIfHasRightsOrDenyRequest(request)
 
 	userId := c.GetSessionUsername()
 	organization := c.Input().Get("organization")
@@ -179,14 +173,14 @@ func (c *ApiController) GetOrganizationApplications() {
 	sortOrder := c.Input().Get("sortOrder")
 
 	if organization == "" {
-		c.ResponseError(c.T("general:Missing parameter") + ": organization")
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": organization")
 		return
 	}
 
 	if limit == "" || page == "" {
 		applications, err := object.GetOrganizationApplications(owner, organization)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseBadRequest(err.Error())
 			return
 		}
 
@@ -233,6 +227,7 @@ func (c *ApiController) UpdateApplication() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(application.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateApplication(goCtx, id, &application))
 	c.ServeJSON()
@@ -269,6 +264,8 @@ func (c *ApiController) AddApplication() {
 		return
 	}
 
+	c.ValidateOrganization(application.Owner)
+
 	c.Data["json"] = wrapActionResponse(object.AddApplication(goCtx, &application))
 	c.ServeJSON()
 }
@@ -290,6 +287,8 @@ func (c *ApiController) DeleteApplication() {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	c.ValidateOrganization(application.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteApplication(&application))
 	c.ServeJSON()

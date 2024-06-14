@@ -110,7 +110,8 @@ func (c *ApiController) ContinueIfHasRightsOrDenyRequest(request BaseDataManageR
 }
 
 func (c *ApiController) ValidateOrganization(organization string) {	
-	if !c.IsGlobalAdmin() {
+	globalAdminOrApp, _ := c.isGlobalAdmin()
+	if  globalAdminOrApp {
 		return
 	}
 	

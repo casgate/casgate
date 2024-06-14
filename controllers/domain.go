@@ -33,21 +33,11 @@ func (c *ApiController) GetDomains() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseError(c.T("auth:Unauthorized operation"))
-		return
-	}
 
 	if limit == "" || page == "" {
-		domains, err := object.GetDomains(c.Ctx.Request.Context(), owner)
+		domains, err := object.GetDomains(c.Ctx.Request.Context(), request.Owner)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -56,14 +46,14 @@ func (c *ApiController) GetDomains() {
 		c.ResponseOk(domains)
 	} else {
 		limit := util.ParseInt(limit)
-		count, err := object.GetDomainCount(owner, field, value)
+		count, err := object.GetDomainCount(request.Owner, request.Field, request.Value)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		domains, err := object.GetPaginationDomains(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
+		domains, err := object.GetPaginationDomains(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -90,6 +80,7 @@ func (c *ApiController) GetDomain() {
 		return
 	}
 
+	c.ValidateOrganization(domain.Owner)
 	c.ResponseOk(domain)
 }
 
@@ -112,6 +103,7 @@ func (c *ApiController) UpdateDomain() {
 		return
 	}
 
+	c.ValidateOrganization(domain.Owner)
 	c.Data["json"] = wrapActionResponse(object.UpdateDomain(c.getRequestCtx(), request.Id, &domain))
 	c.ServeJSON()
 }
@@ -132,6 +124,7 @@ func (c *ApiController) AddDomain() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(domain.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddDomain(&domain))
 	c.ServeJSON()
@@ -154,6 +147,7 @@ func (c *ApiController) DeleteDomain() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(domain.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteDomain(&domain))
 	c.ServeJSON()
