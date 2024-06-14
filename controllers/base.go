@@ -15,6 +15,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -50,6 +51,10 @@ type BaseDataManageRequest struct {
 }
 type SessionData struct {
 	ExpireTime int64
+}
+func (c *ApiController) makeMessage(status int, msg string) string {
+	result, _ := json.Marshal(&Error{Code: status, Message: msg})
+	return string(result)
 }
 
 func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
@@ -100,19 +105,15 @@ func (c *ApiController) ContinueIfHasRightsOrDenyRequest(request BaseDataManageR
 
 	user := c.getCurrentUser()
 	if user == nil {
-		c.CustomAbort(http.StatusUnauthorized, c.T("auth:Unauthorized operation"))
-		//c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
+		c.CustomAbort(http.StatusUnauthorized, c.makeMessage(http.StatusUnauthorized, c.T("auth:Unauthorized operation")))
 	}
 
-	if user.IsForbidden || user.IsDeleted || !c.IsAdmin() {
-		c.CustomAbort(http.StatusForbidden, c.T("auth:Forbidden operation"))	
-		//c.ResponseForbidden(c.T("auth:Forbidden operation"))
+	if user.IsForbidden || user.IsDeleted || !c.IsAdmin() {	
+		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Forbidden operation")))
 	}
 
-	if request.Organization != "" && request.Organization != user.Owner {
-		c.CustomAbort(http.StatusForbidden, c.T("auth:Unable to get data from other organization without global administrator role"))			
-		//c.ResponseForbidden(c.T("auth:Unable to get data from other organization without global administrator role"))
-		return
+	if request.Organization != "" && request.Organization != user.Owner {	
+		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Unable to get data from other organization without global administrator role")))
 	}
 }
 
@@ -123,9 +124,9 @@ func (c *ApiController) ValidateOrganization(organization string) {
 	}
 	
 	user := c.getCurrentUser()
-	if organization != user.Owner {
-		c.CustomAbort(http.StatusForbidden, c.T("auth:Forbidden operation"))	
-		//c.ResponseForbidden(c.T("auth:Unable to get data from other organization without global administrator role"))
+	if organization != user.Owner {	
+		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Forbidden operation")))
+	
 	}
 }
 
