@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -77,18 +78,18 @@ func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
 		result.Limit = util.ParseInt(limit)
 	}	
 	
-	globalAdminOrApp, _ := c.isGlobalAdmin()
+	globalAdmin, _ := c.isGlobalAdmin()
 	userOwner := ""
 	user := c.getCurrentUser()
 	if user != nil {
 		userOwner = user.Owner
 	}
 
-	if !globalAdminOrApp && result.Organization == "" {
+	if !globalAdmin && result.Organization == "" {
 		result.Organization = userOwner
 	}
 	
-	if !globalAdminOrApp && result.Owner == "" {
+	if !globalAdmin && result.Owner == "" {
 		result.Owner = userOwner
 	}
 
@@ -98,8 +99,8 @@ func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
 
 func (c *ApiController) ContinueIfHasRightsOrDenyRequest(request BaseDataManageRequest) {	
 	
-	globalAdminOrApp, _ := c.isGlobalAdmin()
-	if  globalAdminOrApp {
+	globalAdmin, _ := c.isGlobalAdmin()
+	if  globalAdmin {
 		return
 	}
 
@@ -162,12 +163,6 @@ func (c *ApiController) IsAdminOrSelf(user2 *object.User) bool {
 }
 
 func (c *ApiController) isGlobalAdmin() (bool, *object.User) {
-	username := c.GetSessionUsername()
-	if strings.HasPrefix(username, "app/") {
-		// e.g., "app/app-casnode"
-		return true, nil
-	}
-
 	user := c.getCurrentUser()
 	if user == nil {
 		return false, nil
@@ -176,9 +171,47 @@ func (c *ApiController) isGlobalAdmin() (bool, *object.User) {
 	return user.IsGlobalAdmin(), user
 }
 
+func (c *ApiController) getUserByClientIdSecret() *object.User {
+	var user *object.User
+	goCtx := c.Ctx.Request.Context()
+
+	clientId, clientSecret, ok := c.Ctx.Request.BasicAuth()
+	if !ok {
+		clientId = c.Ctx.Input.Query("clientId")
+		clientSecret = c.Ctx.Input.Query("clientSecret")
+	}
+
+	if clientId == "" || clientSecret == "" {
+		return nil
+	}
+
+	application, err := object.GetApplicationByClientId(goCtx, clientId)
+	if err != nil {
+		panic(err)
+	}
+
+	if application == nil || application.ClientSecret != clientSecret {
+		return nil
+	}
+	user = &object.User{
+		Name: fmt.Sprintf("app/%s", application.Name),
+		Owner: application.Organization,
+		IsAdmin: true,
+		IsForbidden: false,
+		IsDeleted: false,
+	}
+	return user
+}
+
+
 func (c *ApiController) getCurrentUser() *object.User {
 	var user *object.User
 	var err error
+	user = c.getUserByClientIdSecret()
+	if user != nil {
+		return user
+	}
+	
 	userId := c.GetSessionUsername()
 	if userId == "" {
 		user = nil
