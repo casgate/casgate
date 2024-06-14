@@ -30,7 +30,7 @@ const {Option} = Select;
 
 export let ServerUrl = "";
 
-export const StaticBaseUrl = "https://cdn.casbin.org";
+export const StaticBaseUrl = "/assets";
 
 export const Countries = [
   {label: "English", key: "en", country: "US", alt: "English"},
@@ -176,7 +176,7 @@ export const OtherProviderInfo = {
       url: "https://aws.amazon.com/s3",
     },
     "MinIO": {
-      logo: "https://min.io/resources/img/logo.svg",
+      logo: `${StaticBaseUrl}/img/social_minio.svg`,
       url: "https://min.io/",
     },
     "Aliyun OSS": {
@@ -431,8 +431,12 @@ export function isLdapEnabled(application) {
   }
 }
 
+export function getCountryImageUrl(country) {
+  return `${StaticBaseUrl}/flag-icons/${country}.svg`;
+}
+
 export function getCountryImage(country) {
-  return <img src={`${StaticBaseUrl}/flag-icons/${country.code}.svg`} alt={country.name} height={20} style={{marginRight: 10}} />;
+  return <img src={getCountryImageUrl(country.code)} alt={country.name} height={20} style={{marginRight: 10}} />;
 }
 
 export function initServerUrl(serverUrl) {

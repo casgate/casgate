@@ -765,7 +765,7 @@ class App extends Component {
       <React.Fragment>
         {(this.state.account === undefined || this.state.account === null) ?
           <Helmet>
-            <link rel="icon" href={"https://cdn.casdoor.com/static/favicon.png"} />
+            <link rel="icon" href={`${Setting.StaticBaseUrl}/static/favicon.png`} />
           </Helmet> :
           <Helmet>
             <title>{this.state.account.organization?.displayName}</title>
