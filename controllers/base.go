@@ -49,6 +49,7 @@ type BaseDataManageRequest struct {
 	SortField 	 string
 	SortOrder	 string
 	Organization string
+	User		 *object.User	 
 }
 type SessionData struct {
 	ExpireTime int64
@@ -80,9 +81,10 @@ func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
 	
 	globalAdmin, _ := c.isGlobalAdmin()
 	userOwner := ""
-	user := c.getCurrentUser()
-	if user != nil {
-		userOwner = user.Owner
+	result.User = c.getCurrentUser()
+	
+	if result.User != nil {
+		userOwner = result.User.Owner
 	}
 
 	if !globalAdmin && result.Organization == "" {
@@ -92,7 +94,6 @@ func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
 	if !globalAdmin && result.Owner == "" {
 		result.Owner = userOwner
 	}
-
 
 	return result
 }
@@ -104,16 +105,15 @@ func (c *ApiController) ContinueIfHasRightsOrDenyRequest(request BaseDataManageR
 		return
 	}
 
-	user := c.getCurrentUser()
-	if user == nil {
+	if request.User == nil {
 		c.CustomAbort(http.StatusUnauthorized, c.makeMessage(http.StatusUnauthorized, c.T("auth:Unauthorized operation")))
 	}
 
-	if user.IsForbidden || user.IsDeleted || !c.IsAdmin() {	
+	if request.User.IsForbidden || request.User.IsDeleted || !c.IsAdmin() {	
 		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Forbidden operation")))
 	}
 
-	if request.Organization != "" && request.Organization != user.Owner {	
+	if request.Organization != "" && request.Organization != request.User.Owner {	
 		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Unable to get data from other organization without global administrator role")))
 	}
 }

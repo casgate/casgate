@@ -262,11 +262,6 @@ func (c *ApiController) AddUserIdProvider() {
 		return
 	}
 
-	if !c.IsGlobalAdmin() {
-		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
-		return
-	}
-
 	if userIdProvider.Owner == "" || !object.CheckUserIdProviderOrigin(userIdProvider) || userIdProvider.UsernameFromIdp == "" {
 		record.AddReason("Add UserIdProvider: Failed to add userIdProvider. Missing parameter")
 		c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))

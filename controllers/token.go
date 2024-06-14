@@ -30,7 +30,6 @@ import (
 // @Success 200 {array} object.Token The Response object
 // @router /get-tokens [get]
 func (c *ApiController) GetTokens() {	
-	
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
     
