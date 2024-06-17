@@ -33,43 +33,25 @@ func (c *ApiController) GetSessions() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-	owner := c.Input().Get("owner")
-
-	if !c.IsGlobalAdmin() && owner == "" {
+	if !c.IsGlobalAdmin() && request.Owner == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
-
-	if limit == "" || page == "" {
-		sessions, err := object.GetSessions(owner)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(sessions)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetSessionCount(owner, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		sessions, err := object.GetPaginationSessions(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(sessions, paginator.Nums())
+	
+	count, err := object.GetSessionCount(request.Owner, request.Field, request.Value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
 	}
+
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	sessions, err := object.GetPaginationSessions(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.ResponseOk(sessions, paginator.Nums())
 }
 
 // GetSingleSession
