@@ -136,7 +136,8 @@
   "util": {
     "No application is found for userId: %s": "Tidak ditemukan aplikasi untuk userId: %s",
     "No provider for category: %s is found for application: %s": "Tidak ditemukan penyedia untuk kategori: %s untuk aplikasi: %s",
-    "The provider: %s is not found": "Penyedia: %s tidak ditemukan"
+    "The provider: %s is not found": "Penyedia: %s tidak ditemukan",
+    "The organization %s has dependencies and cannot be deleted": "Organisasi %s memiliki dependensi dan tidak dapat dihapus"
   },
   "verification": {
     "Code has not been sent yet!": "Kode belum dikirimkan!",
