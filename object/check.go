@@ -399,6 +399,10 @@ func CheckUserPassword(ctx context.Context, organization string, username string
 		}
 	}
 
+	if user.Ldap != "" && !isSigninViaLdap {
+		return nil, fmt.Errorf(i18n.Translate(lang, "check:LDAP users are required to authenticate through the LDAP tab"))
+	}
+
 	if user.Ldap != "" {
 		if !isSigninViaLdap && !isPasswordWithLdapEnabled {
 			return nil, fmt.Errorf(i18n.Translate(lang, "check:password or code is incorrect"))
