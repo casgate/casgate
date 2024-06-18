@@ -13,14 +13,14 @@
 // limitations under the License.
 
 // Package routers
-// @APIVersion 1.376.2
-// @Title Casdoor RESTful API
-// @Description Swagger Docs of Casdoor Backend API
-// @Contact casbin@googlegroups.com
-// @SecurityDefinition AccessToken apiKey Authorization header
-// @Schemes https,http
-// @ExternalDocs Find out more about Casdoor
-// @ExternalDocsUrl https://casdoor.org/
+//	@APIVersion			1.376.2
+//	@Title				Casdoor RESTful API
+//	@Description		Swagger Docs of Casdoor Backend API
+//	@Contact			casbin@googlegroups.com
+//	@SecurityDefinition	AccessToken apiKey Authorization header
+//	@Schemes			https,http
+//	@ExternalDocs		Find out more about Casdoor
+//	@ExternalDocsUrl	https://casdoor.org/
 package routers
 
 import (
@@ -52,7 +52,8 @@ func initAPI() {
 	beego.Router("/api/login", &controllers.ApiController{}, "POST:Login")
 	beego.Router("/api/get-app-login", &controllers.ApiController{}, "GET:GetApplicationLogin")
 	beego.Router("/api/get-dashboard", &controllers.ApiController{}, "GET:GetDashboard")
-	beego.Router("/api/logout", &controllers.ApiController{}, "GET,POST:Logout")
+	beego.Router("/api/logout", &controllers.ApiController{}, "GET:LogoutGet")
+	beego.Router("/api/logout", &controllers.ApiController{}, "POST:LogoutPost")
 	beego.Router("/api/get-account", &controllers.ApiController{}, "GET:GetAccount")
 	beego.Router("/api/userinfo", &controllers.ApiController{}, "GET:GetUserinfo")
 	beego.Router("/api/user", &controllers.ApiController{}, "GET:GetUserinfo2")
