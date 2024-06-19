@@ -350,7 +350,7 @@ func (c *ApiController) UpdateUser() {
 
 	if c.Input().Get("allowEmpty") == "" {
 		if user.DisplayName == "" {
-			c.ResponseInternalServerError(c.T("user:Display name cannot be empty"))
+			c.ResponseUnprocessableEntity(c.T("user:Display name cannot be empty"))
 			return
 		}
 	}
@@ -371,37 +371,10 @@ func (c *ApiController) UpdateUser() {
 		columns = strings.Split(columnsStr, ",")
 	}
 
-	userTokens, err := object.GetUserTokens(&user)
+	affected, err := c.UseCases.UpdateUser(goCtx, id, &user, columns, isAdmin)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
-	}
-
-	if len(userTokens) > 0 {
-		for _, token := range userTokens {
-			token.Permissions = user.Permissions
-			token.Roles = user.Roles
-		}
-		
-		err = object.UpdateTokens(goCtx, userTokens, []string{"permissions", "roles"})
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-	}
-
-	affected, err := object.UpdateUser(id, &user, columns, isAdmin)
-	if err != nil {
-		c.ResponseInternalServerError(err.Error())
-		return
-	}
-
-	if affected {
-		err = object.UpdateUserToOriginalDatabase(&user)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
 	}
 
 	record.AddOldObject(oldUser).AddReason("Update user")

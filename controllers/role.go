@@ -100,7 +100,13 @@ func (c *ApiController) UpdateRole() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(c.UseCases.UpdateRole(id, &role))
+	success, err := c.UseCases.UpdateRole(id, &role)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.Data["json"] = wrapActionResponse(success)
 	c.ServeJSON()
 }
 
