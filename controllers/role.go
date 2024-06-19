@@ -100,50 +100,7 @@ func (c *ApiController) UpdateRole() {
 		return
 	}
 
-	oldRole, err := object.GetRole(id)
-	if err != nil {
-		c.ResponseInternalServerError(err.Error())
-		return
-	}
-
-	deletedUserIds := Difference(oldRole.Users, role.Users)
-	if len(deletedUserIds) > 0 {
-		deletedUserUuids, err := getUsersUUIDs(deletedUserIds)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		tokensToDelete, err := object.GetUsersTokens(deletedUserUuids)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		tokenIdsToDelete := extractTokenIds(tokensToDelete)
-		role.Users = Difference(role.Users, tokenIdsToDelete)
-	}
-
-	addedUserIds := Difference(role.Users, oldRole.Users)
-	if len(addedUserIds) > 0 {
-		newUserIds, err := getUsersUUIDs(addedUserIds)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		newTokens, err := object.GetUsersTokens(newUserIds)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		for _, token := range newTokens {
-			role.Users = append(role.Users, token.GetId())
-		}
-	}
-
-	c.Data["json"] = wrapActionResponse(object.UpdateRole(id, &role))
+	c.Data["json"] = wrapActionResponse(c.UseCases.UpdateRole(id, &role))
 	c.ServeJSON()
 }
 

@@ -21,6 +21,7 @@ import (
 	"github.com/beego/beego"
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/object"
+	usecasesPkg "github.com/casdoor/casdoor/usecases"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -28,6 +29,7 @@ import (
 // controller for handlers under /api uri
 type ApiController struct {
 	beego.Controller
+	UseCases *usecasesPkg.UseCases
 }
 
 // RootController

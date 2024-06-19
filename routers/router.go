@@ -26,6 +26,7 @@ package routers
 import (
 	"github.com/beego/beego"
 	"github.com/casdoor/casdoor/controllers"
+	"github.com/casdoor/casdoor/usecases"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -37,7 +38,9 @@ func initAPI() {
 	ns := beego.NewNamespace("/",
 		beego.NSNamespace("/api",
 			beego.NSInclude(
-				&controllers.ApiController{},
+				&controllers.ApiController{
+					UseCases: usecases.New(),
+				},
 			),
 		),
 		beego.NSNamespace("",
