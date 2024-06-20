@@ -50,7 +50,7 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
   /api/add-api-token:
-    get:
+    post:
       tags:
       - Api Token API
       description: add api token
@@ -2371,7 +2371,7 @@ paths:
           schema:
             $ref: '#/definitions/object.Application'
   /api/get-user-by-api-token:
-    post:
+    get:
       tags:
       - Api Token API
       description: get user by API token
