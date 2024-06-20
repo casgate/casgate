@@ -36,14 +36,20 @@ func (c *ApiController) AddApiToken() {
 		return
 	}
 
-	c.ValidateOrganization(owner)
-
 	user, err := object.GetUser(owner)
 	if err != nil {
 		logs.Error("get user: %s", err.Error())
 
 		c.ResponseInternalServerError("Internal server error")
 		return
+	}
+	c.ValidateOrganization(user.Owner)
+
+	currentUser := c.getCurrentUser()
+	isSelfOrAdmin := currentUser.Id == user.Id || currentUser.IsAdmin
+	if !isSelfOrAdmin {
+		logs.Error("add api token for user: %s. Only self or admin can release token", user.Name)
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 	}
 
 	tokenUser := object.MakeUserForToken(user)
@@ -82,8 +88,7 @@ func (c *ApiController) DeleteApiToken() {
 		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
 		return
 	}
-	c.ValidateOrganization(owner)
-
+	
 	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
@@ -96,6 +101,13 @@ func (c *ApiController) DeleteApiToken() {
 
 		c.ResponseInternalServerError("Internal server error")
 		return
+	}
+	c.ValidateOrganization(user.Owner)
+	currentUser := c.getCurrentUser()
+	isSelfOrAdmin := currentUser.Id == user.Id || currentUser.IsAdmin
+	if !isSelfOrAdmin {
+		logs.Error("delete api token for user: %s. Only self or admin can delete token", user.Name)
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 	}
 
 	affected, err := object.DeleteApiToken(user, token)
@@ -160,6 +172,15 @@ func (c *ApiController) RecreateApiToken() {
 
 		c.ResponseInternalServerError("Internal server error")
 		return
+	}
+
+	c.ValidateOrganization(tokenOwner.Owner)
+
+	currentUser := c.getCurrentUser()
+	isSelfOrAdmin := currentUser.Id == tokenOwner.Id || currentUser.IsAdmin
+	if !isSelfOrAdmin {
+		logs.Error("recreate api token for user: %s. Only self or admin can recreate token", tokenOwner.Name)
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 	}
 
 	if apiTokenUser.Tag != object.MakeTokenUserTag(tokenOwner) {
@@ -231,6 +252,15 @@ func (c *ApiController) GetUserTokens() {
 
 		c.ResponseInternalServerError("Internal server error")
 		return
+	}
+
+	c.ValidateOrganization(tokenOwner.Owner)
+
+	currentUser := c.getCurrentUser()
+	isSelfOrAdmin := currentUser.Id == tokenOwner.Id || currentUser.IsAdmin
+	if !isSelfOrAdmin {
+		logs.Error("add api token for user: %s. Only self or admin can release token", user.Name)
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 	}
 
 	tokens, err := object.GetUserTokens(tokenOwner)
