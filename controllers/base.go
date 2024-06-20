@@ -128,6 +128,9 @@ func (c *ApiController) ValidateOrganization(organization string) {
 	}
 	
 	user := c.getCurrentUser()
+	if user == nil {
+		c.CustomAbort(http.StatusUnauthorized, c.makeMessage(http.StatusUnauthorized, c.T("auth:Unauthorized operation")))
+	}
 	if organization != user.Owner {	
 		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Forbidden operation")))
 	

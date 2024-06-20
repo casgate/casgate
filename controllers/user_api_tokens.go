@@ -31,10 +31,12 @@ import (
 func (c *ApiController) AddApiToken() {
 	ctx := c.getRequestCtx()
 	owner := c.Input().Get("owner")
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
+	if owner == "" {
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
 		return
 	}
+
+	c.ValidateOrganization(owner)
 
 	user, err := object.GetUser(owner)
 	if err != nil {
@@ -76,10 +78,11 @@ func (c *ApiController) AddApiToken() {
 // @router /delete-api-token [post]
 func (c *ApiController) DeleteApiToken() {
 	owner := c.Input().Get("owner")
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
+	if owner == "" { 
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
 		return
 	}
+	c.ValidateOrganization(owner)
 
 	token := c.Input().Get("api_token")
 	if token == "" {
@@ -125,10 +128,11 @@ func (c *ApiController) DeleteApiToken() {
 // @router /recreate-api-token [post]
 func (c *ApiController) RecreateApiToken() {
 	owner := c.Input().Get("owner")
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
+	if owner == "" {
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
 		return
 	}
+	c.ValidateOrganization(owner)
 
 	token := c.Input().Get("api_token")
 	if token == "" {
@@ -192,7 +196,7 @@ func (c *ApiController) GetUserByApiToken() {
 		c.ResponseUnprocessableEntity("token not provided")
 		return
 	}
-
+	
 	owner, err := object.GetApiKeyOwner(token)
 	if err != nil {
 		logs.Error("get api key owner : %s", err.Error())
@@ -216,8 +220,8 @@ func (c *ApiController) GetUserByApiToken() {
 // @router /get-user-tokens [get]
 func (c *ApiController) GetUserTokens() {
 	owner := c.Input().Get("owner")
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
+	if owner == "" {
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
 		return
 	}
 
