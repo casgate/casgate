@@ -121,11 +121,17 @@ func (c *ApiController) GetOrganization() {
 func (c *ApiController) UpdateOrganization() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-
+	
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
 		c.ResponseBadRequest(err.Error())
+		return
+	}
+
+	currentUser := c.getCurrentUser()
+	if !currentUser.IsGlobalAdmin() && currentUser.Owner != organization.Name {
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 		return
 	}
 
@@ -146,6 +152,12 @@ func (c *ApiController) UpdateOrganization() {
 func (c *ApiController) AddOrganization() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
+
+	currentUser := c.getCurrentUser()
+	if !currentUser.IsGlobalAdmin() {
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+		return
+	}
 
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
@@ -180,6 +192,12 @@ func (c *ApiController) AddOrganization() {
 func (c *ApiController) DeleteOrganization() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
+
+	currentUser := c.getCurrentUser()
+	if !currentUser.IsGlobalAdmin() {
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+		return
+	}
 
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
