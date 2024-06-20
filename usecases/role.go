@@ -29,23 +29,6 @@ func (u *UseCases) UpdateRole(id string, role *object.Role) (bool, error) {
 		role.Users = Difference(role.Users, tokenIdsToDelete)
 	}
 
-	addedUserIds := Difference(role.Users, oldRole.Users)
-	if len(addedUserIds) > 0 {
-		newUserIds, err := getUsersUUIDs(addedUserIds)
-		if err != nil {
-			return false, err
-		}
-
-		newTokens, err := object.GetUsersTokens(newUserIds)
-		if err != nil {
-			return false, err
-		}
-
-		for _, token := range newTokens {
-			role.Users = append(role.Users, token.GetId())
-		}
-	}
-
 	return object.UpdateRole(id, role)
 }
 
