@@ -259,7 +259,7 @@ func (c *ApiController) GetUserTokens() {
 	currentUser := c.getCurrentUser()
 	isSelfOrAdmin := currentUser.Id == tokenOwner.Id || currentUser.IsAdmin
 	if !isSelfOrAdmin {
-		logs.Error("add api token for user: %s. Only self or admin can release token", user.Name)
+		logs.Error("add api token for user: %s. Only self or admin can get token", tokenOwner.Name)
 		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 	}
 

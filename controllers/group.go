@@ -152,6 +152,12 @@ func (c *ApiController) DeleteGroup() {
 		c.ResponseError(err.Error())
 		return
 	}
+	groupFromDb, _ := object.GetGroup(group.GetId())
+	if groupFromDb == nil {
+		c.ResponseBadRequest("Domain does't exist")
+		return
+	}
+	c.ValidateOrganization(groupFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteGroup(&group))
 	c.ServeJSON()

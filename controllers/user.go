@@ -446,7 +446,12 @@ func (c *ApiController) DeleteUser() {
 		return
 	}
 
-	c.ValidateOrganization(user.Owner)
+	userFromDb, _ := object.GetUser(user.GetId())
+	if userFromDb == nil {
+		c.ResponseBadRequest("user does't exist")
+		return
+	}
+	c.ValidateOrganization(userFromDb.Owner)
 
 	if user.Owner == "built-in" && user.Name == "admin" {
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))

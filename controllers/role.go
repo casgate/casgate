@@ -89,6 +89,7 @@ func (c *ApiController) UpdateRole() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	c.ValidateOrganization(role.Owner)
 	
 	c.Data["json"] = wrapActionResponse(object.UpdateRole(request.Id, &role))
 	c.ServeJSON()
@@ -111,6 +112,7 @@ func (c *ApiController) AddRole() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	c.ValidateOrganization(role.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddRole(&role))
 	c.ServeJSON()
@@ -133,6 +135,13 @@ func (c *ApiController) DeleteRole() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+
+	roleFromDb, _ := object.GetRole(role.GetId())
+	if roleFromDb == nil {
+		c.ResponseBadRequest("Role does't exist")
+		return
+	}
+	c.ValidateOrganization(roleFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteRole(&role))
 	c.ServeJSON()
