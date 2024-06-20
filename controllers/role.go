@@ -61,7 +61,6 @@ func (c *ApiController) GetRole() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 	
-
 	role, err := object.GetRole(request.Id)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())

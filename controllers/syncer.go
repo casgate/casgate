@@ -33,17 +33,11 @@ func (c *ApiController) GetSyncers() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-	organization := c.Input().Get("organization")
 
 	if limit == "" || page == "" {
-		organizationSyncers, err := object.GetOrganizationSyncers(owner, organization)
+		organizationSyncers, err := object.GetOrganizationSyncers(request.Owner, request.Organization)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -52,14 +46,14 @@ func (c *ApiController) GetSyncers() {
 		c.ResponseOk(organizationSyncers)
 	} else {
 		limit := util.ParseInt(limit)
-		count, err := object.GetSyncerCount(owner, organization, field, value)
+		count, err := object.GetSyncerCount(request.Owner, request.Organization, request.Field, request.Value)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		syncers, err := object.GetPaginationSyncers(owner, organization, paginator.Offset(), limit, field, value, sortField, sortOrder)
+		syncers, err := object.GetPaginationSyncers(request.Owner, request.Organization, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -108,6 +102,9 @@ func (c *ApiController) UpdateSyncer() {
 		return
 	}
 
+	c.ValidateOrganization(syncer.Owner)
+	c.ValidateOrganization(syncer.Organization)
+
 	c.Data["json"] = wrapActionResponse(object.UpdateSyncer(request.Id, &syncer))
 	c.ServeJSON()
 }
@@ -129,6 +126,9 @@ func (c *ApiController) AddSyncer() {
 		return
 	}
 
+	c.ValidateOrganization(syncer.Owner)
+	c.ValidateOrganization(syncer.Organization)
+
 	c.Data["json"] = wrapActionResponse(object.AddSyncer(&syncer))
 	c.ServeJSON()
 }
@@ -149,6 +149,9 @@ func (c *ApiController) DeleteSyncer() {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	c.ValidateOrganization(syncer.Owner)
+	c.ValidateOrganization(syncer.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteSyncer(&syncer))
 	c.ServeJSON()

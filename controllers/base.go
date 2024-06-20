@@ -82,19 +82,22 @@ func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
 	globalAdmin, _ := c.isGlobalAdmin()
 	userOwner := ""
 	result.User = c.getCurrentUser()
+		
 	
 	if result.User != nil {
 		userOwner = result.User.Owner
 	}
 
-	if !globalAdmin && result.Organization == "" {
+	if !globalAdmin {
 		result.Organization = userOwner
-	}
-	
-	if !globalAdmin && result.Owner == "" {
-		result.Owner = userOwner
+
+		if result.Owner != "admin" { // if not shared
+			result.Owner = userOwner
+		}
 	}
 
+	
+	
 	return result
 }
 
@@ -119,8 +122,8 @@ func (c *ApiController) ContinueIfHasRightsOrDenyRequest(request BaseDataManageR
 }
 
 func (c *ApiController) ValidateOrganization(organization string) {	
-	globalAdminOrApp, _ := c.isGlobalAdmin()
-	if  globalAdminOrApp {
+	globalAdmin, _ := c.isGlobalAdmin()
+	if  globalAdmin{
 		return
 	}
 	

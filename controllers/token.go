@@ -90,6 +90,7 @@ func (c *ApiController) UpdateToken() {
 		return
 	}
 
+	c.ValidateOrganization(token.Owner) 
 	c.ValidateOrganization(token.Organization) 
 
 	c.Data["json"] = wrapActionResponse(object.UpdateToken(request.Id, &token))
@@ -113,6 +114,7 @@ func (c *ApiController) AddToken() {
 		return
 	}
 
+	c.ValidateOrganization(token.Owner) 
 	c.ValidateOrganization(token.Organization) 
 
 	c.Data["json"] = wrapActionResponse(object.AddToken(&token))
@@ -137,6 +139,7 @@ func (c *ApiController) DeleteToken() {
 		return
 	}
 
+	c.ValidateOrganization(token.Owner) 
 	c.ValidateOrganization(token.Organization) 
 
 
