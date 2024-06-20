@@ -198,7 +198,7 @@ func (c *ApiController) getUserByClientIdSecret() *object.User {
 	}
 	user = &object.User{
 		Name: fmt.Sprintf("app/%s", application.Name),
-		Owner: application.Organization,
+		Owner: application.Organization, // not application.owner coze app's owner - admin
 		IsAdmin: true,
 		IsForbidden: false,
 		IsDeleted: false,
