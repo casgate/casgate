@@ -27,7 +27,7 @@ import (
 // @Success 200 {object} object.UserApiToken The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 500 Internal Server Error
-// @router /add-api-token [get]
+// @router /add-api-token [post]
 func (c *ApiController) AddApiToken() {
 	ctx := c.getRequestCtx()
 	owner := c.Input().Get("owner")
@@ -185,7 +185,7 @@ func (c *ApiController) RecreateApiToken() {
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
 // @Failure 500 Internal Server Error
-// @router /get-user-by-api-token [post]
+// @router /get-user-by-api-token [get]
 func (c *ApiController) GetUserByApiToken() {
 	token := c.Input().Get("api_token")
 	if token == "" {
