@@ -221,7 +221,8 @@ func (c *ApiController) UpdateApplication() {
 		c.ResponseError(err.Error())
 		return
 	}
-	c.ValidateOrganization(application.Owner)
+	
+	application.Owner = "admin"
 	c.ValidateOrganization(application.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateApplication(goCtx, id, &application))
@@ -248,6 +249,9 @@ func (c *ApiController) AddApplication() {
 		return
 	}
 
+	application.Owner = "admin"
+	c.ValidateOrganization(application.Organization)
+
 	count, err := object.GetApplicationCount("", "", "")
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -259,8 +263,7 @@ func (c *ApiController) AddApplication() {
 		return
 	}
 
-	c.ValidateOrganization(application.Owner)
-	c.ValidateOrganization(application.Organization)
+
 
 	c.Data["json"] = wrapActionResponse(object.AddApplication(goCtx, &application))
 	c.ServeJSON()
@@ -284,7 +287,6 @@ func (c *ApiController) DeleteApplication() {
 		return
 	}
 
-	c.ValidateOrganization(application.Owner)
 	c.ValidateOrganization(application.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteApplication(&application))
