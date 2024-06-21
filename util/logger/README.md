@@ -1,20 +1,20 @@
 # logger
 
-## Использование
+## Usage
 
-* Инициализация глобального логгера
+* Initializing global logger
 
 ```golang
 InitGlobal(loggerConfig)
 ```
 
-* Инициализация контекста с поддержкой хранилища для логгера:
+* Initializing storage in context for logger data:
 
 ```golang
-ctx := InitLoggerCtx(context.Background()) // или передача контекста из запроса
+ctx := InitLoggerCtx(context.Background()) // pass the context from request
 ```
 
-* Добавление контекстой информации
+* Adding values to context storage
 
 ```golang
 logger.SetItem(ctx, "request_id", 12345)
