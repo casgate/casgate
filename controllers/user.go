@@ -17,6 +17,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -47,12 +48,6 @@ type GetEmailAndPhoneResp struct {
 func (c *ApiController) GetGlobalUsers() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	// limitParam := c.Input().Get("pageSize")
-	// page := c.Input().Get("p")
-	// field := c.Input().Get("field")
-	// value := c.Input().Get("value")
-	// sortField := c.Input().Get("sortField")
-	// sortOrder := c.Input().Get("sortOrder")
 
 	fillUserIdProvider := util.ParseBool(c.Input().Get("fillUserIdProvider"))
 
@@ -154,7 +149,18 @@ func (c *ApiController) GetUser() {
 
 	//was allow for anonimus before authz drop
 	request := c.ReadRequestFromQueryParams()
-	c.ContinueIfHasRightsOrDenyRequest(request)
+	
+	if request.User == nil {
+		c.CustomAbort(http.StatusUnauthorized, c.makeMessage(http.StatusUnauthorized, c.T("auth:Unauthorized operation")))
+	}
+
+	if request.User.IsForbidden || request.User.IsDeleted {	
+		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Forbidden operation")))
+	}
+
+	if request.Organization != "" && request.Organization != request.User.Owner {	
+		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Unable to get data from other organization without global administrator role")))
+	}
 
 	email := c.Input().Get("email")
 	phone := c.Input().Get("phone")
