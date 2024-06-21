@@ -30,16 +30,14 @@ import (
 // @Success 200 {array} object.Model The Response object
 // @router /get-models [get]
 func (c *ApiController) GetModels() {
-	owner := c.Input().Get("owner")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
 
 	if limit == "" || page == "" {
-		models, err := object.GetModels(owner)
+		models, err := object.GetModels(request.Owner)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -48,14 +46,14 @@ func (c *ApiController) GetModels() {
 		c.ResponseOk(models)
 	} else {
 		limit := util.ParseInt(limit)
-		count, err := object.GetModelCount(owner, field, value)
+		count, err := object.GetModelCount(request.Owner, request.Field, request.Value)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		models, err := object.GetPaginationModels(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
+		models, err := object.GetPaginationModels(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -101,6 +99,7 @@ func (c *ApiController) UpdateModel() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(model.Owner)
 
 	c.Data["json"] = wrapErrorResponse(object.UpdateModelWithCheck(id, &model))
 	c.ServeJSON()
@@ -120,6 +119,7 @@ func (c *ApiController) AddModel() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(model.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddModel(&model))
 	c.ServeJSON()
@@ -139,6 +139,13 @@ func (c *ApiController) DeleteModel() {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	modelFromDb, _ := object.GetModel(model.GetId())
+	if modelFromDb == nil {
+		c.ResponseBadRequest("Model does't exist")
+		return
+	}
+	c.ValidateOrganization(modelFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteModel(&model))
 	c.ServeJSON()
