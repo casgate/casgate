@@ -17,7 +17,6 @@ import i18next from "i18next";
 import React, {useEffect} from "react";
 import * as UserBackend from "../../backend/UserBackend";
 import {CaptchaWidget} from "../CaptchaWidget";
-import {SafetyOutlined} from "@ant-design/icons";
 
 export const CaptchaModal = (props) => {
   const {owner, name, visible, onOk, onCancel, isCurrentProvider} = props;
@@ -94,7 +93,6 @@ export const CaptchaModal = (props) => {
               ref={defaultInputRef}
               style={{width: "200px"}}
               value={captchaToken}
-              prefix={<SafetyOutlined />}
               placeholder={i18next.t("general:Captcha")}
               onPressEnter={handleOk}
               onChange={(e) => setCaptchaToken(e.target.value)}

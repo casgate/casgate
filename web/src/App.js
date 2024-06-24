@@ -92,12 +92,14 @@ import {clearWeb3AuthToken} from "./auth/Web3Auth";
 import AccountAvatar from "./account/AccountAvatar";
 import OpenTour from "./common/OpenTour";
 
-const {Header, Footer, Content} = Layout;
+const {Header, Content} = Layout;
 
 import {setTwoToneColor} from "@ant-design/icons";
 import DomainListPage from "./DomainListPage";
 import DomainEditPage from "./DomainEditPage";
 import * as ApplicationBackend from "./backend/ApplicationBackend";
+
+import {appThemeComponents, appThemeToken} from "./theme";
 
 setTwoToneColor("rgb(87,52,211)");
 
@@ -645,19 +647,6 @@ class App extends Component {
     return (
       <React.Fragment>
         {!this.state.account ? null : <div style={{display: "none"}} id="CasdoorApplicationName" value={this.state.account.signupApplication} />}
-        <Footer id="footer" style={
-          {
-            textAlign: "center",
-          }
-        }>
-          {
-            Conf.CustomFooter !== null ? Conf.CustomFooter : (
-              <React.Fragment>
-                {this.state.application?.footerText}
-              </React.Fragment>
-            )
-          }
-        </Footer>
       </React.Fragment>
     );
   }
@@ -776,7 +765,7 @@ class App extends Component {
       <React.Fragment>
         {(this.state.account === undefined || this.state.account === null) ?
           <Helmet>
-            <link rel="icon" href={"https://cdn.casdoor.com/static/favicon.png"} />
+            <link rel="icon" href={`${Setting.StaticBaseUrl}/static/favicon.png`} />
           </Helmet> :
           <Helmet>
             <title>{this.state.account.organization?.displayName}</title>
@@ -785,10 +774,12 @@ class App extends Component {
         }
         <ConfigProvider theme={{
           token: {
+            ...appThemeToken,
             colorPrimary: this.state.themeData.colorPrimary,
             colorInfo: this.state.themeData.colorPrimary,
             borderRadius: this.state.themeData.borderRadius,
           },
+          components: appThemeComponents,
           algorithm: Setting.getAlgorithm(this.state.themeAlgorithm),
         }}>
           <StyleProvider hashPriority="high" transformers={[legacyLogicalPropertiesTransformer]}>

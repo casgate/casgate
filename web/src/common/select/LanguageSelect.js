@@ -20,7 +20,7 @@ import {GlobalOutlined} from "@ant-design/icons";
 
 function flagIcon(country, alt) {
   return (
-    <img width={24} alt={alt} src={`${Setting.StaticBaseUrl}/flag-icons/${country}.svg`} />
+    <img width={24} alt={alt} src={Setting.getCountryImageUrl(country)} />
   );
 }
 
@@ -33,7 +33,7 @@ class LanguageSelect extends React.Component {
     };
 
     Setting.Countries.forEach((country) => {
-      new Image().src = `${Setting.StaticBaseUrl}/flag-icons/${country.country}.svg`;
+      new Image().src = Setting.getCountryImageUrl(country.country);
     });
   }
 

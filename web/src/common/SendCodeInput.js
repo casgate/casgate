@@ -16,7 +16,6 @@ import {Button, Input} from "antd";
 import React from "react";
 import i18next from "i18next";
 import * as UserBackend from "../backend/UserBackend";
-import {SafetyOutlined} from "@ant-design/icons";
 import {CaptchaModal} from "./modal/CaptchaModal";
 
 const {Search} = Input;
@@ -75,7 +74,6 @@ export const SendCodeInput = ({value, disabled, textBefore, onChange, onButtonCl
         addonBefore={textBefore}
         disabled={disabled}
         value={value}
-        prefix={<SafetyOutlined />}
         placeholder={i18next.t("code:Enter your code")}
         onChange={e => onChange(e.target.value)}
         enterButton={

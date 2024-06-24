@@ -36,6 +36,17 @@ func (c *ApiController) AddApiToken() {
 		return
 	}
 
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
+		return
+	}
+
 	user, err := object.GetUser(owner)
 	if err != nil {
 		logs.Error("get user: %s", err.Error())
@@ -76,7 +87,7 @@ func (c *ApiController) AddApiToken() {
 // @Tag Api Token API
 // @Description delete api token
 // @Param owner query string true "The owner of token"
-// @Param api_token string true "The user api token"
+// @Param api_token query string true "The user api token"
 // @Success 200 Ok
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
@@ -88,10 +99,27 @@ func (c *ApiController) DeleteApiToken() {
 		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
 		return
 	}
-	
+
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
+		return
+	}
+
 	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
+		return
+	}
+
+	isValid = object.ValidateToken(token)
+	if !isValid {
+		c.ResponseUnprocessableEntity("token is invalid")
 		return
 	}
 
@@ -132,7 +160,7 @@ func (c *ApiController) DeleteApiToken() {
 // @Tag Api Token API
 // @Description recreate api token
 // @Param owner query string true "The owner of token"
-// @Param api_token string true "The user api token"
+// @Param api_token query string true "The user api token"
 // @Success 200 {object} object.UserApiToken The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
@@ -146,9 +174,26 @@ func (c *ApiController) RecreateApiToken() {
 	}
 	c.ValidateOrganization(owner)
 
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
+		return
+	}
+
 	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
+		return
+	}
+
+	isValid = object.ValidateToken(token)
+	if !isValid {
+		c.ResponseUnprocessableEntity("token is invalid")
 		return
 	}
 
@@ -205,19 +250,25 @@ func (c *ApiController) RecreateApiToken() {
 // @Title GetUserByApiToken
 // @Tag Api Token API
 // @Description get user by API token
-// @Param api_token string true "The user api token"
+// @Param api_token query string true "The user api token"
 // @Success 200 {object} object.User The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
 // @Failure 500 Internal Server Error
-// @router /get-user-by-api-token [post]
+// @router /get-user-by-api-token [get]
 func (c *ApiController) GetUserByApiToken() {
 	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
 		return
 	}
-	
+
+	isValid := object.ValidateToken(token)
+	if !isValid {
+		c.ResponseUnprocessableEntity("token is invalid")
+		return
+	}
+
 	owner, err := object.GetApiKeyOwner(token)
 	if err != nil {
 		logs.Error("get api key owner : %s", err.Error())
@@ -234,7 +285,7 @@ func (c *ApiController) GetUserByApiToken() {
 // @Tag Api Token API
 // @Description get user tokens
 // @Param owner query string true "The owner of token"
-// @Success 200 {object} object.User[] The Response object
+// @Success 200 {array} object.User The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
 // @Failure 500 Internal Server Error
@@ -243,6 +294,17 @@ func (c *ApiController) GetUserTokens() {
 	owner := c.Input().Get("owner")
 	if owner == "" {
 		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
+		return
+	}
+
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
 		return
 	}
 

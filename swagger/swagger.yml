@@ -2371,7 +2371,7 @@ paths:
           schema:
             $ref: '#/definitions/object.Application'
   /api/get-user-by-api-token:
-    post:
+    get:
       tags:
       - Api Token API
       description: get user by API token

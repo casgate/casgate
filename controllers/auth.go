@@ -594,10 +594,17 @@ func (c *ApiController) Login() {
 
 			c.ResponseError(c.T(err.Error()))
 		}
-
-		provider, err := object.GetProvider(util.GetId("admin", authForm.Provider))
+		
+		providerID := util.GetId(application.Organization, authForm.Provider)
+		provider, err := object.GetProvider(providerID)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+
+			c.ResponseInternalServerError("internal server error")
+			return
+		}
+		if provider == nil {
+			record.AddReason(fmt.Sprintf("Could not find provider with id: %s", providerID))
 
 			c.ResponseInternalServerError("internal server error")
 			return
