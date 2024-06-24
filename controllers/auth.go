@@ -594,7 +594,7 @@ func (c *ApiController) Login() {
 
 			c.ResponseError(c.T(err.Error()))
 		}
-		
+
 		providerID := util.GetId(application.Organization, authForm.Provider)
 		provider, err := object.GetProvider(providerID)
 		if err != nil {
@@ -778,7 +778,8 @@ func (c *ApiController) Login() {
 				}
 
 				if user == nil || user.IsDeleted {
-					if !application.EnableInternalSignUp && !application.EnableIdpSignUp {
+
+					if !application.EnableIdpSignUp {
 						record.AddReason(fmt.Sprintf("Login error: provider: %s, username: %s, (%s) does not allowed to sign up as new account", provider.Type, userInfo.Username, userInfo.DisplayName))
 
 						c.ResponseError(fmt.Sprintf(c.T("auth:The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support"), provider.Type, userInfo.Username, userInfo.DisplayName))

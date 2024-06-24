@@ -14,6 +14,7 @@
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Konnte nicht anmelden: %s",
     "Forbidden operation": "Forbidden operation",
+    "Invalid id token": "Invalid id token",
     "Invalid token": "Ungültiges Token",
     "State expected: %s, but got: %s": "Erwarteter Zustand: %s, aber erhalten: %s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "Das Konto für den Anbieter: %s und Benutzernamen: %s (%s) existiert nicht und darf nicht über %%s als neues Konto erstellt werden. Bitte nutzen Sie einen anderen Weg, um sich anzumelden",
@@ -27,6 +28,7 @@
     "Unauthorized operation": "Nicht autorisierte Operation",
     "Unknown authentication type (not password or provider), form = %s": "Unbekannter Authentifizierungstyp (nicht Passwort oder Anbieter), Formular = %s",
     "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
+    "Wrong URL": "Wrong URL",
     "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
   },
   "cas": {
@@ -69,7 +71,11 @@
   },
   "general": {
     "Invalid username or password/code": "Ungültiger Benutzername oder Passwort/Code",
+    "Missing administrator credentials": "Missing administrator credentials",
+    "Missing certificate": "Missing certificate",
+    "Missing client certificate": "Missing client certificate",
     "Missing parameter": "Fehlender Parameter",
+    "Missing required parameter": "Missing required parameter",
     "Not implemented": "Not implemented",
     "Please login first": "Bitte zuerst einloggen",
     "The user: %s doesn't exist": "Der Benutzer %s existiert nicht",
