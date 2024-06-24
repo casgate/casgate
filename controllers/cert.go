@@ -101,6 +101,10 @@ func (c *ApiController) GetCert() {
 		c.ResponseError(err.Error())
 		return
 	}
+	if cert == nil {
+		c.ResponseOk()
+		return
+	}
 
 	c.ResponseOk(object.GetMaskedCert(cert))
 }

@@ -187,6 +187,13 @@ func (c *ApiController) GetLdap() {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	if ldap == nil {
+		c.ResponseOk()
+		return
+	}
+
+	c.ValidateOrganization(ldap.Owner)
 	c.ResponseOk(object.GetMaskedLdap(ldap))
 }
 

@@ -144,6 +144,10 @@ func (c *ApiController) GetProvider() {
 		c.ResponseError(err.Error())
 		return
 	}
+	if provider == nil {
+		c.ResponseOk()
+		return
+	}
 
 	c.ResponseOk(object.GetMaskedProvider(provider, isMaskEnabled))
 }
