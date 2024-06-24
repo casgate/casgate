@@ -14,6 +14,7 @@
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Не удалось войти в систему: %s",
     "Forbidden operation": "Forbidden operation",
+    "Invalid id token": "Invalid id token",
     "Invalid token": "Недействительный токен",
     "State expected: %s, but got: %s": "Ожидался статус: %s, но получен: %s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "Аккаунт провайдера: %s и имя пользователя: %s (%s) не существует и не может быть зарегистрирован через %%s, пожалуйста, используйте другой способ регистрации",
@@ -27,6 +28,7 @@
     "Unauthorized operation": "Несанкционированная операция",
     "Unknown authentication type (not password or provider), form = %s": "Неизвестный тип аутентификации (не пароль и не провайдер), форма = %s",
     "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
+    "Wrong URL": "Wrong URL",
     "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
   },
   "cas": {
@@ -69,7 +71,11 @@
   },
   "general": {
     "Invalid username or password/code": "Неправильное имя пользователя или пароль/код",
+    "Missing administrator credentials": "Missing administrator credentials",
+    "Missing certificate": "Missing certificate",
+    "Missing client certificate": "Missing client certificate",
     "Missing parameter": "Отсутствующий параметр",
+    "Missing required parameter": "Missing required parameter",
     "Not implemented": "Not implemented",
     "Please login first": "Пожалуйста, сначала войдите в систему",
     "The user: %s doesn't exist": "Пользователь %s не существует",

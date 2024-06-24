@@ -14,6 +14,7 @@
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "ログインできませんでした：%s",
     "Forbidden operation": "Forbidden operation",
+    "Invalid id token": "Invalid id token",
     "Invalid token": "無効なトークン",
     "State expected: %s, but got: %s": "期待される状態： %s、実際には：%s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "プロバイダーのアカウント：%s とユーザー名：%s（%s）が存在せず、新しいアカウントを %%s 経由でサインアップすることはできません。他の方法でサインアップしてください",
@@ -27,6 +28,7 @@
     "Unauthorized operation": "不正操作",
     "Unknown authentication type (not password or provider), form = %s": "不明な認証タイプ（パスワードまたはプロバイダーではない）フォーム=%s",
     "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
+    "Wrong URL": "Wrong URL",
     "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
   },
   "cas": {
@@ -69,7 +71,11 @@
   },
   "general": {
     "Invalid username or password/code": "Invalid username or password/code",
+    "Missing administrator credentials": "Missing administrator credentials",
+    "Missing certificate": "Missing certificate",
+    "Missing client certificate": "Missing client certificate",
     "Missing parameter": "不足しているパラメーター",
+    "Missing required parameter": "Missing required parameter",
     "Not implemented": "Not implemented",
     "Please login first": "最初にログインしてください",
     "The user: %s doesn't exist": "そのユーザー：%sは存在しません",

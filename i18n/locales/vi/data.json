@@ -14,6 +14,7 @@
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Đăng nhập không thành công: %s",
     "Forbidden operation": "Forbidden operation",
+    "Invalid id token": "Invalid id token",
     "Invalid token": "Mã thông báo không hợp lệ",
     "State expected: %s, but got: %s": "Trạng thái dự kiến: %s, nhưng nhận được: %s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "Tài khoản cho nhà cung cấp: %s và tên người dùng: %s (%s) không tồn tại và không được phép đăng ký làm tài khoản mới qua %%s, vui lòng sử dụng cách khác để đăng ký",
@@ -27,6 +28,7 @@
     "Unauthorized operation": "Hoạt động không được ủy quyền",
     "Unknown authentication type (not password or provider), form = %s": "Loại xác thực không xác định (không phải mật khẩu hoặc nhà cung cấp), biểu mẫu = %s",
     "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
+    "Wrong URL": "Wrong URL",
     "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
   },
   "cas": {
@@ -69,7 +71,11 @@
   },
   "general": {
     "Invalid username or password/code": "Invalid username or password/code",
+    "Missing administrator credentials": "Missing administrator credentials",
+    "Missing certificate": "Missing certificate",
+    "Missing client certificate": "Missing client certificate",
     "Missing parameter": "Thiếu tham số",
+    "Missing required parameter": "Missing required parameter",
     "Not implemented": "Not implemented",
     "Please login first": "Vui lòng đăng nhập trước",
     "The user: %s doesn't exist": "Người dùng: %s không tồn tại",
