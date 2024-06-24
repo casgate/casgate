@@ -612,9 +612,7 @@ func (c *ApiController) SetPassword() {
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
-
-	c.ValidateOrganization(targetUser.Owner)
-
+	
 	isAdmin := c.IsAdmin()
 	if isAdmin {
 		if oldPassword != "" {
