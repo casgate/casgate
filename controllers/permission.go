@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -138,6 +139,10 @@ func (c *ApiController) GetPermission() {
 	permission, err := object.GetPermission(request.Id)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
+		return
+	}
+	if permission == nil {
+		c.ResponseNotFound((fmt.Sprintf(c.T("general:The permission: %s doesn't exist"), request.Id)))
 		return
 	}
 

@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -103,6 +104,11 @@ func (c *ApiController) GetOrganization() {
 	maskedOrganization, err := object.GetMaskedOrganization(object.GetOrganization(request.Id))
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	if maskedOrganization == nil {
+		c.ResponseNotFound((fmt.Sprintf(c.T("general:The organization: %s doesn't exist"), request.Id)))
 		return
 	}
 
