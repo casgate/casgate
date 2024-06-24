@@ -63,7 +63,7 @@ func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
 	result := BaseDataManageRequest{
 		Id:           c.Input().Get("id"),
 		Owner:        c.Input().Get("owner"),
-		Field:        c.Input().Get("sortField"),
+		Field:        c.Input().Get("field"),
 		Value:        c.Input().Get("value"),
 		SortField:    c.Input().Get("sortField"),
 		SortOrder:    c.Input().Get("sortOrder"),
