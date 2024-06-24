@@ -16,7 +16,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -82,7 +81,7 @@ func (c *ApiController) GetDomain() {
 	}
 
 	if domain == nil {
-		c.ResponseNotFound((fmt.Sprintf(c.T("general:The domain: %s doesn't exist"), request.Id)))
+		c.ResponseOk()
 		return
 	}
 

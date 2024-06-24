@@ -15,7 +15,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -90,7 +89,7 @@ func (c *ApiController) GetGroup() {
 		return
 	}
 	if group == nil {
-		c.ResponseNotFound((fmt.Sprintf(c.T("general:The group: %s doesn't exist"), request.Id)))
+		c.ResponseOk()
 		return
 	}
 	c.ResponseOk(group)
