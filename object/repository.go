@@ -32,4 +32,6 @@ type Repository interface {
 	UpdateUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider, findConditions map[string]interface{}) error
 
 	UpdateEntitiesFieldValue(ctx context.Context, entityName string, fieldName, newValue string, findConditions map[string]interface{}) error
+
+	UpdateTokens(ctx context.Context, tokens []User, columns []string) error
 }

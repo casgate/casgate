@@ -66,6 +66,10 @@ class RoleEditPage extends React.Component {
           res.data.tags = [];
         }
 
+        if (!res.data.users) {
+          res.data.users = [];
+        }
+
         this.setState({
           role: res.data,
         });

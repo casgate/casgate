@@ -95,13 +95,18 @@ func (c *ApiController) UpdateRole() {
 	id := c.Input().Get("id")
 
 	var role object.Role
-	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
-	if err != nil {
+	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &role); err != nil {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateRole(id, &role))
+	success, err := c.UseCases.UpdateRole(id, &role)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.Data["json"] = wrapActionResponse(success)
 	c.ServeJSON()
 }
 
