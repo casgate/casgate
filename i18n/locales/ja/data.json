@@ -54,6 +54,7 @@
     "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
     "The user is forbidden to sign in, please contact the administrator": "ユーザーはサインインできません。管理者に連絡してください",
     "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
+    "LDAP users are required to authenticate through the LDAP tab": "LDAP users are required to authenticate through the LDAP tab",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "ユーザー名には英数字、アンダースコア、ハイフンしか含めることができません。連続したハイフンまたはアンダースコアは不可であり、ハイフンまたはアンダースコアで始まるまたは終わることもできません。",
     "Username already exists": "ユーザー名はすでに存在しています",
     "Username cannot contain white spaces": "ユーザ名にはスペースを含めることはできません",
