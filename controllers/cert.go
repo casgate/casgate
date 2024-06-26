@@ -105,6 +105,7 @@ func (c *ApiController) GetCert() {
 		c.ResponseOk()
 		return
 	}
+	c.ValidateOrganization(cert.Owner)
 
 	c.ResponseOk(object.GetMaskedCert(cert))
 }
@@ -130,7 +131,13 @@ func (c *ApiController) UpdateCert() {
 		return
 	}
 
-	c.ValidateOrganization(cert.Owner)
+	certFromDb, _ := object.GetCert(id)
+	if certFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(certFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateCert(id, &cert))
 	c.ServeJSON()
@@ -153,6 +160,7 @@ func (c *ApiController) AddCert() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(cert.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddCert(&cert))
 	c.ServeJSON()

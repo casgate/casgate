@@ -107,8 +107,14 @@ func (c *ApiController) UpdateDomain() {
 		c.ResponseError(err.Error())
 		return
 	}
+	domainFromDb, _ := object.GetCert(request.Id)
+	if domainFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(domainFromDb.Owner)
 
-	c.ValidateOrganization(domain.Owner)
 	c.Data["json"] = wrapActionResponse(object.UpdateDomain(c.getRequestCtx(), request.Id, &domain))
 	c.ServeJSON()
 }

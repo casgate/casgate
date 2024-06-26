@@ -92,6 +92,8 @@ func (c *ApiController) GetGroup() {
 		c.ResponseOk()
 		return
 	}
+	c.ValidateOrganization(group.Owner)
+
 	c.ResponseOk(group)
 }
 
@@ -107,13 +109,20 @@ func (c *ApiController) UpdateGroup() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-
 	var group object.Group
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &group)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	groupFromDb, _ := object.GetGroup(group.GetId())
+	if groupFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(groupFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateGroup(request.Id, &group))
 	c.ServeJSON()
@@ -135,7 +144,8 @@ func (c *ApiController) AddGroup() {
 		c.ResponseError(err.Error())
 		return
 	}
-
+	c.ValidateOrganization(group.Owner)
+	
 	c.Data["json"] = wrapActionResponse(object.AddGroup(&group))
 	c.ServeJSON()
 }

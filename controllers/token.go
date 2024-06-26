@@ -90,8 +90,15 @@ func (c *ApiController) UpdateToken() {
 		return
 	}
 
-	c.ValidateOrganization(token.Owner) 
-	c.ValidateOrganization(token.Organization) 
+
+	tokenFromDb, _ := object.GetToken(request.Id)
+	if tokenFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(tokenFromDb.Owner) 
+	c.ValidateOrganization(tokenFromDb.Organization) 
 
 	c.Data["json"] = wrapActionResponse(object.UpdateToken(request.Id, &token))
 	c.ServeJSON()

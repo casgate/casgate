@@ -167,6 +167,13 @@ func (c *ApiController) UpdatePermission() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	permFromDb, _ := object.GetPermission(permission.GetId())
+	if permFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(permFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.UpdatePermission(request.Id, &permission))
 	c.ServeJSON()

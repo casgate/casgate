@@ -92,6 +92,14 @@ func (c *ApiController) UpdateSession() {
 		return
 	}
 
+	sessionFromDb, _ := object.GetSingleSession(util.GetSessionId(session.Owner, session.Name, session.Application))
+	if sessionFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(sessionFromDb.Owner) 
+
 	c.Data["json"] = wrapActionResponse(object.UpdateSession(util.GetSessionId(session.Owner, session.Name, session.Application), &session))
 	c.ServeJSON()
 }
@@ -137,6 +145,14 @@ func (c *ApiController) DeleteSession() {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	sessionFromDb, _ := object.GetSingleSession(util.GetSessionId(session.Owner, session.Name, session.Application))
+	if sessionFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(sessionFromDb.Owner) 
 
 	c.Data["json"] = wrapActionResponse(object.DeleteSession(ctx, util.GetSessionId(session.Owner, session.Name, session.Application)))
 	c.ServeJSON()
