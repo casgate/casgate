@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -248,6 +249,17 @@ func (c *ApiController) GetDefaultApplication() {
 // @router /get-organization-names [get]
 func (c *ApiController) GetOrganizationNames() {
 	owner := c.Input().Get("owner")
+	builtInApp, err := object.GetApplication(c.Ctx.Request.Context(), "admin/app-built-in")
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	if strings.ToLower(builtInApp.OrgChoiceMode) != "select" {
+		c.ResponseForbidden(c.T("auth:Admin should turn on OrgChoiceMode to select for built-in app"))
+		return
+	}
+
 	organizationNames, err := object.GetOrganizationsByFields(owner, []string{"name", "display_name"}...)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
