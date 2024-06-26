@@ -255,7 +255,9 @@ func (c *ApiController) GetOrganizationNames() {
 		return
 	}
 
-	if strings.ToLower(builtInApp.OrgChoiceMode) != "select" {
+	globalAdmin, _ := c.isGlobalAdmin()
+
+	if !globalAdmin && strings.ToLower(builtInApp.OrgChoiceMode) != "select" {
 		c.ResponseForbidden(c.T("auth:Admin should turn on OrgChoiceMode to select for built-in app"))
 		return
 	}

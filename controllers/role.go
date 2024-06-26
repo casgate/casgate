@@ -70,6 +70,7 @@ func (c *ApiController) GetRole() {
 		c.ResponseOk()
 		return
 	}
+	c.ValidateOrganization(role.Owner)
 
 	c.ResponseOk(role)
 }
@@ -93,7 +94,7 @@ func (c *ApiController) UpdateRole() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
-	roleFromDb, _ := object.GetRole(role.GetId())
+	roleFromDb, _ := object.GetRole(request.Id)
 	if roleFromDb == nil {
 		c.Data["json"] = wrapActionResponse(false)
 		c.ServeJSON()

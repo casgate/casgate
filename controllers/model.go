@@ -99,7 +99,13 @@ func (c *ApiController) UpdateModel() {
 		c.ResponseError(err.Error())
 		return
 	}
-	c.ValidateOrganization(model.Owner)
+	modelFromDb, _ := object.GetModel(id)
+	if modelFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(modelFromDb.Owner)
 
 	c.Data["json"] = wrapErrorResponse(object.UpdateModelWithCheck(id, &model))
 	c.ServeJSON()

@@ -116,7 +116,7 @@ func (c *ApiController) UpdateGroup() {
 		return
 	}
 
-	groupFromDb, _ := object.GetGroup(group.GetId())
+	groupFromDb, _ := object.GetGroup(request.Id)
 	if groupFromDb == nil {
 		c.Data["json"] = wrapActionResponse(false)
 		c.ServeJSON()

@@ -19,7 +19,6 @@ import (
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // GetPermissions
@@ -34,45 +33,21 @@ import (
 func (c *ApiController) GetPermissions() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
+	
+	count, err := object.GetPermissionCount(request.Owner, request.Field, request.Value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
-	if limit == "" || page == "" {
-		permissions, err := object.GetPermissions(owner)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		c.ResponseOk(permissions)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetPermissionCount(owner, field, value)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		permissions, err := object.GetPaginationPermissions(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		c.ResponseOk(permissions, paginator.Nums())
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	permissions, err := object.GetPaginationPermissions(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
 	}
+
+	c.ResponseOk(permissions, paginator.Nums())
 }
 
 // GetPermissionsBySubmitter
@@ -114,6 +89,13 @@ func (c *ApiController) GetPermissionsByRole() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
+	roleFromDb, _ := object.GetRole(request.Id)
+	if roleFromDb == nil {
+		c.ResponseOk()
+		return
+	}
+	c.ValidateOrganization(roleFromDb.Owner)
+
 	permissions, err := object.GetPermissionsByRole(request.Id)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
@@ -144,6 +126,7 @@ func (c *ApiController) GetPermission() {
 		c.ResponseOk()
 		return
 	}
+	c.ValidateOrganization(permission.Owner)
 
 	c.ResponseOk(permission)
 }
@@ -167,7 +150,7 @@ func (c *ApiController) UpdatePermission() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
-	permFromDb, _ := object.GetPermission(permission.GetId())
+	permFromDb, _ := object.GetPermission(request.Id)
 	if permFromDb == nil {
 		c.Data["json"] = wrapActionResponse(false)
 		c.ServeJSON()
@@ -197,6 +180,7 @@ func (c *ApiController) AddPermission() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	c.ValidateOrganization(permission.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddPermission(&permission))
 	c.ServeJSON()
