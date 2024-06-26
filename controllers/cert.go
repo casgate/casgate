@@ -179,7 +179,8 @@ func (c *ApiController) DeleteCert() {
 
 	certFromDb, _ := object.GetCert(cert.GetId())
 	if certFromDb == nil {
-		c.ResponseBadRequest("Cert does't exist")
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
 		return
 	}
 	c.ValidateOrganization(certFromDb.Owner)

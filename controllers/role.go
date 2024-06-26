@@ -142,7 +142,8 @@ func (c *ApiController) DeleteRole() {
 
 	roleFromDb, _ := object.GetRole(role.GetId())
 	if roleFromDb == nil {
-		c.ResponseBadRequest("Role does't exist")
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
 		return
 	}
 	c.ValidateOrganization(roleFromDb.Owner)

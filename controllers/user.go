@@ -454,7 +454,8 @@ func (c *ApiController) DeleteUser() {
 
 	userFromDb, _ := object.GetUser(user.GetId())
 	if userFromDb == nil {
-		c.ResponseBadRequest("user does't exist")
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
 		return
 	}
 	c.ValidateOrganization(userFromDb.Owner)

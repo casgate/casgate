@@ -142,7 +142,8 @@ func (c *ApiController) DeleteModel() {
 
 	modelFromDb, _ := object.GetModel(model.GetId())
 	if modelFromDb == nil {
-		c.ResponseBadRequest("Model does't exist")
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
 		return
 	}
 	c.ValidateOrganization(modelFromDb.Owner)

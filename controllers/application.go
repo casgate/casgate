@@ -289,7 +289,8 @@ func (c *ApiController) DeleteApplication() {
 
 	appFromDb, _ := object.GetApplication(c.getRequestCtx(), application.GetId())
 	if appFromDb == nil {
-		c.ResponseBadRequest("Application does't exist")
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
 		return
 	}
 	c.ValidateOrganization(appFromDb.Organization)

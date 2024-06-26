@@ -216,7 +216,8 @@ func (c *ApiController) DeletePermission() {
 
 	permFromDb, _ := object.GetPermission(permission.GetId())
 	if permFromDb == nil {
-		c.ResponseBadRequest("Permission does't exist")
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
 		return
 	}
 	c.ValidateOrganization(permFromDb.Owner)

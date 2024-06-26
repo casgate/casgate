@@ -155,7 +155,8 @@ func (c *ApiController) DeleteDomain() {
 
 	domainFromDb, _ := object.GetDomain(domain.GetId())
 	if domainFromDb == nil {
-		c.ResponseBadRequest("Domain does't exist")
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
 		return
 	}
 	c.ValidateOrganization(domainFromDb.Owner)
