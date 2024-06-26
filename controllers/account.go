@@ -176,6 +176,7 @@ func (c *ApiController) Signup() {
 		SignupApplication: application.Name,
 		Properties:        map[string]string{},
 		Karma:             0,
+		MappingStrategy:   application.UserMappingStrategy,
 	}
 
 	if len(organization.Tags) > 0 {

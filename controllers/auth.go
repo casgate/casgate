@@ -594,7 +594,7 @@ func (c *ApiController) Login() {
 
 			c.ResponseError(c.T(err.Error()))
 		}
-		
+
 		providerID := util.GetId(application.Organization, authForm.Provider)
 		provider, err := object.GetProvider(providerID)
 		if err != nil {
@@ -859,6 +859,7 @@ func (c *ApiController) Login() {
 						IsDeleted:         false,
 						SignupApplication: application.Name,
 						Properties:        properties,
+						MappingStrategy:   application.UserMappingStrategy,
 					}
 
 					affected, err := object.AddUser(goCtx, user)
@@ -911,6 +912,24 @@ func (c *ApiController) Login() {
 					return
 				}
 
+				resp = c.HandleLoggedIn(application, user, &authForm)
+
+				record.WithAction("signup").WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User logged in")
+			}
+
+			if resp.Status == "ok" {
+				if len(provider.UserMapping) > 0 {
+					record.AddReason("Start attribute mapping")
+					err = object.SyncAttributesToUser(user, userInfo.DisplayName, userInfo.Email, userInfo.Phone, userInfo.AvatarUrl, user.Address)
+					if err != nil {
+						record.AddReason(fmt.Sprintf("Attribute mapping error: %s", err.Error()))
+
+						c.ResponseInternalServerError("internal server error")
+						return
+					}
+					record.AddReason("Finish attribute mapping")
+				}
+
 				if provider.EnableRoleMapping {
 					record.AddReason("Start role mapping")
 					mapper, err := role_mapper.NewRoleMapper(provider.Category, provider.RoleMappingItems, authData)
@@ -922,7 +941,7 @@ func (c *ApiController) Login() {
 					}
 
 					userRoles := mapper.GetRoles()
-					err = object.AddRolesToUser(user.GetId(), userRoles)
+					err = object.SyncRolesToUser(user, userRoles)
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Role mapping error: %s", err.Error()))
 
@@ -931,10 +950,6 @@ func (c *ApiController) Login() {
 					}
 					record.AddReason("Finish role mapping")
 				}
-
-				resp = c.HandleLoggedIn(application, user, &authForm)
-
-				record.WithAction("signup").WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User logged in")
 			}
 		} else { // authForm.Method != "signup"
 			userId := c.GetSessionUsername()

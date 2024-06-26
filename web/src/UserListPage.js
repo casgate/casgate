@@ -86,6 +86,7 @@ class UserListPage extends BaseListPage {
       passwordChangeRequired: false,
       properties: {},
       signupApplication: "app-built-in",
+      mappingStrategy: "all",
     };
   }
 
