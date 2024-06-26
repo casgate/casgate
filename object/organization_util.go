@@ -1,14 +1,33 @@
 package object
 
 func HasOrganizationDependencies(orgName string) (bool, error) {
-	tables := []string{
-		"adapter", "application", "cert", "domain", "enforcer", "group", "ldap", "model",
-		"payment", "permission", "plan", "pricing", "product", "provider", "radius_accounting",
-		"resource", "role", "subscription", "syncer", "token", "user", "webhook",
+	tables := map[string]string{
+		"adapter":           "owner",
+		"application":       "organization",
+		"cert":              "owner",
+		"domain":            "owner",
+		"enforcer":          "owner",
+		"group":             "owner",
+		"ldap":              "owner",
+		"model":             "owner",
+		"payment":           "owner",
+		"permission":        "owner",
+		"plan":              "owner",
+		"pricing":           "owner",
+		"product":           "owner",
+		"provider":          "owner",
+		"radius_accounting": "owner",
+		"resource":          "owner",
+		"role":              "owner",
+		"subscription":      "owner",
+		"syncer":            "owner",
+		"token":             "owner",
+		"user":              "owner",
+		"webhook":           "owner",
 	}
 
-	for _, table := range tables {
-		exists, err := ormer.Engine.Table(table).Where("owner = ?", orgName).Exist()
+	for table, field := range tables {
+		exists, err := ormer.Engine.Table(table).Where(field+" = ?", orgName).Exist()
 		if err != nil {
 			return false, err
 		}
