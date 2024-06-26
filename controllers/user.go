@@ -481,8 +481,6 @@ func (c *ApiController) DeleteUser() {
 // @Failure 500 Internal server error
 // @router /get-email-and-phone [get]
 func (c *ApiController) GetEmailAndPhone() {
-	request := c.ReadRequestFromQueryParams()
-	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	ctx := c.getRequestCtx()
 	organization := c.Ctx.Request.Form.Get("organization")
