@@ -130,6 +130,8 @@ func (c *ApiController) UpdateCert() {
 		return
 	}
 
+	c.ValidateOrganization(cert.Owner)
+
 	c.Data["json"] = wrapActionResponse(object.UpdateCert(id, &cert))
 	c.ServeJSON()
 }
