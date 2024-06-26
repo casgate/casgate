@@ -54,6 +54,10 @@ func GetUserByField(organizationName string, field string, value string) (*User,
 }
 
 func HasUserByField(organizationName string, field string, value string) bool {
+	if field == "email" {
+		value = strings.ToLower(value)
+	}
+
 	user, err := GetUserByField(organizationName, field, value)
 	if err != nil {
 		panic(err)
