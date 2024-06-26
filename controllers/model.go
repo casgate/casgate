@@ -78,7 +78,11 @@ func (c *ApiController) GetModel() {
 		c.ResponseError(err.Error())
 		return
 	}
-
+	if model == nil {
+		c.ResponseOk()
+		return
+	}
+	c.ValidateOrganization(model.Owner)
 	c.ResponseOk(model)
 }
 
