@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -100,6 +101,7 @@ func (c *ApiController) UpdateRole() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	role.Name = strings.ReplaceAll(role.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.UpdateRole(id, &role))
 	c.ServeJSON()
@@ -120,6 +122,7 @@ func (c *ApiController) AddRole() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	role.Name = strings.ReplaceAll(role.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.AddRole(&role))
 	c.ServeJSON()

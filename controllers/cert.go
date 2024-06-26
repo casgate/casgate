@@ -139,6 +139,7 @@ func (c *ApiController) UpdateCert() {
 		c.ResponseError(err.Error())
 		return
 	}
+	cert.Name = strings.ReplaceAll(cert.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.UpdateCert(id, &cert))
 	c.ServeJSON()
@@ -158,6 +159,7 @@ func (c *ApiController) AddCert() {
 		c.ResponseError(err.Error())
 		return
 	}
+	cert.Name = strings.ReplaceAll(cert.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.AddCert(&cert))
 	c.ServeJSON()

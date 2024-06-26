@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -122,6 +123,7 @@ func (c *ApiController) UpdateOrganization() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	organization.Name = strings.ReplaceAll(organization.Name, "/", "")
 
 	c.Data["json"] = wrapActionResponse(object.UpdateOrganization(c.Ctx.Request.Context(), id, &organization, c.GetAcceptLanguage()))
 	c.ServeJSON()
@@ -144,6 +146,7 @@ func (c *ApiController) AddOrganization() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	organization.Name = strings.ReplaceAll(organization.Name, "/", "")
 
 	count, err := object.GetOrganizationCount("", "", "")
 	if err != nil {
