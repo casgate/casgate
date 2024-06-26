@@ -34,12 +34,13 @@ type Role struct {
 	DisplayName string `xorm:"varchar(100)" json:"displayName"`
 	Description string `xorm:"varchar(100)" json:"description"`
 
-	Users     []string `xorm:"mediumtext" json:"users"`
-	Groups    []string `xorm:"mediumtext" json:"groups"`
-	Roles     []string `xorm:"mediumtext" json:"roles"`
-	Domains   []string `xorm:"mediumtext" json:"domains"`
-	Tags      []string `xorm:"mediumtext" json:"tags"`
-	IsEnabled bool     `json:"isEnabled"`
+	Users          []string `xorm:"mediumtext" json:"users"`
+	Groups         []string `xorm:"mediumtext" json:"groups"`
+	Roles          []string `xorm:"mediumtext" json:"roles"`
+	Domains        []string `xorm:"mediumtext" json:"domains"`
+	Tags           []string `xorm:"mediumtext" json:"tags"`
+	IsEnabled      bool     `json:"isEnabled"`
+	ManualOverride bool     `xorm:"bool" json:"manualOverride"`
 }
 
 func GetRoleCount(owner, field, value string) (int64, error) {
@@ -114,7 +115,6 @@ func GetRole(id string) (*Role, error) {
 	return getRole(owner, name)
 }
 
-
 func UpdateRole(id string, role *Role) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
 	oldRole, err := getRole(owner, name)
@@ -125,7 +125,6 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	if oldRole == nil {
 		return false, nil
 	}
-	
 
 	// allParentRoles, _ := GetAncestorRoles(id)
 	// for _, r := range allParentRoles {
@@ -496,14 +495,68 @@ func subRolePermissions(role *Role) ([]*Permission, error) {
 	return result, nil
 }
 
-// AddRolesToUser add userid to roles if they don't contain them already
-func AddRolesToUser(userId string, roleIds []string) error {
+// SyncRolesToUser sync user roles
+func SyncRolesToUser(user *User, roleIds []string) error {
+	userId := user.GetId()
 	roles, err := GetRolesByIds(roleIds)
 	if err != nil {
 		return err
 	}
 
+	if user.MappingStrategy != "all" && user.MappingStrategy != "role" {
+		return nil
+	}
+
+	currentUserRoles, err := getRolesByUserInternal(userId)
+	if err != nil {
+		return err
+	}
+	manualOverrideMap := make(map[string]bool)
+	for _, role := range currentUserRoles {
+		if role.ManualOverride {
+			if len(role.Domains) == 0 {
+				manualOverrideMap[""] = true
+			}
+
+			for _, domain := range role.Domains {
+				manualOverrideMap[domain] = true
+			}
+		}
+	}
+
+	for _, role := range currentUserRoles {
+		if role.ManualOverride {
+			continue
+		}
+		if !util.InSlice(roleIds, role.GetId()) {
+			role.Users = util.DeleteVal(role.Users, userId)
+			_, err = UpdateRole(role.GetId(), role)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	for _, role := range roles {
+		if role.Owner != user.Owner {
+			// we shouldn't add role from another organization (if it happened by any reason) to user, so skip
+			continue
+		}
+
+		if len(role.Domains) == 0 && manualOverrideMap[""] {
+			continue
+		}
+
+		for _, domain := range role.Domains {
+			if manualOverrideMap[domain] {
+				continue
+			}
+		}
+
+		if role.ManualOverride {
+			continue
+		}
+
 		if !util.InSlice(role.Users, userId) {
 			role.Users = append(role.Users, userId)
 
