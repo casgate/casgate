@@ -136,7 +136,8 @@
   "util": {
     "No application is found for userId: %s": "Aucune application n'a été trouvée pour l'identifiant d'utilisateur : %s",
     "No provider for category: %s is found for application: %s": "Aucun fournisseur pour la catégorie: %s n'est trouvé pour l'application: %s",
-    "The provider: %s is not found": "Le fournisseur : %s n'a pas été trouvé"
+    "The provider: %s is not found": "Le fournisseur : %s n'a pas été trouvé",
+    "The organization %s has dependencies and cannot be deleted": "L'organisation %s a des dépendances et ne peut pas être supprimée"
   },
   "verification": {
     "Code has not been sent yet!": "Le code n'a pas encore été envoyé !",
