@@ -372,7 +372,7 @@ e = some(where (p.eft == allow))
 
 [matchers]
 m = (r.subOwner == p.subOwner || p.subOwner == "*") && \
-    (r.subName == p.subName || p.subName == "*" || r.subName != "anonymous" && p.subName == "!anonymous") && \
+    (r.subName == p.subName || p.subName == "*" || (r.subName != "anonymous" && p.subName == "!anonymous" && r.subOwner == p.subOwner)) && \
     (r.method == p.method || p.method == "*") && \
     (r.urlPath == p.urlPath || p.urlPath == "*") && \
     (r.objOwner == p.objOwner || p.objOwner == "*") && \

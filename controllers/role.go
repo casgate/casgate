@@ -19,7 +19,6 @@ import (
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // GetRoles
@@ -31,39 +30,23 @@ import (
 // @Failure 500 Internal server error
 // @router /get-roles [get]
 func (c *ApiController) GetRoles() {
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-
-	if limit == "" || page == "" {
-		roles, err := object.GetRoles(owner)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		c.ResponseOk(roles)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetRoleCount(owner, field, value)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		roles, err := object.GetPaginationRoles(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		c.ResponseOk(roles, paginator.Nums())
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
+	count, err := object.GetRoleCount(request.Owner, request.Field, request.Value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
 	}
+
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	roles, err := object.GetPaginationRoles(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.ResponseOk(roles, paginator.Nums())
 }
 
 // GetRole
@@ -75,13 +58,19 @@ func (c *ApiController) GetRoles() {
 // @Failure 500 Internal server error
 // @router /get-role [get]
 func (c *ApiController) GetRole() {
-	id := c.Input().Get("id")
-
-	role, err := object.GetRole(id)
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
+	role, err := object.GetRole(request.Id)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
+	if role == nil {
+		c.ResponseOk()
+		return
+	}
+	c.ValidateOrganization(role.Owner)
 
 	c.ResponseOk(role)
 }
@@ -96,7 +85,8 @@ func (c *ApiController) GetRole() {
 // @Failure 400 Bad request
 // @router /update-role [post]
 func (c *ApiController) UpdateRole() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
@@ -104,8 +94,15 @@ func (c *ApiController) UpdateRole() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
-
-	c.Data["json"] = wrapActionResponse(object.UpdateRole(id, &role))
+	roleFromDb, _ := object.GetRole(request.Id)
+	if roleFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(roleFromDb.Owner)
+	
+	c.Data["json"] = wrapActionResponse(object.UpdateRole(request.Id, &role))
 	c.ServeJSON()
 }
 
@@ -118,12 +115,15 @@ func (c *ApiController) UpdateRole() {
 // @Failure 400 Bad request
 // @router /add-role [post]
 func (c *ApiController) AddRole() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	c.ValidateOrganization(role.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddRole(&role))
 	c.ServeJSON()
@@ -138,12 +138,22 @@ func (c *ApiController) AddRole() {
 // @Failure 400 Bad request
 // @router /delete-role [post]
 func (c *ApiController) DeleteRole() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+
+	roleFromDb, _ := object.GetRole(role.GetId())
+	if roleFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(roleFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteRole(&role))
 	c.ServeJSON()

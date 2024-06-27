@@ -22,6 +22,8 @@ import {Content} from "antd/es/layout/layout";
 import i18next from "i18next";
 import * as Conf from "../../Conf";
 
+import {appThemeComponents, appThemeToken} from "../../theme";
+
 const ThemesInfo = {
   default: {},
   dark: {
@@ -72,8 +74,10 @@ export default function ThemeEditor(props) {
     <ConfigProvider
       theme={{
         token: {
+          ...appThemeToken,
           ...themeToken,
         },
+        components: appThemeComponents,
         hashed: true,
         algorithm: algorithmFn,
       }}

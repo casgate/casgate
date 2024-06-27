@@ -190,8 +190,8 @@ class BaseListPage extends React.Component {
     if (!this.state.isAuthorized) {
       return (
         <Result
-          status="403"
-          title="403 Unauthorized"
+          status="403" // Using "403" because "401" is not supported by Ant Design's Result component
+          title="401 Unauthorized"
           subTitle={i18next.t("general:Sorry, you do not have permission to access this page or logged in status invalid.")}
           extra={<a href="/"><Button type="primary">{i18next.t("general:Back Home")}</Button></a>}
         />

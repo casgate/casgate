@@ -170,7 +170,7 @@
     "Choose email or phone": "Choose email or phone",
     "Next Step": "Next Step",
     "Password change required": "Password change required",
-    "Please input your username!": "Please input your username!",
+    "Please input your username!": "Please input your Username, Email or Phone!",
     "Reset": "Reset",
     "Retrieve password": "Retrieve password",
     "Unknown forget type": "Unknown forget type",
@@ -476,7 +476,7 @@
     "Verification code": "Verification code",
     "WebAuthn": "WebAuthn",
     "sign up now": "sign up now",
-    "username, Email or phone": "username, Email or phone",
+    "username, Email or phone": "Username, Email or Phone",
     "Choose server": "LDAP Server for connect"
   },
   "mfa": {

@@ -122,13 +122,18 @@ h1 {
   }
 }
 
+.forget-wrapper {
+  height: 100%;
+  margin: 0 auto;
+  padding-top: 128px;
+}
+
 .forget-content {
-  padding: 10px 24px 20px;
-  margin: 30px auto;
-  border: 2px solid #fff;
-  border-radius: 7px;
+  min-width: 390px;
+  max-width: 480px;
+  padding: var(--space-3-x) var(--space-4-x) var(--space-4-x) var(--space-4-x);
+  border-radius: var(--space-2-x);
   background-color: rgb(255 255 255);
-  box-shadow: 0 0 20px rgb(0 0 0 / 20%);
 }
 
 .login-panel {
@@ -143,12 +148,14 @@ h1 {
 }
 
 .login-content {
+  height: 100%;
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   box-sizing: border-box;
   margin: 0 auto;
+  padding-top: 128px;
   position: relative;
 }
 
@@ -156,7 +163,7 @@ h1 {
   flex: auto;
   display: flex;
   align-items: center;
-  background: #ced8eb no-repeat;
+  background: hsl(225deg 15% 95%) no-repeat;
   background-size: 100% 100%;
   background-attachment: fixed;
 
@@ -167,4 +174,13 @@ h1 {
 
 .ant-menu-horizontal {
   border-bottom: none !important;
+}
+
+.ant-message-notice-content:has(.ant-message-error) {
+  background-color: hsl(0deg 100% 98%);
+  border: 1px solid hsl(0deg 82% 91%);
+}
+
+.ant-steps .ant-steps-item-title {
+  font-size: 13px;
 }

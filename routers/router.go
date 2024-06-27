@@ -90,6 +90,7 @@ func initAPI() {
 	beego.Router("/api/delete-api-token", &controllers.ApiController{}, "POST:DeleteApiToken")
 	beego.Router("/api/recreate-api-token", &controllers.ApiController{}, "POST:RecreateApiToken")
 	beego.Router("/api/get-user-by-api-token", &controllers.ApiController{}, "GET:GetUserByApiToken")
+	beego.Router("/api/get-user-tokens", &controllers.ApiController{}, "GET:GetUserTokens")
 
 	beego.Router("/api/get-groups", &controllers.ApiController{}, "GET:GetGroups")
 	beego.Router("/api/get-group", &controllers.ApiController{}, "GET:GetGroup")

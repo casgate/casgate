@@ -16,6 +16,7 @@ package routers
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/object"
@@ -42,17 +43,17 @@ func AutoSigninFilter(ctx *context.Context) {
 	if accessToken != "" {
 		token, err := object.GetTokenByAccessToken(accessToken)
 		if err != nil {
-			responseError(ctx, err.Error())
+			responseError(ctx, err.Error(), http.StatusForbidden)
 			return
 		}
 
 		if token == nil {
-			responseError(ctx, "Access token doesn't exist")
+			responseError(ctx, "Access token doesn't exist", http.StatusForbidden)
 			return
 		}
 
 		if util.IsTokenExpired(token.CreatedTime, token.ExpiresIn) {
-			responseError(ctx, "Access token has expired")
+			responseError(ctx, "Access token has expired", http.StatusForbidden)
 			return
 		}
 
@@ -85,7 +86,7 @@ func AutoSigninFilter(ctx *context.Context) {
 		_, err := object.CheckUserPassword(goCtx, owner, name, password, options)
 		if err != nil {
 			msg := object.CheckPassErrorToMessage(err, "en")
-			responseError(ctx, msg)
+			responseError(ctx, msg, http.StatusForbidden)
 			return
 		}
 

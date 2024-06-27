@@ -29,6 +29,7 @@ const (
 
 var (
 	tagExtractionRegexp = regexp.MustCompile("<access-token><access-token-user-id:(.+)>")
+	tokenValidationRegexp = `^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`
 
 	ExtractOwnerIdError = errors.New("could not extract owner id from tag")
 )
@@ -163,4 +164,26 @@ func MakeUserApiToken(user *User) UserApiToken {
 		Owner:    user.Owner,
 		ApiToken: user.AccessKey + user.AccessSecret,
 	}
+}
+
+func GetUserTokens(user *User) ([]User, error) {
+	var tokens []User
+
+	tagPattern := fmt.Sprintf("<access-token><access-token-user-id:%s>", user.Id)
+
+	err := ormer.Engine.Where("tag LIKE ?", tagPattern).Find(&tokens)
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
+}
+
+func ValidateToken(token string) bool {
+	matched, err := regexp.MatchString(tokenValidationRegexp, token)
+	if err != nil {
+		fmt.Println("Ошибка при проверке токена:", err)
+		return false
+	}
+	return matched
 }

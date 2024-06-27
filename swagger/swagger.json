@@ -976,12 +976,11 @@
                         "type": "string"
                     },
                     {
-                        "in": "string",
+                        "in": "query",
                         "name": "api_token",
                         "description": "The user api token",
-                        "schema": {
-                            "$ref": "#/definitions/true"
-                        }
+                        "required": true,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -3641,7 +3640,7 @@
             }
         },
         "/api/get-user-by-api-token": {
-            "post": {
+            "get": {
                 "tags": [
                     "Api Token API"
                 ],
@@ -3649,12 +3648,11 @@
                 "operationId": "ApiController.GetUserByApiToken",
                 "parameters": [
                     {
-                        "in": "string",
+                        "in": "query",
                         "name": "api_token",
                         "description": "The user api token",
-                        "schema": {
-                            "$ref": "#/definitions/true"
-                        }
+                        "required": true,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -3747,6 +3745,44 @@
                                 "$ref": "#/definitions/object.Payment"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/get-user-tokens": {
+            "get": {
+                "tags": [
+                    "Api Token API"
+                ],
+                "description": "get user tokens",
+                "operationId": "ApiController.GetUserTokens",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "owner",
+                        "description": "The owner of token",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/object.User"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized operation"
+                    },
+                    "422": {
+                        "description": "Unprocessable entity"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
@@ -4371,12 +4407,11 @@
                         "type": "string"
                     },
                     {
-                        "in": "string",
+                        "in": "query",
                         "name": "api_token",
                         "description": "The user api token",
-                        "schema": {
-                            "$ref": "#/definitions/true"
-                        }
+                        "required": true,
+                        "type": "string"
                     }
                 ],
                 "responses": {
