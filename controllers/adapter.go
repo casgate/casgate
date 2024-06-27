@@ -115,6 +115,7 @@ func (c *ApiController) AddAdapter() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(adapter.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddAdapter(&adapter))
 	c.ServeJSON()

@@ -33,40 +33,21 @@ import (
 func (c *ApiController) GetEnforcers() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-
-	if limit == "" || page == "" {
-		enforcers, err := object.GetEnforcers(owner)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(enforcers)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetEnforcerCount(owner, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		enforcers, err := object.GetPaginationEnforcers(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(enforcers, paginator.Nums())
+	
+	count, err := object.GetEnforcerCount(request.Owner, request.Field, request.Value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
 	}
+
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	enforcers, err := object.GetPaginationEnforcers(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.ResponseOk(enforcers, paginator.Nums())
 }
 
 // GetEnforcer
@@ -87,6 +68,11 @@ func (c *ApiController) GetEnforcer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	if enforcer == nil {
+		c.ResponseOk()
+		return
+	}
+	c.ValidateOrganization(enforcer.Owner)
 
 	if loadModelCfg == "true" && enforcer.Model != "" {
 		err := enforcer.LoadModelCfg()
@@ -116,6 +102,13 @@ func (c *ApiController) UpdateEnforcer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	enforcerFromDb, _ := object.GetCert(request.Id)
+	if enforcerFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(enforcerFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateEnforcer(request.Id, &enforcer))
 	c.ServeJSON()
@@ -138,6 +131,7 @@ func (c *ApiController) AddEnforcer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(enforcer.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddEnforcer(&enforcer))
 	c.ServeJSON()
@@ -160,6 +154,13 @@ func (c *ApiController) DeleteEnforcer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	enforcerFromDb, _ := object.GetCert(enforcer.GetId())
+	if enforcerFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(enforcerFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteEnforcer(&enforcer))
 	c.ServeJSON()
