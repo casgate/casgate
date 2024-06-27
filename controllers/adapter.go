@@ -64,6 +64,7 @@ func (c *ApiController) GetAdapter() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(adapter.Owner)
 
 	c.ResponseOk(adapter)
 }
@@ -86,6 +87,13 @@ func (c *ApiController) UpdateAdapter() {
 		c.ResponseError(err.Error())
 		return
 	}
+	adapterFromDb, _ := object.GetDomain(request.Id)
+	if adapterFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(adapterFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateAdapter(request.Id, &adapter))
 	c.ServeJSON()
@@ -128,6 +136,13 @@ func (c *ApiController) DeleteAdapter() {
 		c.ResponseError(err.Error())
 		return
 	}
+	adapterFromDb, _ := object.GetDomain(adapter.GetId())
+	if adapterFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(adapterFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteAdapter(&adapter))
 	c.ServeJSON()
