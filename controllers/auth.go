@@ -341,7 +341,7 @@ func (c *ApiController) Login() {
 
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
-
+	
 	if authForm.Username != "" {
 		if authForm.Type == ResponseTypeLogin {
 			if c.GetSessionUsername() != "" {
@@ -497,7 +497,21 @@ func (c *ApiController) Login() {
 				userName = user.Name
 			}
 
-			user, err = object.CheckUserPassword(goCtx, authForm.Organization, userName, authForm.Password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
+	
+			options := object.CheckUserPasswordOptions{
+				Lang: c.GetAcceptLanguage(),
+				LdapId:         authForm.LdapId,
+				EnableCaptcha:  enableCaptcha,
+				IsSigninViaLdap: isSigninViaLdap,
+				IsPasswordWithLdapEnabled: isPasswordWithLdapEnabled,
+			}
+
+			user, err = object.CheckUserPassword(
+				goCtx, 
+				authForm.Organization, 
+				userName, 
+				authForm.Password,
+				options)
 
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
@@ -505,7 +519,7 @@ func (c *ApiController) Login() {
 			}
 
 			if user != nil && user.Ldap != "" && (isSigninViaLdap || isPasswordWithLdapEnabled) {
-				authForm.LdapId, err = object.CheckLdapUserPassword(user, authForm.Password, c.GetAcceptLanguage())
+				authForm.LdapId, err = object.CheckLdapUserPassword(user, authForm.Password, c.GetAcceptLanguage(), authForm.LdapId)
 			}
 
 			if err != nil {

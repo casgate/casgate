@@ -612,7 +612,7 @@ func SyncUserFromLdap(ctx context.Context, organization string, ldapId string, u
 			continue
 		}
 
-		_, err = CheckLdapUserPassword(user, password, lang)
+		_, err = CheckLdapUserPassword(user, password, lang, "")
 		if err != nil {
 			conn.Close()
 			return nil, err
