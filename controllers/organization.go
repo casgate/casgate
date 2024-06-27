@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -31,6 +32,9 @@ import (
 // @Failure 500 Internal server error
 // @router /get-organizations [get]
 func (c *ApiController) GetOrganizations() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -94,10 +98,17 @@ func (c *ApiController) GetOrganizations() {
 // @Failure 500 Internal server error
 // @router /get-organization [get]
 func (c *ApiController) GetOrganization() {
-	id := c.Input().Get("id")
-	maskedOrganization, err := object.GetMaskedOrganization(object.GetOrganization(id))
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
+	maskedOrganization, err := object.GetMaskedOrganization(object.GetOrganization(request.Id))
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	if maskedOrganization == nil {
+		c.ResponseOk()
 		return
 	}
 
@@ -114,8 +125,9 @@ func (c *ApiController) GetOrganization() {
 // @Failure 400 Bad request
 // @router /update-organization [post]
 func (c *ApiController) UpdateOrganization() {
-	id := c.Input().Get("id")
-
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
@@ -123,7 +135,13 @@ func (c *ApiController) UpdateOrganization() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateOrganization(c.Ctx.Request.Context(), id, &organization, c.GetAcceptLanguage()))
+	currentUser := c.getCurrentUser()
+	if !currentUser.IsGlobalAdmin() && currentUser.Owner != organization.Name {
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+		return
+	}
+
+	c.Data["json"] = wrapActionResponse(object.UpdateOrganization(c.Ctx.Request.Context(), request.Id, &organization, c.GetAcceptLanguage()))
 	c.ServeJSON()
 }
 
@@ -138,6 +156,15 @@ func (c *ApiController) UpdateOrganization() {
 // @Failure 500 Internal server error
 // @router /add-organization [post]
 func (c *ApiController) AddOrganization() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
+	currentUser := c.getCurrentUser()
+	if !currentUser.IsGlobalAdmin() {
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+		return
+	}
+
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
@@ -169,6 +196,15 @@ func (c *ApiController) AddOrganization() {
 // @Failure 400 Bad request
 // @router /delete-organization [post]
 func (c *ApiController) DeleteOrganization() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
+	currentUser := c.getCurrentUser()
+	if !currentUser.IsGlobalAdmin() {
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+		return
+	}
+
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
@@ -213,6 +249,19 @@ func (c *ApiController) GetDefaultApplication() {
 // @router /get-organization-names [get]
 func (c *ApiController) GetOrganizationNames() {
 	owner := c.Input().Get("owner")
+	builtInApp, err := object.GetApplication(c.Ctx.Request.Context(), "admin/app-built-in")
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	globalAdmin, _ := c.isGlobalAdmin()
+
+	if !globalAdmin && strings.ToLower(builtInApp.OrgChoiceMode) != "select" {
+		c.ResponseForbidden(c.T("auth:Admin should turn on OrgChoiceMode to select for built-in app"))
+		return
+	}
+
 	organizationNames, err := object.GetOrganizationsByFields(owner, []string{"name", "display_name"}...)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
