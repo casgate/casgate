@@ -53,6 +53,31 @@ func GetUserByField(organizationName string, field string, value string) (*User,
 	}
 }
 
+func GetUserByFieldCaseInsensitively(organizationName string, field string, value string) (*User, error) {
+	if field == "" || value == "" {
+		return nil, nil
+	}
+
+	user := User{Owner: organizationName}
+
+	match, mErr := regexp.MatchString("^[a-z_]+$", util.SnakeString(field))
+	if !match || mErr != nil {
+		field = ""
+	}
+
+	existed, err := ormer.Engine.Where(fmt.Sprintf("LOWER(%s) = LOWER(?)", field), value).Get(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	if existed {
+		return &user, nil
+	} else {
+		return nil, nil
+	}
+}
+
+
 func HasUserByField(organizationName string, field string, value string) bool {
 	user, err := GetUserByField(organizationName, field, value)
 	if err != nil {
@@ -84,6 +109,36 @@ func GetUserByFields(organization string, field string) (*User, error) {
 
 	// check ID card
 	user, err = GetUserByField(organization, "id_card", field)
+	if user != nil || err != nil {
+		return user, err
+	}
+
+	return nil, nil
+}
+
+func GetUserByFieldsCaseInsensitively(organization string, field string) (*User, error) {
+	// check username
+	user, err := GetUserByFieldCaseInsensitively(organization, "name", field)
+	if err != nil || user != nil {
+		return user, err
+	}
+
+	// check email
+	if strings.Contains(field, "@") {
+		user, err = GetUserByFieldCaseInsensitively(organization, "email", field)
+		if user != nil || err != nil {
+			return user, err
+		}
+	}
+
+	// check phone
+	user, err = GetUserByFieldCaseInsensitively(organization, "phone", field)
+	if user != nil || err != nil {
+		return user, err
+	}
+
+	// check ID card
+	user, err = GetUserByFieldCaseInsensitively(organization, "id_card", field)
 	if user != nil || err != nil {
 		return user, err
 	}

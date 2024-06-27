@@ -315,6 +315,16 @@ class LdapEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+            {Setting.getLabel(i18next.t("ldap:Enable Case Insensitivity"), i18next.t("ldap:Enable Case Insensitivity - Tooltip"))} :
+          </Col>
+          <Col span={20}>
+            <Switch checked={this.state.ldap.enableCaseInsensitivity} onChange={checked => {
+              this.updateLdapField("enableCaseInsensitivity", checked);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Enable Attribute Mapping"), i18next.t("ldap:Enable Attribute Mapping - Tooltip"))} :
           </Col>
           <Col span={20} >

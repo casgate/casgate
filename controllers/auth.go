@@ -459,10 +459,30 @@ func (c *ApiController) Login() {
 			}
 
 			if isSigninViaLdap {
-				user, err = object.GetUserByFields(authForm.Organization, authForm.Username)
+				ldap, err := object.GetLdap(authForm.LdapId)
+				if err != nil {
+					record.AddReason(fmt.Sprintf("Get Ldap error: %s", err.Error()))
+
+					c.ResponseError(c.T(fmt.Sprintf("auth:Failed to login in: %s", err.Error())))
+				}
+				if ldap == nil {
+					record.AddReason(fmt.Sprintf("Cannot get Ldap \"%s\"", authForm.LdapId))
+
+					c.ResponseError(c.T(fmt.Sprintf("auth:Failed to login in: %s", "Failed to get Ldap")))
+				}
+
+				if ldap != nil {
+					if ldap.EnableCaseInsensitivity {
+						user, err = object.GetUserByFieldsCaseInsensitively(authForm.Organization, authForm.Username)
+					} else {
+						user, err = object.GetUserByFields(authForm.Organization, authForm.Username)
+					}
+				}
+				
 				if err != nil {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 				}
+
 				if user == nil {
 					_, err = object.SyncUserFromLdap(goCtx, authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage(), record)
 					if err != nil {
@@ -471,7 +491,13 @@ func (c *ApiController) Login() {
 				}
 			}
 
-			user, err = object.CheckUserPassword(goCtx, authForm.Organization, authForm.Username, authForm.Password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
+			var userName = authForm.Username
+
+			if user != nil && isSigninViaLdap {
+				userName = user.Name
+			}
+
+			user, err = object.CheckUserPassword(goCtx, authForm.Organization, userName, authForm.Password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
 
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
