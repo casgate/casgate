@@ -79,6 +79,12 @@ func (c *ApiController) GetSyncer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	if syncer == nil {
+		c.ResponseOk()
+		return
+	}
+
+	c.ValidateOrganization(syncer.Organization)
 
 	c.ResponseOk(syncer)
 }
@@ -101,9 +107,13 @@ func (c *ApiController) UpdateSyncer() {
 		c.ResponseError(err.Error())
 		return
 	}
-
-	c.ValidateOrganization(syncer.Owner)
-	c.ValidateOrganization(syncer.Organization)
+	syncerFromDb, _ := object.GetSyncer(request.Id)
+	if syncerFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(syncerFromDb.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateSyncer(request.Id, &syncer))
 	c.ServeJSON()
@@ -126,7 +136,6 @@ func (c *ApiController) AddSyncer() {
 		return
 	}
 
-	c.ValidateOrganization(syncer.Owner)
 	c.ValidateOrganization(syncer.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.AddSyncer(&syncer))
@@ -150,8 +159,13 @@ func (c *ApiController) DeleteSyncer() {
 		return
 	}
 
-	c.ValidateOrganization(syncer.Owner)
-	c.ValidateOrganization(syncer.Organization)
+	syncerFromDb, _ := object.GetSyncer(syncer.GetId())
+	if syncerFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(syncerFromDb.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteSyncer(&syncer))
 	c.ServeJSON()
@@ -172,6 +186,7 @@ func (c *ApiController) RunSyncer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(syncer.Organization)
 
 	err = object.RunSyncer(syncer)
 	if err != nil {
