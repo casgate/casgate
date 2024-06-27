@@ -1139,7 +1139,7 @@ func (user *User) IsGlobalAdmin() bool {
 		return false
 	}
 
-	return user.Owner == "built-in"
+	return user.Owner == "built-in" 
 }
 
 func GenerateIdForNewUser(application *Application) (string, error) {

@@ -54,10 +54,17 @@ type LdapIdWithNameResp struct {
 // @Success 200 {object} LdapResp The Response object
 // @router /get-ldap-users [get]
 func (c *ApiController) GetLdapUsers() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	gCtx := c.getRequestCtx()
 	record := object.GetRecord(gCtx)
-
 	ldapId := c.Input().Get("ldapId")
+
+	if ldapId == "" {
+		c.ResponseBadRequest("ldapId is required")
+	}
+
 	ldapServer, err := object.GetLdap(ldapId)
 	if err != nil {
 		record.AddReason(fmt.Sprintf("Get LDAP: %s", err.Error()))
@@ -122,6 +129,9 @@ func (c *ApiController) GetLdapUsers() {
 // @Success 200 {array} object.Ldap The Response object
 // @router /get-ldaps [get]
 func (c *ApiController) GetLdaps() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	owner := c.Input().Get("owner")
 
 	c.ResponseOk(object.GetMaskedLdaps(object.GetLdaps(owner)))
@@ -162,6 +172,9 @@ func (c *ApiController) GetLdapServerNames() {
 // @Success 200 {object} object.Ldap The Response object
 // @router /get-ldap [get]
 func (c *ApiController) GetLdap() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	ldapId := c.Input().Get("ldapId")
 
 	if util.IsStringsEmpty(ldapId) {
@@ -174,6 +187,13 @@ func (c *ApiController) GetLdap() {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	if ldap == nil {
+		c.ResponseOk()
+		return
+	}
+
+	c.ValidateOrganization(ldap.Owner)
 	c.ResponseOk(object.GetMaskedLdap(ldap))
 }
 
@@ -185,6 +205,9 @@ func (c *ApiController) GetLdap() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-ldap [post]
 func (c *ApiController) AddLdap() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	gCtx := c.getRequestCtx()
 	record := object.GetRecord(gCtx)
 
@@ -258,6 +281,9 @@ func (c *ApiController) AddLdap() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-ldap [post]
 func (c *ApiController) UpdateLdap() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	gCtx := c.getRequestCtx()
 	record := object.GetRecord(gCtx)
 
@@ -333,6 +359,9 @@ func (c *ApiController) UpdateLdap() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-ldap [post]
 func (c *ApiController) DeleteLdap() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var ldap object.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 	if err != nil {
@@ -360,6 +389,9 @@ func (c *ApiController) DeleteLdap() {
 // @Success 200 {object} LdapSyncResp The Response object
 // @router /sync-ldap-users [post]
 func (c *ApiController) SyncLdapUsers() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
 
@@ -406,6 +438,9 @@ func (c *ApiController) SyncLdapUsers() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /test-ldap [post]
 func (c *ApiController) TestLdapConnection() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	var ldap object.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 	if err != nil || util.IsStringsEmpty(ldap.Owner, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
