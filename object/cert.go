@@ -98,9 +98,17 @@ func GetGlobalCertsCount(field, value string) (int64, error) {
 	return session.Count(&Cert{})
 }
 
-func GetGlobleCerts() ([]*Cert, error) {
+func GetGlobleCerts(owner string) ([]*Cert, error) {
 	certs := []*Cert{}
-	err := ormer.Engine.Desc("created_time").Find(&certs)
+	session := GetSession("",  -1, -1, "", "", "", "")
+
+	var err error
+	if owner != "" {
+		err = session.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&certs)
+	} else {
+		session.Desc("created_time").Find(&certs)
+	}
+	
 	if err != nil {
 		return certs, err
 	}
@@ -108,9 +116,9 @@ func GetGlobleCerts() ([]*Cert, error) {
 	return certs, nil
 }
 
-func GetPaginationGlobalCerts(offset, limit int, field, value, sortField, sortOrder string) ([]*Cert, error) {
+func GetPaginationGlobalCerts(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Cert, error) {
 	certs := []*Cert{}
-	session := GetSession("", offset, limit, field, value, sortField, sortOrder)
+	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&certs)
 	if err != nil {
 		return certs, err

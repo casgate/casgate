@@ -21,7 +21,6 @@ import (
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // GetCerts
@@ -32,29 +31,17 @@ import (
 // @Success 200 {array} object.Cert The Response object
 // @router /get-certs [get]
 func (c *ApiController) GetCerts() {
-	owner := c.Input().Get("owner")
-	limitParam := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	var limit int
-	if limitParam == "" || page == "" {
-		limit = -1
-	} else {
-		limit = util.ParseInt(limitParam)
-	}
-
-	count, err := object.GetCertCount(owner, field, value)
+	count, err := object.GetCertCount(request.Owner, request.Field, request.Value)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
 
-	paginator := pagination.SetPaginator(c.Ctx, limit, count)
-	certs, err := object.GetMaskedCerts(object.GetPaginationCerts(owner, paginator.Offset(), limit, field, value, sortField, sortOrder))
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	certs, err := object.GetMaskedCerts(object.GetPaginationCerts(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder))
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -70,38 +57,31 @@ func (c *ApiController) GetCerts() {
 // @Success 200 {array} object.Cert The Response object
 // @router /get-globle-certs [get]
 func (c *ApiController) GetGlobleCerts() {
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	if limit == "" || page == "" {
-		maskedCerts, err := object.GetMaskedCerts(object.GetGlobleCerts())
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
+	owner := ""
+	if !c.IsGlobalAdmin() {
+		user, _ := c.RequireSignedInUser()
+		owner = user.Owner
+	} 
 
-		c.ResponseOk(maskedCerts)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetGlobalCertsCount(field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		certs, err := object.GetMaskedCerts(object.GetPaginationGlobalCerts(paginator.Offset(), limit, field, value, sortField, sortOrder))
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(certs, paginator.Nums())
+	count, err := object.GetGlobalCertsCount(request.Field, request.Value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
 	}
+
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	certs, err := object.GetMaskedCerts(
+		object.GetPaginationGlobalCerts(owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder),
+	)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.ResponseOk(certs, paginator.Nums())
 }
 
 // GetCert
@@ -112,12 +92,20 @@ func (c *ApiController) GetGlobleCerts() {
 // @Success 200 {object} object.Cert The Response object
 // @router /get-cert [get]
 func (c *ApiController) GetCert() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	id := c.Input().Get("id")
 	cert, err := object.GetCert(id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	if cert == nil {
+		c.ResponseOk()
+		return
+	}
+	c.ValidateOrganization(cert.Owner)
 
 	c.ResponseOk(object.GetMaskedCert(cert))
 }
@@ -131,6 +119,9 @@ func (c *ApiController) GetCert() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-cert [post]
 func (c *ApiController) UpdateCert() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	id := c.Input().Get("id")
 
 	var cert object.Cert
@@ -139,6 +130,14 @@ func (c *ApiController) UpdateCert() {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	certFromDb, _ := object.GetCert(id)
+	if certFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(certFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateCert(id, &cert))
 	c.ServeJSON()
@@ -152,12 +151,16 @@ func (c *ApiController) UpdateCert() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-cert [post]
 func (c *ApiController) AddCert() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var cert object.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(cert.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddCert(&cert))
 	c.ServeJSON()
@@ -174,12 +177,23 @@ func (c *ApiController) AddCert() {
 // @Failure 500 Internal Server Error
 // @router /delete-cert [post]
 func (c *ApiController) DeleteCert() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	var cert object.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+
+	certFromDb, _ := object.GetCert(cert.GetId())
+	if certFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(certFromDb.Owner)
 
 	providers, err := object.GetProvidersByCertName(cert.Name)
 	if err != nil {

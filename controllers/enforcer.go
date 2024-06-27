@@ -31,39 +31,23 @@ import (
 // @Success 200 {array} object.Enforcer
 // @router /get-enforcers [get]
 func (c *ApiController) GetEnforcers() {
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-
-	if limit == "" || page == "" {
-		enforcers, err := object.GetEnforcers(owner)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(enforcers)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetEnforcerCount(owner, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		enforcers, err := object.GetPaginationEnforcers(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(enforcers, paginator.Nums())
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
+	count, err := object.GetEnforcerCount(request.Owner, request.Field, request.Value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
 	}
+
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	enforcers, err := object.GetPaginationEnforcers(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.ResponseOk(enforcers, paginator.Nums())
 }
 
 // GetEnforcer
@@ -74,14 +58,21 @@ func (c *ApiController) GetEnforcers() {
 // @Success 200 {object} object
 // @router /get-enforcer [get]
 func (c *ApiController) GetEnforcer() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	loadModelCfg := c.Input().Get("loadModelCfg")
 
-	enforcer, err := object.GetEnforcer(id)
+	enforcer, err := object.GetEnforcer(request.Id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	if enforcer == nil {
+		c.ResponseOk()
+		return
+	}
+	c.ValidateOrganization(enforcer.Owner)
 
 	if loadModelCfg == "true" && enforcer.Model != "" {
 		err := enforcer.LoadModelCfg()
@@ -102,7 +93,8 @@ func (c *ApiController) GetEnforcer() {
 // @Success 200 {object} object
 // @router /update-enforcer [post]
 func (c *ApiController) UpdateEnforcer() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	enforcer := object.Enforcer{}
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &enforcer)
@@ -110,8 +102,15 @@ func (c *ApiController) UpdateEnforcer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	enforcerFromDb, _ := object.GetCert(request.Id)
+	if enforcerFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(enforcerFromDb.Owner)
 
-	c.Data["json"] = wrapActionResponse(object.UpdateEnforcer(id, &enforcer))
+	c.Data["json"] = wrapActionResponse(object.UpdateEnforcer(request.Id, &enforcer))
 	c.ServeJSON()
 }
 
@@ -123,12 +122,16 @@ func (c *ApiController) UpdateEnforcer() {
 // @Success 200 {object} object
 // @router /add-enforcer [post]
 func (c *ApiController) AddEnforcer() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	enforcer := object.Enforcer{}
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &enforcer)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(enforcer.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddEnforcer(&enforcer))
 	c.ServeJSON()
@@ -142,12 +145,22 @@ func (c *ApiController) AddEnforcer() {
 // @Success 200 {object} object
 // @router /delete-enforcer [post]
 func (c *ApiController) DeleteEnforcer() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var enforcer object.Enforcer
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &enforcer)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	enforcerFromDb, _ := object.GetCert(enforcer.GetId())
+	if enforcerFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(enforcerFromDb.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteEnforcer(&enforcer))
 	c.ServeJSON()
@@ -182,6 +195,9 @@ func (c *ApiController) GetPolicies() {
 }
 
 func (c *ApiController) UpdatePolicy() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	id := c.Input().Get("id")
 
 	var policies []xormadapter.CasbinRule
@@ -201,7 +217,8 @@ func (c *ApiController) UpdatePolicy() {
 }
 
 func (c *ApiController) AddPolicy() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var policy xormadapter.CasbinRule
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &policy)
@@ -210,7 +227,7 @@ func (c *ApiController) AddPolicy() {
 		return
 	}
 
-	affected, err := object.AddPolicy(id, policy.Ptype, util.CasbinToSlice(policy))
+	affected, err := object.AddPolicy(request.Id, policy.Ptype, util.CasbinToSlice(policy))
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -220,7 +237,8 @@ func (c *ApiController) AddPolicy() {
 }
 
 func (c *ApiController) RemovePolicy() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var policy xormadapter.CasbinRule
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &policy)
@@ -229,7 +247,7 @@ func (c *ApiController) RemovePolicy() {
 		return
 	}
 
-	affected, err := object.RemovePolicy(id, policy.Ptype, util.CasbinToSlice(policy))
+	affected, err := object.RemovePolicy(request.Id, policy.Ptype, util.CasbinToSlice(policy))
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

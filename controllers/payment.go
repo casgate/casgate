@@ -80,6 +80,9 @@ func (c *ApiController) GetPayments() {
 // @Success 200 {array} object.Payment The Response object
 // @router /get-user-payments [get]
 func (c *ApiController) GetUserPayments() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	owner := c.Input().Get("owner")
 	user := c.Input().Get("user")
 

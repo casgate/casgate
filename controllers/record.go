@@ -31,6 +31,8 @@ import (
 // @Success 200 {object} object.Record The Response object
 // @router /get-records [get]
 func (c *ApiController) GetRecords() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	pageSize := c.Input().Get("pageSize")
 	pageNumber := c.Input().Get("p")
 	field := c.Input().Get("field")
@@ -48,22 +50,11 @@ func (c *ApiController) GetRecords() {
 			filterRecord.Organization = organizationName
 		}
 	} else {
-		user, ok := c.RequireSignedInUser()
-		if !ok {
-			c.ResponseUnauthorized(c.T("auth:Unauthorized operation"))
-			return
-		}
-
-		if !user.IsAdmin {
-			c.ResponseForbidden(c.T("auth:Forbidden operation"))
-			return
-		}
-
+		user, _ := c.RequireSignedInUser()
 		if organizationName != "" && organizationName != user.Owner {
 			c.ResponseForbidden(c.T("auth:Unable to get records from other organization without global administrator role"))
 			return
 		}
-
 		filterRecord.Organization = user.Owner
 	}
 
@@ -105,6 +96,8 @@ func (c *ApiController) GetRecords() {
 // @Success 200 {object} object.Record The Response object
 // @router /get-records-filter [post]
 func (c *ApiController) GetRecordsByFilter() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	body := string(c.Ctx.Input.RequestBody)
 
 	record := &object.Record{}
@@ -131,6 +124,8 @@ func (c *ApiController) GetRecordsByFilter() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-record [post]
 func (c *ApiController) AddRecord() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var record object.Record
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &record)
 	if err != nil {
