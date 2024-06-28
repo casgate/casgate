@@ -17,6 +17,7 @@ package object
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -93,14 +94,25 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 		return false, nil
 	}
 
-	// allParentDomains, _ := GetAncestorDomains(ctx, id)
-	// for _, d := range allParentDomains {
-	// 	for _, domainId := range d.Domains {
-	// 		if id == domainId {
-	// 			return false, fmt.Errorf("role %s is in the child domain of %s", id, d.GetId())
-	// 		}
-	// 	}
-	// }
+	slices.Sort(oldDomain.Domains)
+	slices.Sort(domain.Domains)
+
+	needCheckCrossDeps := len(domain.Domains) > 0 && !slices.Equal(oldDomain.Domains, domain.Domains)
+
+	if needCheckCrossDeps {
+		allMyParents, _ := GetAncestorDomains(ctx, id);
+		for _, d := range domain.Domains {
+			for _, pd := range allMyParents {
+				if pd.GetId() == id {
+					continue // self 
+				}
+
+				if d == pd.GetId() {
+					return false, fmt.Errorf("domain %s is in the child domain of %s", id, pd.GetId())
+				}
+	   	    }
+    	}
+    }
 
 	if name != domain.Name {
 		err := domainChangeTrigger(name, domain.Name)

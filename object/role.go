@@ -17,6 +17,7 @@ package object
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/beego/beego/logs"
@@ -126,15 +127,25 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, nil
 	}
 	
+	slices.Sort(oldRole.Roles)
+	slices.Sort(role.Roles)
 
-	// allParentRoles, _ := GetAncestorRoles(id)
-	// for _, r := range allParentRoles {
-	// 	for _, roleId := range r.Roles {
-	// 		if id == roleId {
-	// 			return false, fmt.Errorf("role %s is in the child roles of %s", id, r.GetId())
-	// 		}
-	// 	}
-	// }
+	needCheckCrossDeps := len(role.Roles) > 0 && !slices.Equal(oldRole.Roles, role.Roles)
+
+	if needCheckCrossDeps {
+		allMyParents, _ := GetAncestorRoles(id);
+		for _, r := range role.Roles {
+			for _, pr := range allMyParents {
+				if pr.GetId() == id {
+					continue // self 
+				}
+
+				if r == pr.GetId() {
+					return false, fmt.Errorf("role %s is in the child roles of %s", id, pr.GetId())
+				}
+	   	    }
+    	}
+    }
 
 	if name != role.Name {
 		err := roleChangeTrigger(name, role.Name)
