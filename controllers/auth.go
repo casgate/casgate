@@ -45,6 +45,12 @@ var (
 	lock           sync.RWMutex
 )
 
+type GetAuthURLResp struct {
+	IsShortState bool   `json:"isShortState"`
+	AuthQuery    string `json:"authQuery"`
+	URL          string `json:"url"`
+}
+
 func codeToResponse(code *object.Code) *Response {
 	if code.Code == "" {
 		return &Response{Status: "error", Msg: code.Message, Data: code.Code}
@@ -573,7 +579,9 @@ func (c *ApiController) Login() {
 				return
 			}
 		} else {
-			application, err = object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
+			application, err = object.GetApplicationWithOpts(
+				goCtx, fmt.Sprintf("admin/%s", authForm.Application), &object.GetApplicationOptions{InitOpenIDProvider: true},
+			)
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 
@@ -594,7 +602,7 @@ func (c *ApiController) Login() {
 
 			c.ResponseError(c.T(err.Error()))
 		}
-		
+
 		providerID := util.GetId(application.Organization, authForm.Provider)
 		provider, err := object.GetProvider(providerID)
 		if err != nil {
@@ -1250,4 +1258,234 @@ func (c *ApiController) Callback() {
 
 	frontendCallbackUrl := fmt.Sprintf("/callback?code=%s&state=%s", code, state)
 	c.Ctx.Redirect(http.StatusFound, frontendCallbackUrl)
+}
+
+// GetAuthURL ...
+// @Title GetAuthURL
+// @Tag Login API
+// @Description get auth url
+// @Param   providerID        query    string  true        "The id ( owner/name ) of the provider"
+// @Param   applicationID     query    string  true        "The id ( owner/name ) of the application"
+// @Param   method            query    string  true        "Query method"
+// @Success 200 {object}  Response The Response object
+// @Failure 400 Bad Request
+// @Failure 404 Not Found
+// @Failure 500 Internal Server Error
+// @router /get-auth-url [get]
+func (c *ApiController) GetAuthURL() {
+	goCtx := c.getRequestCtx()
+
+	applicationID := c.Input().Get("applicationID")
+	providerID := c.Input().Get("providerID")
+	method := c.Input().Get("method")
+
+	if applicationID == "" || providerID == "" {
+		c.ResponseNotFound("Missing required parameters")
+		return
+	}
+
+	redirectURI := fmt.Sprintf("%s://%s/callback", getScheme(c.Ctx.Request), c.Ctx.Request.Host)
+	userAgent := c.Ctx.Request.UserAgent()
+
+	application, err := object.GetApplicationWithOpts(goCtx, applicationID, &object.GetApplicationOptions{InitOpenIDProvider: true})
+	if err != nil {
+		c.ResponseInternalServerError(fmt.Sprintf("Get application: %s", applicationID))
+		return
+	}
+	var provider *object.Provider
+	for _, p := range application.Providers {
+		if providerID == p.Provider.GetId() {
+			provider = p.Provider
+			break
+		}
+	}
+	if provider == nil {
+		c.ResponseNotFound(fmt.Sprintf("Could not find provider: %s in application: %s", providerID, applicationID))
+		return
+	}
+
+	isShortState := provider.Type == "WeChat" && strings.Contains(userAgent, "MicroMessenger")
+
+	authQuery, err := getAuthQuery(application.Name, provider.Name, method, redirectURI, c.Ctx.Request.URL.RawQuery)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+	state := getStateFromQueryParams(authQuery, provider.Name, isShortState)
+	authInfo, err := object.GetAuthInfo(provider.Type)
+	if err != nil {
+		c.ResponseBadRequest(err.Error())
+		return
+	}
+
+	endpoint := authInfo.Endpoint()
+	if provider.Type == "AzureAD" && provider.Domain != "" {
+		endpoint = strings.Replace(endpoint, "common", provider.Domain, -1)
+	} else if provider.Type == "Apple" {
+		redirectURI = fmt.Sprintf("%s/api/callback", redirectURI)
+	}
+	url, err := buildAuthURL(provider, authInfo, endpoint, redirectURI, state, userAgent, c.Ctx.Request.Host)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+	resp := GetAuthURLResp{
+		IsShortState: isShortState,
+		AuthQuery:    authQuery,
+		URL:          url,
+	}
+	c.ResponseOk(resp)
+}
+
+func getScheme(r *http.Request) string {
+	if r.TLS != nil {
+		return "https"
+	}
+	if proto := r.Header.Get("X-Forwarded-Proto"); proto != "" {
+		return proto
+	}
+	return "http"
+}
+
+func getAuthQuery(applicationName, providerName, method, currentURL, currentPath string) (string, error) {
+	queryParams, err := url.ParseQuery(currentURL)
+	if err != nil {
+		return "", err
+	}
+	queryParams.Add("application", applicationName)
+	queryParams.Add("provider", providerName)
+	queryParams.Add("method", method)
+
+	if method == "link" {
+		queryParams.Add("from", currentPath)
+	}
+
+	return queryParams.Encode(), nil
+}
+
+func getStateFromQueryParams(authQuery, providerName string, isShortState bool) string {
+	if !isShortState {
+		result := base64.StdEncoding.EncodeToString([]byte(authQuery))
+		return string(result)
+	}
+	return providerName
+}
+
+func buildAuthURL(provider *object.Provider, authInfo *object.AuthInfo, endpoint, redirectURI, state, userAgent, host string) (string, error) {
+	const codeChallenge = "P3S-a7dr8bgM4bF6vOyiKkKETDl16rcAzao9F8UIL1Y" // SHA256(Base64-URL-encode("casdoor-verifier"))
+
+	switch provider.Type {
+	case "Google", "GitHub", "QQ", "Facebook", "Weibo", "Gitee", "LinkedIn", "GitLab", "AzureAD",
+		"Slack", "Line", "Amazon", "Auth0", "BattleNet", "Bitbucket", "Box", "CloudFoundry",
+		"Dailymotion", "DigitalOcean", "Discord", "Dropbox", "EveOnline", "Gitea", "Heroku",
+		"InfluxCloud", "Instagram", "Intercom", "Kakao", "MailRu", "Meetup", "MicrosoftOnline",
+		"Naver", "Nextcloud", "OneDrive", "Oura", "Patreon", "PayPal", "SalesForce", "SoundCloud",
+		"Spotify", "Strava", "Stripe", "Tumblr", "Twitch", "Typetalk", "Uber", "VK", "Wepay", "Xero",
+		"Yahoo", "Yammer", "Yandex", "Zoom":
+		return fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&scope=%s&response_type=code&state=%s",
+			endpoint, provider.ClientId, redirectURI, authInfo.Scope(), state), nil
+	case "DingTalk":
+		return fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&scope=%s&response_type=code&prompt=consent&state=%s",
+			endpoint, provider.ClientId, redirectURI, authInfo.Scope(), state), nil
+	case "WeChat":
+		if strings.Contains(userAgent, "MicroMessenger") {
+			mpEndpoint, err := authInfo.MPEndpoint()
+			if err != nil {
+				return "", err
+			}
+			mpScope, err := authInfo.MPScope()
+			if err != nil {
+				return "", err
+			}
+			return fmt.Sprintf("%s?appid=%s&redirect_uri=%s&state=%s&scope=%s&response_type=code#wechat_redirect",
+				mpEndpoint, provider.ClientId2, redirectURI, state, mpScope), nil
+		}
+		return fmt.Sprintf("%s?appid=%s&redirect_uri=%s&scope=%s&response_type=code&state=%s#wechat_redirect",
+			endpoint, provider.ClientId, redirectURI, authInfo.Scope(), state), nil
+	case "WeCom":
+		switch provider.SubType {
+		case "Internal":
+			if provider.Method == "Silent" {
+				endpoint, err := authInfo.SilentEndpoint()
+				if err != nil {
+					return "", err
+				}
+				return fmt.Sprintf("%s?appid=%s&redirect_uri=%s&state=%s&scope=%s&response_type=code#wechat_redirect",
+					endpoint, provider.ClientId, redirectURI, state, authInfo.Scope()), nil
+			} else if provider.Method == "Normal" {
+				endpoint, err := authInfo.InternalEndpoint()
+				if err != nil {
+					return "", err
+				}
+				return fmt.Sprintf("%s?appid=%s&agentid=%s&redirect_uri=%s&state=%s&usertype=member",
+					endpoint, provider.ClientId, provider.AppId, redirectURI, state), nil
+			} else {
+				return fmt.Sprintf("https://error:not-supported-provider-method:%s", provider.Method), nil
+			}
+		case "Third-party":
+			if provider.Method == "Silent" {
+				endpoint, err := authInfo.SilentEndpoint()
+				if err != nil {
+					return "", err
+				}
+				return fmt.Sprintf("%s?appid=%s&redirect_uri=%s&state=%s&scope=%s&response_type=code#wechat_redirect",
+					endpoint, provider.ClientId, redirectURI, state, authInfo.Scope()), nil
+			} else if provider.Method == "Normal" {
+				return fmt.Sprintf("%s?appid=%s&redirect_uri=%s&state=%s&usertype=member",
+					endpoint, provider.ClientId, redirectURI, state), nil
+			} else {
+				return fmt.Sprintf("https://error:not-supported-provider-method:%s", provider.Method), nil
+			}
+		default:
+			return fmt.Sprintf("https://error:not-supported-provider-sub-type:%s", provider.SubType), nil
+		}
+	case "Lark":
+		return fmt.Sprintf("%s?app_id=%s&redirect_uri=%s&state=%s", endpoint, provider.ClientId, redirectURI, state), nil
+	case "ADFS":
+		return fmt.Sprintf("%s/adfs/oauth2/authorize?client_id=%s&redirect_uri=%s&state=%s&response_type=code&nonce=casdoor&scope=openid",
+			provider.Domain, provider.ClientId, redirectURI, state), nil
+	case "Baidu":
+		return fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&state=%s&response_type=code&scope=%s&display=popup",
+			endpoint, provider.ClientId, redirectURI, state, authInfo.Scope()), nil
+	case "Alipay":
+		return fmt.Sprintf("%s?app_id=%s&scope=auth_user&redirect_uri=%s&state=%s&response_type=code&scope=%s&display=popup",
+			endpoint, provider.ClientId, redirectURI, state, authInfo.Scope()), nil
+	case "Casdoor":
+		return fmt.Sprintf("%s/login/oauth/authorize?client_id=%s&redirect_uri=%s&state=%s&response_type=code&scope=%s",
+			provider.Domain, provider.ClientId, redirectURI, state, authInfo.Scope()), nil
+	case "Infoflow":
+		return fmt.Sprintf("%s?appid=%s&redirect_uri=%s?state=%s", endpoint, provider.ClientId, redirectURI, state), nil
+	case "Apple":
+		return fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&state=%s&response_type=code%%20id_token&scope=%s&response_mode=form_post",
+			endpoint, provider.ClientId, redirectURI, state, authInfo.Scope()), nil
+	case "Steam":
+		return fmt.Sprintf("%s?openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select&openid.identity=http://specs.openid.net/auth/2.0/identifier_select&openid.mode=checkid_setup&openid.ns=http://specs.openid.net/auth/2.0&openid.realm=%s&openid.return_to=%s?state=%s",
+			endpoint, host, redirectURI, state), nil
+	case "Okta":
+		return fmt.Sprintf("%s/v1/authorize?client_id=%s&redirect_uri=%s&state=%s&response_type=code&scope=%s",
+			provider.Domain, provider.ClientId, redirectURI, state, authInfo.Scope()), nil
+	case "Douyin", "TikTok":
+		return fmt.Sprintf("%s?client_key=%s&redirect_uri=%s&state=%s&response_type=code&scope=%s",
+			endpoint, provider.ClientId, redirectURI, state, authInfo.Scope()), nil
+	case "Custom", "OpenID":
+		return fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&scope=%s&response_type=code&state=%s",
+			provider.CustomAuthUrl, provider.ClientId, redirectURI, provider.Scopes, state), nil
+	case "Bilibili":
+		return fmt.Sprintf("%s#/?client_id=%s&return_url=%s&state=%s&response_type=code",
+			endpoint, provider.ClientId, redirectURI, state), nil
+	case "Deezer":
+		return fmt.Sprintf("%s?app_id=%s&redirect_uri=%s&perms=%s", endpoint, provider.ClientId, redirectURI, authInfo.Scope()), nil
+	case "Lastfm":
+		return fmt.Sprintf("%s?api_key=%s&cb=%s", endpoint, provider.ClientId, redirectURI), nil
+	case "Shopify":
+		return fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&scope=%s&state=%s&grant_options[]=per-user",
+			endpoint, provider.ClientId, redirectURI, authInfo.Scope(), state), nil
+	case "Twitter", "Fitbit":
+		return fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&state=%s&response_type=code&scope=%s&code_challenge=%s&code_challenge_method=S256",
+			endpoint, provider.ClientId, redirectURI, state, authInfo.Scope(), codeChallenge), nil
+	case "MetaMask", "Web3Onboard":
+		return fmt.Sprintf("%s?state=%s", redirectURI, state), nil
+	default:
+		return "https://error:unsupported-provider-type", nil
+	}
 }

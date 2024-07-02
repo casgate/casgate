@@ -1189,6 +1189,39 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/Response'
+  /api/get-auth-url:
+    get:
+      tags:
+        - Login API
+      description: get auth url
+      operationId: ApiController.GetAuthURL
+      parameters:
+        - name: providerID
+          in: query
+          required: true
+          type: string
+          description: "The id ( owner/name ) of the provider"
+        - name: applicationID
+          in: query
+          required: true
+          type: string
+          description: "The id ( owner/name ) of the application"
+        - name: method
+          in: query
+          required: true
+          type: string
+          description: "Query method"
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
   /api/get-application:
     get:
       tags:

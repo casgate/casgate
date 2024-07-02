@@ -337,7 +337,7 @@ func GetDefaultApplication(ctx context.Context, id string) (*Application, error)
 	}
 
 	if organization.DefaultApplication != "" {
-		defaultApplication, err := getApplication(ctx, "admin", organization.DefaultApplication)
+		defaultApplication, err := getApplication(ctx, "admin", organization.DefaultApplication, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -367,7 +367,7 @@ func GetDefaultApplication(ctx context.Context, id string) (*Application, error)
 		}
 	}
 
-	err = extendApplicationWithProviders(ctx, defaultApplication)
+	err = extendApplicationWithProviders(ctx, defaultApplication, false)
 	if err != nil {
 		return nil, err
 	}

@@ -126,6 +126,11 @@ export function goToWeb3Url(application, provider, method) {
   }
 }
 
+async function handleOAuthClick(application, provider, method) {
+  const url = await Provider.getAuthUrl(application, provider, method);
+  window.location.href = url;
+}
+
 export function renderProviderLogo(provider, application, width, margin, size, location) {
   if (size === "small") {
     if (provider.category === "OAuth") {
@@ -154,7 +159,7 @@ export function renderProviderLogo(provider, application, width, margin, size, l
       } else {
         return (
           <Tooltip title={provider.displayName}>
-            <a key={provider.displayName} href={Provider.getAuthUrl(application, provider, "signup")}>
+            <a key={provider.displayName} onClick={() => handleOAuthClick(application, provider, "signup")}>
               <img width={width} height={width} src={getProviderLogoURL(provider)} alt={provider.displayName} style={{margin: margin}} />
             </a>
           </Tooltip>
@@ -185,7 +190,7 @@ export function renderProviderLogo(provider, application, width, margin, size, l
     if (provider.category === "OAuth") {
       return (
         <Tooltip title={provider.displayName}>
-          <a key={provider.displayName} href={Provider.getAuthUrl(application, provider, "signup")} style={customAStyle}>
+          <a key={provider.displayName} onClick={() => handleOAuthClick(application, provider, "signup")} style={customAStyle}>
             <button style={customButtonStyle}>
               <img width={26} src={getProviderLogoURL(provider)} alt={provider.displayName} style={customImgStyle} />
               <span style={customSpanStyle}>{text}</span>
@@ -230,10 +235,8 @@ export function renderProviderLogo(provider, application, width, margin, size, l
     } else {
       return (
         <div key={provider.displayName} style={{marginBottom: "10px"}}>
-          <a href={Provider.getAuthUrl(application, provider, "signup")}>
-            {
-              getSigninButton(provider)
-            }
+          <a onClick={() => handleOAuthClick(application, provider, "signup")}>
+            {getSigninButton(provider)}
           </a>
         </div>
       );

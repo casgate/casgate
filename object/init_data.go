@@ -222,7 +222,7 @@ func initDefinedOrganization(organization *Organization) {
 }
 
 func initDefinedApplication(ctx context.Context, application *Application) {
-	existed, err := getApplication(ctx, application.Owner, application.Name)
+	existed, err := getApplication(ctx, application.Owner, application.Name, nil)
 	if err != nil {
 		panic(err)
 	}
