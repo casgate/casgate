@@ -297,7 +297,7 @@ func clearDB(testOrgName, testModelName string) {
 		panic(fmt.Errorf("DeleteModel: %w", err))
 	}
 
-	_, err = DeleteOrganization(&Organization{
+	_, err = DeleteOrganization("en", &Organization{
 		Owner: "admin",
 		Name:  testOrgName,
 	})

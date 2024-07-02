@@ -141,7 +141,8 @@
   "util": {
     "No application is found for userId: %s": "어플리케이션을 찾을 수 없습니다. userId: %s",
     "No provider for category: %s is found for application: %s": "어플리케이션 %s에서 %s 카테고리를 위한 공급자가 찾을 수 없습니다",
-    "The provider: %s is not found": "제공자: %s를 찾을 수 없습니다"
+    "The provider: %s is not found": "제공자: %s를 찾을 수 없습니다",
+    "The organization %s has dependencies and cannot be deleted": "조직에 종속성이 있으므로 삭제할 수 없습니다"
   },
   "verification": {
     "Code has not been sent yet!": "코드는 아직 전송되지 않았습니다!",

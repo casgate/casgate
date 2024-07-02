@@ -141,7 +141,8 @@
   "util": {
     "No application is found for userId: %s": "未找到用户: %s的应用",
     "No provider for category: %s is found for application: %s": "未找到类别为: %s的提供商来满足应用: %s",
-    "The provider: %s is not found": "未找到提供商: %s"
+    "The provider: %s is not found": "未找到提供商: %s",
+    "The organization %s has dependencies and cannot be deleted": "组织%s具有依赖项，无法删除"
   },
   "verification": {
     "Code has not been sent yet!": "验证码还未发送",

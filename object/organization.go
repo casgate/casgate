@@ -264,9 +264,18 @@ func AddOrganization(organization *Organization) (bool, error) {
 	return affected != 0, nil
 }
 
-func DeleteOrganization(organization *Organization) (bool, error) {
+func DeleteOrganization(lang string, organization *Organization) (bool, error) {
 	if organization.Name == "built-in" {
 		return false, nil
+	}
+
+	hasDependencies, err := HasOrganizationDependencies(organization.Name)
+	if err != nil {
+		return false, err
+	}
+
+	if hasDependencies {
+		return false, fmt.Errorf(i18n.Translate(lang, "util:The organization %s has dependencies and cannot be deleted"), organization.DisplayName)
 	}
 
 	affected, err := ormer.Engine.ID(core.PK{organization.Owner, organization.Name}).Delete(&Organization{})

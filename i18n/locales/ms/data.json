@@ -141,7 +141,8 @@
   "util": {
     "No application is found for userId: %s": "No application is found for userId: %s",
     "No provider for category: %s is found for application: %s": "No provider for category: %s is found for application: %s",
-    "The provider: %s is not found": "The provider: %s is not found"
+    "The provider: %s is not found": "The provider: %s is not found",
+    "The organization %s has dependencies and cannot be deleted": "The organization %s has dependencies and cannot be deleted"
   },
   "verification": {
     "Code has not been sent yet!": "Code has not been sent yet!",
