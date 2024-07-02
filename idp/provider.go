@@ -15,6 +15,7 @@
 package idp
 
 import (
+	"github.com/casdoor/casdoor/util"
 	"net/http"
 	"strings"
 
@@ -65,7 +66,7 @@ func (b *BaseProvider) TestConnection() error {
 	return NewNotImplementedError("Not implemented")
 }
 
-func GetIdProvider(idpInfo *ProviderInfo, redirectUrl string) IdProvider {
+func GetIdProvider(idpInfo *ProviderInfo, redirectUrl string, httpClientProvider util.HttpClientProvider) IdProvider {
 	switch idpInfo.Type {
 	case "GitHub":
 		return NewGithubIdProvider(idpInfo.ClientId, idpInfo.ClientSecret, redirectUrl)
@@ -106,7 +107,7 @@ func GetIdProvider(idpInfo *ProviderInfo, redirectUrl string) IdProvider {
 	case "Custom":
 		return NewCustomIdProvider(idpInfo, redirectUrl)
 	case "OpenID":
-		return NewOpenIdProvider(idpInfo, redirectUrl)
+		return NewOpenIdProvider(idpInfo, redirectUrl, httpClientProvider)
 	case "Infoflow":
 		if idpInfo.SubType == "Internal" {
 			return NewInfoflowInternalIdProvider(idpInfo.ClientId, idpInfo.ClientSecret, idpInfo.AppId, redirectUrl)
