@@ -339,6 +339,27 @@ class LdapEditPage extends React.Component {
         }
         <Row style={{marginTop: "20px"}} >
           <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+            {Setting.getLabel(i18next.t("ldap:User mapping strategy"), i18next.t("ldap:User mapping strategy - Tooltip"))} :
+          </Col>
+          <Col span={20} >
+            <Select virtual={false} style={{width: "100%"}}
+              options={[
+                {label: "all", value: "all"},
+                {label: "attribute", value: "attribute"},
+                {label: "role", value: "role"},
+                {label: "nothing", value: "nothing"},
+              ].map((item) => {
+                return Setting.getOption(item.label, item.value);
+              })}
+              value={this.state.ldap.userMappingStrategy ?? "all"}
+              onChange={(value => {
+                this.updateLdapField("userMappingStrategy", value);
+              })} >
+            </Select>
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Enable Role Mapping"), i18next.t("ldap:Enable Role Mapping - Tooltip"))} :
           </Col>
           <Col span={20} >
