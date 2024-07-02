@@ -256,22 +256,27 @@ func CheckPasswordComplexity(user *User, password string, lang string) string {
 
 //check user pwd only in selected ldap
 func CheckLdapUserPassword(user *User, password string, lang string, ldapId string) (string, error) {
-	
-	ldaps, err := GetLdaps(user.Owner)
+	var ldaps []*Ldap
+	var err error
+
+	if ldapId == "" {
+		ldaps, err = GetLdaps(user.Owner)
+	} else {
+		var ldap *Ldap
+		ldap, err = GetLdap(ldapId)
+		ldaps = append(ldaps, ldap)
+	}
+
 	if err != nil {
 		return "", err
 	}
-
+	
 	ldapLoginSuccess := false
 	hit := false
 	var ldapServerId string
 	userDisabled := false
 
 	for _, ldapServer := range ldaps {
-		if ldapId != "" && ldapServer.Id != ldapId {
-			continue
-		}
-
 		conn, err := ldapServer.GetLdapConn(context.Background())
 		if err != nil {
 			continue
