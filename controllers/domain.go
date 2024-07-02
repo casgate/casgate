@@ -107,7 +107,7 @@ func (c *ApiController) UpdateDomain() {
 		c.ResponseError(err.Error())
 		return
 	}
-	domainFromDb, _ := object.GetCert(request.Id)
+	domainFromDb, _ := object.GetDomain(request.Id)
 	if domainFromDb == nil {
 		c.Data["json"] = wrapActionResponse(false)
 		c.ServeJSON()
