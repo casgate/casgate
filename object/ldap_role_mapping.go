@@ -15,6 +15,8 @@
 package object
 
 import (
+	"strings"
+
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -44,7 +46,7 @@ func (r RoleMappingItemRoles) StrRoles() []string {
 	return result
 }
 
-func buildRoleMappingMap(roleMappingItems []*RoleMappingItem) RoleMappingMap {
+func buildRoleMappingMap(roleMappingItems []*RoleMappingItem, enableCaseInsensitivity bool) RoleMappingMap {
 	roleMappingMap := make(RoleMappingMap)
 	for _, roleMappingItem := range roleMappingItems {
 		for _, roleMappingItemValue := range roleMappingItem.Values {
@@ -52,12 +54,24 @@ func buildRoleMappingMap(roleMappingItems []*RoleMappingItem) RoleMappingMap {
 				continue
 			}
 
-			roleMappingAttribute := RoleMappingAttribute(roleMappingItem.Attribute)
+			var roleMappingAttribute RoleMappingAttribute
+			if enableCaseInsensitivity {
+				roleMappingAttribute = RoleMappingAttribute(strings.ToLower(roleMappingItem.Attribute))
+			} else {
+				roleMappingAttribute = RoleMappingAttribute(roleMappingItem.Attribute)
+			}
+
 			if _, ok := roleMappingMap[roleMappingAttribute]; !ok {
 				roleMappingMap[roleMappingAttribute] = make(RoleMappingMapItem)
 			}
-
-			roleMappingValue := RoleMappingItemValue(roleMappingItemValue)
+			
+			var roleMappingValue RoleMappingItemValue
+			if enableCaseInsensitivity {
+				roleMappingValue = RoleMappingItemValue(strings.ToLower(roleMappingItemValue))
+			} else {
+				roleMappingValue = RoleMappingItemValue(roleMappingItemValue)
+			}
+			
 			if _, ok := roleMappingMap[roleMappingAttribute][roleMappingValue]; !ok {
 				roleMappingMap[roleMappingAttribute][roleMappingValue] = make([]RoleMappingItemRoleId, 0)
 			}

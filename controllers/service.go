@@ -32,6 +32,7 @@ type EmailForm struct {
 	Sender    string   `json:"sender"`
 	Receivers []string `json:"receivers"`
 	Provider  string   `json:"provider"`
+	Owner     string   `json:"owner"`
 }
 
 type SmsForm struct {
@@ -65,9 +66,14 @@ func (c *ApiController) SendEmail() {
 	var provider *object.Provider
 	if emailForm.Provider != "" {
 		// called by frontend's TestEmailWidget, provider name is set by frontend
-		provider, err = object.GetProvider(util.GetId("admin", emailForm.Provider))
+		providerID := util.GetId(emailForm.Owner, emailForm.Provider)
+		provider, err = object.GetProvider(providerID)
 		if err != nil {
 			c.ResponseError(err.Error())
+			return
+		}
+		if provider == nil {
+			c.ResponseError(fmt.Sprintf(c.T("util:The provider: %s is not found"), providerID))
 			return
 		}
 

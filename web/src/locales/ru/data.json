@@ -421,6 +421,8 @@
     "Edit LDAP": "Изменить LDAP",
     "Enable Attribute Mapping": "Enable Attribute Mapping",
     "Enable Attribute Mapping - Tooltip": "Enable Attribute Mapping - Tooltip",
+    "Enable Case Insensitivity": "Включить регистронезависимость",
+    "Enable Case Insensitivity - Tooltip": "Следует ли включать регистронезависимость",
     "Enable Cryptographic Authentication": "Включить криптографическую аутентификацию",
     "Enable Cryptographic Authentication - Tooltip": "Следует ли включать криптографическую аутентификацию",
     "Enable Role Mapping": "Включить сопоставление ролей",

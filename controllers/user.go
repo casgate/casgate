@@ -666,7 +666,10 @@ func (c *ApiController) CheckUserPassword() {
 		return
 	}
 
-	_, err = object.CheckUserPassword(ctx, user.Owner, user.Name, user.Password, c.GetAcceptLanguage())
+	options := object.CheckUserPasswordOptions{
+		Lang: c.GetAcceptLanguage(),
+	}
+	_, err = object.CheckUserPassword(ctx, user.Owner, user.Name, user.Password, options)
 	if err == nil {
 		c.ResponseOk()
 	} else {
