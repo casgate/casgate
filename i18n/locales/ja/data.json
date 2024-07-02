@@ -141,7 +141,8 @@
   "util": {
     "No application is found for userId: %s": "ユーザーIDに対するアプリケーションが見つかりません： %s",
     "No provider for category: %s is found for application: %s": "アプリケーション：%sのカテゴリ%sのプロバイダが見つかりません",
-    "The provider: %s is not found": "プロバイダー：%sが見つかりません"
+    "The provider: %s is not found": "プロバイダー：%sが見つかりません",
+    "The organization %s has dependencies and cannot be deleted": "組織%sには依存関係があり、削除できません"
   },
   "verification": {
     "Code has not been sent yet!": "まだコードが送信されていません！",

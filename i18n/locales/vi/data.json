@@ -141,7 +141,8 @@
   "util": {
     "No application is found for userId: %s": "Không tìm thấy ứng dụng cho ID người dùng: %s",
     "No provider for category: %s is found for application: %s": "Không tìm thấy nhà cung cấp cho danh mục: %s cho ứng dụng: %s",
-    "The provider: %s is not found": "Nhà cung cấp: %s không được tìm thấy"
+    "The provider: %s is not found": "Nhà cung cấp: %s không được tìm thấy",
+    "The organization %s has dependencies and cannot be deleted": "Tổ chức %s có phụ thuộc và không thể bị xóa"
   },
   "verification": {
     "Code has not been sent yet!": "Mã chưa được gửi đến!",
