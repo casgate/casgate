@@ -525,9 +525,20 @@ func SyncRolesToUser(user *User, roleIds []string) error {
 	}
 
 	for _, role := range currentUserRoles {
+		if len(role.Domains) == 0 && manualOverrideMap[""] {
+			continue
+		}
+
+		for _, domain := range role.Domains {
+			if manualOverrideMap[domain] {
+				continue
+			}
+		}
+
 		if role.ManualOverride {
 			continue
 		}
+
 		if !util.InSlice(roleIds, role.GetId()) {
 			role.Users = util.DeleteVal(role.Users, userId)
 			_, err = UpdateRole(role.GetId(), role)
