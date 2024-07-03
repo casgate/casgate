@@ -10,11 +10,25 @@ import (
 
 func PathFilter(ctx *context.Context) {
 	urlPath := ctx.Request.URL.Path
-	if !strings.HasPrefix(urlPath, "/api/") && !strings.HasPrefix(urlPath, "/.well-known/") &&
-		!strings.HasPrefix(urlPath, "/cas") && !strings.HasSuffix(urlPath, "/serviceValidate") &&
-		!strings.HasSuffix(urlPath, "/proxy") && !strings.HasSuffix(urlPath, "/proxyValidate") &&
-		!strings.HasSuffix(urlPath, "/validate") && !strings.HasSuffix(urlPath, "/p3/serviceValidate") &&
-		!strings.HasSuffix(urlPath, "/p3/proxyValidate") && !strings.HasSuffix(urlPath, "/samlValidate") {
+
+	prefixWhitelist := []string{"/api/", "/.well-known/", "/cas"}
+	suffixWhitelist := []string{"/serviceValidate", "/proxy", "/proxyValidate", "/validate", "/p3/serviceValidate", "/p3/proxyValidate", "/samlValidate"}
+
+	needCheck := false
+
+	for _, prefix := range prefixWhitelist {
+		if strings.HasPrefix(urlPath, prefix) {
+			needCheck = true
+		}
+	}
+
+	for _, prefix := range suffixWhitelist {
+		if strings.HasSuffix(urlPath, prefix) {
+			needCheck = true
+		}
+	}
+
+	if !needCheck {
 		return
 	}
 
