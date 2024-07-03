@@ -277,6 +277,42 @@ func DeleteRole(role *Role) (bool, error) {
 		}
 	}
 
+	var providers []*Provider
+	err = ormer.Engine.Find(&providers, &Provider{Owner: role.Owner})
+	if err != nil {
+		return false, err
+	}
+
+	for _, provider := range providers {
+		for j, u := range provider.RoleMappingItems {
+			if u.Role == roleId {
+				provider.RoleMappingItems = append(provider.RoleMappingItems[:j], provider.RoleMappingItems[j+1:]...)
+				affected, err := UpdateProvider(provider.GetId(), provider)
+				if err != nil || !affected {
+					return false, err
+				}
+			}
+		}
+	}
+
+	var ldaps []*Ldap
+	err = ormer.Engine.Find(&ldaps, &Ldap{Owner: role.Owner})
+	if err != nil {
+		return false, err
+	}
+
+	for _, ldap := range ldaps {
+		for j, u := range ldap.RoleMappingItems {
+			if u.Role == roleId {
+				ldap.RoleMappingItems = append(ldap.RoleMappingItems[:j], ldap.RoleMappingItems[j+1:]...)
+				affected, err := UpdateLdap(ldap)
+				if err != nil || !affected {
+					return false, err
+				}
+			}
+		}
+	}
+
 	affected, err := ormer.Engine.ID(core.PK{role.Owner, role.Name}).Delete(&Role{})
 	if err != nil {
 		return false, err
