@@ -211,7 +211,7 @@ func ExpireTokenByAccessToken(ctx context.Context, accessToken string) (bool, *A
 		return false, nil, nil, err
 	}
 
-	application, err := getApplication(ctx, token.Owner, token.Application)
+	application, err := getApplication(ctx, token.Owner, token.Application, nil)
 	if err != nil {
 		return false, nil, nil, err
 	}
