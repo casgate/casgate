@@ -56,6 +56,7 @@ class ProviderListPage extends BaseListPage {
       host: "",
       port: 0,
       providerUrl: "https://github.com/organizations/xxx/settings/applications/1234567",
+      userMappingStrategy: "all",
     };
   }
 
