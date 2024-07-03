@@ -15,6 +15,9 @@
 package controllers
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -36,8 +39,100 @@ type RootController struct {
 	ApiController
 }
 
+type BaseDataManageRequest struct {
+	Id           string
+	Owner        string
+	Limit        int
+	Page         string
+	Field        string
+	Value        string
+	SortField    string
+	SortOrder    string
+	Organization string
+	User         *object.User
+}
 type SessionData struct {
 	ExpireTime int64
+}
+
+func (c *ApiController) makeMessage(status int, msg string) string {
+	result, _ := json.Marshal(&Error{Code: status, Message: msg})
+	return string(result)
+}
+
+func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
+	result := BaseDataManageRequest{
+		Id:           c.Input().Get("id"),
+		Owner:        c.Input().Get("owner"),
+		Field:        c.Input().Get("field"),
+		Value:        c.Input().Get("value"),
+		SortField:    c.Input().Get("sortField"),
+		SortOrder:    c.Input().Get("sortOrder"),
+		Organization: c.Input().Get("organization"),
+	}
+
+	limit := c.Input().Get("pageSize")
+	page := c.Input().Get("p")
+
+	if limit == "" || page == "" {
+		result.Limit = -1
+	} else {
+		result.Limit = util.ParseInt(limit)
+	}
+
+	var globalAdmin bool
+	globalAdmin, result.User = c.isGlobalAdmin()
+	userOwner := ""
+
+	if result.User != nil {
+		userOwner = result.User.Owner
+	}
+
+	if !globalAdmin {
+		result.Organization = userOwner
+
+		if result.Owner != "admin" { // if not shared
+			result.Owner = userOwner
+		}
+	}
+
+	return result
+}
+
+func (c *ApiController) ContinueIfHasRightsOrDenyRequest(request BaseDataManageRequest) {
+
+	globalAdmin, _ := c.isGlobalAdmin()
+	if globalAdmin {
+		return
+	}
+
+	if request.User == nil {
+		c.CustomAbort(http.StatusUnauthorized, c.makeMessage(http.StatusUnauthorized, c.T("auth:Unauthorized operation")))
+	}
+
+	if request.User.IsForbidden || request.User.IsDeleted || !c.IsAdmin() {
+		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Forbidden operation")))
+	}
+
+	if request.Organization != "" && request.Organization != request.User.Owner {
+		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Unable to get data from other organization without global administrator role")))
+	}
+}
+
+func (c *ApiController) ValidateOrganization(organization string) {
+	globalAdmin, _ := c.isGlobalAdmin()
+	if globalAdmin {
+		return
+	}
+
+	user := c.getCurrentUser()
+	if user == nil {
+		c.CustomAbort(http.StatusUnauthorized, c.makeMessage(http.StatusUnauthorized, c.T("auth:Unauthorized operation")))
+	}
+	if organization != user.Owner {
+		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Forbidden operation")))
+
+	}
 }
 
 func (c *ApiController) IsGlobalAdmin() bool {
@@ -72,12 +167,6 @@ func (c *ApiController) IsAdminOrSelf(user2 *object.User) bool {
 }
 
 func (c *ApiController) isGlobalAdmin() (bool, *object.User) {
-	username := c.GetSessionUsername()
-	if strings.HasPrefix(username, "app/") {
-		// e.g., "app/app-casnode"
-		return true, nil
-	}
-
 	user := c.getCurrentUser()
 	if user == nil {
 		return false, nil
@@ -86,9 +175,46 @@ func (c *ApiController) isGlobalAdmin() (bool, *object.User) {
 	return user.IsGlobalAdmin(), user
 }
 
+func (c *ApiController) getUserByClientIdSecret() *object.User {
+	var user *object.User
+	goCtx := c.Ctx.Request.Context()
+
+	clientId, clientSecret, ok := c.Ctx.Request.BasicAuth()
+	if !ok {
+		clientId = c.Ctx.Input.Query("clientId")
+		clientSecret = c.Ctx.Input.Query("clientSecret")
+	}
+
+	if clientId == "" || clientSecret == "" {
+		return nil
+	}
+
+	application, err := object.GetApplicationByClientId(goCtx, clientId)
+	if err != nil {
+		panic(err)
+	}
+
+	if application == nil || application.ClientSecret != clientSecret {
+		return nil
+	}
+	user = &object.User{
+		Name:        fmt.Sprintf("app/%s", application.Name),
+		Owner:       application.Organization, // not application.owner coze app's owner - admin
+		IsAdmin:     true,
+		IsForbidden: false,
+		IsDeleted:   false,
+	}
+	return user
+}
+
 func (c *ApiController) getCurrentUser() *object.User {
 	var user *object.User
 	var err error
+	user = c.getUserByClientIdSecret()
+	if user != nil {
+		return user
+	}
+
 	userId := c.GetSessionUsername()
 	if userId == "" {
 		user = nil

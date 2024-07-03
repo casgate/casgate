@@ -142,7 +142,8 @@
   "util": {
     "No application is found for userId: %s": "Не найдено заявки для пользователя с идентификатором: %s",
     "No provider for category: %s is found for application: %s": "Нет поставщика для категории: %s для приложения: %s",
-    "The provider: %s is not found": "Поставщик: %s не найден"
+    "The provider: %s is not found": "Поставщик: %s не найден",
+    "The organization %s has dependencies and cannot be deleted": "Организация %s имеет зависимости и не может быть удалена"
   },
   "verification": {
     "Code has not been sent yet!": "Код еще не был отправлен!",

@@ -32,6 +32,9 @@ import (
 // @Success 200 {object} controllers.Response The Response object
 // @router /enforce [post]
 func (c *ApiController) Enforce() {
+	r := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(r)
+
 	permissionId := c.Input().Get("permissionId")
 	modelId := c.Input().Get("modelId")
 	resourceId := c.Input().Get("resourceId")
@@ -121,6 +124,9 @@ func (c *ApiController) Enforce() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /batch-enforce [post]
 func (c *ApiController) BatchEnforce() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	permissionId := c.Input().Get("permissionId")
 	modelId := c.Input().Get("modelId")
 	enforcerId := c.Input().Get("enforcerId")
@@ -195,6 +201,9 @@ func (c *ApiController) BatchEnforce() {
 }
 
 func (c *ApiController) GetAllObjects() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	userId := c.GetSessionUsername()
 	if userId == "" {
 		c.ResponseError(c.T("general:Please login first"))
@@ -205,6 +214,9 @@ func (c *ApiController) GetAllObjects() {
 }
 
 func (c *ApiController) GetAllActions() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	userId := c.GetSessionUsername()
 	if userId == "" {
 		c.ResponseError(c.T("general:Please login first"))
@@ -215,6 +227,9 @@ func (c *ApiController) GetAllActions() {
 }
 
 func (c *ApiController) GetAllRoles() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	userId := c.GetSessionUsername()
 	if userId == "" {
 		c.ResponseError(c.T("general:Please login first"))

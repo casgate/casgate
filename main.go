@@ -22,7 +22,6 @@ import (
 	"github.com/beego/beego"
 	"github.com/beego/beego/logs"
 	_ "github.com/beego/beego/session/redis"
-	"github.com/casdoor/casdoor/authz"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/ldap"
 	"github.com/casdoor/casdoor/object"
@@ -50,7 +49,6 @@ func main() {
 	object.InitDefaultStorageProvider()
 	object.InitLdapAutoSynchronizer(ctx)
 	proxy.InitHttpClient()
-	authz.InitApi()
 	object.InitUserManager()
 
 	util.SafeGoroutine(func() { object.RunSyncUsersJob() })
@@ -67,7 +65,6 @@ func main() {
 	beego.InsertFilter("*", beego.BeforeRouter, routers.AutoSigninFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.CorsFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PathFilter)
-	beego.InsertFilter("*", beego.BeforeRouter, routers.ApiFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PrometheusFilter)
 	beego.InsertFilter("*", beego.AfterExec, routers.LogRecordMessage, false)
 

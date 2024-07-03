@@ -30,21 +30,14 @@ import (
 // @Success 200 {array} object.Domain The Response object
 // @router /get-domains [get]
 func (c *ApiController) GetDomains() {
-	owner := c.Input().Get("owner")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseError(c.T("auth:Unauthorized operation"))
-		return
-	}
 
 	if limit == "" || page == "" {
-		domains, err := object.GetDomains(c.Ctx.Request.Context(), owner)
+		domains, err := object.GetDomains(c.Ctx.Request.Context(), request.Owner)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -53,14 +46,14 @@ func (c *ApiController) GetDomains() {
 		c.ResponseOk(domains)
 	} else {
 		limit := util.ParseInt(limit)
-		count, err := object.GetDomainCount(owner, field, value)
+		count, err := object.GetDomainCount(request.Owner, request.Field, request.Value)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		domains, err := object.GetPaginationDomains(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
+		domains, err := object.GetPaginationDomains(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -78,14 +71,21 @@ func (c *ApiController) GetDomains() {
 // @Success 200 {object} object.Domain The Response object
 // @router /get-domain [get]
 func (c *ApiController) GetDomain() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	domain, err := object.GetDomain(id)
+	domain, err := object.GetDomain(request.Id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
 
+	if domain == nil {
+		c.ResponseOk()
+		return
+	}
+
+	c.ValidateOrganization(domain.Owner)
 	c.ResponseOk(domain)
 }
 
@@ -98,7 +98,8 @@ func (c *ApiController) GetDomain() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-domain [post]
 func (c *ApiController) UpdateDomain() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var domain object.Domain
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &domain)
@@ -106,8 +107,15 @@ func (c *ApiController) UpdateDomain() {
 		c.ResponseError(err.Error())
 		return
 	}
+	domainFromDb, _ := object.GetDomain(request.Id)
+	if domainFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(domainFromDb.Owner)
 
-	c.Data["json"] = wrapActionResponse(object.UpdateDomain(c.getRequestCtx(), id, &domain))
+	c.Data["json"] = wrapActionResponse(object.UpdateDomain(c.getRequestCtx(), request.Id, &domain))
 	c.ServeJSON()
 }
 
@@ -119,12 +127,15 @@ func (c *ApiController) UpdateDomain() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-domain [post]
 func (c *ApiController) AddDomain() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var domain object.Domain
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &domain)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(domain.Owner)
 
 	c.Data["json"] = wrapActionResponse(object.AddDomain(&domain))
 	c.ServeJSON()
@@ -138,6 +149,9 @@ func (c *ApiController) AddDomain() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-domain [post]
 func (c *ApiController) DeleteDomain() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	var domain object.Domain
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &domain)
 	if err != nil {
@@ -145,6 +159,14 @@ func (c *ApiController) DeleteDomain() {
 		return
 	}
 
+	domainFromDb, _ := object.GetDomain(domain.GetId())
+	if domainFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(domainFromDb.Owner)
+	
 	c.Data["json"] = wrapActionResponse(object.DeleteDomain(&domain))
 	c.ServeJSON()
 }
