@@ -114,7 +114,6 @@ func GetRole(id string) (*Role, error) {
 	return getRole(owner, name)
 }
 
-
 func UpdateRole(id string, role *Role) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
 	oldRole, err := getRole(owner, name)
@@ -125,7 +124,6 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	if oldRole == nil {
 		return false, nil
 	}
-	
 
 	// allParentRoles, _ := GetAncestorRoles(id)
 	// for _, r := range allParentRoles {
@@ -391,6 +389,46 @@ func roleChangeTrigger(oldName string, newName string) error {
 			}
 		}
 		_, err = session.Where("name=?", permission.Name).And("owner=?", permission.Owner).Update(permission)
+		if err != nil {
+			return err
+		}
+	}
+
+	var providers []*Provider
+	err = ormer.Engine.Find(&providers)
+	if err != nil {
+		return err
+	}
+
+	for _, provider := range providers {
+		for j, u := range provider.RoleMappingItems {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(u.Role)
+			if name == oldName {
+				provider.RoleMappingItems[j].Role = util.GetId(owner, newName)
+			}
+		}
+		_, err = session.Where("name=?", provider.Name).And("owner=?", provider.Owner).Update(provider)
+		if err != nil {
+			return err
+		}
+	}
+
+	var ldaps []*Ldap
+	err = ormer.Engine.Find(&ldaps)
+	if err != nil {
+		return err
+	}
+
+	for _, ldap := range ldaps {
+		for j, u := range ldap.RoleMappingItems {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(u.Role)
+			if name == oldName {
+				ldap.RoleMappingItems[j].Role = util.GetId(owner, newName)
+			}
+		}
+		_, err = session.Where("id=?", ldap.Id).And("owner=?", ldap.Owner).Update(ldap)
 		if err != nil {
 			return err
 		}
