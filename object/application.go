@@ -241,6 +241,16 @@ func updateOpenIDWithUrls(provider *Provider) error {
 	return nil
 }
 
+func SetHttpClientToOIDCProvider(idpInfo *idp.ProviderInfo, provider idp.IdProvider) error {
+	client, err := GetProviderHttpClient(*idpInfo)
+	if err != nil {
+		return fmt.Errorf("failed to GetProviderHttpClient")
+	}
+	provider.SetHttpClient(client)
+
+	return nil
+}
+
 func extendApplicationWithOrg(application *Application) (err error) {
 	organization, err := getOrganization(application.Owner, application.Organization)
 	application.OrganizationObj = organization
