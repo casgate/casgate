@@ -35,45 +35,42 @@ func (c *ApiController) GetApplications() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	userId := c.GetSessionUsername()
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
 
 	if !c.IsGlobalAdmin() && request.Organization == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
 
+	var count int64
 	var err error
-	if limit == "" || page == "" {
-		var applications []*object.Application
-		if request.Organization == "" {
-			applications, err = object.GetApplications(request.Owner)
-		} else {
-			applications, err = object.GetOrganizationApplications(request.Owner, request.Organization)
-		}
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-		c.ResponseOk(object.GetMaskedApplications(applications, userId))
+	applications := []*object.Application{}
+
+	if !c.IsGlobalAdmin() || request.Organization != "" {
+		count, err = object.GetOrganizationApplicationCount(request.Owner, request.Organization, request.Field, request.Value)
 	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetApplicationCount(request.Owner, request.Field, request.Value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		application, err := object.GetPaginationApplications(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		applications := object.GetMaskedApplications(application, userId)
-		c.ResponseOk(applications, paginator.Nums())
+		count, err = object.GetApplicationCount(request.Owner, request.Field, request.Value)
 	}
+
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+		
+	if !c.IsGlobalAdmin() || request.Organization != "" {
+		applications, err = object.GetPaginationOrganizationApplications(request.Owner, request.Organization, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	} else {
+		applications, err = object.GetPaginationApplications(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	}
+	
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	applications = object.GetMaskedApplications(applications, userId)
+	c.ResponseOk(applications, paginator.Nums())
 }
 
 // GetApplication
@@ -159,45 +156,41 @@ func (c *ApiController) GetOrganizationApplications() {
 	userId := c.GetSessionUsername()
 	organization := c.Input().Get("organization")
 	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
 	field := c.Input().Get("field")
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
 	sortOrder := c.Input().Get("sortOrder")
+	limit := c.Input().Get("pageSize")
+	page := c.Input().Get("p")
 
 	if organization == "" {
 		c.ResponseBadRequest(c.T("general:Missing parameter") + ": organization")
 		return
 	}
 
+	var Limit int
 	if limit == "" || page == "" {
-		applications, err := object.GetOrganizationApplications(owner, organization)
-		if err != nil {
-			c.ResponseBadRequest(err.Error())
-			return
-		}
-
-		c.ResponseOk(object.GetMaskedApplications(applications, userId))
+		Limit = -1
 	} else {
-		limit := util.ParseInt(limit)
-
-		count, err := object.GetOrganizationApplicationCount(owner, organization, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		application, err := object.GetPaginationOrganizationApplications(owner, organization, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		applications := object.GetMaskedApplications(application, userId)
-		c.ResponseOk(applications, paginator.Nums())
+		Limit = util.ParseInt(limit)
 	}
+	
+	count, err := object.GetOrganizationApplicationCount(owner, organization, field, value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	paginator := pagination.SetPaginator(c.Ctx, Limit, count)
+	applications, err := object.GetPaginationOrganizationApplications(owner, organization, paginator.Offset(), Limit, field, value, sortField, sortOrder)
+	
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	applications = object.GetMaskedApplications(applications, userId)
+	c.ResponseOk(applications, paginator.Nums())
 }
 
 // UpdateApplication
