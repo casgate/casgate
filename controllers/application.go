@@ -174,7 +174,7 @@ func (c *ApiController) GetOrganizationApplications() {
 	} else {
 		Limit = util.ParseInt(limit)
 	}
-	
+
 	count, err := object.GetOrganizationApplicationCount(owner, organization, field, value)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
@@ -255,9 +255,7 @@ func (c *ApiController) AddApplication() {
 		c.ResponseError(err.Error())
 		return
 	}
-
-
-
+	
 	c.Data["json"] = wrapActionResponse(object.AddApplication(goCtx, &application))
 	c.ServeJSON()
 }
