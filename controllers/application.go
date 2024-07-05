@@ -22,6 +22,7 @@ import (
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 )
+const DefaultAppOwner = "admin"
 
 // GetApplications
 // @Title GetApplications
@@ -40,6 +41,7 @@ func (c *ApiController) GetApplications() {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
+	request.Owner = DefaultAppOwner
 
 	var count int64
 	var err error
@@ -154,8 +156,8 @@ func (c *ApiController) GetUserApplication() {
 // @router /get-organization-applications [get]
 func (c *ApiController) GetOrganizationApplications() {
 	userId := c.GetSessionUsername()
+	owner := DefaultAppOwner
 	organization := c.Input().Get("organization")
-	owner := c.Input().Get("owner")
 	field := c.Input().Get("field")
 	value := c.Input().Get("value")
 	sortField := c.Input().Get("sortField")
@@ -215,7 +217,7 @@ func (c *ApiController) UpdateApplication() {
 		return
 	}
 	
-	application.Owner = "admin"
+	application.Owner = DefaultAppOwner
 	c.ValidateOrganization(application.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateApplication(goCtx, id, &application))
@@ -242,7 +244,7 @@ func (c *ApiController) AddApplication() {
 		return
 	}
 
-	application.Owner = "admin"
+	application.Owner = DefaultAppOwner
 	c.ValidateOrganization(application.Organization)
 
 	count, err := object.GetApplicationCount("", "", "")
@@ -255,7 +257,7 @@ func (c *ApiController) AddApplication() {
 		c.ResponseError(err.Error())
 		return
 	}
-	
+
 	c.Data["json"] = wrapActionResponse(object.AddApplication(goCtx, &application))
 	c.ServeJSON()
 }
