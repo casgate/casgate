@@ -511,30 +511,8 @@ func SyncRolesToUser(user *User, roleIds []string) error {
 	if err != nil {
 		return err
 	}
-	manualOverrideMap := make(map[string]bool)
-	for _, role := range currentUserRoles {
-		if role.ManualOverride {
-			if len(role.Domains) == 0 {
-				manualOverrideMap[""] = true
-			}
-
-			for _, domain := range role.Domains {
-				manualOverrideMap[domain] = true
-			}
-		}
-	}
 
 	for _, role := range currentUserRoles {
-		if len(role.Domains) == 0 && manualOverrideMap[""] {
-			continue
-		}
-
-		for _, domain := range role.Domains {
-			if manualOverrideMap[domain] {
-				continue
-			}
-		}
-
 		if role.ManualOverride {
 			continue
 		}
@@ -552,16 +530,6 @@ func SyncRolesToUser(user *User, roleIds []string) error {
 		if role.Owner != user.Owner {
 			// we shouldn't add role from another organization (if it happened by any reason) to user, so skip
 			continue
-		}
-
-		if len(role.Domains) == 0 && manualOverrideMap[""] {
-			continue
-		}
-
-		for _, domain := range role.Domains {
-			if manualOverrideMap[domain] {
-				continue
-			}
 		}
 
 		if role.ManualOverride {
