@@ -14,6 +14,7 @@
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Gagal masuk: %s",
     "Forbidden operation": "Forbidden operation",
+    "Invalid id token": "Invalid id token",
     "Invalid token": "Token tidak valid",
     "State expected: %s, but got: %s": "Diharapkan: %s, tapi diperoleh: %s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "Akun untuk penyedia: %s dan nama pengguna: %s (%s) tidak ada dan tidak diizinkan untuk mendaftar sebagai akun baru melalui %%s, silakan gunakan cara lain untuk mendaftar",
@@ -69,7 +70,11 @@
   },
   "general": {
     "Invalid username or password/code": "Invalid username or password/code",
+    "Missing administrator credentials": "Missing administrator credentials",
+    "Missing certificate": "Missing certificate",
+    "Missing client certificate": "Missing client certificate",
     "Missing parameter": "Parameter hilang",
+    "Missing required parameter": "Missing required parameter",
     "Not implemented": "Not implemented",
     "Please login first": "Silahkan login terlebih dahulu",
     "The user: %s doesn't exist": "Pengguna: %s tidak ada",
@@ -136,7 +141,8 @@
   "util": {
     "No application is found for userId: %s": "Tidak ditemukan aplikasi untuk userId: %s",
     "No provider for category: %s is found for application: %s": "Tidak ditemukan penyedia untuk kategori: %s untuk aplikasi: %s",
-    "The provider: %s is not found": "Penyedia: %s tidak ditemukan"
+    "The provider: %s is not found": "Penyedia: %s tidak ditemukan",
+    "The organization %s has dependencies and cannot be deleted": "Organisasi %s memiliki dependensi dan tidak dapat dihapus"
   },
   "verification": {
     "Code has not been sent yet!": "Kode belum dikirimkan!",

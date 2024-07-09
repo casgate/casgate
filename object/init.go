@@ -69,6 +69,7 @@ func getBuiltInAccountItems() []*AccountItem {
 		{Name: "Bio", Visible: true, ViewRule: "Public", ModifyRule: "Self"},
 		{Name: "Tag", Visible: true, ViewRule: "Public", ModifyRule: "Admin"},
 		{Name: "Signup application", Visible: true, ViewRule: "Public", ModifyRule: "Admin"},
+		{Name: "Mapping strategy", Visible: true, ViewRule: "Public", ModifyRule: "Admin"},
 		{Name: "Roles", Visible: true, ViewRule: "Public", ModifyRule: "Immutable"},
 		{Name: "Permissions", Visible: true, ViewRule: "Public", ModifyRule: "Immutable"},
 		{Name: "Groups", Visible: true, ViewRule: "Public", ModifyRule: "Admin"},
@@ -158,6 +159,7 @@ func initBuiltInUser(ctx context.Context) {
 		SignupApplication: "app-built-in",
 		CreatedIp:         "127.0.0.1",
 		Properties:        make(map[string]string),
+		MappingStrategy:   "all",
 	}
 	_, err = AddUser(ctx, user)
 	if err != nil {
@@ -372,7 +374,7 @@ e = some(where (p.eft == allow))
 
 [matchers]
 m = (r.subOwner == p.subOwner || p.subOwner == "*") && \
-    (r.subName == p.subName || p.subName == "*" || r.subName != "anonymous" && p.subName == "!anonymous") && \
+    (r.subName == p.subName || p.subName == "*" || (r.subName != "anonymous" && p.subName == "!anonymous" && r.subOwner == p.subOwner)) && \
     (r.method == p.method || p.method == "*") && \
     (r.urlPath == p.urlPath || p.urlPath == "*") && \
     (r.objOwner == p.objOwner || p.objOwner == "*") && \

@@ -14,6 +14,7 @@
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Не удалось войти в систему: %s",
     "Forbidden operation": "Forbidden operation",
+    "Invalid id token": "Invalid id token",
     "Invalid token": "Недействительный токен",
     "State expected: %s, but got: %s": "Ожидался статус: %s, но получен: %s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "Аккаунт провайдера: %s и имя пользователя: %s (%s) не существует и не может быть зарегистрирован через %%s, пожалуйста, используйте другой способ регистрации",
@@ -69,7 +70,11 @@
   },
   "general": {
     "Invalid username or password/code": "Неправильное имя пользователя или пароль/код",
+    "Missing administrator credentials": "Missing administrator credentials",
+    "Missing certificate": "Missing certificate",
+    "Missing client certificate": "Missing client certificate",
     "Missing parameter": "Отсутствующий параметр",
+    "Missing required parameter": "Missing required parameter",
     "Not implemented": "Not implemented",
     "Please login first": "Пожалуйста, сначала войдите в систему",
     "The user: %s doesn't exist": "Пользователь %s не существует",
@@ -136,7 +141,8 @@
   "util": {
     "No application is found for userId: %s": "Не найдено заявки для пользователя с идентификатором: %s",
     "No provider for category: %s is found for application: %s": "Нет поставщика для категории: %s для приложения: %s",
-    "The provider: %s is not found": "Поставщик: %s не найден"
+    "The provider: %s is not found": "Поставщик: %s не найден",
+    "The organization %s has dependencies and cannot be deleted": "Организация %s имеет зависимости и не может быть удалена"
   },
   "verification": {
     "Code has not been sent yet!": "Код еще не был отправлен!",

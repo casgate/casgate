@@ -770,7 +770,7 @@ class LoginPage extends React.Component {
     }
 
     return (
-      <span style={{float: "right"}}>
+      <span style={{float: "right", marginTop: 16}}>
         {
           <React.Fragment>
             {i18next.t("login:No account?")}&nbsp;

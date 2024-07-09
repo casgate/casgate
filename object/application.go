@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/idp"
@@ -109,6 +108,8 @@ type Application struct {
 
 	FailedSigninLimit      int `json:"failedSigninLimit"`
 	FailedSigninFrozenTime int `json:"failedSigninFrozenTime"`
+
+	UserMappingStrategy string `xorm:"varchar(50)" json:"userMappingStrategy"`
 }
 
 func GetApplicationCount(owner, field, value string) (int64, error) {
@@ -570,8 +571,8 @@ func (application *Application) GetId() string {
 func (application *Application) IsRedirectUriValid(redirectUri string) bool {
 	redirectUris := append([]string{"http://localhost:", "https://localhost:", "http://127.0.0.1:", "http://casdoor-app"}, application.RedirectUris...)
 	for _, targetUri := range redirectUris {
-		targetUriRegex := regexp.MustCompile(targetUri)
-		if targetUriRegex.MatchString(redirectUri) || strings.Contains(redirectUri, targetUri) {
+		targetUriRegex := regexp.MustCompile(fmt.Sprintf("^%s$", targetUri))
+		if targetUriRegex.MatchString(redirectUri) {
 			return true
 		}
 	}

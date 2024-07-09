@@ -30,17 +30,14 @@ import (
 // @Success 200 {array} object.Syncer The Response object
 // @router /get-syncers [get]
 func (c *ApiController) GetSyncers() {
-	owner := c.Input().Get("owner")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-	organization := c.Input().Get("organization")
 
 	if limit == "" || page == "" {
-		organizationSyncers, err := object.GetOrganizationSyncers(owner, organization)
+		organizationSyncers, err := object.GetOrganizationSyncers(request.Owner, request.Organization)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -49,14 +46,14 @@ func (c *ApiController) GetSyncers() {
 		c.ResponseOk(organizationSyncers)
 	} else {
 		limit := util.ParseInt(limit)
-		count, err := object.GetSyncerCount(owner, organization, field, value)
+		count, err := object.GetSyncerCount(request.Owner, request.Organization, request.Field, request.Value)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		syncers, err := object.GetPaginationSyncers(owner, organization, paginator.Offset(), limit, field, value, sortField, sortOrder)
+		syncers, err := object.GetPaginationSyncers(request.Owner, request.Organization, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -74,13 +71,20 @@ func (c *ApiController) GetSyncers() {
 // @Success 200 {object} object.Syncer The Response object
 // @router /get-syncer [get]
 func (c *ApiController) GetSyncer() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	syncer, err := object.GetSyncer(id)
+	syncer, err := object.GetSyncer(request.Id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	if syncer == nil {
+		c.ResponseOk()
+		return
+	}
+
+	c.ValidateOrganization(syncer.Organization)
 
 	c.ResponseOk(syncer)
 }
@@ -94,7 +98,8 @@ func (c *ApiController) GetSyncer() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-syncer [post]
 func (c *ApiController) UpdateSyncer() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var syncer object.Syncer
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &syncer)
@@ -102,8 +107,15 @@ func (c *ApiController) UpdateSyncer() {
 		c.ResponseError(err.Error())
 		return
 	}
+	syncerFromDb, _ := object.GetSyncer(request.Id)
+	if syncerFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(syncerFromDb.Organization)
 
-	c.Data["json"] = wrapActionResponse(object.UpdateSyncer(id, &syncer))
+	c.Data["json"] = wrapActionResponse(object.UpdateSyncer(request.Id, &syncer))
 	c.ServeJSON()
 }
 
@@ -115,12 +127,16 @@ func (c *ApiController) UpdateSyncer() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-syncer [post]
 func (c *ApiController) AddSyncer() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var syncer object.Syncer
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &syncer)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	c.ValidateOrganization(syncer.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.AddSyncer(&syncer))
 	c.ServeJSON()
@@ -134,12 +150,22 @@ func (c *ApiController) AddSyncer() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-syncer [post]
 func (c *ApiController) DeleteSyncer() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var syncer object.Syncer
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &syncer)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	syncerFromDb, _ := object.GetSyncer(syncer.GetId())
+	if syncerFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(syncerFromDb.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteSyncer(&syncer))
 	c.ServeJSON()
@@ -153,12 +179,14 @@ func (c *ApiController) DeleteSyncer() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /run-syncer [get]
 func (c *ApiController) RunSyncer() {
-	id := c.Input().Get("id")
-	syncer, err := object.GetSyncer(id)
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	syncer, err := object.GetSyncer(request.Id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(syncer.Organization)
 
 	err = object.RunSyncer(syncer)
 	if err != nil {

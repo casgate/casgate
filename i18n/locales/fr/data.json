@@ -14,6 +14,7 @@
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Échec de la connexion : %s",
     "Forbidden operation": "Forbidden operation",
+    "Invalid id token": "Invalid id token",
     "Invalid token": "Jeton invalide",
     "State expected: %s, but got: %s": "État attendu : %s, mais obtenu : %s",
     "The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up": "Le compte pour le fournisseur : %s et le nom d'utilisateur : %s (%s) n'existe pas et n'est pas autorisé à s'inscrire en tant que nouveau compte via %%s, veuillez utiliser une autre méthode pour vous inscrire",
@@ -69,7 +70,11 @@
   },
   "general": {
     "Invalid username or password/code": "Nom d'utilisateur ou mot de passe/code invalide",
+    "Missing administrator credentials": "Missing administrator credentials",
+    "Missing certificate": "Missing certificate",
+    "Missing client certificate": "Missing client certificate",
     "Missing parameter": "Paramètre manquant",
+    "Missing required parameter": "Missing required parameter",
     "Not implemented": "Not implemented",
     "Please login first": "Veuillez d'abord vous connecter",
     "The user: %s doesn't exist": "L'utilisateur : %s n'existe pas",
@@ -136,7 +141,8 @@
   "util": {
     "No application is found for userId: %s": "Aucune application n'a été trouvée pour l'identifiant d'utilisateur : %s",
     "No provider for category: %s is found for application: %s": "Aucun fournisseur pour la catégorie: %s n'est trouvé pour l'application: %s",
-    "The provider: %s is not found": "Le fournisseur : %s n'a pas été trouvé"
+    "The provider: %s is not found": "Le fournisseur : %s n'a pas été trouvé",
+    "The organization %s has dependencies and cannot be deleted": "L'organisation %s a des dépendances et ne peut pas être supprimée"
   },
   "verification": {
     "Code has not been sent yet!": "Le code n'a pas encore été envoyé !",

@@ -176,6 +176,7 @@ func (c *ApiController) Signup() {
 		SignupApplication: application.Name,
 		Properties:        map[string]string{},
 		Karma:             0,
+		MappingStrategy:   application.UserMappingStrategy,
 	}
 
 	if len(organization.Tags) > 0 {
@@ -226,6 +227,7 @@ func (c *ApiController) Signup() {
 
 		user.Id = invitedUser.Id
 		user.Name = invitedUser.Name
+		user.PasswordType = invitedUser.PasswordType
 
 		columns := []string{"password", "type"}
 
@@ -247,6 +249,11 @@ func (c *ApiController) Signup() {
 
 		if application.IsSignupItemVisible("Country/Region") {
 			columns = append(columns, "region")
+		}
+
+		if err := user.UpdateUserPassword(organization); err != nil {
+			c.ResponseError(err.Error())
+			return
 		}
 
 		affected, err = object.UpdateUser(invitedUser.GetId(), user, columns, false)

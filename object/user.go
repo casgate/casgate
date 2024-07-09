@@ -198,6 +198,8 @@ type User struct {
 	MfaEmailEnabled     bool                  `json:"mfaEmailEnabled"`
 	MultiFactorAuths    []*MfaProps           `xorm:"-" json:"multiFactorAuths,omitempty"`
 
+	MappingStrategy string `xorm:"varchar(50)" json:"mappingStrategy"`
+
 	Ldap       string            `xorm:"ldap varchar(100)" json:"ldap"`
 	Properties map[string]string `json:"properties"`
 
@@ -616,7 +618,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 			"eveonline", "fitbit", "gitea", "heroku", "influxcloud", "instagram", "intercom", "kakao", "lastfm", "mailru", "meetup",
 			"microsoftonline", "naver", "nextcloud", "onedrive", "oura", "patreon", "paypal", "salesforce", "shopify", "soundcloud",
 			"spotify", "strava", "stripe", "type", "tiktok", "tumblr", "twitch", "twitter", "typetalk", "uber", "vk", "wepay", "xero", "yahoo",
-			"yammer", "yandex", "zoom", "custom", "keycloak", "aliyunidaas",
+			"yammer", "yandex", "zoom", "custom", "keycloak", "aliyunidaas", "mapping_strategy",
 		}
 	}
 	if isAdmin {
@@ -803,6 +805,10 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 		user.Id = id
 	}
 
+	if user.MappingStrategy == "" {
+		user.MappingStrategy = "all"
+	}
+
 	if user.Owner == "" || user.Name == "" {
 		return false, nil
 	}
@@ -890,6 +896,10 @@ func AddUsers(users []*User) (bool, error) {
 		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, true)
 		if err != nil {
 			return false, err
+		}
+
+		if user.MappingStrategy == "" {
+			user.MappingStrategy = "all"
 		}
 	}
 
@@ -1129,7 +1139,7 @@ func (user *User) IsGlobalAdmin() bool {
 		return false
 	}
 
-	return user.Owner == "built-in"
+	return user.Owner == "built-in" 
 }
 
 func GenerateIdForNewUser(application *Application) (string, error) {
@@ -1258,4 +1268,23 @@ func GetUserTablePasswordMaxLength() (int, error) {
 		}
 	}
 	return 0, fmt.Errorf("could not found column 'password' in table 'user'")
+}
+
+func SyncAttributesToUser(user *User, displayName, email, mobile, avatar string, address []string) error {
+	if user.MappingStrategy != "all" && user.MappingStrategy != "attribute" {
+		return nil
+	}
+
+	user.DisplayName = displayName
+	user.Email = email
+	user.Phone = mobile
+	user.Avatar = avatar
+	user.Address = address
+
+	_, err := UpdateUser(user.GetId(), user, []string{"display_name", "email", "phone", "avatar", "address"}, true)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

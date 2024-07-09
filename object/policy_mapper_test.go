@@ -1,6 +1,7 @@
 package object
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -59,7 +60,7 @@ func benchmarkUpdateRole(N int64, b *testing.B) {
 			Owner: testOrgName,
 			Name:  fmt.Sprintf("user_test-%d", i),
 		}
-		_, err = AddUser(new_user)
+		_, err = AddUser(context.Background(), new_user)
 		if err != nil {
 			b.Errorf("AddUser: %s", err)
 		}
@@ -119,7 +120,7 @@ func benchmarkDeleteRoleFromPermission(N int64, b *testing.B) {
 			Owner: testOrgName,
 			Name:  fmt.Sprintf("user_test-%d", i),
 		}
-		_, err = AddUser(new_user)
+		_, err = AddUser(context.Background(), new_user)
 		if err != nil {
 			b.Errorf("AddUser: %s", err)
 		}
@@ -296,7 +297,7 @@ func clearDB(testOrgName, testModelName string) {
 		panic(fmt.Errorf("DeleteModel: %w", err))
 	}
 
-	_, err = DeleteOrganization(&Organization{
+	_, err = DeleteOrganization("en", &Organization{
 		Owner: "admin",
 		Name:  testOrgName,
 	})

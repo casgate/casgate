@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"net"
 	"strings"
 
 	goldap "github.com/go-ldap/ldap/v3"
@@ -64,11 +65,22 @@ type LdapUser struct {
 
 var ErrX509CertsPEMParse = errors.New("x509: malformed CA certificate")
 
-func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
+func (ldap *Ldap) GetLdapConn(ctx context.Context) (*LdapConn, error) {
 	var (
 		conn *goldap.Conn
 		err  error
 	)
+
+	stopCh := make(chan struct{})
+	util.SafeGoroutine(func() {
+		<-ctx.Done()
+		close(stopCh)
+	})
+
+	dialer := &net.Dialer{
+		Timeout: goldap.DefaultTimeout,
+		Cancel:  stopCh,
+	}
 
 	if ldap.EnableSsl {
 		tlsConf := &tls.Config{}
@@ -102,12 +114,14 @@ func (ldap *Ldap) GetLdapConn() (*LdapConn, error) {
 			}
 			tlsConf.Certificates = clientCerts
 		}
-
-		conn, err = goldap.DialTLS("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port), tlsConf)
+		conn, err = goldap.DialURL(
+			fmt.Sprintf("ldaps://%s:%d", ldap.Host, ldap.Port),
+			goldap.DialWithTLSConfig(tlsConf),
+			goldap.DialWithDialer(dialer),
+		)
 	} else {
-		conn, err = goldap.Dial("tcp", fmt.Sprintf("%s:%d", ldap.Host, ldap.Port))
+		conn, err = goldap.DialURL(fmt.Sprintf("ldap://%s:%d", ldap.Host, ldap.Port), goldap.DialWithDialer(dialer))
 	}
-
 	if err != nil {
 		return nil, err
 	}
@@ -431,6 +445,7 @@ func SyncLdapUsers(ctx context.Context, owner string, syncUsers []LdapUser, ldap
 				Score:             score,
 				Ldap:              syncUser.Uuid,
 				Properties:        map[string]string{},
+				MappingStrategy:   ldap.UserMappingStrategy,
 			}
 
 			if organization.DefaultApplication != "" {
@@ -465,13 +480,19 @@ func SyncLdapUsers(ctx context.Context, owner string, syncUsers []LdapUser, ldap
 			return existUsers, failedUsers, err
 		}
 
-		if ldap.EnableRoleMapping {
-			err = SyncRoles(syncUser, name, owner)
+		if found && ldap.EnableAttributeMapping {
+			err = SyncLdapAttributes(syncUser, name, owner)
 			if err != nil {
 				return existUsers, failedUsers, err
 			}
 		}
 
+		if ldap.EnableRoleMapping {
+			err = SyncLdapRoles(syncUser, name, owner)
+			if err != nil {
+				return existUsers, failedUsers, err
+			}
+		}
 	}
 
 	return existUsers, failedUsers, err
@@ -579,7 +600,7 @@ func SyncUserFromLdap(ctx context.Context, organization string, ldapId string, u
 			continue
 		}
 
-		conn, err := ldapServer.GetLdapConn()
+		conn, err := ldapServer.GetLdapConn(context.Background())
 		if err != nil {
 			continue
 		}

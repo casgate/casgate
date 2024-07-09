@@ -15,6 +15,7 @@
 package routers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -35,8 +36,16 @@ type Response struct {
 	Data2  interface{} `json:"data2"`
 }
 
-func responseError(ctx *context.Context, error string, data ...interface{}) {
-	ctx.ResponseWriter.WriteHeader(http.StatusForbidden)
+type Object struct {
+	Owner        string `json:"owner"`
+	Name         string `json:"name"`
+	Organization string `json:"organization"`
+	AccessKey    string `json:"accessKey"`
+	AccessSecret string `json:"accessSecret"`
+}
+
+func responseError(ctx *context.Context, error string, code int, data ...interface{}) {
+	ctx.ResponseWriter.WriteHeader(code)
 
 	resp := Response{Status: "error", Msg: error}
 	switch len(data) {
@@ -62,10 +71,6 @@ func T(ctx *context.Context, error string) string {
 	return i18n.Translate(getAcceptLanguage(ctx), error)
 }
 
-func denyRequest(ctx *context.Context) {
-	responseError(ctx, T(ctx, "auth:Unauthorized operation"))
-}
-
 func getUsernameByClientIdSecret(ctx *context.Context) string {
 	goCtx := ctx.Request.Context()
 
@@ -89,6 +94,30 @@ func getUsernameByClientIdSecret(ctx *context.Context) string {
 	}
 
 	return fmt.Sprintf("app/%s", application.Name)
+}
+
+func getKeys(ctx *context.Context) (string, string) {
+	method := ctx.Request.Method
+
+	if method == http.MethodGet {
+		accessKey := ctx.Input.Query("accessKey")
+		accessSecret := ctx.Input.Query("accessSecret")
+		return accessKey, accessSecret
+	} else {
+		body := ctx.Input.RequestBody
+
+		if len(body) == 0 {
+			return ctx.Request.Form.Get("accessKey"), ctx.Request.Form.Get("accessSecret")
+		}
+
+		var obj Object
+		err := json.Unmarshal(body, &obj)
+		if err != nil {
+			return "", ""
+		}
+
+		return obj.AccessKey, obj.AccessSecret
+	}
 }
 
 func getUsernameByKeys(ctx *context.Context) string {

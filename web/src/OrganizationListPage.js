@@ -76,6 +76,7 @@ class OrganizationListPage extends BaseListPage {
         {name: "Signup application", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "API key", label: i18next.t("general:API key"), modifyRule: "Self"},
         {name: "Groups", visible: true, viewRule: "Public", modifyRule: "Admin"},
+        {name: "Mapping strategy", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "Roles", visible: true, viewRule: "Public", modifyRule: "Immutable"},
         {name: "Permissions", visible: true, viewRule: "Public", modifyRule: "Immutable"},
         {name: "3rd-party logins", visible: true, viewRule: "Self", modifyRule: "Self"},

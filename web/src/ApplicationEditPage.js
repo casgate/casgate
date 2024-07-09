@@ -36,6 +36,8 @@ import {Controlled as CodeMirror} from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
 import ThemeEditor from "./common/theme/ThemeEditor";
 
+import {appThemeComponents, appThemeToken} from "./theme";
+
 require("codemirror/theme/material-darker.css");
 require("codemirror/mode/htmlmixed/htmlmixed");
 require("codemirror/mode/xml/xml");
@@ -83,11 +85,11 @@ const sideTemplate = `<style>
   }
 </style>
 <div class="left-model">
-  <span class="side-logo"> <img src="https://cdn.casbin.org/img/casdoor-logo_1185x256.png" alt="Casdoor" style="width: 120px"> 
+  <span class="side-logo"> <img src="${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256.png" alt="Casdoor" style="width: 120px"> 
     <span>SSO</span> 
   </span>
   <div class="img">
-    <img src="https://cdn.casbin.org/img/casbin.svg" alt="Casdoor"/>
+    <img src="${Setting.StaticBaseUrl}/img/casbin.svg" alt="Casdoor"/>
   </div>
 </div>
 `;
@@ -494,6 +496,27 @@ class ApplicationEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("application:User mapping strategy"), i18next.t("application:User mapping strategy - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} style={{width: "100%"}}
+              options={[
+                {label: "all", value: "all"},
+                {label: "attribute", value: "attribute"},
+                {label: "role", value: "role"},
+                {label: "nothing", value: "nothing"},
+              ].map((item) => {
+                return Setting.getOption(item.label, item.value);
+              })}
+              value={this.state.application.userMappingStrategy ?? "all"}
+              onChange={(value => {
+                this.updateApplicationField("userMappingStrategy", value);
+              })} >
+            </Select>
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
             {Setting.getLabel(i18next.t("application:is Public"), i18next.t("application:is Public - Tooltip"))} :
           </Col>
           <Col span={1} >
@@ -618,16 +641,6 @@ class ApplicationEditPage extends React.Component {
                 this.updateApplicationField("signinHtml", e.target.value);
               }} />
             </Popover>
-          </Col>
-        </Row>
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Footer Text"), i18next.t("general:Footer Text - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Input value={this.state.application.footerText} onChange={e => {
-              this.updateApplicationField("footerText", e.target.value);
-            }} />
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >
@@ -957,10 +970,12 @@ class ApplicationEditPage extends React.Component {
           <br />
           <ConfigProvider theme={{
             token: {
+              ...appThemeToken,
               colorPrimary: themeData.colorPrimary,
               colorInfo: themeData.colorPrimary,
               borderRadius: themeData.borderRadius,
             },
+            components: appThemeComponents,
           }}>
             <div style={{position: "relative", width: previewWidth, border: "1px solid rgb(217,217,217)", boxShadow: "10px 10px 5px #888888", overflow: "auto"}}>
               {
@@ -989,10 +1004,12 @@ class ApplicationEditPage extends React.Component {
           <br />
           <ConfigProvider theme={{
             token: {
+              ...appThemeToken,
               colorPrimary: themeData.colorPrimary,
               colorInfo: themeData.colorPrimary,
               borderRadius: themeData.borderRadius,
             },
+            components: appThemeComponents,
           }}>
             <div style={{position: "relative", width: previewWidth, border: "1px solid rgb(217,217,217)", boxShadow: "10px 10px 5px #888888", overflow: "auto"}}>
               <div className="loginBackground" style={{backgroundImage: `url(${this.state.application?.formBackgroundUrl})`, overflow: "auto"}}>
@@ -1022,10 +1039,12 @@ class ApplicationEditPage extends React.Component {
         <br />
         <ConfigProvider theme={{
           token: {
+            ...appThemeToken,
             colorPrimary: themeData.colorPrimary,
             colorInfo: themeData.colorPrimary,
             borderRadius: themeData.borderRadius,
           },
+          components: appThemeComponents,
         }}>
           <div style={{position: "relative", width: previewWidth, border: "1px solid rgb(217,217,217)", boxShadow: "10px 10px 5px #888888", flexDirection: "column", flex: "auto"}}>
             <PromptPage application={this.state.application} account={this.props.account} />
