@@ -79,6 +79,10 @@ func GetUserByFieldCaseInsensitively(organizationName string, field string, valu
 
 
 func HasUserByField(organizationName string, field string, value string) bool {
+	if field == "email" {
+		value = strings.ToLower(value)
+	}
+
 	user, err := GetUserByField(organizationName, field, value)
 	if err != nil {
 		panic(err)
