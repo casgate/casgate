@@ -37,6 +37,8 @@ const (
 
 	DefaultFailedSigninLimit      = 5
 	DefaultFailedSigninFrozenTime = 15
+
+	builtInOrganization = "built-in"
 )
 
 func CheckUserSignup(application *Application, organization *Organization, form *form.AuthForm, lang string) string {
@@ -489,6 +491,10 @@ func CheckUserPermission(ctx context.Context, requestUserId, userId string, stri
 		}
 		if requestApp == nil {
 			return false, fmt.Errorf(i18n.Translate(lang, "check:Session outdated, please login again"))
+		}
+
+		if requestApp.Organization == builtInOrganization {
+			hasPermission = true
 		}
 
 		if requestApp.Organization == userOwner {
