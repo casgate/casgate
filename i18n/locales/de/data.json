@@ -10,6 +10,7 @@
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
+    "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "Die Challenge-Methode sollte S256 sein",
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Konnte nicht anmelden: %s",
@@ -24,6 +25,7 @@
     "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "Die Anmeldeart \"Anmeldung mit Passwort\" ist für die Anwendung nicht aktiviert",
     "The provider: %s is not enabled for the application": "Der Anbieter: %s ist nicht für die Anwendung aktiviert",
+    "Unable to get data from other organization without global administrator role": "Unable to get data from other organization without global administrator role",
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Nicht autorisierte Operation",
     "Unknown authentication type (not password or provider), form = %s": "Unbekannter Authentifizierungstyp (nicht Passwort oder Anbieter), Formular = %s",
@@ -94,6 +96,9 @@
     "You are not the global admin, you can't unlink other users": "Sie sind nicht der globale Administrator, Sie können keine anderen Benutzer trennen",
     "You can't unlink yourself, you are not a member of any application": "Du kannst dich nicht abmelden, du bist kein Mitglied einer Anwendung"
   },
+  "mt.Sprintf(\"auth": {
+    "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
+  },
   "organization": {
     "Only admin can modify the %s.": "Nur der Administrator kann das %s ändern.",
     "The %s is immutable.": "Das %s ist unveränderlich.",
@@ -142,8 +147,8 @@
   "util": {
     "No application is found for userId: %s": "Es wurde keine Anwendung für die Benutzer-ID gefunden: %s",
     "No provider for category: %s is found for application: %s": "Kein Anbieter für die Kategorie %s gefunden für die Anwendung: %s",
-    "The provider: %s is not found": "Der Anbieter: %s wurde nicht gefunden",
-    "The organization %s has dependencies and cannot be deleted": "Die Organisation %s hat Abhängigkeiten und kann nicht gelöscht werden"
+    "The organization %s has dependencies and cannot be deleted": "Die Organisation %s hat Abhängigkeiten und kann nicht gelöscht werden",
+    "The provider: %s is not found": "Der Anbieter: %s wurde nicht gefunden"
   },
   "verification": {
     "Code has not been sent yet!": "Der Code wurde noch nicht versendet!",

@@ -10,6 +10,7 @@
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
+    "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "Challenge方法应该为S256",
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "登录失败: %s",
@@ -24,6 +25,7 @@
     "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "该应用禁止采用密码登录方式",
     "The provider: %s is not enabled for the application": "该应用的提供商: %s未被启用",
+    "Unable to get data from other organization without global administrator role": "Unable to get data from other organization without global administrator role",
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "未授权的操作",
     "Unknown authentication type (not password or provider), form = %s": "未知的认证类型（非密码或第三方提供商）：%s",
@@ -94,6 +96,9 @@
     "You are not the global admin, you can't unlink other users": "您不是全局管理员，无法解绑其他用户",
     "You can't unlink yourself, you are not a member of any application": "您无法自行解绑，您不是任何应用程序的成员"
   },
+  "mt.Sprintf(\"auth": {
+    "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
+  },
   "organization": {
     "Only admin can modify the %s.": "仅允许管理员可以修改%s",
     "The %s is immutable.": "%s 是不可变的",
@@ -142,8 +147,8 @@
   "util": {
     "No application is found for userId: %s": "未找到用户: %s的应用",
     "No provider for category: %s is found for application: %s": "未找到类别为: %s的提供商来满足应用: %s",
-    "The provider: %s is not found": "未找到提供商: %s",
-    "The organization %s has dependencies and cannot be deleted": "组织%s具有依赖项，无法删除"
+    "The organization %s has dependencies and cannot be deleted": "组织%s具有依赖项，无法删除",
+    "The provider: %s is not found": "未找到提供商: %s"
   },
   "verification": {
     "Code has not been sent yet!": "验证码还未发送",

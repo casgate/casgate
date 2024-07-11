@@ -10,6 +10,7 @@
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
+    "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "도전 방식은 S256이어야 합니다",
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "로그인에 실패했습니다.: %s",
@@ -24,6 +25,7 @@
     "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "어플리케이션에서는 암호를 사용한 로그인 방법이 활성화되어 있지 않습니다",
     "The provider: %s is not enabled for the application": "제공자 %s은(는) 응용 프로그램에서 활성화되어 있지 않습니다",
+    "Unable to get data from other organization without global administrator role": "Unable to get data from other organization without global administrator role",
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "무단 조작",
     "Unknown authentication type (not password or provider), form = %s": "알 수 없는 인증 유형(암호 또는 공급자가 아님), 폼 = %s",
@@ -94,6 +96,9 @@
     "You are not the global admin, you can't unlink other users": "당신은 전역 관리자가 아니므로 다른 사용자와의 연결을 해제할 수 없습니다",
     "You can't unlink yourself, you are not a member of any application": "당신은 어떤 애플리케이션의 회원이 아니기 때문에 스스로 링크를 해제할 수 없습니다"
   },
+  "mt.Sprintf(\"auth": {
+    "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
+  },
   "organization": {
     "Only admin can modify the %s.": "관리자만 %s을(를) 수정할 수 있습니다.",
     "The %s is immutable.": "%s 는 변경할 수 없습니다.",
@@ -142,8 +147,8 @@
   "util": {
     "No application is found for userId: %s": "어플리케이션을 찾을 수 없습니다. userId: %s",
     "No provider for category: %s is found for application: %s": "어플리케이션 %s에서 %s 카테고리를 위한 공급자가 찾을 수 없습니다",
-    "The provider: %s is not found": "제공자: %s를 찾을 수 없습니다",
-    "The organization %s has dependencies and cannot be deleted": "조직에 종속성이 있으므로 삭제할 수 없습니다"
+    "The organization %s has dependencies and cannot be deleted": "조직에 종속성이 있으므로 삭제할 수 없습니다",
+    "The provider: %s is not found": "제공자: %s를 찾을 수 없습니다"
   },
   "verification": {
     "Code has not been sent yet!": "코드는 아직 전송되지 않았습니다!",
