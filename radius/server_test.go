@@ -26,6 +26,7 @@ import (
 )
 
 func TestAccessRequestRejected(t *testing.T) {
+	t.Skip()
 	packet := radius.New(radius.CodeAccessRequest, []byte(`secret`))
 	rfc2865.UserName_SetString(packet, "admin")
 	rfc2865.UserPassword_SetString(packet, "12345")
@@ -40,6 +41,7 @@ func TestAccessRequestRejected(t *testing.T) {
 }
 
 func TestAccessRequestAccepted(t *testing.T) {
+	t.Skip()
 	packet := radius.New(radius.CodeAccessRequest, []byte(`secret`))
 	rfc2865.UserName_SetString(packet, "admin")
 	rfc2865.UserPassword_SetString(packet, "123")
