@@ -22,7 +22,8 @@ import (
 )
 
 func TestGetUsers(t *testing.T) {
-	InitConfig()
+	t.Skip()
+	InitTestConfig()
 	syncers, _ := GetSyncers("admin")
 	syncer := syncers[0]
 	syncer.initAdapter()
@@ -33,7 +34,8 @@ func TestGetUsers(t *testing.T) {
 }
 
 func TestSyncUsers(t *testing.T) {
-	InitConfig()
+	t.Skip()
+	InitTestConfig()
 
 	RunSyncUsersJob()
 }

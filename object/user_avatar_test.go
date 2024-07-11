@@ -22,7 +22,7 @@ import (
 )
 
 func TestSyncPermanentAvatars(t *testing.T) {
-	InitConfig()
+	InitTestConfig()
 	InitDefaultStorageProvider()
 	proxy.InitHttpClient()
 
@@ -47,7 +47,7 @@ func TestSyncPermanentAvatars(t *testing.T) {
 }
 
 func TestUpdateAvatars(t *testing.T) {
-	InitConfig()
+	InitTestConfig()
 	InitDefaultStorageProvider()
 	proxy.InitHttpClient()
 

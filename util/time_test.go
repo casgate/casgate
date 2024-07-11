@@ -25,7 +25,7 @@ import (
 
 func Test_GetCurrentTime(t *testing.T) {
 	test := GetCurrentTime()
-	expected := time.Now().Format(time.RFC3339)
+	expected := time.Now().UTC().Format(time.RFC3339)
 
 	assert.Equal(t, test, expected, "The times not are equals")
 

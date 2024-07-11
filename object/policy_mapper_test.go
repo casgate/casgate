@@ -38,7 +38,7 @@ var modelRules = [][]string{
 func benchmarkUpdateRole(N int64, b *testing.B) {
 	testOrgName := fmt.Sprintf("%s-%d", testOrgNameDefault, N)
 	testModelName := fmt.Sprintf("%s-%d", testModelNameDefault, N)
-	InitConfig()
+	InitTestConfig()
 	clearDB(testOrgName, testModelName)
 	err := generateInitialData(N, testOrgName, testModelName)
 	if err != nil {
@@ -98,7 +98,7 @@ func BenchmarkUpdateRole(b *testing.B) {
 func benchmarkDeleteRoleFromPermission(N int64, b *testing.B) {
 	testOrgName := fmt.Sprintf("%s-%d", testOrgNameDefault, N)
 	testModelName := fmt.Sprintf("%s-%d", testModelNameDefault, N)
-	InitConfig()
+	InitTestConfig()
 	clearDB(testOrgName, testModelName)
 	err := generateInitialData(N, testOrgName, testModelName)
 	if err != nil {

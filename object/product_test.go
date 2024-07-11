@@ -18,7 +18,7 @@
 package object
 
 //func TestProduct(t *testing.T) {
-//	InitConfig()
+//	InitTestConfig()
 //
 //	product, _ := GetProduct("admin/product_123")
 //	provider, _ := getProvider(product.Owner, "provider_pay_alipay")

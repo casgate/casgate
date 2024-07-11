@@ -34,7 +34,7 @@ func updateUserColumn(column string, user *User) bool {
 }
 
 func TestSyncAvatarsFromGitHub(t *testing.T) {
-	InitConfig()
+	InitTestConfig()
 
 	users, _ := GetGlobalUsers()
 	for _, user := range users {
@@ -48,7 +48,7 @@ func TestSyncAvatarsFromGitHub(t *testing.T) {
 }
 
 func TestSyncIds(t *testing.T) {
-	InitConfig()
+	InitTestConfig()
 
 	users, _ := GetGlobalUsers()
 	for _, user := range users {
@@ -62,7 +62,7 @@ func TestSyncIds(t *testing.T) {
 }
 
 func TestSyncHashes(t *testing.T) {
-	InitConfig()
+	InitTestConfig()
 
 	users, _ := GetGlobalUsers()
 	for _, user := range users {
@@ -103,7 +103,7 @@ func TestGetMaskedUsers(t *testing.T) {
 }
 
 func TestGetUserByField(t *testing.T) {
-	InitConfig()
+	InitTestConfig()
 
 	user, _ := GetUserByField("built-in", "DingTalk", "test")
 	if user != nil {
@@ -114,7 +114,7 @@ func TestGetUserByField(t *testing.T) {
 }
 
 func TestGetEmailsForUsers(t *testing.T) {
-	InitConfig()
+	InitTestConfig()
 
 	emailMap := map[string]int{}
 	emails := []string{}

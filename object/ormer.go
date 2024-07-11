@@ -61,7 +61,9 @@ func getCreateDatabaseFlag() bool {
 	return *res
 }
 
-func InitConfig() {
+// InitTestConfig
+// Initialize database fixtures for testing.
+func InitTestConfig() {
 	err := beego.LoadAppConfig("ini", "../conf/app.conf")
 	if err != nil {
 		panic(err)
