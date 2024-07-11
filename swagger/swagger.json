@@ -6366,6 +6366,9 @@
                 },
                 "tokenFormat": {
                     "type": "string"
+                },
+                "userMappingStrategy": {
+                    "type": "string"
                 }
             }
         },
@@ -6738,6 +6741,9 @@
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                },
+                "userMappingStrategy": {
                     "type": "string"
                 }
             }
@@ -7738,6 +7744,9 @@
                 "owner": {
                     "type": "string"
                 },
+                "manualOverride": {
+                    "type": "boolean"
+                },
                 "roles": {
                     "type": "array",
                     "items": {
@@ -8576,6 +8585,9 @@
                     "type": "string"
                 },
                 "zoom": {
+                    "type": "string"
+                },
+                "mappingStrategy": {
                     "type": "string"
                 }
             }

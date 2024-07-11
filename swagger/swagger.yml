@@ -4172,6 +4172,8 @@ definitions:
           type: string
       tokenFormat:
         type: string
+      userMappingStrategy:
+        type: string
   object.AttributeMappingItem:
     title: AttributeMappingItem
     type: object
@@ -4423,6 +4425,8 @@ definitions:
       serverName:
         type: string
       username:
+        type: string
+      userMappingStrategy:
         type: string
   object.ManagedAccount:
     title: ManagedAccount
@@ -5106,6 +5110,8 @@ definitions:
         type: array
         items:
           type: string
+      manualOverride:
+        type: boolean
   object.RoleMappingItem:
     title: RoleMappingItem
     type: object
@@ -5659,6 +5665,8 @@ definitions:
       yandex:
         type: string
       zoom:
+        type: string
+      mappingStrategy:
         type: string
   object.UserApiToken:
     title: UserApiToken

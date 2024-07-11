@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -53,6 +54,8 @@ type Ldap struct {
 
 	EnableAttributeMapping bool                    `xorm:"bool" json:"enableAttributeMapping"`
 	AttributeMappingItems  []*AttributeMappingItem `xorm:"text" json:"attributeMappingItems"`
+
+	UserMappingStrategy string `xorm:"varchar(50)" json:"userMappingStrategy"`
 }
 
 func AddLdap(ldap *Ldap) (bool, error) {
@@ -163,7 +166,7 @@ func UpdateLdap(ldap *Ldap) (bool, error) {
 	affected, err := ormer.Engine.ID(ldap.Id).Cols("owner", "server_name", "host", "cert",
 		"port", "enable_ssl", "username", "password", "base_dn", "filter", "filter_fields", "auto_sync",
 		"role_mapping_items", "enable_case_insensitivity", "enable_role_mapping", "attribute_mapping_items", "enable_attribute_mapping",
-		"enable_cryptographic_auth", "client_cert").Update(ldap)
+		"enable_cryptographic_auth", "client_cert", "user_mapping_strategy").Update(ldap)
 	if err != nil {
 		return false, nil
 	}

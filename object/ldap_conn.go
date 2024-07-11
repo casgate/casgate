@@ -73,13 +73,13 @@ func (ldap *Ldap) GetLdapConn(ctx context.Context) (*LdapConn, error) {
 
 	stopCh := make(chan struct{})
 	util.SafeGoroutine(func() {
-        <-ctx.Done()
-        close(stopCh)
-    })
+		<-ctx.Done()
+		close(stopCh)
+	})
 
 	dialer := &net.Dialer{
 		Timeout: goldap.DefaultTimeout,
-		Cancel: stopCh,
+		Cancel:  stopCh,
 	}
 
 	if ldap.EnableSsl {
@@ -453,6 +453,7 @@ func SyncLdapUsers(ctx context.Context, owner string, syncUsers []LdapUser, ldap
 				Score:             score,
 				Ldap:              syncUser.Uuid,
 				Properties:        map[string]string{},
+				MappingStrategy:   ldap.UserMappingStrategy,
 			}
 
 			if organization.DefaultApplication != "" {
@@ -487,13 +488,19 @@ func SyncLdapUsers(ctx context.Context, owner string, syncUsers []LdapUser, ldap
 			return existUsers, failedUsers, err
 		}
 
-		if ldap.EnableRoleMapping {
-			err = SyncRoles(syncUser, name, owner)
+		if found && ldap.EnableAttributeMapping {
+			err = SyncLdapAttributes(syncUser, name, owner)
 			if err != nil {
 				return existUsers, failedUsers, err
 			}
 		}
 
+		if ldap.EnableRoleMapping {
+			err = SyncLdapRoles(syncUser, name, owner)
+			if err != nil {
+				return existUsers, failedUsers, err
+			}
+		}
 	}
 
 	return existUsers, failedUsers, err
