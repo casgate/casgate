@@ -434,6 +434,8 @@ func GetUserByEmail(owner string, email string) (*User, error) {
 		return nil, nil
 	}
 
+	email = strings.ToLower(email)
+
 	user := User{Owner: owner, Email: email}
 	existed, err := ormer.Engine.Get(&user)
 	if err != nil {
@@ -598,6 +600,8 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 	if user.Password == "***" {
 		user.Password = oldUser.Password
 	}
+
+	user.Email = strings.ToLower(user.Email)
 
 	if user.Avatar != oldUser.Avatar && user.Avatar != "" && user.PermanentAvatar != "*" {
 		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
@@ -813,6 +817,8 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 		return false, nil
 	}
 
+	user.Email = strings.ToLower(user.Email)
+
 	organization, _ := GetOrganizationByUser(user)
 	if organization == nil {
 		return false, nil
@@ -892,6 +898,8 @@ func AddUsers(users []*User) (bool, error) {
 		}
 
 		user.PreHash = user.Hash
+
+		user.Email = strings.ToLower(user.Email)
 
 		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, true)
 		if err != nil {

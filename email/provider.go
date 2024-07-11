@@ -14,14 +14,16 @@
 
 package email
 
+import "crypto/tls"
+
 type EmailProvider interface {
 	Send(fromAddress string, fromName, toAddress string, subject string, content string) error
 }
 
-func GetEmailProvider(typ string, clientId string, clientSecret string, host string, port int, disableSsl bool) EmailProvider {
+func GetEmailProvider(typ string, clientId string, clientSecret string, host string, port int, disableSsl bool, tlsConfig *tls.Config) EmailProvider {
 	if typ == "Azure ACS" {
 		return NewAzureACSEmailProvider(clientSecret, host)
 	} else {
-		return NewSmtpEmailProvider(clientId, clientSecret, host, port, typ, disableSsl)
+		return NewSmtpEmailProvider(clientId, clientSecret, host, port, typ, disableSsl, tlsConfig)
 	}
 }

@@ -23,20 +23,39 @@ import (
 	"github.com/casdoor/gomail/v2"
 )
 
-func getDialer(provider *Provider) *gomail.Dialer {
+func getDialer(provider *Provider) (*gomail.Dialer, error) {
 	dialer := &gomail.Dialer{}
 	dialer = gomail.NewDialer(provider.Host, provider.Port, provider.ClientId, provider.ClientSecret)
+
+	if provider.Cert != "" {
+		conf, err := GetTlsConfigForCert(provider.Cert)
+		if err != nil {
+			return nil, err
+		}
+		conf.ServerName = provider.Host
+		dialer.TLSConfig = conf	
+	}
+
 	if provider.Type == "SUBMAIL" {
 		dialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 
 	dialer.SSL = !provider.DisableSsl
 
-	return dialer
+	return dialer, nil
 }
 
 func SendEmail(provider *Provider, title string, content string, dest string, sender string) error {
-	emailProvider := email.GetEmailProvider(provider.Type, provider.ClientId, provider.ClientSecret, provider.Host, provider.Port, provider.DisableSsl)
+	var conf *tls.Config
+	var err error
+	if provider.Cert != "" {
+		conf, err = GetTlsConfigForCert(provider.Cert)
+		if err != nil {
+			return err
+		}	
+		conf.ServerName = provider.Host
+	}
+	emailProvider := email.GetEmailProvider(provider.Type, provider.ClientId, provider.ClientSecret, provider.Host, provider.Port, provider.DisableSsl, conf)
 
 	fromAddress := provider.ClientId2
 	if fromAddress == "" {
@@ -53,7 +72,10 @@ func SendEmail(provider *Provider, title string, content string, dest string, se
 
 // DailSmtpServer Dail Smtp server
 func DailSmtpServer(provider *Provider) error {
-	dialer := getDialer(provider)
+	dialer, err := getDialer(provider)
+	if err != nil {
+		return err
+	}
 
 	sender, err := dialer.Dial()
 	if err != nil {

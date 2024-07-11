@@ -211,7 +211,7 @@ func ExpireTokenByAccessToken(ctx context.Context, accessToken string) (bool, *A
 		return false, nil, nil, err
 	}
 
-	application, err := getApplication(ctx, token.Owner, token.Application)
+	application, err := getApplication(ctx, token.Owner, token.Application, nil)
 	if err != nil {
 		return false, nil, nil, err
 	}
@@ -631,7 +631,7 @@ func GetPasswordToken(ctx context.Context, application *Application, username st
 	}
 
 	if user.Ldap != "" {
-		_, err = CheckLdapUserPassword(user, password, "en")
+		_, err = CheckLdapUserPassword(user, password, "en", "")
 	} else {
 		err = CheckPassword(ctx, user, password, "en")
 	}

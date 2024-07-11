@@ -44,3 +44,25 @@ code {
 .ant-list-sm .ant-list-item {
   padding: 2px !important;
 }
+
+#signup .ant-form-item .ant-form-item-label {
+  height: 48px;
+  display: inline-grid;
+  align-items: center;
+  white-space: normal;
+  padding-inline-end: 8px;
+}
+
+#signup .ant-form-item .ant-form-item-label > label {
+  height: auto;
+  display: block;
+}
+
+#signup .ant-form-item .ant-form-item-label > label::before {
+  display: inline;
+}
+
+#signup .ant-form-item .ant-form-item-label > label::after {
+  display: inline;
+  margin: 0;
+}

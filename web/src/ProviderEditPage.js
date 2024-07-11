@@ -1010,6 +1010,22 @@ class ProviderEditPage extends React.Component {
                   }} />
                 </Col>
               </Row>
+              <Row style={{marginTop: "20px"}} >
+                <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+                  {Setting.getLabel(i18next.t("cert:CA Certificate"), i18next.t("cert:CA Certificate - Tooltip"))} :
+                </Col>
+                <Col span={21} >
+                  <Select virtual={false} style={{width: "100%"}} value={this.state.provider.cert} onChange={(value => {this.updateProviderField("cert", value);})}>
+                    {
+                      this.state.caCerts.map((cert, index) => <Option key={index} value={cert.name}>{cert.name}</Option>)
+                    }
+                  </Select>
+                </Col>
+                <Col style={{paddingLeft: "5px"}} span={1} >
+                  <Button icon={<ClearOutlined />} type="text" onClick={() => {this.updateProviderField("cert", "");}} >
+                  </Button>
+                </Col>
+              </Row>
               {["Azure ACS"].includes(this.state.provider.type) ? null : (
                 <Row style={{marginTop: "20px"}} >
                   <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>

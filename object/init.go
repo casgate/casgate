@@ -168,7 +168,7 @@ func initBuiltInUser(ctx context.Context) {
 }
 
 func initBuiltInApplication(ctx context.Context) {
-	application, err := getApplication(ctx, "admin", "app-built-in")
+	application, err := getApplication(ctx, "admin", "app-built-in", nil)
 	if err != nil {
 		panic(err)
 	}

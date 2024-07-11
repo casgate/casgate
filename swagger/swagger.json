@@ -1837,6 +1837,55 @@
                 }
             }
         },
+        "/api/get-auth-url": {
+            "get": {
+                "tags": [
+                    "Login API"
+                ],
+                "description": "get auth url",
+                "operationId": "ApiController.GetAuthURL",
+                "parameters": [
+                    {
+                        "name": "providerID",
+                        "in": "query",
+                        "description": "The id ( owner/name ) of the provider",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "applicationID",
+                        "in": "query",
+                        "description": "The id ( owner/name ) of the application",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "method",
+                        "in": "query",
+                        "description": "Query method",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/api/get-application": {
             "get": {
                 "tags": [
