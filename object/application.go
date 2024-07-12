@@ -108,6 +108,12 @@ type Application struct {
 
 	FailedSigninLimit      int `json:"failedSigninLimit"`
 	FailedSigninFrozenTime int `json:"failedSigninFrozenTime"`
+
+	UserMappingStrategy string `xorm:"varchar(50)" json:"userMappingStrategy"`
+}
+
+type GetApplicationOptions struct {
+	InitOpenIDProvider bool
 }
 
 func GetApplicationCount(owner, field, value string) (int64, error) {
@@ -195,7 +201,7 @@ func getProviderMap(owner string) (m map[string]*Provider, err error) {
 	return m, err
 }
 
-func extendApplicationWithProviders(ctx context.Context, application *Application) (err error) {
+func extendApplicationWithProviders(ctx context.Context, application *Application, initOpenIDProvider bool) (err error) {
 	m, err := getProviderMap(application.Organization)
 	if err != nil {
 		return err
@@ -205,7 +211,7 @@ func extendApplicationWithProviders(ctx context.Context, application *Applicatio
 
 	for _, providerItem := range application.Providers {
 		if provider, ok := m[providerItem.Name]; ok {
-			if provider.Type == "OpenID" {
+			if provider.Type == "OpenID" && initOpenIDProvider {
 				err := updateOpenIDWithUrls(provider)
 				if err != nil {
 					record.AddReason(fmt.Sprintf("failed updateOpenIDWithUrls for provider %s: %s", provider.Name, err.Error()))
@@ -271,7 +277,7 @@ func extendApplicationWithSigninMethods(application *Application) (err error) {
 	return
 }
 
-func getApplication(ctx context.Context, owner string, name string) (*Application, error) {
+func getApplication(ctx context.Context, owner string, name string, opts *GetApplicationOptions) (*Application, error) {
 	if owner == "" || name == "" {
 		return nil, nil
 	}
@@ -282,8 +288,13 @@ func getApplication(ctx context.Context, owner string, name string) (*Applicatio
 		return nil, err
 	}
 
+	var initOpenIDProvider bool
+	if opts != nil {
+		initOpenIDProvider = opts.InitOpenIDProvider
+	}
+
 	if existed {
-		err = extendApplicationWithProviders(ctx, &application)
+		err = extendApplicationWithProviders(ctx, &application, initOpenIDProvider)
 		if err != nil {
 			return nil, err
 		}
@@ -312,7 +323,7 @@ func GetApplicationByOrganizationName(ctx context.Context, organization string) 
 	}
 
 	if existed {
-		err = extendApplicationWithProviders(ctx, &application)
+		err = extendApplicationWithProviders(ctx, &application, false)
 		if err != nil {
 			return nil, err
 		}
@@ -335,7 +346,7 @@ func GetApplicationByOrganizationName(ctx context.Context, organization string) 
 
 func GetApplicationByUser(ctx context.Context, user *User) (*Application, error) {
 	if user.SignupApplication != "" {
-		return getApplication(ctx, "admin", user.SignupApplication)
+		return getApplication(ctx, "admin", user.SignupApplication, nil)
 	} else {
 		return GetApplicationByOrganizationName(ctx, user.Owner)
 	}
@@ -344,7 +355,7 @@ func GetApplicationByUser(ctx context.Context, user *User) (*Application, error)
 func GetApplicationByUserId(ctx context.Context, userId string) (application *Application, err error) {
 	owner, name := util.GetOwnerAndNameFromId(userId)
 	if owner == "app" {
-		application, err = getApplication(ctx, "admin", name)
+		application, err = getApplication(ctx, "admin", name, nil)
 		return
 	}
 
@@ -364,7 +375,7 @@ func GetApplicationByClientId(ctx context.Context, clientId string) (*Applicatio
 	}
 
 	if existed {
-		err = extendApplicationWithProviders(ctx, &application)
+		err = extendApplicationWithProviders(ctx, &application, false)
 		if err != nil {
 			return nil, err
 		}
@@ -387,7 +398,12 @@ func GetApplicationByClientId(ctx context.Context, clientId string) (*Applicatio
 
 func GetApplication(ctx context.Context, id string) (*Application, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	return getApplication(ctx, owner, name)
+	return getApplication(ctx, owner, name, nil)
+}
+
+func GetApplicationWithOpts(ctx context.Context, id string, opts *GetApplicationOptions) (*Application, error) {
+	owner, name := util.GetOwnerAndNameFromId(id)
+	return getApplication(ctx, owner, name, opts)
 }
 
 func GetMaskedApplication(application *Application, userId string) *Application {
@@ -453,7 +469,7 @@ func GetMaskedApplications(applications []*Application, userId string) []*Applic
 
 func UpdateApplication(ctx context.Context, id string, application *Application) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	oldApplication, err := getApplication(ctx, owner, name)
+	oldApplication, err := getApplication(ctx, owner, name, nil)
 	if oldApplication == nil {
 		return false, err
 	}

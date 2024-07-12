@@ -54,6 +54,7 @@ class LdapTable extends React.Component {
       attributeMappingItems: [],
       roleMappingItems: [],
       enableRoleMapping: false,
+      userMappingStrategy: "all",
     };
   }
 

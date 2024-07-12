@@ -73,13 +73,13 @@ func (ldap *Ldap) GetLdapConn(ctx context.Context) (*LdapConn, error) {
 
 	stopCh := make(chan struct{})
 	util.SafeGoroutine(func() {
-        <-ctx.Done()
-        close(stopCh)
-    })
+		<-ctx.Done()
+		close(stopCh)
+	})
 
 	dialer := &net.Dialer{
 		Timeout: goldap.DefaultTimeout,
-		Cancel: stopCh,
+		Cancel:  stopCh,
 	}
 
 	if ldap.EnableSsl {
@@ -216,7 +216,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 
 	var attributeMappingMap AttributeMappingMap
 	if ldapServer.EnableAttributeMapping {
-		attributeMappingMap = buildAttributeMappingMap(ldapServer.AttributeMappingItems)
+		attributeMappingMap = buildAttributeMappingMap(ldapServer.AttributeMappingItems, ldapServer.EnableCaseInsensitivity)
 		SearchAttributes = append(SearchAttributes, attributeMappingMap.Keys()...)
 	}
 
@@ -239,7 +239,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 
 	var roleMappingMap RoleMappingMap
 	if ldapServer.EnableRoleMapping {
-		roleMappingMap = buildRoleMappingMap(ldapServer.RoleMappingItems)
+		roleMappingMap = buildRoleMappingMap(ldapServer.RoleMappingItems, ldapServer.EnableCaseInsensitivity)
 	}
 
 	var ldapUsers []LdapUser
@@ -247,7 +247,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 		var user LdapUser
 
 		if ldapServer.EnableAttributeMapping {
-			unmappedAttributes := MapAttributesToUser(entry, &user, attributeMappingMap)
+			unmappedAttributes := MapAttributesToUser(entry, &user, attributeMappingMap, ldapServer.EnableCaseInsensitivity)
 			if len(unmappedAttributes) > 0 {
 				rb.AddReason(fmt.Sprintf("User (%s) has unmapped attributes: %s", entry.DN, strings.Join(unmappedAttributes, ", ")))
 			}
@@ -256,8 +256,16 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 		for _, attribute := range entry.Attributes {
 			// check attribute value with role mapping rules
 			if ldapServer.EnableRoleMapping {
-				if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attribute.Name)]; ok {
+				attributeName := attribute.Name
+				if ldapServer.EnableCaseInsensitivity {
+					attributeName = strings.ToLower(attributeName)
+				}
+
+				if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attributeName)]; ok {
 					for _, value := range attribute.Values {
+						if ldapServer.EnableCaseInsensitivity {
+							value = strings.ToLower(value)
+						}
 						if roleMappingMapRoles, ok := roleMappingMapItem[RoleMappingItemValue(value)]; ok {
 							user.Roles = append(user.Roles, roleMappingMapRoles.StrRoles()...)
 						}
@@ -445,6 +453,7 @@ func SyncLdapUsers(ctx context.Context, owner string, syncUsers []LdapUser, ldap
 				Score:             score,
 				Ldap:              syncUser.Uuid,
 				Properties:        map[string]string{},
+				MappingStrategy:   ldap.UserMappingStrategy,
 			}
 
 			if organization.DefaultApplication != "" {
@@ -479,13 +488,19 @@ func SyncLdapUsers(ctx context.Context, owner string, syncUsers []LdapUser, ldap
 			return existUsers, failedUsers, err
 		}
 
-		if ldap.EnableRoleMapping {
-			err = SyncRoles(syncUser, name, owner)
+		if found && ldap.EnableAttributeMapping {
+			err = SyncLdapAttributes(syncUser, name, owner)
 			if err != nil {
 				return existUsers, failedUsers, err
 			}
 		}
 
+		if ldap.EnableRoleMapping {
+			err = SyncLdapRoles(syncUser, name, owner)
+			if err != nil {
+				return existUsers, failedUsers, err
+			}
+		}
 	}
 
 	return existUsers, failedUsers, err
@@ -604,7 +619,7 @@ func SyncUserFromLdap(ctx context.Context, organization string, ldapId string, u
 			continue
 		}
 
-		_, err = CheckLdapUserPassword(user, password, lang)
+		_, err = CheckLdapUserPassword(user, password, lang, "")
 		if err != nil {
 			conn.Close()
 			return nil, err
