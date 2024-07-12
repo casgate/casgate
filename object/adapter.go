@@ -16,7 +16,6 @@ package object
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
@@ -174,9 +173,9 @@ func (adapter *Adapter) InitAdapter() error {
 		}
 	}
 
-	if !isCloudIntranet {
-		dataSourceName = strings.ReplaceAll(dataSourceName, "dbi.", "db.")
-	}
+	// if !isCloudIntranet {
+	// 	dataSourceName = strings.ReplaceAll(dataSourceName, "dbi.", "db.")
+	// }
 
 	engine, err := xorm.NewEngine(driverName, dataSourceName)
 	if err != nil {

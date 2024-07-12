@@ -183,13 +183,6 @@ func initAPI() {
 	beego.Router("/api/add-application", &controllers.ApiController{}, "POST:AddApplication")
 	beego.Router("/api/delete-application", &controllers.ApiController{}, "POST:DeleteApplication")
 
-	beego.Router("/api/get-resources", &controllers.ApiController{}, "GET:GetResources")
-	beego.Router("/api/get-resource", &controllers.ApiController{}, "GET:GetResource")
-	beego.Router("/api/update-resource", &controllers.ApiController{}, "POST:UpdateResource")
-	beego.Router("/api/add-resource", &controllers.ApiController{}, "POST:AddResource")
-	beego.Router("/api/delete-resource", &controllers.ApiController{}, "POST:DeleteResource")
-	beego.Router("/api/upload-resource", &controllers.ApiController{}, "POST:UploadResource")
-
 	beego.Router("/api/get-tokens", &controllers.ApiController{}, "GET:GetTokens")
 	beego.Router("/api/get-token", &controllers.ApiController{}, "GET:GetToken")
 	beego.Router("/api/update-token", &controllers.ApiController{}, "POST:UpdateToken")

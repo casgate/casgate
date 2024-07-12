@@ -45,7 +45,6 @@ func main() {
 
 	object.InitDb(ctx)
 	object.InitFromFile(ctx)
-	object.InitDefaultStorageProvider()
 	object.InitLdapAutoSynchronizer(ctx)
 	proxy.InitHttpClient()
 	object.InitUserManager()

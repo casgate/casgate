@@ -122,7 +122,7 @@ export const TourObj = {
   providers: [
     {
       title: "Provider List",
-      description: "We have 6 kinds of providers:OAuth providers、SMS Providers、Email Providers、Storage Providers、Payment Provider、Captcha Provider.",
+      description: "We have 4 kinds of providers:OAuth providers、SMS Providers、Email Providers、Captcha Provider.",
     },
     {
       title: "Provider Add",
@@ -161,7 +161,7 @@ export const TourObj = {
   ],
 };
 
-export const TourUrlList = ["home", "organizations", "groups", "users", "applications", "providers", "resources", "roles", "permissions", "models", "adapters", "enforcers", "tokens", "sessions", "products", "payments", "plans", "pricings", "subscriptions", "sysinfo", "syncers", "webhooks"];
+export const TourUrlList = ["home", "organizations", "groups", "users", "applications", "providers", "roles", "permissions", "models", "adapters", "enforcers", "tokens", "sessions", "sysinfo", "webhooks"];
 
 export function getNextUrl(pathName = window.location.pathname) {
   return TourUrlList[TourUrlList.indexOf(pathName.replace("/", "")) + 1] || "";
