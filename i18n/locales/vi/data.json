@@ -100,7 +100,8 @@
   },
   "provider": {
     "Invalid application id": "Sai ID ứng dụng",
-    "the provider: %s does not exist": "Nhà cung cấp: %s không tồn tại"
+    "the provider: %s does not exist": "Nhà cung cấp: %s không tồn tại",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port"
   },
   "resource": {
     "User is nil for tag: avatar": "Người dùng không có giá trị cho thẻ: hình đại diện",

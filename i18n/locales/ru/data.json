@@ -100,7 +100,8 @@
   },
   "provider": {
     "Invalid application id": "Неверный идентификатор приложения",
-    "the provider: %s does not exist": "провайдер: %s не существует"
+    "the provider: %s does not exist": "провайдер: %s не существует",
+    "The provider's email server does not support insecure connections to the specified port": "Сервер провайдера электронной почты не поддерживает безопасное соединение с указанным портом"
   },
   "resource": {
     "User is nil for tag: avatar": "Пользователь равен нулю для тега: аватар",

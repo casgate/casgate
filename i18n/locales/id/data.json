@@ -100,7 +100,8 @@
   },
   "provider": {
     "Invalid application id": "ID aplikasi tidak valid",
-    "the provider: %s does not exist": "provider: %s tidak ada"
+    "the provider: %s does not exist": "provider: %s tidak ada",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port"
   },
   "resource": {
     "User is nil for tag: avatar": "Pengguna kosong untuk tag: avatar",

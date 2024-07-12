@@ -100,7 +100,8 @@
   },
   "provider": {
     "Invalid application id": "Identificación de aplicación no válida",
-    "the provider: %s does not exist": "El proveedor: %s no existe"
+    "the provider: %s does not exist": "El proveedor: %s no existe",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port"
   },
   "resource": {
     "User is nil for tag: avatar": "El usuario es nulo para la etiqueta: avatar",
