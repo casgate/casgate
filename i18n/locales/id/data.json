@@ -54,7 +54,7 @@
     "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
     "The user is forbidden to sign in, please contact the administrator": "Pengguna dilarang masuk, silakan hubungi administrator",
     "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
-    "LDAP users are required to authenticate through the LDAP tab": "LDAP users are required to authenticate through the LDAP tab",
+    "Go to the LDAP tab and select the specific connection you have configured": "Go to the LDAP tab and select the specific connection you have configured",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "Nama pengguna hanya bisa menggunakan karakter alfanumerik, garis bawah atau tanda hubung, tidak boleh memiliki dua tanda hubung atau garis bawah berurutan, dan tidak boleh diawali atau diakhiri dengan tanda hubung atau garis bawah.",
     "Username already exists": "Nama pengguna sudah ada",
     "Username cannot contain white spaces": "Username tidak boleh mengandung spasi",
