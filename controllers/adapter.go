@@ -64,6 +64,10 @@ func (c *ApiController) GetAdapter() {
 		c.ResponseError(err.Error())
 		return
 	}
+	if adapter == nil {
+		c.ResponseOk()
+		return
+	}
 	c.ValidateOrganization(adapter.Owner)
 
 	c.ResponseOk(adapter)
