@@ -20,7 +20,7 @@ import ShortcutsPage from "./basic/ShortcutsPage";
 import {MfaRuleRequired} from "./Setting";
 import * as Setting from "./Setting";
 import {StyleProvider, legacyLogicalPropertiesTransformer} from "@ant-design/cssinjs";
-import {AppstoreTwoTone, BarsOutlined, DollarTwoTone, DownOutlined, HomeTwoTone, InfoCircleFilled, LockTwoTone, LogoutOutlined, SafetyCertificateTwoTone, SettingOutlined, SettingTwoTone, WalletTwoTone} from "@ant-design/icons";
+import {AppstoreTwoTone, BarsOutlined, DownOutlined, HomeTwoTone, InfoCircleFilled, LockTwoTone, LogoutOutlined, SafetyCertificateTwoTone, SettingOutlined, SettingTwoTone, WalletTwoTone} from "@ant-design/icons";
 import {Alert, Avatar, Button, Card, ConfigProvider, Drawer, Dropdown, FloatButton, Layout, Menu, Result} from "antd";
 import {Link, Redirect, Route, Switch, withRouter} from "react-router-dom";
 import OrganizationListPage from "./OrganizationListPage";
@@ -48,22 +48,8 @@ import TokenEditPage from "./TokenEditPage";
 import RecordListPage from "./RecordListPage";
 import WebhookListPage from "./WebhookListPage";
 import WebhookEditPage from "./WebhookEditPage";
-import SyncerListPage from "./SyncerListPage";
-import SyncerEditPage from "./SyncerEditPage";
 import CertListPage from "./CertListPage";
 import CertEditPage from "./CertEditPage";
-import SubscriptionListPage from "./SubscriptionListPage";
-import SubscriptionEditPage from "./SubscriptionEditPage";
-import PricingListPage from "./PricingListPage";
-import PricingEditPage from "./PricingEditPage";
-import PlanListPage from "./PlanListPage";
-import PlanEditPage from "./PlanEditPage";
-import ProductListPage from "./ProductListPage";
-import ProductEditPage from "./ProductEditPage";
-import ProductBuyPage from "./ProductBuyPage";
-import PaymentListPage from "./PaymentListPage";
-import PaymentEditPage from "./PaymentEditPage";
-import PaymentResultPage from "./PaymentResultPage";
 import ModelListPage from "./ModelListPage";
 import ModelEditPage from "./ModelEditPage";
 import AdapterListPage from "./AdapterListPage";
@@ -464,14 +450,6 @@ class App extends Component {
         Setting.getItem(<Link to="/tokens">{i18next.t("general:Tokens")}</Link>, "/tokens"),
       ]));
 
-      res.push(Setting.getItem(<Link style={{color: "black"}} to="/products">{i18next.t("general:Business & Payments")}</Link>, "/business", <DollarTwoTone />, [
-        Setting.getItem(<Link to="/products">{i18next.t("general:Products")}</Link>, "/products"),
-        Setting.getItem(<Link to="/payments">{i18next.t("general:Payments")}</Link>, "/payments"),
-        Setting.getItem(<Link to="/plans">{i18next.t("general:Plans")}</Link>, "/plans"),
-        Setting.getItem(<Link to="/pricings">{i18next.t("general:Pricings")}</Link>, "/pricings"),
-        Setting.getItem(<Link to="/subscriptions">{i18next.t("general:Subscriptions")}</Link>, "/subscriptions"),
-      ]));
-
       if (Setting.isAdminUser(this.state.account)) {
         res.push(Setting.getItem(<Link style={{color: "black"}} to="/sysinfo">{i18next.t("general:Admin")}</Link>, "/admin", <SettingTwoTone />, [
           Setting.getItem(<Link to="/sysinfo">{i18next.t("general:System Info")}</Link>, "/sysinfo"),
@@ -540,22 +518,8 @@ class App extends Component {
         <Route exact path="/tokens/:tokenName" render={(props) => this.renderLoginIfNotLoggedIn(<TokenEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/webhooks" render={(props) => this.renderLoginIfNotLoggedIn(<WebhookListPage account={this.state.account} {...props} />)} />
         <Route exact path="/webhooks/:webhookName" render={(props) => this.renderLoginIfNotLoggedIn(<WebhookEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/syncers" render={(props) => this.renderLoginIfNotLoggedIn(<SyncerListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/syncers/:syncerName" render={(props) => this.renderLoginIfNotLoggedIn(<SyncerEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/certs" render={(props) => this.renderLoginIfNotLoggedIn(<CertListPage account={this.state.account} {...props} />)} />
         <Route exact path="/certs/:organizationName/:certName" render={(props) => this.renderLoginIfNotLoggedIn(<CertEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/plans" render={(props) => this.renderLoginIfNotLoggedIn(<PlanListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/plans/:organizationName/:planName" render={(props) => this.renderLoginIfNotLoggedIn(<PlanEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/pricings" render={(props) => this.renderLoginIfNotLoggedIn(<PricingListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/pricings/:organizationName/:pricingName" render={(props) => this.renderLoginIfNotLoggedIn(<PricingEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/subscriptions" render={(props) => this.renderLoginIfNotLoggedIn(<SubscriptionListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/subscriptions/:organizationName/:subscriptionName" render={(props) => this.renderLoginIfNotLoggedIn(<SubscriptionEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/products" render={(props) => this.renderLoginIfNotLoggedIn(<ProductListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/products/:organizationName/:productName" render={(props) => this.renderLoginIfNotLoggedIn(<ProductEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/products/:organizationName/:productName/buy" render={(props) => this.renderLoginIfNotLoggedIn(<ProductBuyPage account={this.state.account} {...props} />)} />
-        <Route exact path="/payments" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentListPage account={this.state.account} {...props} />)} />
-        <Route exact path="/payments/:organizationName/:paymentName" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/payments/:organizationName/:paymentName/result" render={(props) => this.renderLoginIfNotLoggedIn(<PaymentResultPage account={this.state.account} {...props} />)} />
         <Route exact path="/records" render={(props) => this.renderLoginIfNotLoggedIn(<RecordListPage account={this.state.account} {...props} />)} />
         <Route exact path="/mfa/setup" render={(props) => this.renderLoginIfNotLoggedIn(<MfaSetupPage account={this.state.account} onfinish={() => this.setState({requiredEnableMfa: false})} {...props} />)} />
         <Route exact path="/.well-known/openid-configuration" render={(props) => <OdicDiscoveryPage />} />

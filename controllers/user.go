@@ -372,14 +372,6 @@ func (c *ApiController) UpdateUser() {
 		return
 	}
 
-	if affected {
-		err = object.UpdateUserToOriginalDatabase(&user)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-	}
-
 	record.AddOldObject(oldUser).AddReason("Update user")
 
 	c.Data["json"] = wrapActionResponse(affected)
