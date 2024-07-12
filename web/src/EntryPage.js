@@ -27,7 +27,6 @@ import PromptPage from "./auth/PromptPage";
 import ResultPage from "./auth/ResultPage";
 import CasLogout from "./auth/CasLogout";
 import {authConfig} from "./auth/Auth";
-import QrCodePage from "./QrCodePage";
 
 class EntryPage extends React.Component {
   constructor(props) {
@@ -89,7 +88,6 @@ class EntryPage extends React.Component {
           <Route exact path="/result/:applicationName" render={(props) => this.renderHomeIfLoggedIn(<ResultPage {...this.props} application={this.state.application} onUpdateApplication={onUpdateApplication} {...props} />)} />
           <Route exact path="/cas/:owner/:casApplicationName/logout" render={(props) => this.renderHomeIfLoggedIn(<CasLogout {...this.props} application={this.state.application} onUpdateApplication={onUpdateApplication} {...props} />)} />
           <Route exact path="/cas/:owner/:casApplicationName/login" render={(props) => {return (<LoginPage {...this.props} application={this.state.application} type={"cas"} mode={"signin"} onUpdateApplication={onUpdateApplication} {...props} />);}} />
-          <Route exact path="/qrcode/:owner/:paymentName" render={(props) => <QrCodePage {...this.props} onUpdateApplication={onUpdateApplication} {...props} />} />
         </Switch>
       </div>
     );

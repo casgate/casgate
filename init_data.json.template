@@ -265,36 +265,6 @@
       "users": []
     }
   ],
-  "syncers": [
-    {
-      "affiliationTable": "",
-      "avatarBaseUrl": "",
-      "database": "",
-      "databaseType": "",
-      "errorText": "",
-      "host": "",
-      "isEnabled": false,
-      "name": "",
-      "organization": "",
-      "owner": "",
-      "password": "",
-      "port": 0,
-      "syncInterval": 0,
-      "table": "",
-      "tableColumns": [
-        {
-          "casdoorName": "",
-          "isHashed": true,
-          "name": "",
-          "type": "",
-          "values": []
-        }
-      ],
-      "tablePrimaryKey": "",
-      "type": "",
-      "user": ""
-    }
-  ],
   "tokens": [
     {
       "accessToken": "",

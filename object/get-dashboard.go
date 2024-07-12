@@ -24,7 +24,6 @@ type Dashboard struct {
 	UserCounts         []int `json:"userCounts"`
 	ProviderCounts     []int `json:"providerCounts"`
 	ApplicationCounts  []int `json:"applicationCounts"`
-	SubscriptionCounts []int `json:"subscriptionCounts"`
 }
 
 func GetDashboard(owner string) (*Dashboard, error) {
@@ -33,7 +32,6 @@ func GetDashboard(owner string) (*Dashboard, error) {
 		UserCounts:         make([]int, 31),
 		ProviderCounts:     make([]int, 31),
 		ApplicationCounts:  make([]int, 31),
-		SubscriptionCounts: make([]int, 31),
 	}
 
 	var wg sync.WaitGroup
@@ -43,7 +41,7 @@ func GetDashboard(owner string) (*Dashboard, error) {
 	providers := []Provider{}
 	applications := []Application{}
 
-	wg.Add(5)
+	wg.Add(4)
 	go func() {
 		defer wg.Done()
 		if err := ormer.Engine.Find(&organizations, &Organization{Owner: owner}); err != nil {
