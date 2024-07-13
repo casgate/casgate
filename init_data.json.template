@@ -192,69 +192,6 @@
       "users": []
     }
   ],
-  "payments": [
-    {
-      "currency": "",
-      "detail": "",
-      "displayName": "",
-      "invoiceRemark": "",
-      "invoiceTaxId": "",
-      "invoiceTitle": "",
-      "invoiceType": "",
-      "invoiceUrl": "",
-      "message": "",
-      "name": "",
-      "organization": "",
-      "owner": "",
-      "payUrl": "",
-      "personEmail": "",
-      "personIdCard": "",
-      "personName": "",
-      "personPhone": "",
-      "price": 0,
-      "productDisplayName": "",
-      "productName": "",
-      "provider": "",
-      "returnUrl": "",
-      "state": "",
-      "tag": "",
-      "type": "",
-      "user": ""
-    }
-  ],
-  "products": [
-    {
-      "currency": "",
-      "detail": "",
-      "displayName": "",
-      "image": "",
-      "name": "",
-      "owner": "",
-      "price": 0,
-      "providers": [],
-      "quantity": 0,
-      "returnUrl": "",
-      "sold": 0,
-      "state": "",
-      "tag": ""
-    }
-  ],
-  "resources": [
-    {
-      "owner": "",
-      "name": "",
-      "user": "",
-      "provider": "",
-      "application": "",
-      "tag": "",
-      "parent": "",
-      "fileName": "",
-      "fileType": "",
-      "fileFormat": "",
-      "url": "",
-      "description": ""
-    }
-  ],
   "roles": [
     {
       "displayName": "",

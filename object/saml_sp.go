@@ -80,7 +80,7 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 		"username":    assertionInfo.NameID,
 		"displayName": fmt.Sprintf("%s %s", assertionInfo.Values.Get(defaultFirstNameOid), assertionInfo.Values.Get(defaultLastNameOid)),
 		"email":       assertionInfo.Values.Get(defaultEmailOid),
-		"avatarUrl":   fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
+		"avatarUrl":   "",
 	}
 
 	if strings.Trim(dataMap["displayName"], " ") == "" {

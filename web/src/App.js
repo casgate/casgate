@@ -21,7 +21,7 @@ import {MfaRuleRequired} from "./Setting";
 import * as Setting from "./Setting";
 import {StyleProvider, legacyLogicalPropertiesTransformer} from "@ant-design/cssinjs";
 import {AppstoreTwoTone, BarsOutlined, DownOutlined, HomeTwoTone, InfoCircleFilled, LockTwoTone, LogoutOutlined, SafetyCertificateTwoTone, SettingOutlined, SettingTwoTone, WalletTwoTone} from "@ant-design/icons";
-import {Alert, Avatar, Button, Card, ConfigProvider, Drawer, Dropdown, FloatButton, Layout, Menu, Result} from "antd";
+import {Alert, Button, Card, ConfigProvider, Drawer, Dropdown, FloatButton, Layout, Menu, Result} from "antd";
 import {Link, Redirect, Route, Switch, withRouter} from "react-router-dom";
 import OrganizationListPage from "./OrganizationListPage";
 import OrganizationEditPage from "./OrganizationEditPage";
@@ -40,7 +40,6 @@ import ProviderListPage from "./ProviderListPage";
 import ProviderEditPage from "./ProviderEditPage";
 import ApplicationListPage from "./ApplicationListPage";
 import ApplicationEditPage from "./ApplicationEditPage";
-import ResourceListPage from "./ResourceListPage";
 import LdapEditPage from "./LdapEditPage";
 import LdapSyncPage from "./LdapSyncPage";
 import TokenListPage from "./TokenListPage";
@@ -75,7 +74,6 @@ import LanguageSelect from "./common/select/LanguageSelect";
 import ThemeSelect from "./common/select/ThemeSelect";
 import OrganizationSelect from "./common/select/OrganizationSelect";
 import {clearWeb3AuthToken} from "./auth/Web3Auth";
-import AccountAvatar from "./account/AccountAvatar";
 import OpenTour from "./common/OpenTour";
 
 const {Header, Content} = Layout;
@@ -152,7 +150,7 @@ class App extends Component {
       this.setState({selectedMenuKey: "/orgs"});
     } else if (uri.includes("/roles") || uri.includes("/domains") || uri.includes("/permissions") || uri.includes("/models") || uri.includes("/adapters") || uri.includes("/enforcers")) {
       this.setState({selectedMenuKey: "/auth"});
-    } else if (uri.includes("/applications") || uri.includes("/providers") || uri.includes("/resources") || uri.includes("/certs")) {
+    } else if (uri.includes("/applications") || uri.includes("/providers") || uri.includes("/certs")) {
       this.setState({selectedMenuKey: "/identity"});
     } else if (uri.includes("/records") || uri.includes("/tokens") || uri.includes("/sessions")) {
       this.setState({selectedMenuKey: "/logs"});
@@ -300,24 +298,6 @@ class App extends Component {
     });
   }
 
-  renderAvatar() {
-    if (this.state.account.avatar === "") {
-      return (
-        <Avatar style={{backgroundColor: Setting.getAvatarColor(this.state.account.name), verticalAlign: "middle"}} size="large">
-          {Setting.getShortName(this.state.account.name)}
-        </Avatar>
-      );
-    } else {
-      return (
-        <Avatar src={this.state.account.avatar} style={{verticalAlign: "middle"}} size="large"
-          icon={<AccountAvatar src={this.state.account.avatar} style={{verticalAlign: "middle"}} size={40} />}
-        >
-          {Setting.getShortName(this.state.account.name)}
-        </Avatar>
-      );
-    }
-  }
-
   renderRightDropdown() {
     const items = [];
     if (this.state.requiredEnableMfa === false) {
@@ -341,11 +321,6 @@ class App extends Component {
     return (
       <Dropdown key="/rightDropDown" menu={{items, onClick}} >
         <div className="rightDropDown">
-          {
-            this.renderAvatar()
-          }
-          &nbsp;
-          &nbsp;
           {Setting.isMobile() ? null : Setting.getShortText(Setting.getNameAtLeast(this.state.account.displayName), 30)} &nbsp; <DownOutlined />
           &nbsp;
           &nbsp;
@@ -406,13 +381,6 @@ class App extends Component {
     })));
 
     if (Setting.isLocalAdminUser(this.state.account)) {
-      if (Conf.ShowGithubCorner) {
-        res.push(Setting.getItem(<a href={"https://casdoor.com"}>
-          <span style={{fontWeight: "bold", backgroundColor: "rgba(87,52,211,0.4)", marginTop: "12px", paddingLeft: "5px", paddingRight: "5px", display: "flex", alignItems: "center", height: "40px", borderRadius: "5px"}}>
-            🚀 SaaS Hosting 🔥
-          </span>
-        </a>, "#"));
-      }
 
       res.push(Setting.getItem(<Link style={{color: "black"}} to="/organizations">{i18next.t("general:User Management")}</Link>, "/orgs", <AppstoreTwoTone />, [
         Setting.getItem(<Link to="/organizations">{i18next.t("general:Organizations")}</Link>, "/organizations"),
@@ -423,7 +391,6 @@ class App extends Component {
       res.push(Setting.getItem(<Link style={{color: "black"}} to="/applications">{i18next.t("general:Identity")}</Link>, "/identity", <LockTwoTone />, [
         Setting.getItem(<Link to="/applications">{i18next.t("general:Applications")}</Link>, "/applications"),
         Setting.getItem(<Link to="/providers">{i18next.t("general:Providers")}</Link>, "/providers"),
-        Setting.getItem(<Link to="/resources">{i18next.t("general:Resources")}</Link>, "/resources"),
         Setting.getItem(<Link to="/certs">{i18next.t("general:Certs")}</Link>, "/certs"),
       ]));
 
@@ -505,8 +472,6 @@ class App extends Component {
         <Route exact path="/providers/:organizationName/:providerName" render={(props) => this.renderLoginIfNotLoggedIn(<ProviderEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/applications" render={(props) => this.renderLoginIfNotLoggedIn(<ApplicationListPage account={this.state.account} {...props} />)} />
         <Route exact path="/applications/:organizationName/:applicationName" render={(props) => this.renderLoginIfNotLoggedIn(<ApplicationEditPage account={this.state.account} {...props} />)} />
-        <Route exact path="/resources" render={(props) => this.renderLoginIfNotLoggedIn(<ResourceListPage account={this.state.account} {...props} />)} />
-        {/* <Route exact path="/resources/:resourceName" render={(props) => this.renderLoginIfNotLoggedIn(<ResourceEditPage account={this.state.account} {...props} />)}/>*/}
         <Route exact path="/ldap/:organizationName/:ldapId" render={(props) => this.renderLoginIfNotLoggedIn(<LdapEditPage account={this.state.account} {...props} />)} />
         <Route exact path="/ldap/sync/:organizationName/:ldapId" render={(props) => this.renderLoginIfNotLoggedIn(<LdapSyncPage account={this.state.account} {...props} />)} />
         <Route exact path="/tokens" render={(props) => this.renderLoginIfNotLoggedIn(<TokenListPage account={this.state.account} {...props} />)} />
