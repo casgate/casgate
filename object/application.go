@@ -18,12 +18,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"regexp"
+
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 	"github.com/r3labs/diff/v3"
 	"github.com/xorm-io/core"
 )
@@ -512,6 +514,17 @@ func UpdateApplication(ctx context.Context, id string, application *Application)
 
 	recordProvidersDiff(record, oldApplication.Providers, application.Providers)
 
+	oldSSOProvidersMap := make(map[string]bool)
+	newSSOProvidersMap := make(map[string]bool)
+
+	for _, provider := range oldApplication.Providers {
+		oldSSOProvidersMap[provider.Name] = true
+	}
+
+	for _, provider := range application.Providers {
+		newSSOProvidersMap[provider.Name] = true
+	}
+
 	session := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols()
 	if application.ClientSecret == "***" {
 		session.Omit("client_secret")
@@ -519,6 +532,26 @@ func UpdateApplication(ctx context.Context, id string, application *Application)
 	affected, err := session.Update(application)
 	if err != nil {
 		return false, err
+	}
+
+	for _, provider := range application.Providers {
+		if !oldSSOProvidersMap[provider.Name] {
+			logger.Info(
+				ctx,
+				"provider turned on",
+				"application", application.GetId(),
+				"provider", provider.Name)
+		}
+	}
+
+	for _, provider := range oldApplication.Providers {
+		if !newSSOProvidersMap[provider.Name] {
+			logger.Info(
+				ctx,
+				"provider turned off",
+				"application", application.GetId(),
+				"provider", provider.Name)
+		}
 	}
 
 	return affected != 0, nil
