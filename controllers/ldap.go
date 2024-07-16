@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	goldap "github.com/go-ldap/ldap/v3"
 
@@ -45,6 +46,8 @@ type LdapIdWithNameResp struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
+
+const ldapSyncMinIntervalMinutes = 15
 
 // GetLdapUsers
 // @Title GetLdapser
@@ -231,6 +234,8 @@ func (c *ApiController) AddLdap() {
 		msg = c.T("general:Missing certificate")
 	} else if disabledCryptoAndEmptyCred {
 		msg = c.T("general:Missing administrator credentials")
+	} else if ldap.AutoSync < ldapSyncMinIntervalMinutes {
+		msg = c.T("general:Ldap sync interval can't be less than 15 minutes")
 	}
 
 	if msg != "" {
@@ -260,7 +265,9 @@ func (c *ApiController) AddLdap() {
 	resp.Data2 = ldap
 
 	if ldap.AutoSync != 0 {
-		err = object.GetLdapAutoSynchronizer().StartAutoSync(gCtx, ldap.Id, record)
+		// Create new context to use in background operation,
+		// because request context may timeout or be cancelled by framework code.
+		err = object.GetLdapSynchronizationManager().StartAutoSync(context.Background(), ldap.Id, time.Duration(ldap.AutoSync)*time.Minute, record)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Get LDAP syncronizer error: %v", err.Error()))
 
@@ -301,6 +308,8 @@ func (c *ApiController) UpdateLdap() {
 		msg = c.T("general:Missing client certificate")
 	} else if disabledCryptoAndEmptyCred {
 		msg = c.T("general:Missing administrator credentials")
+	} else if ldap.AutoSync < ldapSyncMinIntervalMinutes {
+		msg = c.T("general:Ldap sync interval can't be less than 15 minutes")
 	}
 
 	if msg != "" {
@@ -336,7 +345,7 @@ func (c *ApiController) UpdateLdap() {
 	}
 
 	if ldap.AutoSync != 0 {
-		err := object.GetLdapAutoSynchronizer().StartAutoSync(gCtx, ldap.Id, record)
+		err := object.GetLdapSynchronizationManager().StartAutoSync(gCtx, ldap.Id, time.Duration(ldap.AutoSync)*time.Minute, record)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Get LDAP syncronizer error: %v", err.Error()))
 
@@ -344,7 +353,7 @@ func (c *ApiController) UpdateLdap() {
 			return
 		}
 	} else if ldap.AutoSync == 0 && prevLdap.AutoSync != 0 {
-		object.GetLdapAutoSynchronizer().StopAutoSync(ldap.Id)
+		object.GetLdapSynchronizationManager().StopAutoSync(ldap.Id)
 	}
 
 	c.Data["json"] = wrapActionResponse(affected)
@@ -375,7 +384,7 @@ func (c *ApiController) DeleteLdap() {
 		return
 	}
 
-	object.GetLdapAutoSynchronizer().StopAutoSync(ldap.Id)
+	object.GetLdapSynchronizationManager().StopAutoSync(ldap.Id)
 
 	c.Data["json"] = wrapActionResponse(affected)
 	c.ServeJSON()
@@ -409,9 +418,17 @@ func (c *ApiController) SyncLdapUsers() {
 		return
 	}
 
-	exist, failed, err := object.SyncLdapUsers(goCtx, owner, users, ldapId)
+	syncResult, err := object.SyncLdapUsers(goCtx, object.LdapSyncCommand{
+		Owner:     owner,
+		LdapUsers: users,
+		LdapId:    ldapId,
+		Reason:    "manual",
+	})
 	if err != nil {
 		record.AddReason(fmt.Sprintf("LDAP error: %s", err.Error()))
+
+		c.ResponseError(err.Error())
+		return
 	}
 
 	err = object.UpdateLdapSyncTime(ldapId)
@@ -422,11 +439,11 @@ func (c *ApiController) SyncLdapUsers() {
 		return
 	}
 
-	record.AddReason("LDAP: finish sync users")
+	record.AddReason("LDAP: users sync finished")
 
 	c.ResponseOk(&LdapSyncResp{
-		Exist:  exist,
-		Failed: failed,
+		Exist:  syncResult.Exist,
+		Failed: syncResult.Failed,
 	})
 }
 
@@ -440,7 +457,7 @@ func (c *ApiController) SyncLdapUsers() {
 func (c *ApiController) TestLdapConnection() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	var ldap object.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 	if err != nil || util.IsStringsEmpty(ldap.Owner, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {

@@ -103,6 +103,10 @@ func GetLdaps(owner string) ([]*Ldap, error) {
 }
 
 func GetLdap(id string) (*Ldap, error) {
+	return getLdap(id)
+}
+
+func getLdap(id string) (*Ldap, error) {
 	if util.IsStringsEmpty(id) {
 		return nil, nil
 	}
@@ -202,4 +206,11 @@ func GetLdapPassword(ldap Ldap) (string, error) {
 	}
 
 	return ldapFromDB.Password, nil
+}
+
+type LdapRepository struct {
+}
+
+func (r *LdapRepository) GetLdap(id string) (*Ldap, error) {
+	return getLdap(id)
 }
