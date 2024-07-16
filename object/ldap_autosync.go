@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"sync"
 	"time"
 
@@ -167,7 +168,7 @@ func logAndAddRecord(message string, logLevel int, rb *RecordBuilder) {
 // start all autosync goroutine for existing ldap servers in each organizations
 func (l *LdapAutoSynchronizer) LdapAutoSynchronizerStartUpAll(ctx context.Context) error {
 	organizations := []*Organization{}
-	err := ormer.Engine.Desc("created_time").Find(&organizations)
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&organizations)
 	if err != nil {
 		logs.Info("failed to startup LdapAutoSynchronizer")
 	}
@@ -194,7 +195,7 @@ func (l *LdapAutoSynchronizer) LdapAutoSynchronizerStartUpAll(ctx context.Contex
 }
 
 func UpdateLdapSyncTime(ldapId string) error {
-	_, err := ormer.Engine.ID(ldapId).Update(&Ldap{LastSync: util.GetCurrentTime()})
+	_, err := orm.AppOrmer.Engine.ID(ldapId).Update(&Ldap{LastSync: util.GetCurrentTime()})
 	if err != nil {
 		return err
 	}

@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"time"
 
 	"github.com/casdoor/casdoor/pp"
@@ -124,13 +125,13 @@ func NewSubscription(owner, userName, planName, paymentName, period string) *Sub
 }
 
 func GetSubscriptionCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Subscription{})
 }
 
 func GetSubscriptions(owner string) ([]*Subscription, error) {
 	subscriptions := []*Subscription{}
-	err := ormer.Engine.Desc("created_time").Find(&subscriptions, &Subscription{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&subscriptions, &Subscription{Owner: owner})
 	if err != nil {
 		return subscriptions, err
 	}
@@ -145,7 +146,7 @@ func GetSubscriptions(owner string) ([]*Subscription, error) {
 
 func GetSubscriptionsByUser(owner, userName string) ([]*Subscription, error) {
 	subscriptions := []*Subscription{}
-	err := ormer.Engine.Desc("created_time").Find(&subscriptions, &Subscription{Owner: owner, User: userName})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&subscriptions, &Subscription{Owner: owner, User: userName})
 	if err != nil {
 		return subscriptions, err
 	}
@@ -161,7 +162,7 @@ func GetSubscriptionsByUser(owner, userName string) ([]*Subscription, error) {
 
 func GetPaginationSubscriptions(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Subscription, error) {
 	subscriptions := []*Subscription{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&subscriptions)
 	if err != nil {
 		return subscriptions, err
@@ -181,7 +182,7 @@ func getSubscription(owner string, name string) (*Subscription, error) {
 	}
 
 	subscription := Subscription{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&subscription)
+	existed, err := orm.AppOrmer.Engine.Get(&subscription)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +207,7 @@ func UpdateSubscription(id string, subscription *Subscription) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(subscription)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(subscription)
 	if err != nil {
 		return false, err
 	}
@@ -215,7 +216,7 @@ func UpdateSubscription(id string, subscription *Subscription) (bool, error) {
 }
 
 func AddSubscription(subscription *Subscription) (bool, error) {
-	affected, err := ormer.Engine.Insert(subscription)
+	affected, err := orm.AppOrmer.Engine.Insert(subscription)
 	if err != nil {
 		return false, err
 	}
@@ -224,7 +225,7 @@ func AddSubscription(subscription *Subscription) (bool, error) {
 }
 
 func DeleteSubscription(subscription *Subscription) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{subscription.Owner, subscription.Name}).Delete(&Subscription{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{subscription.Owner, subscription.Name}).Delete(&Subscription{})
 	if err != nil {
 		return false, err
 	}

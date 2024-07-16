@@ -17,6 +17,7 @@ package object
 import (
 	"database/sql"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"strings"
 	"time"
 
@@ -113,7 +114,7 @@ func (syncer *Syncer) updateUserForOriginalFields(user *User) (bool, error) {
 
 	columns := syncer.getCasdoorColumns()
 	columns = append(columns, "affiliation", "hash", "pre_hash")
-	affected, err := ormer.Engine.ID(core.PK{oldUser.Owner, oldUser.Name}).Cols(columns...).Update(user)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{oldUser.Owner, oldUser.Name}).Cols(columns...).Update(user)
 	if err != nil {
 		return false, err
 	}
@@ -124,7 +125,7 @@ func (syncer *Syncer) updateUserForOriginalByFields(user *User, key string) (boo
 	var err error
 	oldUser := User{}
 
-	existed, err := ormer.Engine.Where(key+" = ? and owner = ?", syncer.getUserValue(user, key), user.Owner).Get(&oldUser)
+	existed, err := orm.AppOrmer.Engine.Where(key+" = ? and owner = ?", syncer.getUserValue(user, key), user.Owner).Get(&oldUser)
 	if err != nil {
 		return false, err
 	}
@@ -141,7 +142,7 @@ func (syncer *Syncer) updateUserForOriginalByFields(user *User, key string) (boo
 
 	columns := syncer.getCasdoorColumns()
 	columns = append(columns, "affiliation", "hash", "pre_hash")
-	affected, err := ormer.Engine.Where(key+" = ? and owner = ?", syncer.getUserValue(&oldUser, key), oldUser.Owner).Cols(columns...).Update(user)
+	affected, err := orm.AppOrmer.Engine.Where(key+" = ? and owner = ?", syncer.getUserValue(&oldUser, key), oldUser.Owner).Cols(columns...).Update(user)
 	if err != nil {
 		return false, err
 	}
@@ -185,7 +186,7 @@ func (syncer *Syncer) initAdapter() error {
 	}
 
 	var err error
-	syncer.Ormer, err = NewAdapter(syncer.DatabaseType, dataSourceName, syncer.Database)
+	syncer.Ormer, err = orm.NewAdapter(syncer.DatabaseType, dataSourceName, syncer.Database)
 	return err
 }
 

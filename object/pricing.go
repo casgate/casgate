@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -55,13 +56,13 @@ func (pricing *Pricing) HasPlan(planName string) (bool, error) {
 }
 
 func GetPricingCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Pricing{})
 }
 
 func GetPricings(owner string) ([]*Pricing, error) {
 	pricings := []*Pricing{}
-	err := ormer.Engine.Desc("created_time").Find(&pricings, &Pricing{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&pricings, &Pricing{Owner: owner})
 	if err != nil {
 		return pricings, err
 	}
@@ -71,7 +72,7 @@ func GetPricings(owner string) ([]*Pricing, error) {
 
 func GetPaginatedPricings(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Pricing, error) {
 	pricings := []*Pricing{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&pricings)
 	if err != nil {
 		return pricings, err
@@ -85,7 +86,7 @@ func getPricing(owner, name string) (*Pricing, error) {
 	}
 
 	pricing := Pricing{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&pricing)
+	existed, err := orm.AppOrmer.Engine.Get(&pricing)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +104,7 @@ func GetPricing(id string) (*Pricing, error) {
 
 func GetApplicationDefaultPricing(owner, appName string) (*Pricing, error) {
 	pricings := make([]*Pricing, 0, 1)
-	err := ormer.Engine.Asc("created_time").Find(&pricings, &Pricing{Owner: owner, Application: appName})
+	err := orm.AppOrmer.Engine.Asc("created_time").Find(&pricings, &Pricing{Owner: owner, Application: appName})
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +124,7 @@ func UpdatePricing(id string, pricing *Pricing) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(pricing)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(pricing)
 	if err != nil {
 		return false, err
 	}
@@ -132,7 +133,7 @@ func UpdatePricing(id string, pricing *Pricing) (bool, error) {
 }
 
 func AddPricing(pricing *Pricing) (bool, error) {
-	affected, err := ormer.Engine.Insert(pricing)
+	affected, err := orm.AppOrmer.Engine.Insert(pricing)
 	if err != nil {
 		return false, err
 	}
@@ -140,7 +141,7 @@ func AddPricing(pricing *Pricing) (bool, error) {
 }
 
 func DeletePricing(pricing *Pricing) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{pricing.Owner, pricing.Name}).Delete(pricing)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{pricing.Owner, pricing.Name}).Delete(pricing)
 	if err != nil {
 		return false, err
 	}

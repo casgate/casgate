@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/pp"
 
@@ -46,13 +47,13 @@ type Product struct {
 }
 
 func GetProductCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Product{})
 }
 
 func GetProducts(owner string) ([]*Product, error) {
 	products := []*Product{}
-	err := ormer.Engine.Desc("created_time").Find(&products, &Product{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&products, &Product{Owner: owner})
 	if err != nil {
 		return products, err
 	}
@@ -62,7 +63,7 @@ func GetProducts(owner string) ([]*Product, error) {
 
 func GetPaginationProducts(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Product, error) {
 	products := []*Product{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&products)
 	if err != nil {
 		return products, err
@@ -77,7 +78,7 @@ func getProduct(owner string, name string) (*Product, error) {
 	}
 
 	product := Product{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&product)
+	existed, err := orm.AppOrmer.Engine.Get(&product)
 	if err != nil {
 		return &product, nil
 	}
@@ -102,7 +103,7 @@ func UpdateProduct(id string, product *Product) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(product)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(product)
 	if err != nil {
 		return false, err
 	}
@@ -111,7 +112,7 @@ func UpdateProduct(id string, product *Product) (bool, error) {
 }
 
 func AddProduct(product *Product) (bool, error) {
-	affected, err := ormer.Engine.Insert(product)
+	affected, err := orm.AppOrmer.Engine.Insert(product)
 	if err != nil {
 		return false, err
 	}
@@ -120,7 +121,7 @@ func AddProduct(product *Product) (bool, error) {
 }
 
 func DeleteProduct(product *Product) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{product.Owner, product.Name}).Delete(&Product{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{product.Owner, product.Name}).Delete(&Product{})
 	if err != nil {
 		return false, err
 	}

@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"net/http"
 
 	"github.com/beego/beego"
@@ -34,8 +35,8 @@ import (
 )
 
 func main() {
-	object.InitFlag()
-	ormer := object.InitAdapter()
+	orm.InitFlag()
+	ormer := orm.InitAdapter()
 	trm := txmanager.NewTransactionManager(ormer.Engine)
 	repo := repository.NewRepo(trm)
 	object.InitRepo(trm, repo)

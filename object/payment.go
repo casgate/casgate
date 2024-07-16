@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/pp"
 
@@ -60,13 +61,13 @@ type Payment struct {
 }
 
 func GetPaymentCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Payment{Owner: owner})
 }
 
 func GetPayments(owner string) ([]*Payment, error) {
 	payments := []*Payment{}
-	err := ormer.Engine.Desc("created_time").Find(&payments, &Payment{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&payments, &Payment{Owner: owner})
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,7 @@ func GetPayments(owner string) ([]*Payment, error) {
 
 func GetUserPayments(owner, user string) ([]*Payment, error) {
 	payments := []*Payment{}
-	err := ormer.Engine.Desc("created_time").Find(&payments, &Payment{Owner: owner, User: user})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&payments, &Payment{Owner: owner, User: user})
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +87,7 @@ func GetUserPayments(owner, user string) ([]*Payment, error) {
 
 func GetPaginationPayments(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Payment, error) {
 	payments := []*Payment{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&payments, &Payment{Owner: owner})
 	if err != nil {
 		return nil, err
@@ -101,7 +102,7 @@ func getPayment(owner string, name string) (*Payment, error) {
 	}
 
 	payment := Payment{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&payment)
+	existed, err := orm.AppOrmer.Engine.Get(&payment)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +127,7 @@ func UpdatePayment(id string, payment *Payment) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(payment)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(payment)
 	if err != nil {
 		return false, err
 	}
@@ -135,7 +136,7 @@ func UpdatePayment(id string, payment *Payment) (bool, error) {
 }
 
 func AddPayment(payment *Payment) (bool, error) {
-	affected, err := ormer.Engine.Insert(payment)
+	affected, err := orm.AppOrmer.Engine.Insert(payment)
 	if err != nil {
 		return false, err
 	}
@@ -144,7 +145,7 @@ func AddPayment(payment *Payment) (bool, error) {
 }
 
 func DeletePayment(payment *Payment) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{payment.Owner, payment.Name}).Delete(&Payment{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{payment.Owner, payment.Name}).Delete(&Payment{})
 	if err != nil {
 		return false, err
 	}

@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"time"
 
 	"github.com/casdoor/casdoor/util"
@@ -63,13 +64,13 @@ func GetDuration(period string) (startTime time.Time, endTime time.Time) {
 }
 
 func GetPlanCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Plan{})
 }
 
 func GetPlans(owner string) ([]*Plan, error) {
 	plans := []*Plan{}
-	err := ormer.Engine.Desc("created_time").Find(&plans, &Plan{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&plans, &Plan{Owner: owner})
 	if err != nil {
 		return plans, err
 	}
@@ -78,7 +79,7 @@ func GetPlans(owner string) ([]*Plan, error) {
 
 func GetPaginatedPlans(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Plan, error) {
 	plans := []*Plan{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&plans)
 	if err != nil {
 		return plans, err
@@ -92,7 +93,7 @@ func getPlan(owner, name string) (*Plan, error) {
 	}
 
 	plan := Plan{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&plan)
+	existed, err := orm.AppOrmer.Engine.Get(&plan)
 	if err != nil {
 		return &plan, err
 	}
@@ -116,7 +117,7 @@ func UpdatePlan(id string, plan *Plan) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(plan)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(plan)
 	if err != nil {
 		return false, err
 	}
@@ -125,7 +126,7 @@ func UpdatePlan(id string, plan *Plan) (bool, error) {
 }
 
 func AddPlan(plan *Plan) (bool, error) {
-	affected, err := ormer.Engine.Insert(plan)
+	affected, err := orm.AppOrmer.Engine.Insert(plan)
 	if err != nil {
 		return false, err
 	}
@@ -133,7 +134,7 @@ func AddPlan(plan *Plan) (bool, error) {
 }
 
 func DeletePlan(plan *Plan) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{plan.Owner, plan.Name}).Delete(plan)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{plan.Owner, plan.Name}).Delete(plan)
 	if err != nil {
 		return false, err
 	}

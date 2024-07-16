@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"net"
 	"strings"
 
@@ -509,7 +510,7 @@ func SyncLdapUsers(ctx context.Context, owner string, syncUsers []LdapUser, ldap
 func GetExistUuids(owner string, uuids []string) ([]string, error) {
 	var existUuids []string
 
-	err := ormer.Engine.Table("user").Where("owner = ?", owner).Cols("ldap").
+	err := orm.AppOrmer.Engine.Table("user").Where("owner = ?", owner).Cols("ldap").
 		In("ldap", uuids).Select("DISTINCT ldap").Find(&existUuids)
 	if err != nil {
 		return existUuids, err
@@ -521,7 +522,7 @@ func GetExistUuids(owner string, uuids []string) ([]string, error) {
 func (ldapUser *LdapUser) buildLdapUserName() (string, error) {
 	user := User{}
 	uidWithNumber := fmt.Sprintf("%s_%s", ldapUser.Uid, ldapUser.UidNumber)
-	has, err := ormer.Engine.Where("name = ? or name = ?", ldapUser.Uid, uidWithNumber).Get(&user)
+	has, err := orm.AppOrmer.Engine.Where("name = ? or name = ?", ldapUser.Uid, uidWithNumber).Get(&user)
 	if err != nil {
 		return "", err
 	}

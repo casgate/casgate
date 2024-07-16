@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -54,17 +55,17 @@ type Syncer struct {
 	IsReadOnly       bool           `json:"isReadOnly"`
 	IsEnabled        bool           `json:"isEnabled"`
 
-	Ormer *Ormer `xorm:"-" json:"-"`
+	Ormer *orm.Ormer `xorm:"-" json:"-"`
 }
 
 func GetSyncerCount(owner, organization, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Syncer{Organization: organization})
 }
 
 func GetSyncers(owner string) ([]*Syncer, error) {
 	syncers := []*Syncer{}
-	err := ormer.Engine.Desc("created_time").Find(&syncers, &Syncer{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&syncers, &Syncer{Owner: owner})
 	if err != nil {
 		return syncers, err
 	}
@@ -74,7 +75,7 @@ func GetSyncers(owner string) ([]*Syncer, error) {
 
 func GetOrganizationSyncers(owner, organization string) ([]*Syncer, error) {
 	syncers := []*Syncer{}
-	err := ormer.Engine.Desc("created_time").Find(&syncers, &Syncer{Owner: owner, Organization: organization})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&syncers, &Syncer{Owner: owner, Organization: organization})
 	if err != nil {
 		return syncers, err
 	}
@@ -84,7 +85,7 @@ func GetOrganizationSyncers(owner, organization string) ([]*Syncer, error) {
 
 func GetPaginationSyncers(owner, organization string, offset, limit int, field, value, sortField, sortOrder string) ([]*Syncer, error) {
 	syncers := []*Syncer{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&syncers, &Syncer{Organization: organization})
 	if err != nil {
 		return syncers, err
@@ -99,7 +100,7 @@ func getSyncer(owner string, name string) (*Syncer, error) {
 	}
 
 	syncer := Syncer{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&syncer)
+	existed, err := orm.AppOrmer.Engine.Get(&syncer)
 	if err != nil {
 		return &syncer, err
 	}
@@ -142,7 +143,7 @@ func UpdateSyncer(id string, syncer *Syncer) (bool, error) {
 		return false, nil
 	}
 
-	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
+	session := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols()
 	if syncer.Password == "***" {
 		session.Omit("password")
 	}
@@ -173,7 +174,7 @@ func updateSyncerErrorText(syncer *Syncer, line string) (bool, error) {
 
 	s.ErrorText = s.ErrorText + line
 
-	affected, err := ormer.Engine.ID(core.PK{s.Owner, s.Name}).Cols("error_text").Update(s)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{s.Owner, s.Name}).Cols("error_text").Update(s)
 	if err != nil {
 		return false, err
 	}
@@ -182,7 +183,7 @@ func updateSyncerErrorText(syncer *Syncer, line string) (bool, error) {
 }
 
 func AddSyncer(syncer *Syncer) (bool, error) {
-	affected, err := ormer.Engine.Insert(syncer)
+	affected, err := orm.AppOrmer.Engine.Insert(syncer)
 	if err != nil {
 		return false, err
 	}
@@ -198,7 +199,7 @@ func AddSyncer(syncer *Syncer) (bool, error) {
 }
 
 func DeleteSyncer(syncer *Syncer) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{syncer.Owner, syncer.Name}).Delete(&Syncer{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{syncer.Owner, syncer.Name}).Delete(&Syncer{})
 	if err != nil {
 		return false, err
 	}

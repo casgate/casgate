@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"reflect"
 	"strings"
 	"testing"
@@ -25,7 +26,7 @@ import (
 )
 
 func updateUserColumn(column string, user *User) bool {
-	affected, err := ormer.Engine.ID(core.PK{user.Owner, user.Name}).Cols(column).Update(user)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{user.Owner, user.Name}).Cols(column).Update(user)
 	if err != nil {
 		panic(err)
 	}
