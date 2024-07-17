@@ -26,7 +26,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
 	saml2 "github.com/russellhaering/gosaml2"
