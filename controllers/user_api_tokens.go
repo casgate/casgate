@@ -17,6 +17,7 @@ package controllers
 import (
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 // AddApiToken
@@ -79,6 +80,11 @@ func (c *ApiController) AddApiToken() {
 		return
 	}
 
+	token := tokenUser.AccessKey + tokenUser.AccessSecret
+	isRootUser := currentUser.Owner == "built-in" && currentUser.Name == "admin"
+
+	logger.Info(ctx, "user api token created", "token", token, "is_root_user", isRootUser)
+
 	c.ResponseOk(object.MakeUserApiToken(tokenUser))
 }
 
@@ -95,7 +101,7 @@ func (c *ApiController) AddApiToken() {
 // @router /delete-api-token [post]
 func (c *ApiController) DeleteApiToken() {
 	owner := c.Input().Get("owner")
-	if owner == "" { 
+	if owner == "" {
 		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
 		return
 	}
@@ -151,6 +157,10 @@ func (c *ApiController) DeleteApiToken() {
 		c.ResponseInternalServerError("token does not deleted")
 		return
 	}
+
+	isRootUser := currentUser.Owner == "built-in" && currentUser.Name == "admin"
+
+	logger.Info(c.getRequestCtx(), "user api token deleted", "token", token, "is_root_user", isRootUser)
 
 	c.ResponseOk()
 }
