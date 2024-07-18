@@ -19,6 +19,7 @@ import (
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 // GetRoles
@@ -102,7 +103,54 @@ func (c *ApiController) UpdateRole() {
 	}
 	c.ValidateOrganization(roleFromDb.Owner)
 
-	c.Data["json"] = wrapActionResponse(object.UpdateRole(request.Id, &role))
+	affected, err := object.UpdateRole(request.Id, &role)
+
+	ctx := c.getRequestCtx()
+
+	if err != nil {
+		logger.Error(ctx, "failed to update role",
+			"old_role", roleFromDb,
+			"new_role", role,
+			"error", err.Error())
+	} else if !affected {
+		logger.Error(ctx, "failed to update role: not affected",
+			"old_role", roleFromDb,
+			"new_role", role)
+	} else {
+		logger.Info(ctx, "role updated successfully",
+			"role_id", role.GetId())
+
+		oldUsers := make(map[string]struct{})
+		newUsers := make(map[string]struct{})
+
+		for _, userID := range roleFromDb.Users {
+			oldUsers[userID] = struct{}{}
+		}
+
+		for _, userID := range role.Users {
+			newUsers[userID] = struct{}{}
+		}
+
+		for userID := range oldUsers {
+			if _, found := newUsers[userID]; !found {
+				logger.Info(ctx, "user lost role",
+					"role_id", role.GetId(),
+					"user_id", userID,
+					"by_user", c.getCurrentUser().GetId())
+			}
+		}
+
+		for userID := range newUsers {
+			if _, found := oldUsers[userID]; !found {
+				logger.Info(ctx, "user gained role",
+					"role_id", role.GetId(),
+					"user_id", userID,
+					"by_user", c.getCurrentUser().GetId())
+			}
+		}
+	}
+
+	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 }
 
