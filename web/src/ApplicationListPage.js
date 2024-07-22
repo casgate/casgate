@@ -37,7 +37,7 @@ class ApplicationListPage extends BaseListPage {
       organization: organizationName,
       createdTime: moment().format(),
       displayName: `New Application - ${randomName}`,
-      logo: `${Setting.StaticBaseUrl}/img/CG_logo.png`,
+      logo: `${Setting.StaticBaseUrl}/img/cg_logo.png`,
       enablePassword: true,
       enablePasswordRecovery: true,
       enableInternalSignUp: true,
