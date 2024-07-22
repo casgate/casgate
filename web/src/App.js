@@ -214,9 +214,9 @@ class App extends Component {
 
   getLogo(themes) {
     if (themes.includes("dark")) {
-      return `${Setting.StaticBaseUrl}/img/CG_logo.png`;
+      return `${Setting.StaticBaseUrl}/img/cg_logo.png`;
     } else {
-      return `${Setting.StaticBaseUrl}/img/CG_logo.png`;
+      return `${Setting.StaticBaseUrl}/img/cg_logo.png`;
       // return `${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256.png`;
     }
   }
