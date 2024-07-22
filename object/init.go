@@ -182,7 +182,7 @@ func initBuiltInApplication(ctx context.Context) {
 		Name:                 "app-built-in",
 		CreatedTime:          util.GetCurrentTime(),
 		DisplayName:          "Casdoor",
-		Logo:                 fmt.Sprintf("%s/img/casdoor-logo_1185x256.png", conf.GetConfigString("staticBaseUrl")),
+		Logo:                 fmt.Sprintf("%s/img/CG_logo.png", conf.GetConfigString("staticBaseUrl")),
 		HomepageUrl:          "https://casdoor.org",
 		Organization:         "built-in",
 		Cert:                 "cert-built-in",

@@ -85,7 +85,7 @@ const sideTemplate = `<style>
   }
 </style>
 <div class="left-model">
-  <span class="side-logo"> <img src="${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256.png" alt="Casdoor" style="width: 120px"> 
+  <span class="side-logo"> <img src="${Setting.StaticBaseUrl}/img/CG_logo.png" alt="Casgate" style="width: 120px"> 
     <span>SSO</span> 
   </span>
   <div class="img">

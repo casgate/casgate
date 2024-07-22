@@ -82,7 +82,7 @@ export const appThemeComponents = {
   },
   Tooltip: {
     colorBgSpotlight: "rgb(206, 216, 235)",
-    colorTextLightSolid: "rgb(46, 58, 82)",
+    colorTextLightSolid: "rgb(255, 255, 255)",
     paddingSM: 16,
     fontSize: 13,
     colorText: "rgb(46, 58, 82)",
