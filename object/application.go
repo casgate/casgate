@@ -180,6 +180,8 @@ func GetPaginationOrganizationApplications(owner, organization string, offset, l
 }
 
 func getProviderMap(owner string) (m map[string]*Provider, err error) {
+	ctx := context.TODO()
+
 	providers, err := GetProviders(owner)
 	if err != nil {
 		return nil, err
@@ -193,7 +195,7 @@ func getProviderMap(owner string) (m map[string]*Provider, err error) {
 			if err != nil {
 				return
 			}
-			UpdateProvider(provider.Owner+"/"+provider.Name, provider)
+			UpdateProvider(ctx, provider.Owner+"/"+provider.Name, provider)
 		}
 
 		m[provider.Name] = GetMaskedProvider(provider, true)

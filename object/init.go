@@ -287,6 +287,8 @@ func initBuiltInLdap() {
 }
 
 func initBuiltInProvider() {
+	ctx := context.TODO()
+
 	provider, err := GetProvider(util.GetId("admin", "provider_captcha_default"))
 	if err != nil {
 		panic(err)
@@ -304,7 +306,7 @@ func initBuiltInProvider() {
 		Category:    "Captcha",
 		Type:        "Default",
 	}
-	_, err = AddProvider(provider)
+	_, err = AddProvider(ctx, provider)
 	if err != nil {
 		panic(err)
 	}
