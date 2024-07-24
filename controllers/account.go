@@ -126,11 +126,7 @@ func (c *ApiController) Signup() {
 		}
 	}
 
-	id, err := object.GenerateIdForNewUser(application)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
-	}
+	id := util.GenerateId()
 
 	username := authForm.Username
 	if !application.IsSignupItemVisible("Username") {

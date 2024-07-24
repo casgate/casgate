@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -57,7 +56,7 @@ type User struct {
 	CreatedTime string `xorm:"varchar(100) index" json:"createdTime"`
 	UpdatedTime string `xorm:"varchar(100)" json:"updatedTime"`
 
-	Id                     string    `xorm:"varchar(100) index" json:"id"`
+	Id                     string    `xorm:"varchar(100) index unique" json:"id"`
 	Type                   string    `xorm:"varchar(100)" json:"type"`
 	Password               string    `xorm:"varchar(100)" json:"password"`
 	PasswordChangeRequired bool      `xorm:"-" json:"passwordChangeRequired"`
@@ -795,19 +794,7 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 }
 
 func AddUser(ctx context.Context, user *User) (bool, error) {
-	if user.Id == "" {
-		application, err := GetApplicationByUser(ctx, user)
-		if err != nil {
-			return false, err
-		}
-
-		id, err := GenerateIdForNewUser(application)
-		if err != nil {
-			return false, err
-		}
-
-		user.Id = id
-	}
+	user.Id = util.GenerateId()
 
 	if user.MappingStrategy == "" {
 		user.MappingStrategy = "all"
@@ -1147,26 +1134,7 @@ func (user *User) IsGlobalAdmin() bool {
 		return false
 	}
 
-	return user.Owner == "built-in" 
-}
-
-func GenerateIdForNewUser(application *Application) (string, error) {
-	if application == nil || application.GetSignupItemRule("ID") != "Incremental" {
-		return util.GenerateId(), nil
-	}
-
-	lastUser, err := getLastUser(application.Organization)
-	if err != nil {
-		return "", err
-	}
-
-	lastUserId := -1
-	if lastUser != nil {
-		lastUserId = util.ParseInt(lastUser.Id)
-	}
-
-	res := strconv.Itoa(lastUserId + 1)
-	return res, nil
+	return user.Owner == "built-in"
 }
 
 func reachablePermissionsByUser(user *User) ([]*Permission, error) {
