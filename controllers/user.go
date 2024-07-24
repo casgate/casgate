@@ -315,7 +315,7 @@ func (c *ApiController) UpdateUser() {
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
-		logger.Error(goCtx, "failed to unmarshall user",
+		logger.Error(goCtx, "UpdateUser: failed to unmarshall user",
 			"error", err.Error())
 		c.ResponseBadRequest(err.Error())
 		return
@@ -326,8 +326,9 @@ func (c *ApiController) UpdateUser() {
 	if id == "" {
 		id = c.GetSessionUsername()
 		if id == "" {
-			logger.Error(goCtx, "missed parameter to update user",
-				"user", user.GetId())
+			logger.Error(goCtx, "UpdateUser: missed parameter",
+				"user", user.GetId(),
+				"parameter", "id")
 			c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
 			return
 		}
@@ -335,7 +336,7 @@ func (c *ApiController) UpdateUser() {
 
 	oldUser, err := object.GetUser(id)
 	if err != nil {
-		logger.Error(goCtx, "failed to get user from database",
+		logger.Error(goCtx, "UpdateUser: failed to get user from database",
 			"id", id,
 			"error", err.Error())
 		c.ResponseInternalServerError(err.Error())
@@ -343,21 +344,21 @@ func (c *ApiController) UpdateUser() {
 	}
 
 	if oldUser == nil {
-		logger.Error(goCtx, "user not found",
+		logger.Error(goCtx, "UpdateUser: user not found",
 			"id", id)
 		c.ResponseNotFound(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), id))
 		return
 	}
 
 	if oldUser.Owner == "built-in" && oldUser.Name == "admin" && (user.Owner != "built-in" || user.Name != "admin") {
-		logger.Error(goCtx, "tried to update admin user")
+		logger.Error(goCtx, "UpdateUser: tried to update admin user")
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
 
 	if c.Input().Get("allowEmpty") == "" {
 		if user.DisplayName == "" {
-			logger.Error(goCtx, "tried to set empty display name",
+			logger.Error(goCtx, "UpdateUser: empty display name not allowed",
 				"user", oldUser.GetId())
 			c.ResponseInternalServerError(c.T("user:Display name cannot be empty"))
 			return
@@ -365,7 +366,7 @@ func (c *ApiController) UpdateUser() {
 	}
 
 	if msg := object.CheckUpdateUser(oldUser, &user, c.GetAcceptLanguage()); msg != "" {
-		logger.Error(goCtx, "user update validation failed",
+		logger.Error(goCtx, "UpdateUser: validation failed",
 			"old_user", oldUser,
 			"new_user", user,
 			"message", msg)
@@ -375,7 +376,7 @@ func (c *ApiController) UpdateUser() {
 
 	isAdmin := c.IsAdmin()
 	if pass, err := object.CheckPermissionForUpdateUser(oldUser, &user, isAdmin, c.GetAcceptLanguage()); !pass {
-		logger.Error(goCtx, "permission check not passed for user update",
+		logger.Error(goCtx, "UpdateUser: permission check not passed",
 			"old_user", oldUser,
 			"new_user", user,
 			"is_admin", isAdmin)
@@ -390,7 +391,7 @@ func (c *ApiController) UpdateUser() {
 
 	affected, err := object.UpdateUser(id, &user, columns, isAdmin)
 	if err != nil {
-		logger.Error(goCtx, "failed to update user",
+		logger.Error(goCtx, "UpdateUser: failed to update user",
 			"id", id,
 			"old_user", oldUser,
 			"new_user", user,
@@ -398,27 +399,27 @@ func (c *ApiController) UpdateUser() {
 		c.ResponseInternalServerError(err.Error())
 		return
 	} else if !affected {
-		logger.Error(goCtx, "failed to update user: not affected",
+		logger.Error(goCtx, "UpdateUser: not affected",
 			"id", id,
 			"old_user", oldUser,
 			"new_user", user)
 		c.ResponseError(c.T("account:Failed to update user"), util.StructToJson(user))
 	} else {
-		logger.Info(goCtx, "user updated successfully",
+		logger.Info(goCtx, "UpdateUser: user updated successfully",
 			"id", id)
 
 		if !oldUser.IsForbidden && user.IsForbidden {
-			logger.Info(goCtx, "user has been blocked",
+			logger.Info(goCtx, "UpdateUser: user has been blocked",
 				"id", id)
 		}
 
 		if oldUser.IsForbidden && !user.IsForbidden {
-			logger.Info(goCtx, "user has been unblocked",
+			logger.Info(goCtx, "UpdateUser: user has been unblocked",
 				"id", id)
 		}
 
 		if oldUser.Password != user.Password {
-			logger.Info(goCtx, "user's password has been changed",
+			logger.Info(goCtx, "UpdateUser: user's password has been changed",
 				"id", id,
 				"isAdmin", isAdmin)
 		}
@@ -450,14 +451,14 @@ func (c *ApiController) UpdateUser() {
 		}
 
 		if len(joinedGroups) > 0 {
-			logger.Info(goCtx, "user joined groups",
+			logger.Info(goCtx, "UpdateUser: user joined groups",
 				"user_id", id,
 				"groups", joinedGroups,
 				"by_user", c.getCurrentUser().GetId())
 		}
 
 		if len(leftGroups) > 0 {
-			logger.Info(goCtx, "user left groups",
+			logger.Info(goCtx, "UpdateUser: user left groups",
 				"user_id", id,
 				"groups", leftGroups,
 				"by_user", c.getCurrentUser().GetId())

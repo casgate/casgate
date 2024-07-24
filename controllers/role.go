@@ -108,16 +108,16 @@ func (c *ApiController) UpdateRole() {
 	ctx := c.getRequestCtx()
 
 	if err != nil {
-		logger.Error(ctx, "failed to update role",
+		logger.Error(ctx, "UpdateRole: failed to update role",
 			"old_role", roleFromDb,
 			"new_role", role,
 			"error", err.Error())
 	} else if !affected {
-		logger.Error(ctx, "failed to update role: not affected",
+		logger.Error(ctx, "UpdateRole: failed to update role: not affected",
 			"old_role", roleFromDb,
 			"new_role", role)
 	} else {
-		logger.Info(ctx, "role updated successfully",
+		logger.Info(ctx, "UpdateRole: role updated successfully",
 			"role_id", role.GetId())
 
 		oldUsers := make(map[string]struct{})
@@ -133,7 +133,7 @@ func (c *ApiController) UpdateRole() {
 
 		for userID := range oldUsers {
 			if _, found := newUsers[userID]; !found {
-				logger.Info(ctx, "user lost role",
+				logger.Info(ctx, "UpdateRole: role removed from user",
 					"role_id", role.GetId(),
 					"user_id", userID,
 					"by_user", c.getCurrentUser().GetId())
@@ -142,7 +142,7 @@ func (c *ApiController) UpdateRole() {
 
 		for userID := range newUsers {
 			if _, found := oldUsers[userID]; !found {
-				logger.Info(ctx, "user gained role",
+				logger.Info(ctx, "UpdateRole: role added to user",
 					"role_id", role.GetId(),
 					"user_id", userID,
 					"by_user", c.getCurrentUser().GetId())
