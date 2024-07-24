@@ -181,7 +181,7 @@ func (c *ApiController) UpdateProvider() {
 		}
 	}
 
-	affected, err := object.UpdateProvider(id, &provider)
+	affected, err := object.UpdateProvider(c.getRequestCtx(), id, &provider)
 	if err != nil {
 		detail := fmt.Sprintf("Update provider error: Owner: %s, Name: %s, Type: %s", provider.Owner, provider.Name, provider.Type)
 		record.AddReason(detail)
@@ -221,7 +221,7 @@ func (c *ApiController) AddProvider() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.AddProvider(&provider))
+	c.Data["json"] = wrapActionResponse(object.AddProvider(c.getRequestCtx(), &provider))
 	c.ServeJSON()
 }
 

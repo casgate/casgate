@@ -232,9 +232,7 @@ func GetWechatMiniProgramProvider(application *Application) *Provider {
 	return nil
 }
 
-func UpdateProvider(id string, provider *Provider) (bool, error) {
-	ctx := context.Background()
-
+func UpdateProvider(ctx context.Context, id string, provider *Provider) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
 	p, err := getProvider(owner, name)
 	if err != nil {
@@ -268,7 +266,7 @@ func UpdateProvider(id string, provider *Provider) (bool, error) {
 		logger.Error(ctx, "failed to update provider", "provider", provider.GetId())
 		return false, err
 	} else {
-		if !CompareRoleMappingSlices(provider.RoleMappingItems, p.RoleMappingItems) {
+		if !IsRoleMappingsEqual(provider.RoleMappingItems, p.RoleMappingItems) {
 			logger.Info(ctx, "successfully updated provider mappings", "provider", provider.GetId())
 		}
 		logger.Info(ctx, "successfully updated provider", "provider", provider.GetId())
@@ -277,9 +275,7 @@ func UpdateProvider(id string, provider *Provider) (bool, error) {
 	return affected != 0, nil
 }
 
-func AddProvider(provider *Provider) (bool, error) {
-	ctx := context.Background()
-
+func AddProvider(ctx context.Context, provider *Provider) (bool, error) {
 	if provider.Type == "Tencent Cloud COS" {
 		provider.Endpoint = util.GetEndPoint(provider.Endpoint)
 		provider.IntranetEndpoint = util.GetEndPoint(provider.IntranetEndpoint)
@@ -289,9 +285,9 @@ func AddProvider(provider *Provider) (bool, error) {
 	if err != nil {
 		logger.Error(ctx, "failed to add provider", "provider", provider.GetId())
 		return false, err
-	} else {
-		logger.Info(ctx, "successfully added provider", "provider", provider.GetId())
 	}
+
+	logger.Info(ctx, "successfully added provider", "provider", provider.GetId())
 
 	return affected != 0, nil
 }
