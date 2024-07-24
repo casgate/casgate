@@ -26,6 +26,7 @@ import (
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/pp"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 	"github.com/xorm-io/core"
 )
 
@@ -231,9 +232,10 @@ func GetWechatMiniProgramProvider(application *Application) *Provider {
 	return nil
 }
 
-func UpdateProvider(id string, provider *Provider) (bool, error) {
+func UpdateProvider(ctx context.Context, id string, provider *Provider) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	if p, err := getProvider(owner, name); err != nil {
+	p, err := getProvider(owner, name)
+	if err != nil {
 		return false, err
 	} else if p == nil {
 		return false, nil
@@ -261,13 +263,19 @@ func UpdateProvider(id string, provider *Provider) (bool, error) {
 
 	affected, err := session.Update(provider)
 	if err != nil {
+		logger.Error(ctx, "failed to update provider", "provider", provider.GetId())
 		return false, err
+	} else {
+		if !IsRoleMappingsEqual(provider.RoleMappingItems, p.RoleMappingItems) {
+			logger.Info(ctx, "successfully updated provider mappings", "provider", provider.GetId())
+		}
+		logger.Info(ctx, "successfully updated provider", "provider", provider.GetId())
 	}
 
 	return affected != 0, nil
 }
 
-func AddProvider(provider *Provider) (bool, error) {
+func AddProvider(ctx context.Context, provider *Provider) (bool, error) {
 	if provider.Type == "Tencent Cloud COS" {
 		provider.Endpoint = util.GetEndPoint(provider.Endpoint)
 		provider.IntranetEndpoint = util.GetEndPoint(provider.IntranetEndpoint)
@@ -275,8 +283,11 @@ func AddProvider(provider *Provider) (bool, error) {
 
 	affected, err := ormer.Engine.Insert(provider)
 	if err != nil {
+		logger.Error(ctx, "failed to add provider", "provider", provider.GetId())
 		return false, err
 	}
+
+	logger.Info(ctx, "successfully added provider", "provider", provider.GetId())
 
 	return affected != 0, nil
 }

@@ -16,6 +16,7 @@ package object
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/url"
 	"path/filepath"
@@ -104,6 +105,8 @@ func GetUploadFileUrl(provider *Provider, fullFilePath string, hasTimestamp bool
 }
 
 func getStorageProvider(provider *Provider, lang string) (oss.StorageInterface, error) {
+	ctx := context.TODO()
+
 	endpoint := getProviderEndpoint(provider)
 	storageProvider := storage.GetStorageProvider(provider.Type, provider.ClientId, provider.ClientSecret, provider.RegionId, provider.Bucket, endpoint)
 	if storageProvider == nil {
@@ -112,7 +115,7 @@ func getStorageProvider(provider *Provider, lang string) (oss.StorageInterface, 
 
 	if provider.Domain == "" {
 		provider.Domain = storageProvider.GetEndpoint()
-		UpdateProvider(provider.GetId(), provider)
+		UpdateProvider(ctx, provider.GetId(), provider)
 	}
 
 	return storageProvider, nil

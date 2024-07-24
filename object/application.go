@@ -23,6 +23,7 @@ import (
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 	"github.com/r3labs/diff/v3"
 	"github.com/xorm-io/core"
 )
@@ -179,6 +180,8 @@ func GetPaginationOrganizationApplications(owner, organization string, offset, l
 }
 
 func getProviderMap(owner string) (m map[string]*Provider, err error) {
+	ctx := context.TODO()
+
 	providers, err := GetProviders(owner)
 	if err != nil {
 		return nil, err
@@ -192,7 +195,7 @@ func getProviderMap(owner string) (m map[string]*Provider, err error) {
 			if err != nil {
 				return
 			}
-			UpdateProvider(provider.Owner+"/"+provider.Name, provider)
+			UpdateProvider(ctx, provider.Owner+"/"+provider.Name, provider)
 		}
 
 		m[provider.Name] = GetMaskedProvider(provider, true)
@@ -501,6 +504,17 @@ func UpdateApplication(ctx context.Context, id string, application *Application)
 
 	recordProvidersDiff(record, oldApplication.Providers, application.Providers)
 
+	oldSSOProvidersMap := make(map[string]bool)
+	newSSOProvidersMap := make(map[string]bool)
+
+	for _, provider := range oldApplication.Providers {
+		oldSSOProvidersMap[provider.Name] = true
+	}
+
+	for _, provider := range application.Providers {
+		newSSOProvidersMap[provider.Name] = true
+	}
+
 	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
 	if application.ClientSecret == "***" {
 		session.Omit("client_secret")
@@ -508,6 +522,26 @@ func UpdateApplication(ctx context.Context, id string, application *Application)
 	affected, err := session.Update(application)
 	if err != nil {
 		return false, err
+	}
+
+	for _, provider := range application.Providers {
+		if !oldSSOProvidersMap[provider.Name] {
+			logger.Info(
+				ctx,
+				"provider turned on",
+				"application", application.GetId(),
+				"provider", provider.Name)
+		}
+	}
+
+	for _, provider := range oldApplication.Providers {
+		if !newSSOProvidersMap[provider.Name] {
+			logger.Info(
+				ctx,
+				"provider turned off",
+				"application", application.GetId(),
+				"provider", provider.Name)
+		}
 	}
 
 	return affected != 0, nil
