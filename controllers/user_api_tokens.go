@@ -81,7 +81,7 @@ func (c *ApiController) AddApiToken() {
 	}
 
 	token := tokenUser.AccessKey + tokenUser.AccessSecret
-	isRootUser := currentUser.Owner == "built-in" && currentUser.Name == "admin"
+	isRootUser := currentUser.Owner == builtInOrg && currentUser.Name == adminUsername
 
 	logger.Info(ctx, "user api token created", "token", token, "is_root_user", isRootUser)
 
@@ -158,7 +158,7 @@ func (c *ApiController) DeleteApiToken() {
 		return
 	}
 
-	isRootUser := currentUser.Owner == "built-in" && currentUser.Name == "admin"
+	isRootUser := currentUser.Owner == builtInOrg && currentUser.Name == adminUsername
 
 	logger.Info(c.getRequestCtx(), "user api token deleted", "token", token, "is_root_user", isRootUser)
 
