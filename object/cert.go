@@ -19,6 +19,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
 )
@@ -51,6 +52,10 @@ var ErrCertInvalidScope = errors.New(fmt.Sprintf("invalid certificate scope"))
 func GetMaskedCert(cert *Cert) *Cert {
 	if cert == nil {
 		return nil
+	}
+
+	if cert.PrivateKey != "" {
+		cert.PrivateKey = "***"
 	}
 
 	return cert
@@ -100,7 +105,7 @@ func GetGlobalCertsCount(field, value string) (int64, error) {
 
 func GetGlobleCerts(owner string) ([]*Cert, error) {
 	certs := []*Cert{}
-	session := GetSession("",  -1, -1, "", "", "", "")
+	session := GetSession("", -1, -1, "", "", "", "")
 
 	var err error
 	if owner != "" {
@@ -108,7 +113,7 @@ func GetGlobleCerts(owner string) ([]*Cert, error) {
 	} else {
 		session.Desc("created_time").Find(&certs)
 	}
-	
+
 	if err != nil {
 		return certs, err
 	}
@@ -199,7 +204,11 @@ func UpdateCert(id string, cert *Cert) (bool, error) {
 			return false, err
 		}
 	}
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(cert)
+	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
+	if cert.PrivateKey == "***" {
+		session.Omit("private_key")
+	}
+	affected, err := session.Update(cert)
 	if err != nil {
 		return false, err
 	}
