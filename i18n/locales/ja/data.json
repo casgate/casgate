@@ -4,12 +4,13 @@
     "Get init score failed, error: %w": "イニットスコアの取得に失敗しました。エラー：%w",
     "Please sign out first": "最初にサインアウトしてください",
     "The application does not allow to sign up new account": "アプリケーションは新しいアカウントの登録を許可しません",
+    "User already registered": "User already registered",
     "Wrong email for invited user": "Wrong email for invited user",
-    "Wrong user type": "Wrong user type",
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
+    "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "チャレンジメソッドはS256である必要があります",
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "ログインできませんでした：%s",
@@ -24,6 +25,7 @@
     "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "ログイン方法：パスワードでのログインはアプリケーションで有効になっていません",
     "The provider: %s is not enabled for the application": "プロバイダー：%sはアプリケーションでは有効化されていません",
+    "Unable to get data from other organization without global administrator role": "Unable to get data from other organization without global administrator role",
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "不正操作",
     "Unknown authentication type (not password or provider), form = %s": "不明な認証タイプ（パスワードまたはプロバイダーではない）フォーム=%s",
@@ -42,6 +44,7 @@
     "Email is invalid": "電子メールは無効です",
     "Empty username.": "空のユーザー名。",
     "FirstName cannot be blank": "ファーストネームは空白にできません",
+    "Go to the LDAP tab and select the specific connection you have configured": "Go to the LDAP tab and select the specific connection you have configured",
     "Invitation code cannot be blank": "Invitation code cannot be blank",
     "Invitation code is invalid": "Invitation code is invalid",
     "LDAP user name or password incorrect": "Ldapのユーザー名またはパスワードが間違っています",
@@ -55,7 +58,6 @@
     "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
     "The user is forbidden to sign in, please contact the administrator": "ユーザーはサインインできません。管理者に連絡してください",
     "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
-    "Go to the LDAP tab and select the specific connection you have configured": "Go to the LDAP tab and select the specific connection you have configured",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "ユーザー名には英数字、アンダースコア、ハイフンしか含めることができません。連続したハイフンまたはアンダースコアは不可であり、ハイフンまたはアンダースコアで始まるまたは終わることもできません。",
     "Username already exists": "ユーザー名はすでに存在しています",
     "Username cannot contain white spaces": "ユーザ名にはスペースを含めることはできません",
@@ -93,6 +95,9 @@
     "This provider can't be unlinked": "このプロバイダーはリンク解除できません",
     "You are not the global admin, you can't unlink other users": "あなたはグローバル管理者ではありません、他のユーザーとのリンクを解除することはできません",
     "You can't unlink yourself, you are not a member of any application": "あなたは自分自身をアンリンクすることはできません、あなたはどのアプリケーションのメンバーでもありません"
+  },
+  "mt.Sprintf(\"auth": {
+    "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
   },
   "organization": {
     "Only admin can modify the %s.": "管理者のみが%sを変更できます。",
@@ -142,8 +147,8 @@
   "util": {
     "No application is found for userId: %s": "ユーザーIDに対するアプリケーションが見つかりません： %s",
     "No provider for category: %s is found for application: %s": "アプリケーション：%sのカテゴリ%sのプロバイダが見つかりません",
-    "The provider: %s is not found": "プロバイダー：%sが見つかりません",
-    "The organization %s has dependencies and cannot be deleted": "組織%sには依存関係があり、削除できません"
+    "The organization %s has dependencies and cannot be deleted": "組織%sには依存関係があり、削除できません",
+    "The provider: %s is not found": "プロバイダー：%sが見つかりません"
   },
   "verification": {
     "Code has not been sent yet!": "まだコードが送信されていません！",
