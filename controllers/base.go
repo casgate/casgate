@@ -71,6 +71,18 @@ func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
 		Organization: c.Input().Get("organization"),
 	}
 
+	if !util.FilterField(result.Field) {
+		result.Field = ""
+	}
+
+	if !util.FilterField(result.SortField) {
+		result.SortField = ""
+	}
+
+	if !util.FilterField(result.SortOrder) {
+		result.SortOrder = ""
+	}
+
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 
