@@ -20,7 +20,7 @@ import (
 	"github.com/xorm-io/xorm"
 )
 
-// contextKey is a value for use with context.WithValue.
+// ContextKey is a value for use with context.WithValue.
 type ContextKey struct {
 	name string
 }

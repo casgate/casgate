@@ -20,6 +20,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/beego/beego/utils/pagination"
+	"github.com/casdoor/casdoor/ldap_sync"
+	"github.com/pkg/errors"
+
 	goldap "github.com/go-ldap/ldap/v3"
 
 	"github.com/casdoor/casdoor/object"
@@ -45,6 +49,10 @@ type LdapSyncResp struct {
 type LdapIdWithNameResp struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type SyncLdapUsersRequest struct {
+	Id string
 }
 
 const ldapSyncMinIntervalMinutes = 15
@@ -408,7 +416,7 @@ func (c *ApiController) SyncLdapUsers() {
 
 	id := c.Input().Get("id")
 
-	owner, ldapId := util.GetOwnerAndNameFromId(id)
+	_, ldapId := util.GetOwnerAndNameFromId(id)
 	var users []object.LdapUser
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &users)
 	if err != nil {
@@ -419,7 +427,6 @@ func (c *ApiController) SyncLdapUsers() {
 	}
 
 	syncResult, err := object.SyncLdapUsers(goCtx, object.LdapSyncCommand{
-		Owner:     owner,
 		LdapUsers: users,
 		LdapId:    ldapId,
 		Reason:    "manual",
@@ -435,6 +442,76 @@ func (c *ApiController) SyncLdapUsers() {
 	if err != nil {
 		record.AddReason(fmt.Sprintf("LDAP error: %s", err.Error()))
 
+		c.ResponseError(err.Error())
+		return
+	}
+
+	record.AddReason("LDAP: users sync finished")
+
+	c.ResponseOk(&LdapSyncResp{
+		Exist:  syncResult.Exist,
+		Failed: syncResult.Failed,
+	})
+}
+
+// SyncLdapUsersV2
+// @Title SyncLdapUsersV2
+// @Tag Account API
+// @Description sync ldap users by ldap uuid
+// @Param	body	body	SyncLdapUsersRequest	true
+// @Success 200 {object} LdapSyncResp The Response object
+// @router /sync-ldap-users-v2 [post]
+func (c *ApiController) SyncLdapUsersV2() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
+	syncRequest := SyncLdapUsersRequest{}
+	goCtx := c.getRequestCtx()
+	record := object.GetRecord(goCtx)
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &syncRequest)
+	if err != nil {
+		err = errors.Wrap(err, "SyncLdapUsersV2 error: unmarshal users")
+		record.AddReason(err.Error())
+		c.ResponseError(err.Error())
+		return
+	}
+
+	record.AddReason("SyncLdapUsersV2: start sync users")
+
+	var users []object.LdapUser
+	ldap, err := object.GetLdap(syncRequest.Id)
+	if err != nil {
+		err = errors.Wrap(err, "SyncLdapUsers error: failed to GetLdap")
+		record.AddReason(err.Error())
+		c.ResponseError(err.Error())
+		return
+	}
+
+	conn, err := ldap.GetLdapConn(goCtx)
+	if err != nil {
+		err = errors.Wrap(err, "SyncLdapUsers error: failed to GetLdapConn")
+		record.AddReason(err.Error())
+		c.ResponseError(err.Error())
+		return
+	}
+
+	res, err := conn.GetLdapUsers(ldap, nil, record)
+	if err != nil {
+		err = errors.Wrap(err, "SyncLdapUsers error: failed to GetLdapUsers")
+		record.AddReason(err.Error())
+		c.ResponseError(err.Error())
+		return
+	}
+	users = res
+
+	syncResult, err := object.SyncLdapUsers(goCtx, object.LdapSyncCommand{
+		LdapUsers: users,
+		LdapId:    syncRequest.Id,
+		Reason:    "manual",
+	})
+	if err != nil {
+		err = errors.Wrap(err, "SyncLdapUsers error")
+		record.AddReason(err.Error())
 		c.ResponseError(err.Error())
 		return
 	}
@@ -509,4 +586,63 @@ func (c *ApiController) TestLdapConnection() {
 	}
 
 	c.ResponseOk()
+}
+
+// GetLdapSyncHistory
+// @Title GetLdapSyncHistory
+// @Tag Account API
+// @Description get detailed ldap sync history info, with list of users and what happened to them
+// @Param id query string true "Ldap UUID"
+// @Param limit	query	string	10 	false	"Results per page"
+// @Param sortOrder	query string "descend" false "descend/ascend"
+// @Param p query string 1 false "Page number"
+// @Success 200 {array} ldap_sync.LdapSyncHistory The Response object
+// @router /get-ldap-sync-history [get]
+func (c *ApiController) GetLdapSyncHistory() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	var err error
+
+	ctx := c.getRequestCtx()
+	record := object.GetRecord(ctx)
+
+	ldapId := c.Input().Get("id")
+	sortOrderRaw := c.Input().Get("sortOrder")
+	limit := request.Limit
+
+	if limit <= 0 {
+		limit = 10
+	}
+	sortOrder := "descend"
+	if sortOrderRaw == "ascend" {
+		sortOrder = "ascend"
+	}
+
+	if ldapId == "" {
+		err = errors.New("GetLdapSyncHistory: ldap id is required")
+		record.AddReason(err.Error())
+
+		c.ResponseBadRequest(err.Error())
+	}
+
+	repo := ldap_sync.LdapSyncHistoryRepository{}
+	count, err := repo.CountLdapSyncHistoryEntries(ldapId)
+	if err != nil {
+		err = errors.Wrap(err, "CountLdapSyncHistoryEntries failed")
+		record.AddReason(err.Error())
+
+		c.ResponseError(err.Error())
+		return
+	}
+
+	paginator := pagination.SetPaginator(c.Ctx, limit, count)
+	history, err := repo.GetLdapSyncHistory(ldapId, paginator.Offset(), limit, sortOrder)
+	if err != nil {
+		err = errors.Wrap(err, "GetLdapSyncHistory failed")
+		record.AddReason(err.Error())
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk(history, paginator.Nums())
 }

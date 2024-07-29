@@ -1837,55 +1837,6 @@
                 }
             }
         },
-        "/api/get-auth-url": {
-            "get": {
-                "tags": [
-                    "Login API"
-                ],
-                "description": "get auth url",
-                "operationId": "ApiController.GetAuthURL",
-                "parameters": [
-                    {
-                        "name": "providerID",
-                        "in": "query",
-                        "description": "The id ( owner/name ) of the provider",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "applicationID",
-                        "in": "query",
-                        "description": "The id ( owner/name ) of the application",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "method",
-                        "in": "query",
-                        "description": "Query method",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/controllers.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
         "/api/get-application": {
             "get": {
                 "tags": [
@@ -1937,6 +1888,55 @@
                                 "$ref": "#/definitions/object.Application"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/get-auth-url": {
+            "get": {
+                "tags": [
+                    "Login API"
+                ],
+                "description": "get auth url",
+                "operationId": "ApiController.GetAuthURL",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "providerID",
+                        "description": "The id ( owner/name ) of the provider",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "applicationID",
+                        "description": "The id ( owner/name ) of the application",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "method",
+                        "description": "Query method",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
@@ -2413,6 +2413,56 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/LdapIdWithNameResp"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/get-ldap-sync-history": {
+            "get": {
+                "tags": [
+                    "Account API"
+                ],
+                "description": "get detailed ldap sync history info, with list of users and what happened to them",
+                "operationId": "ApiController.GetLdapSyncHistory",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "description": "Ldap UUID",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "description": "Results per page",
+                        "type": "string",
+                        "default": "10"
+                    },
+                    {
+                        "in": "query",
+                        "name": "sortOrder",
+                        "description": "descend/ascend",
+                        "type": "string",
+                        "default": "descend"
+                    },
+                    {
+                        "in": "query",
+                        "name": "p",
+                        "description": "Page number",
+                        "type": "string",
+                        "default": "0"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ldap_sync.LdapSyncHistory"
                             }
                         }
                     }
@@ -4824,6 +4874,33 @@
                 }
             }
         },
+        "/api/sync-ldap-users-v2": {
+            "post": {
+                "tags": [
+                    "Account API"
+                ],
+                "description": "sync ldap users by ldap uuid",
+                "operationId": "ApiController.SyncLdapUsersV2",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "true",
+                        "schema": {
+                            "$ref": "#/definitions/SyncLdapUsersRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/LdapSyncResp"
+                        }
+                    }
+                }
+            }
+        },
         "/api/test-ldap": {
             "post": {
                 "tags": [
@@ -5979,11 +6056,11 @@
         }
     },
     "definitions": {
-        "195958.\u003cnil\u003e.string": {
+        "233165.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "319386.\u003cnil\u003e.string": {
+        "347125.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -6007,6 +6084,10 @@
             "title": "Response",
             "type": "object"
         },
+        "SyncLdapUsersRequest": {
+            "title": "SyncLdapUsersRequest",
+            "type": "object"
+        },
         "casbin.Enforcer": {
             "title": "Enforcer",
             "type": "object"
@@ -6020,6 +6101,9 @@
             "type": "object",
             "properties": {
                 "content": {
+                    "type": "string"
+                },
+                "owner": {
                     "type": "string"
                 },
                 "provider": {
@@ -6099,6 +6183,55 @@
         "jose.JSONWebKey": {
             "title": "JSONWebKey",
             "type": "object"
+        },
+        "ldap_sync.LdapSyncHistory": {
+            "title": "LdapSyncHistory",
+            "type": "object",
+            "properties": {
+                "ended_at": {
+                    "type": "string",
+                    "format": "datetime"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "ldap_id": {
+                    "type": "string"
+                },
+                "ldap_sync_id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ldap_sync.LdapSyncHistoryUser"
+                    }
+                },
+                "started_at": {
+                    "type": "string",
+                    "format": "datetime"
+                },
+                "synced_by_user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "ldap_sync.LdapSyncHistoryUser": {
+            "title": "LdapSyncHistoryUser",
+            "type": "object",
+            "properties": {
+                "Action": {
+                    "type": "string"
+                },
+                "UUID": {
+                    "type": "string"
+                }
+            }
         },
         "model.Model": {
             "title": "Model",
@@ -6203,6 +6336,12 @@
                 "enableCodeSignin": {
                     "type": "boolean"
                 },
+                "enableIdpSignUp": {
+                    "type": "boolean"
+                },
+                "enableInternalSignUp": {
+                    "type": "boolean"
+                },
                 "enableLinkWithEmail": {
                     "type": "boolean"
                 },
@@ -6213,12 +6352,6 @@
                     "type": "boolean"
                 },
                 "enableSamlCompress": {
-                    "type": "boolean"
-                },
-                "enableInternalSignUp": {
-                    "type": "boolean"
-                },
-                "enableIdpSignUp": {
                     "type": "boolean"
                 },
                 "enableSigninSession": {
@@ -6694,6 +6827,9 @@
                 "enableAttributeMapping": {
                     "type": "boolean"
                 },
+                "enableCaseInsensitivity": {
+                    "type": "boolean"
+                },
                 "enableCryptographicAuth": {
                     "type": "boolean"
                 },
@@ -6740,10 +6876,10 @@
                 "serverName": {
                     "type": "string"
                 },
-                "username": {
+                "userMappingStrategy": {
                     "type": "string"
                 },
-                "userMappingStrategy": {
+                "username": {
                     "type": "string"
                 }
             }
@@ -6821,7 +6957,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/195958.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/233165.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -7021,24 +7157,6 @@
                     "$ref": "#/definitions/object.ThemeData"
                 },
                 "websiteUrl": {
-                    "type": "string"
-                }
-            }
-        },
-        "object.Ormer": {
-            "title": "Ormer",
-            "type": "object",
-            "properties": {
-                "Engine": {
-                    "$ref": "#/definitions/xorm.Engine"
-                },
-                "dataSourceName": {
-                    "type": "string"
-                },
-                "dbName": {
-                    "type": "string"
-                },
-                "driverName": {
                     "type": "string"
                 }
             }
@@ -7548,7 +7666,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/319386.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/347125.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"
@@ -7738,14 +7856,14 @@
                 "isEnabled": {
                     "type": "boolean"
                 },
+                "manualOverride": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
                 "owner": {
                     "type": "string"
-                },
-                "manualOverride": {
-                    "type": "boolean"
                 },
                 "roles": {
                     "type": "array",
@@ -8369,6 +8487,9 @@
                         "$ref": "#/definitions/object.ManagedAccount"
                     }
                 },
+                "mappingStrategy": {
+                    "type": "string"
+                },
                 "meetup": {
                     "type": "string"
                 },
@@ -8586,9 +8707,6 @@
                 },
                 "zoom": {
                     "type": "string"
-                },
-                "mappingStrategy": {
-                    "type": "string"
                 }
             }
         },
@@ -8724,6 +8842,24 @@
                 }
             }
         },
+        "orm.Ormer": {
+            "title": "Ormer",
+            "type": "object",
+            "properties": {
+                "Engine": {
+                    "$ref": "#/definitions/xorm.Engine"
+                },
+                "dataSourceName": {
+                    "type": "string"
+                },
+                "dbName": {
+                    "type": "string"
+                },
+                "driverName": {
+                    "type": "string"
+                }
+            }
+        },
         "pp.PaymentState": {
             "title": "PaymentState",
             "type": "string",
@@ -8750,10 +8886,6 @@
         },
         "protocol.CredentialCreationResponse": {
             "title": "CredentialCreationResponse",
-            "type": "object"
-        },
-        "true": {
-            "title": "true",
             "type": "object"
         },
         "util.SystemInfo": {

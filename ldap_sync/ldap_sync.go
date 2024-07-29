@@ -20,27 +20,12 @@ import (
 	"time"
 )
 
-type LdapSyncHistory struct {
-	Id             int                   `xorm:"int notnull pk" json:"id"`
-	LdapSyncID     string                `xorm:"'ldap_sync_id' varchar(100) notnull" json:"ldap_sync_id"`
-	StartedAt      time.Time             `xorm:"datetime notnull" json:"started_at"`
-	EndedAt        time.Time             `xorm:"datetime" json:"ended_at"`
-	Reason         string                `xorm:"varchar(100) notnull" json:"reason"`
-	SyncedByUserID string                `xorm:"'synced_by_user_id' varchar(100) notnull" json:"synced_by_user_id"`
-	Result         []LdapSyncHistoryUser `xorm:"json" json:"result"`
-}
-
 type LdapSync struct {
 	Id        int       `xorm:"int notnull pk" json:"id"`
 	LdapID    string    `xorm:"'ldap_id' varchar(100) notnull" json:"ldap_id"`
 	Status    string    `xorm:"varchar(100) notnull" json:"status"`
 	CreatedAt time.Time `xorm:"datetime notnull" json:"created_at"`
 	UpdatedAt time.Time `xorm:"datetime notnull" json:"updated_at"`
-}
-
-type LdapSyncHistoryUser struct {
-	UUID   string
-	Action string
 }
 
 type LdapSyncStatus string
@@ -58,10 +43,11 @@ var (
 
 type LdapSyncRepository struct{}
 
-func (r *LdapSyncRepository) LockLDAPForSync(ldapId string) error {
-	exists, err := orm.AppOrmer.Engine.Exist(&LdapSync{LdapID: ldapId})
+func (r *LdapSyncRepository) LockLDAPForSync(ldapId string) (int, error) {
+	ldapSync := &LdapSync{LdapID: ldapId}
+	exists, err := orm.AppOrmer.Engine.Get(ldapSync)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if exists {
 		res, err := orm.AppOrmer.Engine.Exec(
@@ -72,17 +58,17 @@ func (r *LdapSyncRepository) LockLDAPForSync(ldapId string) error {
 			ldapId,
 			time.Now().UTC().Add(-LdapSyncTimeout))
 		if err != nil {
-			return err
+			return 0, err
 		}
 		// For use with PostgreSQL rewrite using "Returning" clause
 		rows, err := res.RowsAffected()
 		if err != nil {
-			return err
+			return 0, err
 		}
 		if rows == 0 {
-			return LDAPSyncInProgress
+			return 0, LDAPSyncInProgress
 		}
-		return nil
+		return ldapSync.Id, nil
 	}
 
 	_, err = orm.AppOrmer.Engine.Exec(
@@ -92,9 +78,13 @@ func (r *LdapSyncRepository) LockLDAPForSync(ldapId string) error {
 		time.Now().UTC(),
 		time.Now().UTC())
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	_, err = orm.AppOrmer.Engine.Get(ldapSync)
+	if err != nil {
+		return 0, err
+	}
+	return ldapSync.Id, nil
 }
 
 func (r *LdapSyncRepository) UnlockLDAPForSync(ldapId string) error {

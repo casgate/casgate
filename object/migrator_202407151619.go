@@ -40,7 +40,8 @@ func (*Migrator_202407151619) DoMigration() *migrate.Migration {
 			sql := `
 CREATE TABLE ldap_sync_history (
     id int not null primary key auto_increment,
-    ldap_sync_id varchar(100) not null,
+    ldap_sync_id int not null,
+    ldap_id varchar(100) not null,
     started_at datetime not null,
     ended_at datetime,
     reason varchar(100) not null,

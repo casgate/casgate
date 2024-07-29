@@ -1189,39 +1189,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/Response'
-  /api/get-auth-url:
-    get:
-      tags:
-        - Login API
-      description: get auth url
-      operationId: ApiController.GetAuthURL
-      parameters:
-        - name: providerID
-          in: query
-          required: true
-          type: string
-          description: "The id ( owner/name ) of the provider"
-        - name: applicationID
-          in: query
-          required: true
-          type: string
-          description: "The id ( owner/name ) of the application"
-        - name: method
-          in: query
-          required: true
-          type: string
-          description: "Query method"
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-        "400":
-          description: Bad Request
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
   /api/get-application:
     get:
       tags:
@@ -1258,6 +1225,39 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Application'
+  /api/get-auth-url:
+    get:
+      tags:
+      - Login API
+      description: get auth url
+      operationId: ApiController.GetAuthURL
+      parameters:
+      - in: query
+        name: providerID
+        description: The id ( owner/name ) of the provider
+        required: true
+        type: string
+      - in: query
+        name: applicationID
+        description: The id ( owner/name ) of the application
+        required: true
+        type: string
+      - in: query
+        name: method
+        description: Query method
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/Response'
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
   /api/get-captcha:
     get:
       tags:
@@ -1570,6 +1570,40 @@ paths:
             type: array
             items:
               $ref: '#/definitions/LdapIdWithNameResp'
+  /api/get-ldap-sync-history:
+    get:
+      tags:
+      - Account API
+      description: get detailed ldap sync history info, with list of users and what happened to them
+      operationId: ApiController.GetLdapSyncHistory
+      parameters:
+      - in: query
+        name: id
+        description: Ldap UUID
+        required: true
+        type: string
+      - in: query
+        name: limit
+        description: Results per page
+        type: string
+        default: "10"
+      - in: query
+        name: sortOrder
+        description: descend/ascend
+        type: string
+        default: descend
+      - in: query
+        name: p
+        description: Page number
+        type: string
+        default: "0"
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ldap_sync.LdapSyncHistory'
   /api/get-ldap-users:
     get:
       tags:
@@ -3150,6 +3184,23 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/LdapSyncResp'
+  /api/sync-ldap-users-v2:
+    post:
+      tags:
+      - Account API
+      description: sync ldap users by ldap uuid
+      operationId: ApiController.SyncLdapUsersV2
+      parameters:
+      - in: body
+        name: body
+        description: "true"
+        schema:
+          $ref: '#/definitions/SyncLdapUsersRequest'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/LdapSyncResp'
   /api/test-ldap:
     post:
       tags:
@@ -3906,10 +3957,10 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  195958.<nil>.string:
+  233165.<nil>.string:
     title: string
     type: object
-  319386.<nil>.string:
+  347125.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -3927,6 +3978,9 @@ definitions:
   Response:
     title: Response
     type: object
+  SyncLdapUsersRequest:
+    title: SyncLdapUsersRequest
+    type: object
   casbin.Enforcer:
     title: Enforcer
     type: object
@@ -3938,6 +3992,8 @@ definitions:
     type: object
     properties:
       content:
+        type: string
+      owner:
         type: string
       provider:
         type: string
@@ -3990,6 +4046,40 @@ definitions:
   jose.JSONWebKey:
     title: JSONWebKey
     type: object
+  ldap_sync.LdapSyncHistory:
+    title: LdapSyncHistory
+    type: object
+    properties:
+      ended_at:
+        type: string
+        format: datetime
+      id:
+        type: integer
+        format: int64
+      ldap_id:
+        type: string
+      ldap_sync_id:
+        type: integer
+        format: int64
+      reason:
+        type: string
+      result:
+        type: array
+        items:
+          $ref: '#/definitions/ldap_sync.LdapSyncHistoryUser'
+      started_at:
+        type: string
+        format: datetime
+      synced_by_user_id:
+        type: string
+  ldap_sync.LdapSyncHistoryUser:
+    title: LdapSyncHistoryUser
+    type: object
+    properties:
+      Action:
+        type: string
+      UUID:
+        type: string
   model.Model:
     title: Model
     type: object
@@ -4061,6 +4151,10 @@ definitions:
         type: boolean
       enableCodeSignin:
         type: boolean
+      enableIdpSignUp:
+        type: boolean
+      enableInternalSignUp:
+        type: boolean
       enableLinkWithEmail:
         type: boolean
       enablePassword:
@@ -4068,10 +4162,6 @@ definitions:
       enablePasswordRecovery:
         type: boolean
       enableSamlCompress:
-        type: boolean
-      enableInternalSignUp:
-        type: boolean
-      enableIdpSignUp:
         type: boolean
       enableSigninSession:
         type: boolean
@@ -4393,6 +4483,8 @@ definitions:
         type: string
       enableAttributeMapping:
         type: boolean
+      enableCaseInsensitivity:
+        type: boolean
       enableCryptographicAuth:
         type: boolean
       enableRoleMapping:
@@ -4424,9 +4516,9 @@ definitions:
           $ref: '#/definitions/object.RoleMappingItem'
       serverName:
         type: string
-      username:
-        type: string
       userMappingStrategy:
+        type: string
+      username:
         type: string
   object.ManagedAccount:
     title: ManagedAccount
@@ -4479,7 +4571,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/195958.<nil>.string'
+          $ref: '#/definitions/233165.<nil>.string'
       description:
         type: string
       displayName:
@@ -4613,18 +4705,6 @@ definitions:
       themeData:
         $ref: '#/definitions/object.ThemeData'
       websiteUrl:
-        type: string
-  object.Ormer:
-    title: Ormer
-    type: object
-    properties:
-      Engine:
-        $ref: '#/definitions/xorm.Engine'
-      dataSourceName:
-        type: string
-      dbName:
-        type: string
-      driverName:
         type: string
   object.Payment:
     title: Payment
@@ -4967,7 +5047,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/319386.<nil>.string'
+        $ref: '#/definitions/347125.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:
@@ -5094,6 +5174,8 @@ definitions:
           type: string
       isEnabled:
         type: boolean
+      manualOverride:
+        type: boolean
       name:
         type: string
       owner:
@@ -5110,8 +5192,6 @@ definitions:
         type: array
         items:
           type: string
-      manualOverride:
-        type: boolean
   object.RoleMappingItem:
     title: RoleMappingItem
     type: object
@@ -5520,6 +5600,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/object.ManagedAccount'
+      mappingStrategy:
+        type: string
       meetup:
         type: string
       metamask:
@@ -5666,8 +5748,6 @@ definitions:
         type: string
       zoom:
         type: string
-      mappingStrategy:
-        type: string
   object.UserApiToken:
     title: UserApiToken
     type: object
@@ -5756,6 +5836,18 @@ definitions:
         type: string
       url:
         type: string
+  orm.Ormer:
+    title: Ormer
+    type: object
+    properties:
+      Engine:
+        $ref: '#/definitions/xorm.Engine'
+      dataSourceName:
+        type: string
+      dbName:
+        type: string
+      driverName:
+        type: string
   pp.PaymentState:
     title: PaymentState
     type: string
@@ -5777,9 +5869,6 @@ definitions:
     type: object
   protocol.CredentialCreationResponse:
     title: CredentialCreationResponse
-    type: object
-  "true":
-    title: "true"
     type: object
   util.SystemInfo:
     title: SystemInfo
