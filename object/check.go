@@ -46,6 +46,8 @@ const (
 
 	DefaultFailedSigninLimit      = 5
 	DefaultFailedSigninFrozenTime = 15
+
+	builtInOrganization = "built-in"
 )
 
 func CheckUserSignup(application *Application, organization *Organization, form *form.AuthForm, lang string) string {
@@ -482,7 +484,7 @@ func CheckPassErrorToMessage(err error, lang string) string {
 	return err.Error()
 }
 
-func CheckUserPermission(requestUserId, userId string, strict bool, lang string) (bool, error) {
+func CheckUserPermission(ctx context.Context, requestUserId, userId string, strict bool, lang string) (bool, error) {
 	if requestUserId == "" {
 		return false, fmt.Errorf(i18n.Translate(lang, "general:Please login first"))
 	}
@@ -508,7 +510,21 @@ func CheckUserPermission(requestUserId, userId string, strict bool, lang string)
 
 	hasPermission := false
 	if strings.HasPrefix(requestUserId, "app/") {
-		hasPermission = true
+		requestApp, err := GetApplication(ctx, fmt.Sprintf("admin/%s", strings.Split(requestUserId, "/")[1]))
+		if err != nil {
+			return false, err
+		}
+		if requestApp == nil {
+			return false, fmt.Errorf(i18n.Translate(lang, "check:Session outdated, please login again"))
+		}
+
+		if requestApp.Organization == builtInOrganization {
+			hasPermission = true
+		}
+
+		if requestApp.Organization == userOwner {
+			hasPermission = true
+		}
 	} else {
 		requestUser, err := GetUser(requestUserId)
 		if err != nil {
