@@ -189,8 +189,8 @@ func initBuiltInApplication(ctx context.Context) {
 		Organization:         "built-in",
 		Cert:                 "cert-built-in",
 		EnablePassword:       true,
-		EnableInternalSignUp: true,
-		EnableIdpSignUp:      true,
+		EnableInternalSignUp: false,
+		EnableIdpSignUp:      false,
 		Providers: []*ProviderItem{
 			{Name: "provider_captcha_default", CanSignUp: false, CanSignIn: false, CanUnlink: false, Prompted: false, AlertType: "None", Rule: "None", Provider: nil},
 		},
