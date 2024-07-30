@@ -85,6 +85,6 @@ func GetCountryCode(prefix string, phone string) (string, error) {
 	return countryCode, nil
 }
 
-func FilterField(field string) bool {
+func IsFieldValueAllowedForDB(field string) bool {
 	return ReFieldWhiteList.MatchString(field)
 }

@@ -10,6 +10,7 @@
     "organization in request differs from application organization": "Организация в запросе отличается от организации приложения"
   },
   "auth": {
+    "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "Метод испытаний должен быть S256",
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Не удалось войти в систему: %s",
@@ -24,6 +25,7 @@
     "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "Метод входа: вход с паролем не включен для приложения",
     "The provider: %s is not enabled for the application": "Провайдер: %s не включен для приложения",
+    "Unable to get data from other organization without global administrator role": "Unable to get data from other organization without global administrator role",
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Несанкционированная операция",
     "Unknown authentication type (not password or provider), form = %s": "Неизвестный тип аутентификации (не пароль и не провайдер), форма = %s",
@@ -42,6 +44,7 @@
     "Email is invalid": "Адрес электронной почты недействительный",
     "Empty username.": "Пустое имя пользователя.",
     "FirstName cannot be blank": "Имя не может быть пустым",
+    "Go to the LDAP tab and select the specific connection you have configured": "Перейди на вкладку LDAP и выбери конкретное настроенное подключение",
     "Invitation code cannot be blank": "Invitation code cannot be blank",
     "Invitation code is invalid": "Invitation code is invalid",
     "LDAP user name or password incorrect": "Неправильное имя пользователя или пароль Ldap",
@@ -55,7 +58,6 @@
     "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
     "The user is forbidden to sign in, please contact the administrator": "Пользователю запрещен вход, пожалуйста, обратитесь к администратору",
     "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
-    "Go to the LDAP tab and select the specific connection you have configured": "Перейди на вкладку LDAP и выбери конкретное настроенное подключение",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "Имя пользователя может состоять только из буквенно-цифровых символов, нижних подчеркиваний или дефисов, не может содержать последовательные дефисы или подчеркивания, а также не может начинаться или заканчиваться на дефис или подчеркивание.",
     "Username already exists": "Имя пользователя уже существует",
     "Username cannot contain white spaces": "Имя пользователя не может содержать пробелы",
@@ -93,6 +95,9 @@
     "This provider can't be unlinked": "Этот провайдер не может быть отсоединен",
     "You are not the global admin, you can't unlink other users": "Вы не являетесь глобальным администратором, вы не можете отсоединять других пользователей",
     "You can't unlink yourself, you are not a member of any application": "Вы не можете отвязаться, так как вы не являетесь участником никакого приложения"
+  },
+  "mt.Sprintf(\"auth": {
+    "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
   },
   "organization": {
     "Only admin can modify the %s.": "Только администратор может изменять %s.",
@@ -142,8 +147,8 @@
   "util": {
     "No application is found for userId: %s": "Не найдено заявки для пользователя с идентификатором: %s",
     "No provider for category: %s is found for application: %s": "Нет поставщика для категории: %s для приложения: %s",
-    "The provider: %s is not found": "Поставщик: %s не найден",
-    "The organization %s has dependencies and cannot be deleted": "Организация %s имеет зависимости и не может быть удалена"
+    "The organization %s has dependencies and cannot be deleted": "Организация %s имеет зависимости и не может быть удалена",
+    "The provider: %s is not found": "Поставщик: %s не найден"
   },
   "verification": {
     "Code has not been sent yet!": "Код еще не был отправлен!",

@@ -71,15 +71,16 @@ func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
 		Organization: c.Input().Get("organization"),
 	}
 
-	if !util.FilterField(result.Field) {
+	if !util.IsFieldValueAllowedForDB(result.Field) {
 		result.Field = ""
+		result.Value = ""
 	}
 
-	if !util.FilterField(result.SortField) {
+	if !util.IsFieldValueAllowedForDB(result.SortField) {
 		result.SortField = ""
 	}
 
-	if !util.FilterField(result.SortOrder) {
+	if !util.IsFieldValueAllowedForDB(result.SortOrder) {
 		result.SortOrder = ""
 	}
 

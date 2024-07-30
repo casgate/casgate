@@ -10,6 +10,7 @@
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
+    "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "La méthode de défi doit être S256",
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Échec de la connexion : %s",
@@ -24,6 +25,7 @@
     "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "La méthode de connexion : connexion avec mot de passe n'est pas activée pour l'application",
     "The provider: %s is not enabled for the application": "Le fournisseur :%s n'est pas activé pour l'application",
+    "Unable to get data from other organization without global administrator role": "Unable to get data from other organization without global administrator role",
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Opération non autorisée",
     "Unknown authentication type (not password or provider), form = %s": "Type d'authentification inconnu (pas de mot de passe ou de fournisseur), formulaire = %s",
@@ -42,6 +44,7 @@
     "Email is invalid": "L'adresse e-mail est invalide",
     "Empty username.": "Nom d'utilisateur vide.",
     "FirstName cannot be blank": "Le prénom ne peut pas être laissé vide",
+    "Go to the LDAP tab and select the specific connection you have configured": "Go to the LDAP tab and select the specific connection you have configured",
     "Invitation code cannot be blank": "Invitation code cannot be blank",
     "Invitation code is invalid": "Invitation code is invalid",
     "LDAP user name or password incorrect": "Nom d'utilisateur ou mot de passe LDAP incorrect",
@@ -55,7 +58,6 @@
     "The password must be between %d and %d characters long": "The password must be between %d and %d characters long",
     "The user is forbidden to sign in, please contact the administrator": "L'utilisateur est interdit de se connecter, veuillez contacter l'administrateur",
     "The user: %s doesn't exist in LDAP server": "The user: %s doesn't exist in LDAP server",
-    "Go to the LDAP tab and select the specific connection you have configured": "Go to the LDAP tab and select the specific connection you have configured",
     "The username may only contain alphanumeric characters, underlines or hyphens, cannot have consecutive hyphens or underlines, and cannot begin or end with a hyphen or underline.": "Le nom d'utilisateur ne peut contenir que des caractères alphanumériques, des traits soulignés ou des tirets, ne peut pas avoir de tirets ou de traits soulignés consécutifs et ne peut pas commencer ou se terminer par un tiret ou un trait souligné.",
     "Username already exists": "Nom d'utilisateur existe déjà",
     "Username cannot contain white spaces": "Nom d'utilisateur ne peut pas contenir d'espaces blancs",
@@ -93,6 +95,9 @@
     "This provider can't be unlinked": "Ce fournisseur ne peut pas être dissocié",
     "You are not the global admin, you can't unlink other users": "Vous n'êtes pas l'administrateur global, vous ne pouvez pas détacher d'autres utilisateurs",
     "You can't unlink yourself, you are not a member of any application": "Vous ne pouvez pas vous désolidariser, car vous n'êtes membre d'aucune application"
+  },
+  "mt.Sprintf(\"auth": {
+    "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
   },
   "organization": {
     "Only admin can modify the %s.": "Seul l'administrateur peut modifier le %s.",
@@ -142,8 +147,8 @@
   "util": {
     "No application is found for userId: %s": "Aucune application n'a été trouvée pour l'identifiant d'utilisateur : %s",
     "No provider for category: %s is found for application: %s": "Aucun fournisseur pour la catégorie: %s n'est trouvé pour l'application: %s",
-    "The provider: %s is not found": "Le fournisseur : %s n'a pas été trouvé",
-    "The organization %s has dependencies and cannot be deleted": "L'organisation %s a des dépendances et ne peut pas être supprimée"
+    "The organization %s has dependencies and cannot be deleted": "L'organisation %s a des dépendances et ne peut pas être supprimée",
+    "The provider: %s is not found": "Le fournisseur : %s n'a pas été trouvé"
   },
   "verification": {
     "Code has not been sent yet!": "Le code n'a pas encore été envoyé !",
