@@ -242,7 +242,7 @@ func (c *ApiController) AddLdap() {
 		msg = c.T("general:Missing certificate")
 	} else if disabledCryptoAndEmptyCred {
 		msg = c.T("general:Missing administrator credentials")
-	} else if ldap.AutoSync < ldapSyncMinIntervalMinutes {
+	} else if ldap.AutoSync != 0 && ldap.AutoSync < ldapSyncMinIntervalMinutes {
 		msg = c.T("general:Ldap sync interval can't be less than 15 minutes")
 	}
 
@@ -316,7 +316,7 @@ func (c *ApiController) UpdateLdap() {
 		msg = c.T("general:Missing client certificate")
 	} else if disabledCryptoAndEmptyCred {
 		msg = c.T("general:Missing administrator credentials")
-	} else if ldap.AutoSync < ldapSyncMinIntervalMinutes {
+	} else if ldap.AutoSync != 0 && ldap.AutoSync < ldapSyncMinIntervalMinutes {
 		msg = c.T("general:Ldap sync interval can't be less than 15 minutes")
 	}
 

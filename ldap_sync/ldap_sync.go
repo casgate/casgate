@@ -16,7 +16,9 @@ package ldap_sync
 
 import (
 	"errors"
+	"fmt"
 	"github.com/casdoor/casdoor/orm"
+	"strconv"
 	"time"
 )
 
@@ -50,9 +52,9 @@ func (r *LdapSyncRepository) LockLDAPForSync(ldapId string) (int, error) {
 		return 0, err
 	}
 	if exists {
-		res, err := orm.AppOrmer.Engine.Exec(
+		res, err := orm.AppOrmer.Engine.QueryString(
 			`UPDATE ldap_sync SET status = ?, updated_at = ? WHERE ldap_id = ? AND 
-                                                         (status = 'off' OR (status = 'on' AND updated_at < ?))`,
+                                                         (status = 'off' OR (status = 'on' AND updated_at < ?)) RETURNING id`,
 			LdapSyncStatusOn,
 			time.Now().UTC(),
 			ldapId,
@@ -60,15 +62,15 @@ func (r *LdapSyncRepository) LockLDAPForSync(ldapId string) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		// For use with PostgreSQL rewrite using "Returning" clause
-		rows, err := res.RowsAffected()
+		if res == nil {
+			return 0, LDAPSyncInProgress
+		}
+		id := fmt.Sprintf("%s", res[0]["id"])
+		ldapSyncID, err := strconv.Atoi(id)
 		if err != nil {
 			return 0, err
 		}
-		if rows == 0 {
-			return 0, LDAPSyncInProgress
-		}
-		return ldapSync.Id, nil
+		return ldapSyncID, nil
 	}
 
 	_, err = orm.AppOrmer.Engine.Exec(

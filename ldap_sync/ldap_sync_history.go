@@ -6,7 +6,7 @@ import (
 )
 
 type LdapSyncHistory struct {
-	Id             int                   `xorm:"int notnull pk" json:"id"`
+	Id             int                   `xorm:"int notnull pk autoincr" json:"id"`
 	LdapSyncID     int                   `xorm:"'ldap_sync_id' int notnull" json:"ldap_sync_id"`
 	LdapID         string                `xorm:"'ldap_id' varchar(100) notnull" json:"ldap_id"`
 	StartedAt      time.Time             `xorm:"datetime notnull" json:"started_at"`

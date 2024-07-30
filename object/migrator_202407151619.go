@@ -36,17 +36,16 @@ func (*Migrator_202407151619) DoMigration() *migrate.Migration {
 			if err != nil {
 				return err
 			}
-			// update permission_rule table
 			sql := `
 CREATE TABLE ldap_sync_history (
-    id int not null primary key auto_increment,
-    ldap_sync_id int not null,
-    ldap_id varchar(100) not null,
-    started_at datetime not null,
-    ended_at datetime,
-    reason varchar(100) not null,
-    synced_by_user_id varchar(100) not null,
-    result json
+    id SERIAL NOT NULL PRIMARY KEY,
+    ldap_sync_id INT NOT NULL ,
+    ldap_id TEXT NOT NULL,
+    started_at TIMESTAMP NOT NULL,
+    ended_at TIMESTAMP,
+    reason TEXT NOT NULL,
+    synced_by_user_id TEXT NOT NULL,
+    result JSONB
 );
 `
 			_, err = engine.Exec(sql)
@@ -56,11 +55,11 @@ CREATE TABLE ldap_sync_history (
 
 			sql = `
 CREATE TABLE ldap_sync (
-    id int not null primary key auto_increment,
-    ldap_id varchar(100) not null,
-    status varchar(100) not null,
-    created_at datetime not null,
-    updated_at datetime not null
+    id SERIAL NOT NULL PRIMARY KEY,
+    ldap_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    created_at TIMESTAMP not null,
+    updated_at TIMESTAMP not null
 );
 `
 			_, err = engine.Exec(sql)
