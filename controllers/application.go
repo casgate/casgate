@@ -221,9 +221,11 @@ func (c *ApiController) UpdateApplication() {
 		c.ResponseError(err.Error())
 		return
 	}
-	
+
 	application.Owner = "admin"
 	c.ValidateOrganization(application.Organization)
+
+	c.validateApplicationURLs(application)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateApplication(goCtx, id, &application))
 	c.ServeJSON()
@@ -252,6 +254,8 @@ func (c *ApiController) AddApplication() {
 	application.Owner = "admin"
 	c.ValidateOrganization(application.Organization)
 
+	c.validateApplicationURLs(application)
+
 	count, err := object.GetApplicationCount("", "", "")
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -262,8 +266,6 @@ func (c *ApiController) AddApplication() {
 		c.ResponseError(err.Error())
 		return
 	}
-
-
 
 	c.Data["json"] = wrapActionResponse(object.AddApplication(goCtx, &application))
 	c.ServeJSON()
@@ -279,7 +281,7 @@ func (c *ApiController) AddApplication() {
 func (c *ApiController) DeleteApplication() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	var application object.Application
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &application)
 	if err != nil {
@@ -297,4 +299,46 @@ func (c *ApiController) DeleteApplication() {
 
 	c.Data["json"] = wrapActionResponse(object.DeleteApplication(&application))
 	c.ServeJSON()
+}
+
+func (c *ApiController) validateApplicationURLs(application object.Application) {
+	if application.Logo != "" && !util.IsURLValid(application.Logo) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:Logo")))
+		return
+	}
+
+	if application.HomepageUrl != "" && !util.IsURLValid(application.HomepageUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:HomepageUrl")))
+		return
+	}
+
+	if application.SamlReplyUrl != "" && !util.IsURLValid(application.SamlReplyUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:SamlReplyUrl")))
+		return
+	}
+
+	if application.SignupUrl != "" && !util.IsURLValid(application.SignupUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:SignupUrl")))
+		return
+	}
+
+	if application.SigninUrl != "" && !util.IsURLValid(application.SigninUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:SigninUrl")))
+		return
+	}
+
+	if application.ForgetUrl != "" && !util.IsURLValid(application.ForgetUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:ForgetUrl")))
+		return
+	}
+
+	if application.AffiliationUrl != "" && !util.IsURLValid(application.AffiliationUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:AffiliationUrl")))
+		return
+	}
+
+	if application.FormBackgroundUrl != "" && !util.IsURLValid(application.FormBackgroundUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:FormBackgroundUrl")))
+		return
+	}
 }

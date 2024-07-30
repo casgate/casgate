@@ -9,6 +9,10 @@
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
+  "application": {
+    "HomepageUrl": "HomepageUrl",
+    "Logo": "Logo"
+  },
   "auth": {
     "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "Die Challenge-Methode sollte S256 sein",
@@ -72,6 +76,7 @@
     "unsupported password type: %s": "Nicht unterstützter Passworttyp: %s"
   },
   "general": {
+    "%s field is not valid URL": "%s field is not valid URL",
     "Invalid username or password/code": "Ungültiger Benutzername oder Passwort/Code",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
@@ -100,12 +105,31 @@
     "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
   },
   "organization": {
+    "AffiliationUrl": "AffiliationUrl",
+    "DefaultAvatar": "DefaultAvatar",
+    "Favicon": "Favicon",
+    "ForgetUrl": "ForgetUrl",
+    "FormBackgroundUrl": "FormBackgroundUrl",
     "Only admin can modify the %s.": "Nur der Administrator kann das %s ändern.",
+    "SamlReplyUrl": "SamlReplyUrl",
+    "SigninUrl": "SigninUrl",
+    "SignupUrl": "SignupUrl",
     "The %s is immutable.": "Das %s ist unveränderlich.",
-    "Unknown modify rule %s.": "Unbekannte Änderungsregel %s."
+    "Unknown modify rule %s.": "Unbekannte Änderungsregel %s.",
+    "WebsiteUrl": "WebsiteUrl"
   },
   "provider": {
+    "BaseHostUrl": "BaseHostUrl",
+    "CustomAuthUrl": "CustomAuthUrl",
+    "CustomConfUrl": "CustomConfUrl",
+    "CustomLogo": "CustomLogo",
+    "CustomTokenUrl": "CustomTokenUrl",
+    "CustomUserInfoUrl": "CustomUserInfoUrl",
+    "Domain": "Domain",
     "Invalid application id": "Ungültige Anwendungs-ID",
+    "IssuerUrl": "IssuerUrl",
+    "ProviderUrl": "ProviderUrl",
+    "SingleLogoutServiceUrl": "SingleLogoutServiceUrl",
     "the provider: %s does not exist": "Der Anbieter %s existiert nicht"
   },
   "resource": {
@@ -140,9 +164,11 @@
     "Token not found, invalid accessToken": "Token nicht gefunden, ungültiger Zugriffs-Token"
   },
   "user": {
+    "Avatar": "Avatar",
     "Display name cannot be empty": "Anzeigename darf nicht leer sein",
     "Failed to add userIdProvider": "Failed to add userIdProvider",
-    "New password cannot contain blank space.": "Das neue Passwort darf keine Leerzeichen enthalten."
+    "New password cannot contain blank space.": "Das neue Passwort darf keine Leerzeichen enthalten.",
+    "PermanentAvatar": "PermanentAvatar"
   },
   "util": {
     "No application is found for userId: %s": "Es wurde keine Anwendung für die Benutzer-ID gefunden: %s",
@@ -167,5 +193,8 @@
   "webauthn": {
     "Found no credentials for this user": "Es wurden keine Anmeldeinformationen für diesen Benutzer gefunden",
     "Please call WebAuthnSigninBegin first": "Bitte rufen Sie zuerst WebAuthnSigninBegin auf"
+  },
+  "webhook": {
+    "Url": "Url"
   }
 }

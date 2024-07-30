@@ -9,6 +9,10 @@
     "Wrong username for invited user": "Неверное имя пользователя приглашенного пользователя",
     "organization in request differs from application organization": "Организация в запросе отличается от организации приложения"
   },
+  "application": {
+    "HomepageUrl": "HomepageUrl",
+    "Logo": "Logo"
+  },
   "auth": {
     "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "Метод испытаний должен быть S256",
@@ -72,6 +76,7 @@
     "unsupported password type: %s": "неподдерживаемый тип пароля: %s"
   },
   "general": {
+    "%s field is not valid URL": "%s field is not valid URL",
     "Invalid username or password/code": "Неправильное имя пользователя или пароль/код",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
@@ -100,12 +105,31 @@
     "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
   },
   "organization": {
+    "AffiliationUrl": "AffiliationUrl",
+    "DefaultAvatar": "DefaultAvatar",
+    "Favicon": "Favicon",
+    "ForgetUrl": "ForgetUrl",
+    "FormBackgroundUrl": "FormBackgroundUrl",
     "Only admin can modify the %s.": "Только администратор может изменять %s.",
+    "SamlReplyUrl": "SamlReplyUrl",
+    "SigninUrl": "SigninUrl",
+    "SignupUrl": "SignupUrl",
     "The %s is immutable.": "%s неизменяемый.",
-    "Unknown modify rule %s.": "Неизвестное изменение правила %s."
+    "Unknown modify rule %s.": "Неизвестное изменение правила %s.",
+    "WebsiteUrl": "WebsiteUrl"
   },
   "provider": {
+    "BaseHostUrl": "BaseHostUrl",
+    "CustomAuthUrl": "CustomAuthUrl",
+    "CustomConfUrl": "CustomConfUrl",
+    "CustomLogo": "CustomLogo",
+    "CustomTokenUrl": "CustomTokenUrl",
+    "CustomUserInfoUrl": "CustomUserInfoUrl",
+    "Domain": "Domain",
     "Invalid application id": "Неверный идентификатор приложения",
+    "IssuerUrl": "IssuerUrl",
+    "ProviderUrl": "ProviderUrl",
+    "SingleLogoutServiceUrl": "SingleLogoutServiceUrl",
     "the provider: %s does not exist": "провайдер: %s не существует"
   },
   "resource": {
@@ -140,9 +164,11 @@
     "Token not found, invalid accessToken": "Токен не найден, недействительный accessToken"
   },
   "user": {
+    "Avatar": "Avatar",
     "Display name cannot be empty": "Отображаемое имя не может быть пустым",
     "Failed to add userIdProvider": "Failed to add userIdProvider",
-    "New password cannot contain blank space.": "Новый пароль не может содержать пробелы."
+    "New password cannot contain blank space.": "Новый пароль не может содержать пробелы.",
+    "PermanentAvatar": "PermanentAvatar"
   },
   "util": {
     "No application is found for userId: %s": "Не найдено заявки для пользователя с идентификатором: %s",
@@ -167,5 +193,8 @@
   "webauthn": {
     "Found no credentials for this user": "Не найдено учетных данных для этого пользователя",
     "Please call WebAuthnSigninBegin first": "Пожалуйста, сначала вызовите WebAuthnSigninBegin"
+  },
+  "webhook": {
+    "Url": "Url"
   }
 }

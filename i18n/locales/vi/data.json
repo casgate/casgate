@@ -9,6 +9,10 @@
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
+  "application": {
+    "HomepageUrl": "HomepageUrl",
+    "Logo": "Logo"
+  },
   "auth": {
     "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "Phương pháp thách thức nên là S256",
@@ -72,6 +76,7 @@
     "unsupported password type: %s": "Loại mật khẩu không được hỗ trợ: %s"
   },
   "general": {
+    "%s field is not valid URL": "%s field is not valid URL",
     "Invalid username or password/code": "Invalid username or password/code",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
@@ -100,12 +105,31 @@
     "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
   },
   "organization": {
+    "AffiliationUrl": "AffiliationUrl",
+    "DefaultAvatar": "DefaultAvatar",
+    "Favicon": "Favicon",
+    "ForgetUrl": "ForgetUrl",
+    "FormBackgroundUrl": "FormBackgroundUrl",
     "Only admin can modify the %s.": "Chỉ những người quản trị mới có thể sửa đổi %s.",
+    "SamlReplyUrl": "SamlReplyUrl",
+    "SigninUrl": "SigninUrl",
+    "SignupUrl": "SignupUrl",
     "The %s is immutable.": "%s không thể thay đổi được.",
-    "Unknown modify rule %s.": "Quy tắc thay đổi không xác định %s."
+    "Unknown modify rule %s.": "Quy tắc thay đổi không xác định %s.",
+    "WebsiteUrl": "WebsiteUrl"
   },
   "provider": {
+    "BaseHostUrl": "BaseHostUrl",
+    "CustomAuthUrl": "CustomAuthUrl",
+    "CustomConfUrl": "CustomConfUrl",
+    "CustomLogo": "CustomLogo",
+    "CustomTokenUrl": "CustomTokenUrl",
+    "CustomUserInfoUrl": "CustomUserInfoUrl",
+    "Domain": "Domain",
     "Invalid application id": "Sai ID ứng dụng",
+    "IssuerUrl": "IssuerUrl",
+    "ProviderUrl": "ProviderUrl",
+    "SingleLogoutServiceUrl": "SingleLogoutServiceUrl",
     "the provider: %s does not exist": "Nhà cung cấp: %s không tồn tại"
   },
   "resource": {
@@ -140,9 +164,11 @@
     "Token not found, invalid accessToken": "Token không tìm thấy, accessToken không hợp lệ"
   },
   "user": {
+    "Avatar": "Avatar",
     "Display name cannot be empty": "Tên hiển thị không thể trống",
     "Failed to add userIdProvider": "Failed to add userIdProvider",
-    "New password cannot contain blank space.": "Mật khẩu mới không thể chứa dấu trắng."
+    "New password cannot contain blank space.": "Mật khẩu mới không thể chứa dấu trắng.",
+    "PermanentAvatar": "PermanentAvatar"
   },
   "util": {
     "No application is found for userId: %s": "Không tìm thấy ứng dụng cho ID người dùng: %s",
@@ -167,5 +193,8 @@
   "webauthn": {
     "Found no credentials for this user": "Không tìm thấy thông tin xác thực cho người dùng này",
     "Please call WebAuthnSigninBegin first": "Vui lòng gọi WebAuthnSigninBegin trước"
+  },
+  "webhook": {
+    "Url": "Url"
   }
 }

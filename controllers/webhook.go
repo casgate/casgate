@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
@@ -118,6 +119,7 @@ func (c *ApiController) UpdateWebhook() {
 		return
 	}
 	c.ValidateOrganization(webhookFromDb.Organization)
+	c.validateWebhookURLs(webhook)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateWebhook(request.Id, &webhook))
 	c.ServeJSON()
@@ -141,6 +143,7 @@ func (c *ApiController) AddWebhook() {
 		return
 	}
 	c.ValidateOrganization(webhook.Organization)
+	c.validateWebhookURLs(webhook)
 
 	c.Data["json"] = wrapActionResponse(object.AddWebhook(&webhook))
 	c.ServeJSON()
@@ -172,4 +175,11 @@ func (c *ApiController) DeleteWebhook() {
 
 	c.Data["json"] = wrapActionResponse(object.DeleteWebhook(&webhook))
 	c.ServeJSON()
+}
+
+func (c *ApiController) validateWebhookURLs(webhook object.Webhook) {
+	if webhook.Url != "" && !util.IsURLValid(webhook.Url) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("webhook:Url")))
+		return
+	}
 }

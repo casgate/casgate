@@ -9,6 +9,10 @@
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
+  "application": {
+    "HomepageUrl": "HomepageUrl",
+    "Logo": "Logo"
+  },
   "auth": {
     "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "チャレンジメソッドはS256である必要があります",
@@ -72,6 +76,7 @@
     "unsupported password type: %s": "サポートされていないパスワードタイプ：%s"
   },
   "general": {
+    "%s field is not valid URL": "%s field is not valid URL",
     "Invalid username or password/code": "Invalid username or password/code",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
@@ -100,12 +105,31 @@
     "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
   },
   "organization": {
+    "AffiliationUrl": "AffiliationUrl",
+    "DefaultAvatar": "DefaultAvatar",
+    "Favicon": "Favicon",
+    "ForgetUrl": "ForgetUrl",
+    "FormBackgroundUrl": "FormBackgroundUrl",
     "Only admin can modify the %s.": "管理者のみが%sを変更できます。",
+    "SamlReplyUrl": "SamlReplyUrl",
+    "SigninUrl": "SigninUrl",
+    "SignupUrl": "SignupUrl",
     "The %s is immutable.": "%sは不変です。",
-    "Unknown modify rule %s.": "未知の変更ルール%s。"
+    "Unknown modify rule %s.": "未知の変更ルール%s。",
+    "WebsiteUrl": "WebsiteUrl"
   },
   "provider": {
+    "BaseHostUrl": "BaseHostUrl",
+    "CustomAuthUrl": "CustomAuthUrl",
+    "CustomConfUrl": "CustomConfUrl",
+    "CustomLogo": "CustomLogo",
+    "CustomTokenUrl": "CustomTokenUrl",
+    "CustomUserInfoUrl": "CustomUserInfoUrl",
+    "Domain": "Domain",
     "Invalid application id": "アプリケーションIDが無効です",
+    "IssuerUrl": "IssuerUrl",
+    "ProviderUrl": "ProviderUrl",
+    "SingleLogoutServiceUrl": "SingleLogoutServiceUrl",
     "the provider: %s does not exist": "プロバイダー%sは存在しません"
   },
   "resource": {
@@ -140,9 +164,11 @@
     "Token not found, invalid accessToken": "トークンが見つかりません。無効なアクセストークンです"
   },
   "user": {
+    "Avatar": "Avatar",
     "Display name cannot be empty": "表示名は空にできません",
     "Failed to add userIdProvider": "Failed to add userIdProvider",
-    "New password cannot contain blank space.": "新しいパスワードにはスペースを含めることはできません。"
+    "New password cannot contain blank space.": "新しいパスワードにはスペースを含めることはできません。",
+    "PermanentAvatar": "PermanentAvatar"
   },
   "util": {
     "No application is found for userId: %s": "ユーザーIDに対するアプリケーションが見つかりません： %s",
@@ -167,5 +193,8 @@
   "webauthn": {
     "Found no credentials for this user": "このユーザーの資格情報が見つかりませんでした",
     "Please call WebAuthnSigninBegin first": "最初にWebAuthnSigninBeginを呼び出してください"
+  },
+  "webhook": {
+    "Url": "Url"
   }
 }

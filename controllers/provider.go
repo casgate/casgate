@@ -174,6 +174,8 @@ func (c *ApiController) UpdateProvider() {
 	}
 	c.ValidateOrganization(provider.Owner)
 
+	c.validateProviderURLs(provider)
+
 	for _, roleMappingItem := range provider.RoleMappingItems {
 		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
 			c.ResponseError(c.T("general:Missing parameter"))
@@ -209,6 +211,8 @@ func (c *ApiController) AddProvider() {
 	}
 
 	c.ValidateOrganization(provider.Owner)
+
+	c.validateProviderURLs(provider)
 
 	count, err := object.GetProviderCount("", "", "")
 	if err != nil {
@@ -330,4 +334,56 @@ func (c *ApiController) TestProviderConnection() {
 		return
 	}
 	c.ResponseOk()
+}
+
+func (c *ApiController) validateProviderURLs(provider object.Provider) {
+	if provider.Domain != "" && !util.IsURLValid(provider.Domain) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:Domain")))
+		return
+	}
+
+	if provider.CustomConfUrl != "" && !util.IsURLValid(provider.CustomConfUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomConfUrl")))
+		return
+	}
+
+	if provider.CustomAuthUrl != "" && !util.IsURLValid(provider.CustomAuthUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomAuthUrl")))
+		return
+	}
+
+	if provider.CustomTokenUrl != "" && !util.IsURLValid(provider.CustomTokenUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomTokenUrl")))
+		return
+	}
+
+	if provider.CustomUserInfoUrl != "" && !util.IsURLValid(provider.CustomUserInfoUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomUserInfoUrl")))
+		return
+	}
+
+	if provider.CustomLogo != "" && !util.IsURLValid(provider.CustomLogo) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomLogo")))
+		return
+	}
+
+	if provider.IssuerUrl != "" && !util.IsURLValid(provider.IssuerUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:IssuerUrl")))
+		return
+	}
+
+	if provider.BaseHostUrl != "" && !util.IsURLValid(provider.BaseHostUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:BaseHostUrl")))
+		return
+	}
+
+	if provider.ProviderUrl != "" && !util.IsURLValid(provider.ProviderUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:ProviderUrl")))
+		return
+	}
+
+	if provider.SingleLogoutServiceUrl != "" && !util.IsURLValid(provider.SingleLogoutServiceUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:SingleLogoutServiceUrl")))
+		return
+	}
 }
