@@ -181,10 +181,6 @@ class ProviderEditPage extends React.Component {
             this.updateUserMappingField("email", value);
           }}
         />
-        {Setting.getLabel(i18next.t("general:Avatar"), i18next.t("general:Avatar - Tooltip"))} :
-        <Input value={this.state.provider.userMapping.avatarUrl?.length > 0 ? this.state.provider.userMapping.avatarUrl[0] : null} onChange={e => {
-          this.updateUserMappingField("avatarUrl", e.target.value);
-        }} />
       </React.Fragment>
     );
   }
