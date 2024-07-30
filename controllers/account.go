@@ -211,7 +211,7 @@ func (c *ApiController) Signup() {
 		}
 
 		if invitedUser.Type != "invited-user" {
-			c.ResponseError(fmt.Errorf(c.T("account:Wrong user type")).Error())
+			c.ResponseError(fmt.Errorf(c.T("account:User already registered")).Error())
 			return
 		}
 
