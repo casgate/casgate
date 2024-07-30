@@ -10,18 +10,21 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - postgres
     environment:
       RUNNING_IN_DOCKER: "true"
     volumes:
       - ./conf:/conf/
-  db:
+  postgres:
     restart: always
-    image: mysql:8.0.25
-    platform: linux/amd64
+    image: postgres:16.2@sha256:07572430dbcd821f9f978899c3ab3a727f5029be9298a41662e1b5404d5b73e0
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      MYSQL_ROOT_PASSWORD: 123456
-    volumes:
-      - /usr/local/docker/mysql:/var/lib/mysql
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: casdoor
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
