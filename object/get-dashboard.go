@@ -24,7 +24,6 @@ type Dashboard struct {
 	UserCounts         []int `json:"userCounts"`
 	ProviderCounts     []int `json:"providerCounts"`
 	ApplicationCounts  []int `json:"applicationCounts"`
-	SubscriptionCounts []int `json:"subscriptionCounts"`
 }
 
 func GetDashboard(owner string) (*Dashboard, error) {
@@ -33,7 +32,6 @@ func GetDashboard(owner string) (*Dashboard, error) {
 		UserCounts:         make([]int, 31),
 		ProviderCounts:     make([]int, 31),
 		ApplicationCounts:  make([]int, 31),
-		SubscriptionCounts: make([]int, 31),
 	}
 
 	var wg sync.WaitGroup
@@ -42,9 +40,8 @@ func GetDashboard(owner string) (*Dashboard, error) {
 	users := []User{}
 	providers := []Provider{}
 	applications := []Application{}
-	subscriptions := []Subscription{}
 
-	wg.Add(5)
+	wg.Add(4)
 	go func() {
 		defer wg.Done()
 		if err := ormer.Engine.Find(&organizations, &Organization{Owner: owner}); err != nil {
@@ -76,13 +73,6 @@ func GetDashboard(owner string) (*Dashboard, error) {
 		}
 	}()
 
-	go func() {
-		defer wg.Done()
-
-		if err := ormer.Engine.Find(&subscriptions, &Subscription{Owner: owner}); err != nil {
-			panic(err)
-		}
-	}()
 	wg.Wait()
 
 	nowTime := time.Now()
@@ -92,7 +82,6 @@ func GetDashboard(owner string) (*Dashboard, error) {
 		dashboard.UserCounts[30-i] = countCreatedBefore(users, cutTime)
 		dashboard.ProviderCounts[30-i] = countCreatedBefore(providers, cutTime)
 		dashboard.ApplicationCounts[30-i] = countCreatedBefore(applications, cutTime)
-		dashboard.SubscriptionCounts[30-i] = countCreatedBefore(subscriptions, cutTime)
 	}
 	return dashboard, nil
 }
@@ -124,13 +113,6 @@ func countCreatedBefore(objects interface{}, before time.Time) int {
 	case []Application:
 		for _, a := range obj {
 			createdTime, _ := time.Parse("2006-01-02T15:04:05-07:00", a.CreatedTime)
-			if createdTime.Before(before) {
-				count++
-			}
-		}
-	case []Subscription:
-		for _, s := range obj {
-			createdTime, _ := time.Parse("2006-01-02T15:04:05-07:00", s.CreatedTime)
 			if createdTime.Before(before) {
 				count++
 			}

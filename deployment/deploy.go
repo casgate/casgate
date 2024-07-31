@@ -21,20 +21,19 @@ import (
 	"strings"
 
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/storage"
 	"github.com/casdoor/casdoor/util"
 	"github.com/casdoor/oss"
 )
 
 func deployStaticFiles(provider *object.Provider) {
-	storageProvider := storage.GetStorageProvider(provider.Type, provider.ClientId, provider.ClientSecret, provider.RegionId, provider.Bucket, provider.Endpoint)
-	if storageProvider == nil {
-		panic(fmt.Sprintf("the provider type: %s is not supported", provider.Type))
-	}
+	// storageProvider := storage.GetStorageProvider(provider.Type, provider.ClientId, provider.ClientSecret, provider.RegionId, provider.Bucket, provider.Endpoint)
+	// if storageProvider == nil {
+	// 	panic(fmt.Sprintf("the provider type: %s is not supported", provider.Type))
+	// }
 
-	uploadFolder(storageProvider, "js")
-	uploadFolder(storageProvider, "css")
-	updateHtml(provider.Domain)
+	// uploadFolder(storageProvider, "js")
+	// uploadFolder(storageProvider, "css")
+	// updateHtml(provider.Domain)
 }
 
 func uploadFolder(storageProvider oss.StorageInterface, folder string) {

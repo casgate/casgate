@@ -181,10 +181,6 @@ class ProviderEditPage extends React.Component {
             this.updateUserMappingField("email", value);
           }}
         />
-        {Setting.getLabel(i18next.t("general:Avatar"), i18next.t("general:Avatar - Tooltip"))} :
-        <Input value={this.state.provider.userMapping.avatarUrl?.length > 0 ? this.state.provider.userMapping.avatarUrl[0] : null} onChange={e => {
-          this.updateUserMappingField("avatarUrl", e.target.value);
-        }} />
       </React.Fragment>
     );
   }
@@ -512,13 +508,9 @@ class ProviderEditPage extends React.Component {
                 this.updateProviderField("receiver", this.props.account.email);
               } else if (value === "SMS") {
                 this.updateProviderField("type", "Twilio SMS");
-              } else if (value === "Storage") {
-                this.updateProviderField("type", "AWS S3");
               } else if (value === "SAML") {
                 this.updateProviderField("type", "Keycloak");
                 this.updateProviderField("endpointType", "HTTP-POST");
-              } else if (value === "Payment") {
-                this.updateProviderField("type", "PayPal");
               } else if (value === "Captcha") {
                 this.updateProviderField("type", "Default");
               } else if (value === "Web3") {
@@ -533,10 +525,8 @@ class ProviderEditPage extends React.Component {
                   {id: "Email", name: "Email"},
                   {id: "Notification", name: "Notification"},
                   {id: "OAuth", name: "OAuth"},
-                  {id: "Payment", name: "Payment"},
                   {id: "SAML", name: "SAML"},
                   {id: "SMS", name: "SMS"},
-                  {id: "Storage", name: "Storage"},
                   {id: "Web3", name: "Web3"},
                 ]
                   .sort((a, b) => a.name.localeCompare(b.name))
@@ -770,7 +760,6 @@ class ProviderEditPage extends React.Component {
         {
           (this.state.provider.category === "Captcha" && this.state.provider.type === "Default") ||
           (this.state.provider.category === "Web3") ||
-          (this.state.provider.category === "Storage" && this.state.provider.type === "Local File System") ||
           (this.state.provider.category === "Notification" && (this.state.provider.type === "Google Chat" || this.state.provider.type === "Custom HTTP")) ? null : (
               <React.Fragment>
                 {

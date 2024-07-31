@@ -603,13 +603,6 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 
 	user.Email = strings.ToLower(user.Email)
 
-	if user.Avatar != oldUser.Avatar && user.Avatar != "" && user.PermanentAvatar != "*" {
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
-		if err != nil {
-			return false, err
-		}
-	}
-
 	if len(columns) == 0 {
 		columns = []string{
 			"owner", "display_name", "avatar",
@@ -744,12 +737,6 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 		user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
 	}
 
-	if user.Avatar != oldUser.Avatar && user.Avatar != "" {
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
-		if err != nil {
-			return false, err
-		}
-	}
 	err = user.checkPasswordChangeRequestAllowed()
 	if err != nil {
 		return false, err
@@ -843,18 +830,6 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 		user.PasswordChangeTime = time.Now()
 	}
 
-	updated, err := user.refreshAvatar()
-	if err != nil {
-		return false, err
-	}
-
-	if updated && user.PermanentAvatar != "*" {
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
-		if err != nil {
-			return false, err
-		}
-	}
-
 	count, err := GetUserCount(user.Owner, "", "", "")
 	if err != nil {
 		return false, err
@@ -900,11 +875,6 @@ func AddUsers(users []*User) (bool, error) {
 		user.PreHash = user.Hash
 
 		user.Email = strings.ToLower(user.Email)
-
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, true)
-		if err != nil {
-			return false, err
-		}
 
 		if user.MappingStrategy == "" {
 			user.MappingStrategy = "all"

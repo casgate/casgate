@@ -324,26 +324,11 @@ func (a *Ormer) createTable() {
 		panic(err)
 	}
 
-	err = a.Engine.Sync2(new(Syncer))
-	if err != nil {
-		panic(err)
-	}
-
 	err = a.Engine.Sync2(new(Cert))
 	if err != nil {
 		panic(err)
 	}
-
-	err = a.Engine.Sync2(new(Product))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Payment))
-	if err != nil {
-		panic(err)
-	}
-
+	
 	err = a.Engine.Sync2(new(Ldap))
 	if err != nil {
 		panic(err)
@@ -365,21 +350,6 @@ func (a *Ormer) createTable() {
 	}
 
 	err = a.Engine.Sync2(new(Session))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Subscription))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Plan))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Pricing))
 	if err != nil {
 		panic(err)
 	}

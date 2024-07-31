@@ -183,13 +183,6 @@ func initAPI() {
 	beego.Router("/api/add-application", &controllers.ApiController{}, "POST:AddApplication")
 	beego.Router("/api/delete-application", &controllers.ApiController{}, "POST:DeleteApplication")
 
-	beego.Router("/api/get-resources", &controllers.ApiController{}, "GET:GetResources")
-	beego.Router("/api/get-resource", &controllers.ApiController{}, "GET:GetResource")
-	beego.Router("/api/update-resource", &controllers.ApiController{}, "POST:UpdateResource")
-	beego.Router("/api/add-resource", &controllers.ApiController{}, "POST:AddResource")
-	beego.Router("/api/delete-resource", &controllers.ApiController{}, "POST:DeleteResource")
-	beego.Router("/api/upload-resource", &controllers.ApiController{}, "POST:UploadResource")
-
 	beego.Router("/api/get-tokens", &controllers.ApiController{}, "GET:GetTokens")
 	beego.Router("/api/get-token", &controllers.ApiController{}, "GET:GetToken")
 	beego.Router("/api/update-token", &controllers.ApiController{}, "POST:UpdateToken")
@@ -215,12 +208,7 @@ func initAPI() {
 	beego.Router("/api/add-webhook", &controllers.ApiController{}, "POST:AddWebhook")
 	beego.Router("/api/delete-webhook", &controllers.ApiController{}, "POST:DeleteWebhook")
 
-	beego.Router("/api/get-syncers", &controllers.ApiController{}, "GET:GetSyncers")
-	beego.Router("/api/get-syncer", &controllers.ApiController{}, "GET:GetSyncer")
-	beego.Router("/api/update-syncer", &controllers.ApiController{}, "POST:UpdateSyncer")
-	beego.Router("/api/add-syncer", &controllers.ApiController{}, "POST:AddSyncer")
-	beego.Router("/api/delete-syncer", &controllers.ApiController{}, "POST:DeleteSyncer")
-	beego.Router("/api/run-syncer", &controllers.ApiController{}, "GET:RunSyncer")
+
 
 	beego.Router("/api/get-certs", &controllers.ApiController{}, "GET:GetCerts")
 	beego.Router("/api/get-globle-certs", &controllers.ApiController{}, "GET:GetGlobleCerts")
@@ -228,40 +216,6 @@ func initAPI() {
 	beego.Router("/api/update-cert", &controllers.ApiController{}, "POST:UpdateCert")
 	beego.Router("/api/add-cert", &controllers.ApiController{}, "POST:AddCert")
 	beego.Router("/api/delete-cert", &controllers.ApiController{}, "POST:DeleteCert")
-
-	beego.Router("/api/get-subscriptions", &controllers.ApiController{}, "GET:GetSubscriptions")
-	beego.Router("/api/get-subscription", &controllers.ApiController{}, "GET:GetSubscription")
-	beego.Router("/api/update-subscription", &controllers.ApiController{}, "POST:UpdateSubscription")
-	beego.Router("/api/add-subscription", &controllers.ApiController{}, "POST:AddSubscription")
-	beego.Router("/api/delete-subscription", &controllers.ApiController{}, "POST:DeleteSubscription")
-
-	beego.Router("/api/get-plans", &controllers.ApiController{}, "GET:GetPlans")
-	beego.Router("/api/get-plan", &controllers.ApiController{}, "GET:GetPlan")
-	beego.Router("/api/update-plan", &controllers.ApiController{}, "POST:UpdatePlan")
-	beego.Router("/api/add-plan", &controllers.ApiController{}, "POST:AddPlan")
-	beego.Router("/api/delete-plan", &controllers.ApiController{}, "POST:DeletePlan")
-
-	beego.Router("/api/get-pricings", &controllers.ApiController{}, "GET:GetPricings")
-	beego.Router("/api/get-pricing", &controllers.ApiController{}, "GET:GetPricing")
-	beego.Router("/api/update-pricing", &controllers.ApiController{}, "POST:UpdatePricing")
-	beego.Router("/api/add-pricing", &controllers.ApiController{}, "POST:AddPricing")
-	beego.Router("/api/delete-pricing", &controllers.ApiController{}, "POST:DeletePricing")
-
-	beego.Router("/api/get-products", &controllers.ApiController{}, "GET:GetProducts")
-	beego.Router("/api/get-product", &controllers.ApiController{}, "GET:GetProduct")
-	beego.Router("/api/update-product", &controllers.ApiController{}, "POST:UpdateProduct")
-	beego.Router("/api/add-product", &controllers.ApiController{}, "POST:AddProduct")
-	beego.Router("/api/delete-product", &controllers.ApiController{}, "POST:DeleteProduct")
-	beego.Router("/api/buy-product", &controllers.ApiController{}, "POST:BuyProduct")
-
-	beego.Router("/api/get-payments", &controllers.ApiController{}, "GET:GetPayments")
-	beego.Router("/api/get-user-payments", &controllers.ApiController{}, "GET:GetUserPayments")
-	beego.Router("/api/get-payment", &controllers.ApiController{}, "GET:GetPayment")
-	beego.Router("/api/update-payment", &controllers.ApiController{}, "POST:UpdatePayment")
-	beego.Router("/api/add-payment", &controllers.ApiController{}, "POST:AddPayment")
-	beego.Router("/api/delete-payment", &controllers.ApiController{}, "POST:DeletePayment")
-	beego.Router("/api/notify-payment/?:owner/?:payment", &controllers.ApiController{}, "POST:NotifyPayment")
-	beego.Router("/api/invoice-payment", &controllers.ApiController{}, "POST:InvoicePayment")
 
 	beego.Router("/api/send-email", &controllers.ApiController{}, "POST:SendEmail")
 	beego.Router("/api/send-sms", &controllers.ApiController{}, "POST:SendSms")
