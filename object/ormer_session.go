@@ -43,7 +43,7 @@ func GetSession(owner string, offset, limit int, field, value, sortField, sortOr
 		if value != "" {
 			filterValue = fmt.Sprintf("%%%s%%", value)
 		}
-		if util.FilterField(field) {
+		if util.IsFieldValueAllowedForDB(field) {
 			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), filterValue)
 		}
 	}
@@ -83,7 +83,7 @@ func GetSessionForUser(owner string, offset, limit int, field, value, sortField,
 	}
 
 	if field != "" && value != "" {
-		if util.FilterField(field) {
+		if util.IsFieldValueAllowedForDB(field) {
 			if offset != -1 {
 				field = fmt.Sprintf("a.%s", field)
 			}

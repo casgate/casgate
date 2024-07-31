@@ -428,6 +428,8 @@
     "Edit LDAP": "Chỉnh sửa LDAP",
     "Enable Attribute Mapping": "Enable Attribute Mapping",
     "Enable Attribute Mapping - Tooltip": "Enable Attribute Mapping - Tooltip",
+    "Enable Case Insensitivity": "Включить регистронезависимость",
+    "Enable Case Insensitivity - Tooltip": "Следует ли включать регистронезависимость",
     "Enable Cryptographic Authentication": "Enable Cryptographic Authentication",
     "Enable Cryptographic Authentication - Tooltip": "Whether to enable Cryptographic Authentication",
     "Enable Role Mapping": "Enable Role Mapping",
