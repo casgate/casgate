@@ -71,7 +71,6 @@ import i18next from "i18next";
 import {withTranslation} from "react-i18next";
 import EnableMfaNotification from "./common/notifaction/EnableMfaNotification";
 import LanguageSelect from "./common/select/LanguageSelect";
-import ThemeSelect from "./common/select/ThemeSelect";
 import OrganizationSelect from "./common/select/OrganizationSelect";
 import {clearWeb3AuthToken} from "./auth/Web3Auth";
 import OpenTour from "./common/OpenTour";
@@ -197,9 +196,10 @@ class App extends Component {
 
   getLogo(themes) {
     if (themes.includes("dark")) {
-      return `${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256_dark.png`;
+      return `${Setting.StaticBaseUrl}/img/cg_logo.png`;
     } else {
-      return `${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256.png`;
+      return `${Setting.StaticBaseUrl}/img/cg_logo.png`;
+      // return `${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256.png`;
     }
   }
 
@@ -339,14 +339,14 @@ class App extends Component {
       return (
         <React.Fragment>
           {this.renderRightDropdown()}
-          <ThemeSelect
+          {/* <ThemeSelect
             themeAlgorithm={this.state.themeAlgorithm}
             onChange={(nextThemeAlgorithm) => {
               this.setState({
                 themeAlgorithm: nextThemeAlgorithm,
                 logo: this.getLogo(nextThemeAlgorithm),
               });
-            }} />
+            }} /> */}
           <LanguageSelect languages={this.state.account.organization.languages} />
           <OpenTour />
           {Setting.isAdminUser(this.state.account) && !Setting.isMobile() &&
