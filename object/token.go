@@ -463,7 +463,7 @@ func RefreshToken(ctx context.Context, grantType string, refreshToken string, sc
 		}, nil
 	}
 	// generate a new token
-	user, err := getUser(application.Organization, token.User)
+	user, err := getUser(token.Organization, token.User)
 	if err != nil {
 		return nil, err
 	}

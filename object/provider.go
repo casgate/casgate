@@ -25,7 +25,6 @@ import (
 	bCtx "github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
-	"github.com/casdoor/casdoor/pp"
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
 )
@@ -289,71 +288,6 @@ func DeleteProvider(provider *Provider) (bool, error) {
 	}
 
 	return affected != 0, nil
-}
-
-func GetPaymentProvider(p *Provider) (pp.PaymentProvider, error) {
-	cert := &Cert{}
-	if p.Cert != "" {
-		var err error
-		cert, err = GetCert(util.GetId(p.Owner, p.Cert))
-		if err != nil {
-			return nil, err
-		}
-
-		if cert == nil {
-			return nil, fmt.Errorf("the cert: %s does not exist", p.Cert)
-		}
-	}
-	typ := p.Type
-	if typ == "Dummy" {
-		pp, err := pp.NewDummyPaymentProvider()
-		if err != nil {
-			return nil, err
-		}
-		return pp, nil
-	} else if typ == "Alipay" {
-		if p.Metadata != "" {
-			// alipay provider store rootCert's name in metadata
-			rootCert, err := GetCert(util.GetId(p.Owner, p.Metadata))
-			if err != nil {
-				return nil, err
-			}
-			if rootCert == nil {
-				return nil, fmt.Errorf("the cert: %s does not exist", p.Metadata)
-			}
-			pp, err := pp.NewAlipayPaymentProvider(p.ClientId, cert.Certificate, cert.PrivateKey, rootCert.Certificate, rootCert.PrivateKey)
-			if err != nil {
-				return nil, err
-			}
-			return pp, nil
-		} else {
-			return nil, fmt.Errorf("the metadata of alipay provider is empty")
-		}
-	} else if typ == "GC" {
-		return pp.NewGcPaymentProvider(p.ClientId, p.ClientSecret, p.Host), nil
-	} else if typ == "WeChat Pay" {
-		pp, err := pp.NewWechatPaymentProvider(p.ClientId, p.ClientSecret, p.ClientId2, cert.Certificate, cert.PrivateKey)
-		if err != nil {
-			return nil, err
-		}
-		return pp, nil
-	} else if typ == "PayPal" {
-		pp, err := pp.NewPaypalPaymentProvider(p.ClientId, p.ClientSecret)
-		if err != nil {
-			return nil, err
-		}
-		return pp, nil
-	} else if typ == "Stripe" {
-		pp, err := pp.NewStripePaymentProvider(p.ClientId, p.ClientSecret)
-		if err != nil {
-			return nil, err
-		}
-		return pp, nil
-	} else {
-		return nil, fmt.Errorf("the payment provider type: %s is not supported", p.Type)
-	}
-
-	return nil, nil
 }
 
 func (p *Provider) GetId() string {

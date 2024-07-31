@@ -25,17 +25,10 @@ import (
 const saltLenth = 16
 
 func calculateHash(user *User) (string, error) {
-	syncer, err := getDbSyncerForUser(user)
-	if err != nil {
-		return "", err
-	}
-
-	if syncer == nil {
-		return "", nil
-	}
-
-	return syncer.calculateHash(user), nil
+	return "", nil
 }
+
+
 
 func (user *User) UpdateUserHash() error {
 	hash, err := calculateHash(user)

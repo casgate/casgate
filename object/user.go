@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"github.com/casdoor/casdoor/orm"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -58,7 +57,7 @@ type User struct {
 	CreatedTime string `xorm:"varchar(100) index" json:"createdTime"`
 	UpdatedTime string `xorm:"varchar(100)" json:"updatedTime"`
 
-	Id                     string    `xorm:"varchar(100) index" json:"id"`
+	Id                     string    `xorm:"varchar(100) index unique" json:"id"`
 	Type                   string    `xorm:"varchar(100)" json:"type"`
 	Password               string    `xorm:"varchar(100)" json:"password"`
 	PasswordChangeRequired bool      `xorm:"-" json:"passwordChangeRequired"`
@@ -604,13 +603,6 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 
 	user.Email = strings.ToLower(user.Email)
 
-	if user.Avatar != oldUser.Avatar && user.Avatar != "" && user.PermanentAvatar != "*" {
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
-		if err != nil {
-			return false, err
-		}
-	}
-
 	if len(columns) == 0 {
 		columns = []string{
 			"owner", "display_name", "avatar",
@@ -745,12 +737,6 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 		user.PasswordChangeTime = getNextPasswordChangeTime(organization.PasswordChangeInterval)
 	}
 
-	if user.Avatar != oldUser.Avatar && user.Avatar != "" {
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
-		if err != nil {
-			return false, err
-		}
-	}
 	err = user.checkPasswordChangeRequestAllowed()
 	if err != nil {
 		return false, err
@@ -796,19 +782,7 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 }
 
 func AddUser(ctx context.Context, user *User) (bool, error) {
-	if user.Id == "" {
-		application, err := GetApplicationByUser(ctx, user)
-		if err != nil {
-			return false, err
-		}
-
-		id, err := GenerateIdForNewUser(application)
-		if err != nil {
-			return false, err
-		}
-
-		user.Id = id
-	}
+	user.Id = util.GenerateId()
 
 	if user.MappingStrategy == "" {
 		user.MappingStrategy = "all"
@@ -842,18 +816,6 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 
 	if user.PasswordChangeRequired {
 		user.PasswordChangeTime = time.Now()
-	}
-
-	updated, err := user.refreshAvatar()
-	if err != nil {
-		return false, err
-	}
-
-	if updated && user.PermanentAvatar != "*" {
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, false)
-		if err != nil {
-			return false, err
-		}
 	}
 
 	count, err := GetUserCount(user.Owner, "", "", "")
@@ -901,11 +863,6 @@ func AddUsers(users []*User) (bool, error) {
 		user.PreHash = user.Hash
 
 		user.Email = strings.ToLower(user.Email)
-
-		user.PermanentAvatar, err = getPermanentAvatarUrl(user.Owner, user.Name, user.Avatar, true)
-		if err != nil {
-			return false, err
-		}
 
 		if user.MappingStrategy == "" {
 			user.MappingStrategy = "all"
@@ -1149,25 +1106,6 @@ func (user *User) IsGlobalAdmin() bool {
 	}
 
 	return user.Owner == "built-in"
-}
-
-func GenerateIdForNewUser(application *Application) (string, error) {
-	if application == nil || application.GetSignupItemRule("ID") != "Incremental" {
-		return util.GenerateId(), nil
-	}
-
-	lastUser, err := getLastUser(application.Organization)
-	if err != nil {
-		return "", err
-	}
-
-	lastUserId := -1
-	if lastUser != nil {
-		lastUserId = util.ParseInt(lastUser.Id)
-	}
-
-	res := strconv.Itoa(lastUserId + 1)
-	return res, nil
 }
 
 func reachablePermissionsByUser(user *User) ([]*Permission, error) {

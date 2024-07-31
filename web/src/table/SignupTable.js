@@ -171,12 +171,7 @@ class SignupTable extends React.Component {
         width: "155px",
         render: (text, record, index) => {
           let options = [];
-          if (record.name === "ID") {
-            options = [
-              {id: "Random", name: i18next.t("application:Random")},
-              {id: "Incremental", name: i18next.t("application:Incremental")},
-            ];
-          } else if (record.name === "Display name") {
+          if (record.name === "Display name") {
             options = [
               {id: "None", name: i18next.t("general:None")},
               {id: "Real name", name: i18next.t("application:Real name")},

@@ -111,7 +111,6 @@ func initBuiltInOrganization() bool {
 		PasswordType:       "argon2id",
 		PasswordOptions:    []string{"AtLeast6"},
 		CountryCodes:       []string{"US", "ES", "FR", "DE", "GB", "CN", "JP", "KR", "VN", "ID", "SG", "IN"},
-		DefaultAvatar:      fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
 		Tags:               []string{},
 		Languages:          []string{"en", "zh", "es", "fr", "de", "id", "ja", "ko", "ru", "vi", "pt"},
 		InitScore:          2000,
@@ -146,7 +145,6 @@ func initBuiltInUser(ctx context.Context) {
 		Type:              "normal-user",
 		Password:          "123",
 		DisplayName:       "Admin",
-		Avatar:            fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
 		Email:             "admin@example.com",
 		Phone:             "12345678910",
 		CountryCode:       "US",
@@ -618,22 +616,7 @@ func CreateTable(a *orm.Ormer) {
 		panic(err)
 	}
 
-	err = a.Engine.Sync2(new(Syncer))
-	if err != nil {
-		panic(err)
-	}
-
 	err = a.Engine.Sync2(new(Cert))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Product))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Payment))
 	if err != nil {
 		panic(err)
 	}
@@ -659,21 +642,6 @@ func CreateTable(a *orm.Ormer) {
 	}
 
 	err = a.Engine.Sync2(new(Session))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Subscription))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Plan))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Pricing))
 	if err != nil {
 		panic(err)
 	}

@@ -31,7 +31,6 @@ import (
 	"github.com/casdoor/casdoor/repository"
 	"github.com/casdoor/casdoor/routers"
 	"github.com/casdoor/casdoor/txmanager"
-	"github.com/casdoor/casdoor/util"
 )
 
 func main() {
@@ -47,12 +46,9 @@ func main() {
 
 	object.InitDb(ctx)
 	object.InitFromFile(ctx)
-	object.InitDefaultStorageProvider()
 	object.InitLdapAutoSynchronizer(ctx)
 	proxy.InitHttpClient()
 	object.InitUserManager()
-
-	util.SafeGoroutine(func() { object.RunSyncUsersJob() })
 
 	// beego.DelStaticPath("/static")
 	// beego.SetStaticPath("/static", "web/build/static")

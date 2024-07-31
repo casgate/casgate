@@ -54,6 +54,10 @@ func GetMaskedCert(cert *Cert) *Cert {
 		return nil
 	}
 
+	if cert.PrivateKey != "" {
+		cert.PrivateKey = "***"
+	}
+
 	return cert
 }
 
@@ -200,7 +204,11 @@ func UpdateCert(id string, cert *Cert) (bool, error) {
 			return false, err
 		}
 	}
-	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(cert)
+	session := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols()
+	if cert.PrivateKey == "***" {
+		session.Omit("private_key")
+	}
+	affected, err := session.Update(cert)
 	if err != nil {
 		return false, err
 	}
