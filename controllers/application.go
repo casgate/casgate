@@ -302,43 +302,21 @@ func (c *ApiController) DeleteApplication() {
 }
 
 func (c *ApiController) validateApplicationURLs(application object.Application) {
-	if application.Logo != "" && !util.IsURLValid(application.Logo) {
-		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:Logo")))
-		return
+	fieldErrMap := map[string]string{
+		application.Logo:              fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:Logo")),
+		application.HomepageUrl:       fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:HomepageUrl")),
+		application.SamlReplyUrl:      fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:SamlReplyUrl")),
+		application.SignupUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:SignupUrl")),
+		application.SigninUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:SigninUrl")),
+		application.ForgetUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:ForgetUrl")),
+		application.AffiliationUrl:    fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:AffiliationUrl")),
+		application.FormBackgroundUrl: fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:FormBackgroundUrl")),
 	}
 
-	if application.HomepageUrl != "" && !util.IsURLValid(application.HomepageUrl) {
-		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:HomepageUrl")))
-		return
-	}
-
-	if application.SamlReplyUrl != "" && !util.IsURLValid(application.SamlReplyUrl) {
-		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:SamlReplyUrl")))
-		return
-	}
-
-	if application.SignupUrl != "" && !util.IsURLValid(application.SignupUrl) {
-		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:SignupUrl")))
-		return
-	}
-
-	if application.SigninUrl != "" && !util.IsURLValid(application.SigninUrl) {
-		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:SigninUrl")))
-		return
-	}
-
-	if application.ForgetUrl != "" && !util.IsURLValid(application.ForgetUrl) {
-		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:ForgetUrl")))
-		return
-	}
-
-	if application.AffiliationUrl != "" && !util.IsURLValid(application.AffiliationUrl) {
-		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:AffiliationUrl")))
-		return
-	}
-
-	if application.FormBackgroundUrl != "" && !util.IsURLValid(application.FormBackgroundUrl) {
-		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:FormBackgroundUrl")))
-		return
+	for field, err := range fieldErrMap {
+		if field != "" && !util.IsURLValid(field) {
+			c.ResponseError(err)
+			return
+		}
 	}
 }

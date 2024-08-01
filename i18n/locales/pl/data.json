@@ -10,8 +10,14 @@
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "application": {
+    "AffiliationUrl": "AffiliationUrl",
+    "ForgetUrl": "ForgetUrl",
+    "FormBackgroundUrl": "FormBackgroundUrl",
     "HomepageUrl": "HomepageUrl",
-    "Logo": "Logo"
+    "Logo": "Logo",
+    "SamlReplyUrl": "SamlReplyUrl",
+    "SigninUrl": "SigninUrl",
+    "SignupUrl": "SignupUrl"
   },
   "auth": {
     "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
@@ -105,15 +111,9 @@
     "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
   },
   "organization": {
-    "AffiliationUrl": "AffiliationUrl",
     "DefaultAvatar": "DefaultAvatar",
     "Favicon": "Favicon",
-    "ForgetUrl": "ForgetUrl",
-    "FormBackgroundUrl": "FormBackgroundUrl",
     "Only admin can modify the %s.": "Only admin can modify the %s.",
-    "SamlReplyUrl": "SamlReplyUrl",
-    "SigninUrl": "SigninUrl",
-    "SignupUrl": "SignupUrl",
     "The %s is immutable.": "The %s is immutable.",
     "Unknown modify rule %s.": "Unknown modify rule %s.",
     "WebsiteUrl": "WebsiteUrl"
