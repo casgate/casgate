@@ -47,7 +47,7 @@ func InitFlag() {
 }
 
 func getCreateDatabaseFlag() bool {
-	res := flag.Bool("CreateDatabase", false, "true if you need to create database")
+	res := flag.Bool("createDatabase", false, "true if you need to create database")
 	flag.Parse()
 	return *res
 }
