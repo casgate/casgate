@@ -36,6 +36,7 @@ import (
 	"github.com/casdoor/casdoor/proxy"
 	"github.com/casdoor/casdoor/role_mapper"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 	"github.com/google/uuid"
 	"gopkg.in/square/go-jose.v2/jwt"
 )
@@ -222,6 +223,15 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 			c.ResponseError(err.Error(), nil)
 			return
 		}
+
+		var provider_type, provider_cat string
+		if form.Provider != "" {
+			provider_type = application.GetProviderItem(form.Provider).Provider.Type
+			provider_cat = application.GetProviderItem(form.Provider).Provider.Category
+		}
+
+		logger.Info(c.getRequestCtx(), "login successfully",
+			"user_id", user.GetId(), "application", form.Application, "provider", form.Provider, "provider_type", provider_type, "provider_category", provider_cat)
 	}
 
 	return resp
@@ -347,7 +357,7 @@ func (c *ApiController) Login() {
 
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
-	
+
 	if authForm.Username != "" {
 		if authForm.Type == ResponseTypeLogin {
 			if c.GetSessionUsername() != "" {
@@ -484,7 +494,7 @@ func (c *ApiController) Login() {
 						user, err = object.GetUserByFields(authForm.Organization, authForm.Username)
 					}
 				}
-				
+
 				if err != nil {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 				}
@@ -503,19 +513,18 @@ func (c *ApiController) Login() {
 				userName = user.Name
 			}
 
-	
 			options := object.CheckUserPasswordOptions{
-				Lang: c.GetAcceptLanguage(),
-				LdapId:         authForm.LdapId,
-				EnableCaptcha:  enableCaptcha,
-				IsSigninViaLdap: isSigninViaLdap,
+				Lang:                      c.GetAcceptLanguage(),
+				LdapId:                    authForm.LdapId,
+				EnableCaptcha:             enableCaptcha,
+				IsSigninViaLdap:           isSigninViaLdap,
 				IsPasswordWithLdapEnabled: isPasswordWithLdapEnabled,
 			}
 
 			user, err = object.CheckUserPassword(
-				goCtx, 
-				authForm.Organization, 
-				userName, 
+				goCtx,
+				authForm.Organization,
+				userName,
 				authForm.Password,
 				options)
 
