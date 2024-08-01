@@ -149,16 +149,16 @@ func (c *ApiController) GetUser() {
 
 	//was allow for anonimus before authz drop
 	request := c.ReadRequestFromQueryParams()
-	
+
 	if request.User == nil {
 		c.CustomAbort(http.StatusUnauthorized, c.makeMessage(http.StatusUnauthorized, c.T("auth:Unauthorized operation")))
 	}
 
-	if request.User.IsForbidden || request.User.IsDeleted {	
+	if request.User.IsForbidden || request.User.IsDeleted {
 		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Forbidden operation")))
 	}
 
-	if request.Organization != "" && request.Organization != request.User.Owner {	
+	if request.Organization != "" && request.Organization != request.User.Owner {
 		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Unable to get data from other organization without global administrator role")))
 	}
 
@@ -319,6 +319,8 @@ func (c *ApiController) UpdateUser() {
 
 	c.ValidateOrganization(user.Owner)
 
+	c.validateUserURLs(user)
+
 	if id == "" {
 		id = c.GetSessionUsername()
 		if id == "" {
@@ -409,6 +411,8 @@ func (c *ApiController) AddUser() {
 	}
 
 	c.ValidateOrganization(user.Owner)
+
+	c.validateUserURLs(user)
 
 	count, err := object.GetUserCount("", "", "", "")
 	if err != nil {
@@ -611,7 +615,7 @@ func (c *ApiController) SetPassword() {
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
-	
+
 	isAdmin := c.IsAdmin()
 	if isAdmin {
 		if oldPassword != "" {
@@ -806,7 +810,7 @@ func (c *ApiController) RemoveUserFromGroup() {
 func (c *ApiController) SendInvite() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	ctx := c.getRequestCtx()
 	username := c.Input().Get("name")
 
@@ -917,5 +921,17 @@ func fillUserIdProviders(users []*object.User, userIdProviders []*object.UserIdP
 		if userIdProvider, ok := userIdProviderMap[users[i].Id]; ok {
 			users[i].UserIdProvider = userIdProvider
 		}
+	}
+}
+
+func (c *ApiController) validateUserURLs(user object.User) {
+	if user.Avatar != "" && !util.IsURLValid(user.Avatar) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("user:Avatar")))
+		return
+	}
+
+	if user.PermanentAvatar != "" && !util.IsURLValid(user.PermanentAvatar) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("user:PermanentAvatar")))
+		return
 	}
 }
