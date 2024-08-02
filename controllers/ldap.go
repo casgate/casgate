@@ -79,37 +79,27 @@ func (c *ApiController) GetLdapUsers() {
 
 	ldapServer, err := object.GetLdap(ldapId)
 	if err != nil {
-		record.AddReason(fmt.Sprintf("Get LDAP: %s", err.Error()))
-
+		err = errors.Wrap(err, "Get LDAP")
+		logger.Error(gCtx, err.Error())
+		record.AddReason(err.Error())
 		c.ResponseError(err.Error())
 		return
 	}
 
 	conn, err := ldapServer.GetLdapConn(context.Background())
 	if err != nil {
-		record.AddReason(fmt.Sprintf("Get LDAP connection: %s", err.Error()))
-
+		err = errors.Wrap(err, "Get LDAP connection")
+		logger.Error(gCtx, err.Error())
+		record.AddReason(err.Error())
 		c.ResponseError(err.Error())
 		return
 	}
 
-	//groupsMap, err := conn.GetLdapGroups(ldapServer.BaseDn)
-	//if err != nil {
-	//  c.ResponseError(err.Error())
-	//	return
-	//}
-
-	//for _, group := range groupsMap {
-	//	resp.Groups = append(resp.Groups, LdapRespGroup{
-	//		GroupId:   group.GidNumber,
-	//		GroupName: group.Cn,
-	//	})
-	//}
-
 	users, err := conn.GetLdapUsers(ldapServer, nil, record)
 	if err != nil {
-		record.AddReason(fmt.Sprintf("Get LDAP users: %s", err.Error()))
-
+		err = errors.Wrap(err, "Get LDAP users")
+		logger.Error(gCtx, err.Error())
+		record.AddReason(err.Error())
 		c.ResponseError(err.Error())
 		return
 	}
@@ -120,8 +110,9 @@ func (c *ApiController) GetLdapUsers() {
 	}
 	existUuids, err := object.GetExistUuids(ldapServer.Owner, uuids)
 	if err != nil {
-		record.AddReason(fmt.Sprintf("Find existed LDAP users: %s", err.Error()))
-
+		err = errors.Wrap(err, "Find existed LDAP users")
+		logger.Error(gCtx, err.Error())
+		record.AddReason(err.Error())
 		c.ResponseError(err.Error())
 		return
 	}
