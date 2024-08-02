@@ -2545,23 +2545,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/LdapSyncResp'
-  /api/sync-ldap-users-v2:
-    post:
-      tags:
-      - Account API
-      description: sync ldap users by ldap uuid
-      operationId: ApiController.SyncLdapUsersV2
-      parameters:
-      - in: body
-        name: body
-        description: "true"
-        schema:
-          $ref: '#/definitions/SyncLdapUsersRequest'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/LdapSyncResp'
   /api/test-ldap:
     post:
       tags:
@@ -3005,6 +2988,23 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Userinfo'
+  /api/v2/sync-ldap-users:
+    post:
+      tags:
+      - Account API
+      description: sync ldap users by ldap uuid
+      operationId: ApiController.SyncLdapUsersV2
+      parameters:
+      - in: body
+        name: body
+        description: "true"
+        schema:
+          $ref: '#/definitions/SyncLdapUsersRequest'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/LdapSyncResp'
   /api/verify-captcha:
     post:
       tags:
@@ -3105,10 +3105,10 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  228538.<nil>.string:
+  228634.<nil>.string:
     title: string
     type: object
-  315445.<nil>.string:
+  315541.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -3719,7 +3719,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/228538.<nil>.string'
+          $ref: '#/definitions/228634.<nil>.string'
       description:
         type: string
       displayName:
@@ -4031,7 +4031,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/315445.<nil>.string'
+        $ref: '#/definitions/315541.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:

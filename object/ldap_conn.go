@@ -519,6 +519,9 @@ func SyncLdapUsers(
 
 		return nil
 	})
+	if err != nil {
+		return syncDetails, errors.Wrap(err, "ldap user sync transaction failed")
+	}
 	for _, updatedUser := range updatedUsers {
 		syncDetails.Updated = append(syncDetails.Updated, updatedUser)
 	}

@@ -3892,33 +3892,6 @@
                 }
             }
         },
-        "/api/sync-ldap-users-v2": {
-            "post": {
-                "tags": [
-                    "Account API"
-                ],
-                "description": "sync ldap users by ldap uuid",
-                "operationId": "ApiController.SyncLdapUsersV2",
-                "parameters": [
-                    {
-                        "in": "body",
-                        "name": "body",
-                        "description": "true",
-                        "schema": {
-                            "$ref": "#/definitions/SyncLdapUsersRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "$ref": "#/definitions/LdapSyncResp"
-                        }
-                    }
-                }
-            }
-        },
         "/api/test-ldap": {
             "post": {
                 "tags": [
@@ -4596,6 +4569,33 @@
                 }
             }
         },
+        "/api/v2/sync-ldap-users": {
+            "post": {
+                "tags": [
+                    "Account API"
+                ],
+                "description": "sync ldap users by ldap uuid",
+                "operationId": "ApiController.SyncLdapUsersV2",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "true",
+                        "schema": {
+                            "$ref": "#/definitions/SyncLdapUsersRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/LdapSyncResp"
+                        }
+                    }
+                }
+            }
+        },
         "/api/verify-captcha": {
             "post": {
                 "tags": [
@@ -4752,11 +4752,11 @@
         }
     },
     "definitions": {
-        "228538.\u003cnil\u003e.string": {
+        "228634.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "315445.\u003cnil\u003e.string": {
+        "315541.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -5653,7 +5653,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/228538.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/228634.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6119,7 +6119,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/315445.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/315541.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"

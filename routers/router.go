@@ -164,7 +164,7 @@ func initAPI() {
 	beego.Router("/api/update-ldap", &controllers.ApiController{}, "POST:UpdateLdap")
 	beego.Router("/api/delete-ldap", &controllers.ApiController{}, "POST:DeleteLdap")
 	beego.Router("/api/sync-ldap-users", &controllers.ApiController{}, "POST:SyncLdapUsers")
-	beego.Router("/api/sync-ldap-users-v2", &controllers.ApiController{}, "POST:SyncLdapUsersV2")
+	beego.Router("/api/v2/sync-ldap-users", &controllers.ApiController{}, "POST:SyncLdapUsersV2")
 	beego.Router("/api/test-ldap", &controllers.ApiController{}, "POST:TestLdapConnection")
 	beego.Router("/api/get-ldap-sync-history", &controllers.ApiController{}, "GEt:GetLdapSyncHistory")
 
