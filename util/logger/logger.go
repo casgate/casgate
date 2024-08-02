@@ -77,6 +77,23 @@ func Create(config *Config) *Logger {
 	logger := &Logger{
 		l: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			Level: logLevel,
+			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+				// Remove time from the output for predictable test output.
+				if a.Key == slog.TimeKey {
+					// Rename the time key from "time" to "dt".
+					a.Key = "dt"
+					a.Value = slog.StringValue(a.Value.Time().Format("2006-01-02 15:04:05.000"))
+				}
+
+				// Customize the name of the level key and the output string, including
+				// custom level values.
+				if a.Key == slog.LevelKey {
+					// Rename the level key from "level" to "lvl".
+					a.Key = "lvl"
+				}
+
+				return a
+			},
 		})),
 	}
 

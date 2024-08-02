@@ -31,6 +31,7 @@ import (
 	"github.com/casdoor/casdoor/routers"
 	"github.com/casdoor/casdoor/txmanager"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 func main() {
@@ -65,6 +66,7 @@ func main() {
 	beego.InsertFilter("*", beego.BeforeRouter, routers.AutoSigninFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.CorsFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PrometheusFilter)
+	beego.InsertFilter("*", beego.BeforeRouter, routers.LoggerFilter)
 	beego.InsertFilter("*", beego.AfterExec, routers.LogRecordMessage, false)
 
 	beego.BConfig.WebConfig.Session.SessionOn = true
@@ -83,6 +85,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	logger.InitGlobal(&logger.Config{Level: conf.GetConfigString("logLevel")})
 	port := beego.AppConfig.DefaultInt("httpport", 8000)
 	// logs.SetLevel(logs.LevelInformational)
 	logs.SetLogFuncCall(false)

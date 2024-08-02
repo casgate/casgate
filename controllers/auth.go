@@ -138,7 +138,6 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 
 	if form.Type == ResponseTypeLogin {
 		c.SetSessionUsername(userId)
-		util.LogInfo(c.Ctx, "API: [%s] signed in", userId)
 		resp = &Response{Status: "ok", Msg: "", Data: userId}
 	} else if form.Type == ResponseTypeCode {
 		clientId := c.Input().Get("clientId")
@@ -230,8 +229,27 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 			provider_cat = application.GetProviderItem(form.Provider).Provider.Category
 		}
 
-		logger.Info(c.getRequestCtx(), "login successfully",
-			"user_id", user.GetId(), "application", form.Application, "provider", form.Provider, "provider_type", provider_type, "provider_category", provider_cat)
+		msg := map[string]string{
+			"provider":      form.Provider,
+			"provider_type": provider_type,
+			"provider_cat":  provider_cat,
+			"ldap":          form.LdapId,
+		}
+		msgStr, err := json.Marshal(msg)
+		if err != nil {
+			c.ResponseError(err.Error(), nil)
+			return
+		}
+
+		logger.Info(c.getRequestCtx(),
+			string(msgStr),
+			"obj-type", "application",
+			"usr", user.GetId(),
+			"obj", form.Application,
+			"act", "login",
+			"r", "success",
+		)
+
 	}
 
 	return resp
@@ -372,6 +390,7 @@ func (c *ApiController) Login() {
 
 		var user *object.User
 		var msg string
+		var logMsg string
 
 		if authForm.Password == "" {
 			record.AddReason("Empty password")
@@ -530,6 +549,7 @@ func (c *ApiController) Login() {
 
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
+				logMsg = err.Error()
 				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
 			}
 
@@ -539,11 +559,32 @@ func (c *ApiController) Login() {
 
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
+				logMsg = err.Error()
 				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
 			}
 		}
 
 		if msg != "" {
+			logMsg := map[string]string{
+				"application": authForm.Application,
+				"provider":    authForm.Provider,
+				"ldap":        authForm.LdapId,
+				"error":       logMsg,
+			}
+			logMsgStr, err := json.Marshal(logMsg)
+			if err != nil {
+				c.ResponseError(err.Error(), nil)
+				return
+			}
+			logger.Warn(c.getRequestCtx(),
+				string(logMsgStr),
+				"obj-type", "User",
+				"usr", util.GetId(authForm.Organization, authForm.Username),
+				"obj-type", "application",
+				"obj", authForm.Application,
+				"act", "login",
+				"r", "failure",
+			)
 			resp = &Response{Status: "error", Msg: msg}
 		} else {
 			application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))

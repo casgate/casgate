@@ -23,6 +23,7 @@ import (
 	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 const (
@@ -332,14 +333,25 @@ func (c *ApiController) Logout() {
 		_, err := object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
-
 			c.ResponseError(err.Error())
 			return
 		}
 
-		util.LogInfo(c.Ctx, "API: [%s] logged out", user)
-
 		application := c.GetSessionApplication()
+
+		var applicationID string
+		if application != nil {
+			applicationID = application.GetId()
+		}
+		logger.Info(c.getRequestCtx(),
+			"",
+			"obj-type", "application",
+			"usr", user,
+			"obj", applicationID,
+			"act", "logout",
+			"r", "success",
+		)
+
 		if application == nil || application.Name == "app-built-in" || application.HomepageUrl == "" {
 			record.AddReason("Logout error: application mismatch")
 
