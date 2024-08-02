@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
 	"net/http"
 
 	"github.com/beego/beego"
@@ -80,6 +81,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	logger.InitGlobal(&logger.Config{Level: conf.GetConfigString("logLevel")})
 	port := beego.AppConfig.DefaultInt("httpport", 8000)
 	// logs.SetLevel(logs.LevelInformational)
 	logs.SetLogFuncCall(false)
