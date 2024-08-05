@@ -19,6 +19,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"slices"
 )
 
 // global usage logging functions
@@ -131,7 +132,9 @@ func getArgs(ctx context.Context, args ...any) []any {
 	attrs := getAttrs(ctx)
 	a := make([]any, 0, len(attrs)*2+len(args)) // attrs contains 2 value (key+value)
 	for _, attr := range attrs {
-		a = append(a, attr.Key, attr.Value.String())
+		if !slices.Contains(args, any(attr.Key)) {
+			a = append(a, attr.Key, attr.Value.String())
+		}
 	}
 	if len(args) > 0 {
 		a = append(a, args...)

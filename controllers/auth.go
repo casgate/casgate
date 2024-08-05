@@ -15,6 +15,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
@@ -223,18 +224,31 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 			return
 		}
 
-		var provider_type, provider_cat string
+		var provider, provider_type, provider_cat string
 		if form.Provider != "" {
-			provider_type = application.GetProviderItem(form.Provider).Provider.Type
-			provider_cat = application.GetProviderItem(form.Provider).Provider.Category
+			provider = form.Provider
+			provider_type = application.GetProviderItem(provider).Provider.Type
+			provider_cat = application.GetProviderItem(provider).Provider.Category
 		}
 
-		msg := map[string]string{
-			"provider":      form.Provider,
-			"provider_type": provider_type,
-			"provider_cat":  provider_cat,
-			"ldap":          form.LdapId,
+		if form.LdapId != "" {
+			provider = form.LdapId
+			provider_cat = "LDAP"
 		}
+
+		msg := map[string]string{}
+		if provider != "" {
+			msg["provider"] = provider
+		}
+
+		if provider_type != "" {
+			msg["provider_type"] = provider_type
+		}
+
+		if provider_cat != "" {
+			msg["provider_cat"] = provider_cat
+		}
+
 		msgStr, err := json.Marshal(msg)
 		if err != nil {
 			c.ResponseError(err.Error(), nil)
@@ -366,21 +380,25 @@ func isProxyProviderType(providerType string) bool {
 func (c *ApiController) Login() {
 	resp := &Response{}
 
+	goCtx := c.getRequestCtx()
 	var authForm form.AuthForm
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &authForm)
 	if err != nil {
+		logLoginErr(goCtx, "read request body error", authForm.Provider, "")
 		c.ResponseBadRequest("read request body error")
+
 		return
 	}
+	logger.SetItem(goCtx, "obj-type", "application")
+	logger.SetItem(goCtx, "obj", fmt.Sprintf("admin/%s", authForm.Application))
+	logger.SetItem(goCtx, "usr", util.GetId(authForm.Organization, authForm.Username))
 
-	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
 
 	if authForm.Username != "" {
 		if authForm.Type == ResponseTypeLogin {
 			if c.GetSessionUsername() != "" {
-				record.AddReason("Login error: please sign out first")
-
+				logLoginErr(goCtx, "Login error: please sign out first", authForm.Provider, "")
 				c.ResponseError(c.T("account:Please sign out first"), c.GetSessionUsername())
 				return
 			}
@@ -396,13 +414,11 @@ func (c *ApiController) Login() {
 			record.AddReason("Empty password")
 
 			if user, err = object.GetUserByFields(authForm.Organization, authForm.Username); err != nil {
-				record.AddReason("Login error: please sign out first")
-
+				logLoginErr(goCtx, "Login error: please sign out first", authForm.Provider, "")
 				c.ResponseError(err.Error(), nil)
 				return
 			} else if user == nil {
-				record.AddReason("Login error: User not found")
-
+				logLoginErr(goCtx, "Login error: User not found", authForm.Provider, "")
 				c.ResponseError(fmt.Sprintf(c.T("general:Invalid username or password/code"), util.GetId(authForm.Organization, authForm.Username)))
 				return
 			}
@@ -413,8 +429,7 @@ func (c *ApiController) Login() {
 				authForm.CountryCode = user.GetCountryCode(authForm.CountryCode)
 				var ok bool
 				if checkDest, ok = util.GetE164Number(authForm.Username, authForm.CountryCode); !ok {
-					record.AddReason("Login error: invalid country code")
-
+					logLoginErr(goCtx, "Login error: invalid country code", authForm.Provider, "")
 					c.ResponseError(fmt.Sprintf(c.T("verification:Phone number is invalid in your region %s"), authForm.CountryCode))
 					return
 				}
@@ -423,8 +438,7 @@ func (c *ApiController) Login() {
 			// check result through Email or Phone
 			err := object.CheckSigninCode(goCtx, user, checkDest, authForm.Code, c.GetAcceptLanguage())
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s - %s", verificationCodeType, err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s - %s", verificationCodeType, err.Error()), authForm.Provider, "")
 				c.ResponseError(fmt.Sprintf("%s - %s", verificationCodeType, err.Error()))
 				return
 			}
@@ -432,54 +446,48 @@ func (c *ApiController) Login() {
 			// disable the verification code
 			err = object.DisableVerificationCode(checkDest)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 				c.ResponseError(err.Error(), nil)
 				return
 			}
 		} else {
 			application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 				c.ResponseError(err.Error(), nil)
 				return
 			}
 
 			if application == nil {
-				record.AddReason(fmt.Sprintf("Login error: application does not exists: %s", authForm.Application))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: application does not exists: %s", authForm.Application), authForm.Provider, "")
 				c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 				return
 			}
 			if authForm.SigninMethod == "Password" && !application.EnablePassword {
-				record.AddReason("Login error: login with password is not enabled for the application")
-
+				logLoginErr(goCtx, "Login error: login with password is not enabled for the application", authForm.Provider, "")
 				c.ResponseError(c.T("auth:The login method: login with password is not enabled for the application"))
 				return
 			}
 			if authForm.SigninMethod == "LDAP" && !application.IsLdapEnabled() {
+				logLoginErr(goCtx, c.T("auth:The login method: login with LDAP is not enabled for the application"), authForm.LdapId, "LDAP")
 				c.ResponseError(c.T("auth:The login method: login with LDAP is not enabled for the application"))
 				return
 			}
 			var enableCaptcha bool
 			if enableCaptcha, err = object.CheckToEnableCaptcha(application, authForm.Organization, authForm.Username); err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 				c.ResponseInternalServerError("internal server error")
 				return
 			} else if enableCaptcha {
 				isHuman, err := captcha.VerifyCaptchaByCaptchaType(authForm.CaptchaType, authForm.CaptchaToken, authForm.ClientSecret)
 				if err != nil {
-					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+					logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 					c.ResponseInternalServerError("internal server error")
 					return
 				}
 
 				if !isHuman {
-					record.AddReason("Login error: turing test filed")
-
+					logLoginErr(goCtx, "Login error: turing test filed", authForm.Provider, "")
 					c.ResponseError(c.T("verification:Turing test failed."))
 					return
 				}
@@ -496,13 +504,11 @@ func (c *ApiController) Login() {
 			if isSigninViaLdap {
 				ldap, err := object.GetLdap(authForm.LdapId)
 				if err != nil {
-					record.AddReason(fmt.Sprintf("Get Ldap error: %s", err.Error()))
-
+					logLoginErr(goCtx, fmt.Sprintf("Get Ldap error: %s", err.Error()), authForm.Provider, "")
 					c.ResponseError(c.T(fmt.Sprintf("auth:Failed to login in: %s", err.Error())))
 				}
 				if ldap == nil {
-					record.AddReason(fmt.Sprintf("Cannot get Ldap \"%s\"", authForm.LdapId))
-
+					logLoginErr(goCtx, fmt.Sprintf("Cannot get Ldap \"%s\"", authForm.LdapId), authForm.Provider, "")
 					c.ResponseError(c.T(fmt.Sprintf("auth:Failed to login in: %s", "Failed to get Ldap")))
 				}
 
@@ -550,7 +556,6 @@ func (c *ApiController) Login() {
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
 				logMsg = err.Error()
-				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
 			}
 
 			if user != nil && user.Ldap != "" && (isSigninViaLdap || isPasswordWithLdapEnabled) {
@@ -560,59 +565,35 @@ func (c *ApiController) Login() {
 			if err != nil {
 				msg = object.CheckPassErrorToMessage(err, c.GetAcceptLanguage())
 				logMsg = err.Error()
-				record.AddReason(fmt.Sprintf("Error: %s", err.Error()))
 			}
 		}
 
 		if msg != "" {
-			logMsg := map[string]string{
-				"application": authForm.Application,
-				"provider":    authForm.Provider,
-				"ldap":        authForm.LdapId,
-				"error":       logMsg,
-			}
-			logMsgStr, err := json.Marshal(logMsg)
-			if err != nil {
-				c.ResponseError(err.Error(), nil)
-				return
-			}
-			logger.Warn(c.getRequestCtx(),
-				string(logMsgStr),
-				"obj-type", "User",
-				"usr", util.GetId(authForm.Organization, authForm.Username),
-				"obj-type", "application",
-				"obj", authForm.Application,
-				"act", "login",
-				"r", "failure",
-			)
+			logLoginErr(goCtx, logMsg, authForm.Provider, "")
 			resp = &Response{Status: "error", Msg: msg}
 		} else {
 			application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
 			if application == nil {
-				record.AddReason(fmt.Sprintf("Login error: application does not exists: %s", authForm.Application))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: application does not exists: %s", authForm.Application), authForm.Provider, "")
 				c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 				return
 			}
 
 			organization, err := object.GetOrganizationByUser(user)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
 			if organization == nil {
-				record.AddReason(fmt.Sprintf("Login error: Organization does not exist"))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: Organization does not exist"), authForm.Provider, "")
 				c.ResponseInternalServerError(c.T("check:Organization does not exist"))
 				return
 			}
@@ -649,8 +630,7 @@ func (c *ApiController) Login() {
 				err = object.UpdateUserIdProvider(c.Ctx.Request.Context(), userIdProvider, "ldap_id")
 
 				if err != nil {
-					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+					logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 					c.ResponseInternalServerError("internal server error")
 					return
 				}
@@ -664,7 +644,7 @@ func (c *ApiController) Login() {
 			application, err = object.GetApplicationByClientId(goCtx, authForm.ClientId)
 			if err != nil {
 				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
@@ -673,45 +653,40 @@ func (c *ApiController) Login() {
 				goCtx, fmt.Sprintf("admin/%s", authForm.Application), &object.GetApplicationOptions{InitOpenIDProvider: true},
 			)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
 		}
 
 		if application == nil {
-			record.AddReason(fmt.Sprintf("Login error: the application does not exists: %s", err.Error()))
-
+			logLoginErr(goCtx, fmt.Sprintf("Login error: the application does not exists: %s", err.Error()), authForm.Provider, "")
 			c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 			return
 		}
+		logger.SetItem(goCtx, "obj", application.GetId())
 		organization, err := object.GetOrganization(util.GetId("admin", application.Organization))
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+			logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 			c.ResponseError(c.T(err.Error()))
 		}
 
 		providerID := util.GetId(application.Organization, authForm.Provider)
 		provider, err := object.GetProvider(providerID)
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+			logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 			c.ResponseInternalServerError("internal server error")
 			return
 		}
 		if provider == nil {
-			record.AddReason(fmt.Sprintf("Could not find provider with id: %s", providerID))
-
+			logLoginErr(goCtx, fmt.Sprintf("Could not find provider with id: %s", providerID), authForm.Provider, "")
 			c.ResponseInternalServerError("internal server error")
 			return
 		}
 
 		providerItem := application.GetProviderItem(provider.Name)
 		if !providerItem.IsProviderVisible() {
-			record.AddReason(fmt.Sprintf("Login error: provider is not enabled for the application: %s", provider.Name))
-
+			logLoginErr(goCtx, fmt.Sprintf("Login error: provider is not enabled for the application: %s", provider.Name), authForm.Provider, "")
 			c.ResponseError(fmt.Sprintf(c.T("auth:The provider: %s is not enabled for the application"), provider.Name))
 			return
 		}
@@ -720,10 +695,9 @@ func (c *ApiController) Login() {
 		var authData map[string]interface{}
 		if provider.Category == "SAML" {
 			// SAML
-			userInfo, authData, err = object.ParseSamlResponse(authForm.SamlResponse, provider, c.Ctx.Request.Host)
+			userInfo, authData, err = object.ParseSamlResponse(c.getRequestCtx(), authForm.SamlResponse, provider, c.Ctx.Request.Host)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("SAML login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("SAML login error: %s", err.Error()), authForm.Provider, provider.Category)
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
@@ -732,23 +706,20 @@ func (c *ApiController) Login() {
 			idpInfo := object.FromProviderToIdpInfo(c.Ctx, provider)
 			idProvider := idp.GetIdProvider(idpInfo, authForm.RedirectUri)
 			if idProvider == nil {
-				record.AddReason(fmt.Sprintf("Login error: provider type is not supported: %s", provider.Type))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: provider type is not supported: %s", provider.Type), authForm.Provider, provider.Category)
 				c.ResponseError(fmt.Sprintf(c.T("storage:The provider type: %s is not supported"), provider.Type))
 				return
 			}
 
 			err = setHttpClient(idProvider, *idpInfo)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
 			if authForm.State != conf.GetConfigString("authState") && authForm.State != application.Name {
-				record.AddReason(fmt.Sprintf("Login error: mismatch state: %s got: %s", conf.GetConfigString("authState"), authForm.State))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: mismatch state: %s got: %s", conf.GetConfigString("authState"), authForm.State), authForm.Provider, provider.Category)
 				c.ResponseError(fmt.Sprintf(c.T("auth:State expected: %s, but got: %s"), conf.GetConfigString("authState"), authForm.State))
 				return
 			}
@@ -756,23 +727,20 @@ func (c *ApiController) Login() {
 			// https://github.com/golang/oauth2/issues/123#issuecomment-103715338
 			token, err := idProvider.GetToken(authForm.Code)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 				c.ResponseUnauthorized("wrong client id")
 				return
 			}
 
 			if !token.Valid() {
-				record.AddReason("Login error: invalid token")
-
+				logLoginErr(goCtx, "Login error: invalid token", authForm.Provider, provider.Category)
 				c.ResponseError(c.T("auth:Invalid token"))
 				return
 			}
 
 			userInfo, err = idProvider.GetUserInfo(token)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 				c.ResponseError(fmt.Sprintf(c.T("auth:Failed to login in: %s"), err.Error()))
 				return
 			}
@@ -783,8 +751,7 @@ func (c *ApiController) Login() {
 				if jwtToken != nil {
 					err = jwtToken.UnsafeClaimsWithoutVerification(&authData)
 					if err != nil {
-						record.AddReason("Login error: invalid token")
-
+						logLoginErr(goCtx, "Login error: invalid token", authForm.Provider, provider.Category)
 						c.ResponseError(c.T("auth:Invalid token"))
 						return
 					}
@@ -800,8 +767,7 @@ func (c *ApiController) Login() {
 
 					err = jwtIdToken.UnsafeClaimsWithoutVerification(&authData)
 					if err != nil {
-						record.AddReason("Login error: invalid id token")
-
+						logLoginErr(goCtx, "Login error: invalid id token", authForm.Provider, provider.Category)
 						c.ResponseError(c.T("auth:Invalid id token"))
 						return
 					}
@@ -814,7 +780,7 @@ func (c *ApiController) Login() {
 			if provider.Category == "OAuth" || provider.Category == "Web3" || provider.Category == "SAML" {
 				user, err = object.GetUserByField(application.Organization, provider.Type, userInfo.Id)
 				if err != nil {
-					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
+					logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 					c.ResponseInternalServerError("internal server error")
 					return
 				}
@@ -824,8 +790,7 @@ func (c *ApiController) Login() {
 				// Sign in via OAuth (want to sign up but already have account)
 
 				if user.IsForbidden {
-					record.AddReason("Login error: user forbidden to sign in")
-
+					logLoginErr(goCtx, "Login error: user forbidden to sign in", authForm.Provider, provider.Category)
 					c.ResponseError(c.T("check:The user is forbidden to sign in, please contact the administrator"))
 					return
 				}
@@ -844,8 +809,7 @@ func (c *ApiController) Login() {
 					LastSignInTime:  util.GetCurrentTime(),
 				}, "provider_name")
 				if err != nil {
-					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+					logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 					c.ResponseInternalServerError(err.Error())
 					return
 				}
@@ -856,8 +820,7 @@ func (c *ApiController) Login() {
 						// Find existing user with Email
 						user, err = object.GetUserByField(application.Organization, "email", userInfo.Email)
 						if err != nil {
-							record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+							logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 							c.ResponseInternalServerError("internal server error")
 							return
 						}
@@ -867,8 +830,7 @@ func (c *ApiController) Login() {
 						// Find existing user with phone number
 						user, err = object.GetUserByField(application.Organization, "phone", userInfo.Phone)
 						if err != nil {
-							record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+							logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 							c.ResponseInternalServerError("internal server error")
 							return
 						}
@@ -877,15 +839,13 @@ func (c *ApiController) Login() {
 
 				if user == nil || user.IsDeleted {
 					if !application.EnableInternalSignUp && !application.EnableIdpSignUp {
-						record.AddReason(fmt.Sprintf("Login error: provider: %s, username: %s, (%s) does not allowed to sign up as new account", provider.Type, userInfo.Username, userInfo.DisplayName))
-
+						logLoginErr(goCtx, fmt.Sprintf("Login error: provider: %s, username: %s, (%s) does not allowed to sign up as new account", provider.Type, userInfo.Username, userInfo.DisplayName), authForm.Provider, provider.Category)
 						c.ResponseError(fmt.Sprintf(c.T("auth:The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support"), provider.Type, userInfo.Username, userInfo.DisplayName))
 						return
 					}
 
 					if !providerItem.CanSignUp {
-						record.AddReason(fmt.Sprintf("Login error: provider: %s, username: %s, (%s) does not allowed to sign up as new account via %s", provider.Type, userInfo.Username, userInfo.DisplayName, provider.Type))
-
+						logLoginErr(goCtx, fmt.Sprintf("Login error: provider: %s, username: %s, (%s) does not allowed to sign up as new account via %s", provider.Type, userInfo.Username, userInfo.DisplayName, provider.Type), authForm.Provider, provider.Category)
 						c.ResponseError(fmt.Sprintf(c.T("auth:The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account via %%s, please use another way to sign up"), provider.Type, userInfo.Username, userInfo.DisplayName, provider.Type))
 						return
 					}
@@ -893,8 +853,7 @@ func (c *ApiController) Login() {
 					// Handle username conflicts
 					tmpUser, err := object.GetUser(util.GetId(application.Organization, userInfo.Username))
 					if err != nil {
-						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+						logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")
 						return
 					}
@@ -902,8 +861,7 @@ func (c *ApiController) Login() {
 					if tmpUser != nil {
 						uid, err := uuid.NewRandom()
 						if err != nil {
-							record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+							logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 							c.ResponseInternalServerError("internal server error")
 							return
 						}
@@ -915,8 +873,7 @@ func (c *ApiController) Login() {
 					properties := map[string]string{}
 					count, err := object.GetUserCount(application.Organization, "", "", "")
 					if err != nil {
-						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+						logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")
 						return
 					}
@@ -924,8 +881,7 @@ func (c *ApiController) Login() {
 					properties["no"] = strconv.Itoa(int(count + 2))
 					initScore, err := organization.GetInitScore()
 					if err != nil {
-						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+						logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseError(fmt.Errorf(c.T("account:Get init score failed, error: %w"), err).Error())
 						return
 					}
@@ -962,15 +918,13 @@ func (c *ApiController) Login() {
 
 					affected, err := object.AddUser(goCtx, user)
 					if err != nil {
-						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+						logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")
 						return
 					}
 
 					if !affected {
-						record.AddReason(fmt.Sprintf("Login error: user information is invalid: %s", util.StructToJson(user)))
-
+						logLoginErr(goCtx, fmt.Sprintf("Login error: user information is invalid: %s", util.StructToJson(user)), authForm.Provider, provider.Category)
 						c.ResponseError(fmt.Sprintf(c.T("auth:Failed to create user, user information is invalid")))
 						return
 					}
@@ -980,8 +934,7 @@ func (c *ApiController) Login() {
 					// sync info from 3rd-party if possible
 					_, err := object.SetUserOAuthProperties(organization, user, provider.Type, userInfo)
 					if err != nil {
-						record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+						logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")
 						return
 					}
@@ -989,8 +942,7 @@ func (c *ApiController) Login() {
 
 				_, err = object.LinkUserAccount(user, provider.Type, userInfo.Id)
 				if err != nil {
-					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+					logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 					c.ResponseInternalServerError("internal server error")
 					return
 				}
@@ -1004,8 +956,7 @@ func (c *ApiController) Login() {
 					CreatedTime:     util.GetCurrentTime(),
 				})
 				if err != nil {
-					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+					logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 					c.ResponseInternalServerError("internal server error")
 					return
 				}
@@ -1020,8 +971,7 @@ func (c *ApiController) Login() {
 					record.AddReason("Start attribute mapping")
 					err = object.SyncAttributesToUser(user, userInfo.DisplayName, userInfo.Email, userInfo.Phone, userInfo.AvatarUrl, user.Address)
 					if err != nil {
-						record.AddReason(fmt.Sprintf("Attribute mapping error: %s", err.Error()))
-
+						logLoginErr(goCtx, fmt.Sprintf("Attribute mapping error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")
 						return
 					}
@@ -1032,8 +982,7 @@ func (c *ApiController) Login() {
 					record.AddReason("Start role mapping")
 					mapper, err := role_mapper.NewRoleMapper(provider.Category, provider.RoleMappingItems, authData)
 					if err != nil {
-						record.AddReason(fmt.Sprintf("Role mapping error: %s", err.Error()))
-
+						logLoginErr(goCtx, fmt.Sprintf("Role mapping error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")
 						return
 					}
@@ -1041,8 +990,7 @@ func (c *ApiController) Login() {
 					userRoles := mapper.GetRoles()
 					err = object.SyncRolesToUser(user, userRoles)
 					if err != nil {
-						record.AddReason(fmt.Sprintf("Role mapping error: %s", err.Error()))
-
+						logLoginErr(goCtx, fmt.Sprintf("Role mapping error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")
 						return
 					}
@@ -1052,31 +1000,27 @@ func (c *ApiController) Login() {
 		} else { // authForm.Method != "signup"
 			userId := c.GetSessionUsername()
 			if userId == "" {
-				record.AddReason("Login error: invalid username or password")
-
+				logLoginErr(goCtx, "Login error: invalid username or password", authForm.Provider, provider.Category)
 				c.ResponseError(fmt.Sprintf(c.T("general:Invalid username or password/code"), util.GetId(application.Organization, userInfo.Id)), userInfo)
 				return
 			}
 
 			oldUser, err := object.GetUserByField(application.Organization, provider.Type, userInfo.Id)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
 			if oldUser != nil {
-				record.AddReason(fmt.Sprintf("Login error: provider: %s and username: %s (%s) is already linked to another account %s (%s)", provider.Type, userInfo.Username, userInfo.DisplayName, oldUser.Name, oldUser.DisplayName))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: provider: %s and username: %s (%s) is already linked to another account %s (%s)", provider.Type, userInfo.Username, userInfo.DisplayName, oldUser.Name, oldUser.DisplayName), authForm.Provider, provider.Category)
 				c.ResponseError(fmt.Sprintf(c.T("auth:The account for provider: %s and username: %s (%s) is already linked to another account: %s (%s)"), provider.Type, userInfo.Username, userInfo.DisplayName, oldUser.Name, oldUser.DisplayName))
 				return
 			}
 
 			user, err := object.GetUser(userId)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
@@ -1084,16 +1028,14 @@ func (c *ApiController) Login() {
 			// sync info from 3rd-party if possible
 			_, err = object.SetUserOAuthProperties(organization, user, provider.Type, userInfo)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
 			isLinked, err := object.LinkUserAccount(user, provider.Type, userInfo.Id)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, provider.Category)
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
@@ -1107,14 +1049,12 @@ func (c *ApiController) Login() {
 	} else if c.getMfaUserSession() != "" {
 		user, err := object.GetUser(c.getMfaUserSession())
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+			logLoginErr(goCtx, fmt.Sprintf("internal server error: %s", err.Error()), authForm.Provider, "")
 			c.ResponseInternalServerError("internal server error")
 			return
 		}
 		if user == nil {
-			record.AddReason("Login error: expired user session")
-
+			logLoginErr(goCtx, "expired user session", authForm.Provider, "")
 			c.ResponseError("expired user session")
 			return
 		}
@@ -1122,45 +1062,39 @@ func (c *ApiController) Login() {
 		if authForm.Passcode != "" {
 			mfaUtil := object.GetMfaUtil(authForm.MfaType, user.GetPreferredMfaProps(false))
 			if mfaUtil == nil {
-				record.AddReason("Login error: invalid multi-factor authentication type")
-
+				logLoginErr(goCtx, "Login error: invalid multi-factor authentication type", authForm.Provider, "")
 				c.ResponseError("Invalid multi-factor authentication type")
 				return
 			}
 
 			err = mfaUtil.Verify(authForm.Passcode)
 			if err != nil {
-				record.AddReason("OTP was wrong")
-
+				logLoginErr(goCtx, "OTP was wrong", authForm.Provider, "")
 				c.ResponseUnprocessableEntity("OTP was wrong")
 				return
 			}
 		} else if authForm.RecoveryCode != "" {
 			err = object.MfaRecover(user, authForm.RecoveryCode)
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
 		} else {
-			record.AddReason("missing passcode or recovery code")
-
+			logLoginErr(goCtx, "missing passcode or recovery code", authForm.Provider, "")
 			c.ResponseError("missing passcode or recovery code")
 			return
 		}
 
 		application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+			logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 			c.ResponseInternalServerError("internal server error")
 			return
 		}
 
 		if application == nil {
-			record.AddReason(fmt.Sprintf("Login error: application: %s doens not exists", authForm.Application))
-
+			logLoginErr(goCtx, fmt.Sprintf("Login error: application: %s does not exists", authForm.Application), authForm.Provider, "")
 			c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 			return
 		}
@@ -1179,14 +1113,12 @@ func (c *ApiController) Login() {
 	} else if c.getChangePasswordUserSession() != "" {
 		user, err := object.GetUser(c.getChangePasswordUserSession())
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+			logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 			c.ResponseInternalServerError("internal server error")
 			return
 		}
 		if user == nil {
-			record.AddReason("expired user session")
-
+			logLoginErr(goCtx, "expired user session", authForm.Provider, "")
 			c.ResponseError("expired user session")
 			return
 		}
@@ -1198,15 +1130,13 @@ func (c *ApiController) Login() {
 
 		application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+			logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 			c.ResponseInternalServerError("internal server error")
 			return
 		}
 
 		if application == nil {
-			record.AddReason(fmt.Sprintf("Login error: application %s does not exist", authForm.Application))
-
+			logLoginErr(goCtx, fmt.Sprintf("Login error: application %s does not exist", authForm.Application), authForm.Provider, "")
 			c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 			return
 		}
@@ -1220,15 +1150,13 @@ func (c *ApiController) Login() {
 			// user already signed in to Casdoor, so let the user click the avatar button to do the quick sign-in
 			application, err := object.GetApplication(goCtx, fmt.Sprintf("admin/%s", authForm.Application))
 			if err != nil {
-				record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 				c.ResponseInternalServerError("internal server error")
 				return
 			}
 
 			if application == nil {
-				record.AddReason(fmt.Sprintf("Login error: application %s does not exist", authForm.Application))
-
+				logLoginErr(goCtx, fmt.Sprintf("Login error: application %s does not exist", authForm.Application), authForm.Provider, "")
 				c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 				return
 			}
@@ -1238,8 +1166,7 @@ func (c *ApiController) Login() {
 
 			record.WithOrganization(application.Organization).WithUsername(user.Name).AddReason("Quick sign in")
 		} else {
-			record.AddReason("Login error: Unknown authentication type (not password or provider)")
-
+			logLoginErr(goCtx, "Login error: Unknown authentication type (not password or provider)", authForm.Provider, "")
 			c.ResponseError(fmt.Sprintf(c.T("auth:Unknown authentication type (not password or provider), form = %s"), util.StructToJson(authForm)))
 			return
 		}
@@ -1249,10 +1176,36 @@ func (c *ApiController) Login() {
 	c.ServeJSON()
 }
 
+func logLoginErr(ctx context.Context, errText string, provider string, providerCat string) {
+	record := object.GetRecord(ctx)
+	record.AddReason(errText)
+
+	logMsg := map[string]string{
+		"error": errText,
+	}
+
+	if provider != "" {
+		logMsg["provider"] = provider
+	}
+	if providerCat != "" {
+		logMsg["provider_cat"] = providerCat
+	}
+
+	logMsgStr, err := json.Marshal(logMsg)
+	if err != nil {
+		return
+	}
+	logger.Error(ctx,
+		string(logMsgStr),
+		"act", "login",
+		"r", "failure",
+	)
+}
+
 func (c *ApiController) GetSamlLogin() {
 	providerId := c.Input().Get("id")
 	relayState := c.Input().Get("relayState")
-	authURL, method, err := object.GenerateSamlRequest(providerId, relayState, c.Ctx.Request.Host, c.GetAcceptLanguage())
+	authURL, method, err := object.GenerateSamlRequest(c.getRequestCtx(), providerId, relayState, c.Ctx.Request.Host, c.GetAcceptLanguage())
 	if err != nil {
 		logs.Error("generate SAML request: %s", err.Error())
 
