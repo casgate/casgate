@@ -1298,6 +1298,40 @@ paths:
             type: array
             items:
               $ref: '#/definitions/LdapIdWithNameResp'
+  /api/get-ldap-sync-history:
+    get:
+      tags:
+      - Account API
+      description: get detailed ldap sync history info, with list of users and what happened to them
+      operationId: ApiController.GetLdapSyncHistory
+      parameters:
+      - in: query
+        name: id
+        description: Ldap UUID
+        required: true
+        type: string
+      - in: query
+        name: limit
+        description: Results per page
+        type: string
+        default: "10"
+      - in: query
+        name: sortOrder
+        description: descend/ascend
+        type: string
+        default: descend
+      - in: query
+        name: p
+        description: Page number
+        type: string
+        default: "1"
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ldap_sync.LdapSyncHistory'
   /api/get-ldap-users:
     get:
       tags:
@@ -2954,6 +2988,23 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Userinfo'
+  /api/v2/sync-ldap-users:
+    post:
+      tags:
+      - Account API
+      description: sync ldap users by ldap uuid
+      operationId: ApiController.SyncLdapUsersV2
+      parameters:
+      - in: body
+        name: body
+        description: "true"
+        schema:
+          $ref: '#/definitions/SyncLdapUsersRequest'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/LdapSyncResp'
   /api/verify-captcha:
     post:
       tags:
@@ -3054,20 +3105,11 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  1172.0x1400028e8d0.false:
-    title: "false"
-    type: object
-  1206.0x1400028e900.false:
-    title: "false"
-    type: object
-  214539.<nil>.string:
+  228634.<nil>.string:
     title: string
     type: object
-  312096.<nil>.string:
+  315541.<nil>.string:
     title: string
-    type: object
-  331526.0x14000acc450.false:
-    title: "false"
     type: object
   LaravelResponse:
     title: LaravelResponse
@@ -3083,6 +3125,9 @@ definitions:
     type: object
   Response:
     title: Response
+    type: object
+  SyncLdapUsersRequest:
+    title: SyncLdapUsersRequest
     type: object
   casbin.Enforcer:
     title: Enforcer
@@ -3119,9 +3164,13 @@ definitions:
     type: object
     properties:
       data:
-        $ref: '#/definitions/1172.0x1400028e8d0.false'
+        additionalProperties:
+          description: support string, struct or []struct
+          type: string
       data2:
-        $ref: '#/definitions/1206.0x1400028e900.false'
+        additionalProperties:
+          description: support string, struct or []struct
+          type: string
       msg:
         type: string
       name:
@@ -3145,14 +3194,45 @@ definitions:
   jose.JSONWebKey:
     title: JSONWebKey
     type: object
+  ldap_sync.LdapSyncHistory:
+    title: LdapSyncHistory
+    type: object
+    properties:
+      ended_at:
+        type: string
+        format: datetime
+      id:
+        type: integer
+        format: int64
+      ldap_id:
+        type: string
+      ldap_sync_id:
+        type: integer
+        format: int64
+      reason:
+        type: string
+      result:
+        type: array
+        items:
+          $ref: '#/definitions/ldap_sync.LdapSyncHistoryUser'
+      started_at:
+        type: string
+        format: datetime
+      synced_by_user_id:
+        type: string
+  ldap_sync.LdapSyncHistoryUser:
+    title: LdapSyncHistoryUser
+    type: object
+    properties:
+      Action:
+        type: string
+      UUID:
+        type: string
   model.Model:
     title: Model
     type: object
   object:
     title: object
-    type: object
-  object.&{270271 0x140008f1ec0 false}:
-    title: '&{270271 0x140008f1ec0 false}'
     type: object
   object.AccountItem:
     title: AccountItem
@@ -3344,7 +3424,7 @@ definitions:
     title: CasbinRequest
     type: array
     items:
-      $ref: '#/definitions/object.&{270271 0x140008f1ec0 false}'
+      $ref: '#/definitions/object.CasbinRequest'
   object.Cert:
     title: Cert
     type: object
@@ -3639,7 +3719,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/214539.<nil>.string'
+          $ref: '#/definitions/228634.<nil>.string'
       description:
         type: string
       displayName:
@@ -3951,7 +4031,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/312096.<nil>.string'
+        $ref: '#/definitions/315541.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:
@@ -4018,7 +4098,9 @@ definitions:
     type: object
     properties:
       oldObject:
-        $ref: '#/definitions/331526.0x14000acc450.false'
+        additionalProperties:
+          description: support string, struct or []struct
+          type: string
       reasons:
         type: array
         items:

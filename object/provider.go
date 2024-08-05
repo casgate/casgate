@@ -17,6 +17,7 @@ package object
 import (
 	"context"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"net/http"
 	"strings"
 	"time"
@@ -135,19 +136,19 @@ func GetMaskedProviders(providers []*Provider, isMaskEnabled bool) []*Provider {
 }
 
 func GetProviderCount(owner, field, value string) (int64, error) {
-	session := GetSession("", -1, -1, field, value, "", "")
+	session := orm.GetSession("", -1, -1, field, value, "", "")
 	return session.Where("owner = ? or owner = ? ", "admin", owner).Count(&Provider{})
 }
 
 func GetGlobalProviderCount(field, value string) (int64, error) {
-	session := GetSession("", -1, -1, field, value, "", "")
+	session := orm.GetSession("", -1, -1, field, value, "", "")
 	return session.Count(&Provider{})
 }
 
 func GetProvidersByCertName(certName string) ([]*Provider, error) {
 	providers := []*Provider{}
 
-	err := ormer.Engine.Where("cert = ?", certName).Find(&providers, &Provider{})
+	err := orm.AppOrmer.Engine.Where("cert = ?", certName).Find(&providers, &Provider{})
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +158,7 @@ func GetProvidersByCertName(certName string) ([]*Provider, error) {
 
 func GetProviders(owner string) ([]*Provider, error) {
 	providers := []*Provider{}
-	err := ormer.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&providers, &Provider{})
+	err := orm.AppOrmer.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&providers, &Provider{})
 	if err != nil {
 		return providers, err
 	}
@@ -167,7 +168,7 @@ func GetProviders(owner string) ([]*Provider, error) {
 
 func GetGlobalProviders() ([]*Provider, error) {
 	providers := []*Provider{}
-	err := ormer.Engine.Desc("created_time").Find(&providers)
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&providers)
 	if err != nil {
 		return providers, err
 	}
@@ -177,7 +178,7 @@ func GetGlobalProviders() ([]*Provider, error) {
 
 func GetPaginationProviders(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Provider, error) {
 	providers := []*Provider{}
-	session := GetSession("", offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession("", offset, limit, field, value, sortField, sortOrder)
 	err := session.Where("owner = ? or owner = ? ", "admin", owner).Find(&providers)
 	if err != nil {
 		return providers, err
@@ -188,7 +189,7 @@ func GetPaginationProviders(owner string, offset, limit int, field, value, sortF
 
 func GetPaginationGlobalProviders(offset, limit int, field, value, sortField, sortOrder string) ([]*Provider, error) {
 	providers := []*Provider{}
-	session := GetSession("", offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession("", offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&providers)
 	if err != nil {
 		return providers, err
@@ -203,7 +204,7 @@ func getProvider(owner string, name string) (*Provider, error) {
 	}
 
 	provider := Provider{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&provider)
+	existed, err := orm.AppOrmer.Engine.Get(&provider)
 	if err != nil {
 		return &provider, err
 	}
@@ -245,7 +246,7 @@ func UpdateProvider(id string, provider *Provider) (bool, error) {
 		}
 	}
 
-	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
+	session := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols()
 	if provider.ClientSecret == "***" {
 		session = session.Omit("client_secret")
 	}
@@ -272,7 +273,7 @@ func AddProvider(provider *Provider) (bool, error) {
 		provider.IntranetEndpoint = util.GetEndPoint(provider.IntranetEndpoint)
 	}
 
-	affected, err := ormer.Engine.Insert(provider)
+	affected, err := orm.AppOrmer.Engine.Insert(provider)
 	if err != nil {
 		return false, err
 	}
@@ -281,7 +282,7 @@ func AddProvider(provider *Provider) (bool, error) {
 }
 
 func DeleteProvider(provider *Provider) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{provider.Owner, provider.Name}).Delete(&Provider{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{provider.Owner, provider.Name}).Delete(&Provider{})
 	if err != nil {
 		return false, err
 	}
@@ -296,7 +297,7 @@ func (p *Provider) GetId() string {
 func GetCaptchaProviderByOwnerName(applicationId, lang string) (*Provider, error) {
 	owner, name := util.GetOwnerAndNameFromId(applicationId)
 	provider := Provider{Owner: owner, Name: name, Category: "Captcha"}
-	existed, err := ormer.Engine.Get(&provider)
+	existed, err := orm.AppOrmer.Engine.Get(&provider)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +333,7 @@ func GetCaptchaProviderByApplication(ctx context.Context, applicationId, isCurre
 }
 
 func providerChangeTrigger(oldName string, newName string) error {
-	session := ormer.Engine.NewSession()
+	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	err := session.Begin()
@@ -341,7 +342,7 @@ func providerChangeTrigger(oldName string, newName string) error {
 	}
 
 	var applications []*Application
-	err = ormer.Engine.Find(&applications)
+	err = orm.AppOrmer.Engine.Find(&applications)
 	if err != nil {
 		return err
 	}

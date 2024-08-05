@@ -17,6 +17,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
 	"net/http"
 
 	"github.com/beego/beego"
@@ -33,8 +35,8 @@ import (
 )
 
 func main() {
-	object.InitFlag()
-	ormer := object.InitAdapter()
+	orm.InitFlag()
+	ormer := orm.InitAdapter()
 	trm := txmanager.NewTransactionManager(ormer.Engine)
 	repo := repository.NewRepo(trm)
 	object.InitRepo(trm, repo)
@@ -79,6 +81,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	logger.InitGlobal(&logger.Config{Level: conf.GetConfigString("logLevel")})
 	port := beego.AppConfig.DefaultInt("httpport", 8000)
 	// logs.SetLevel(logs.LevelInformational)
 	logs.SetLogFuncCall(false)

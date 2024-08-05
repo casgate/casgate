@@ -15,6 +15,7 @@
 package object
 
 import (
+	"github.com/casdoor/casdoor/orm"
 	"sync"
 	"time"
 )
@@ -44,7 +45,7 @@ func GetDashboard(owner string) (*Dashboard, error) {
 	wg.Add(4)
 	go func() {
 		defer wg.Done()
-		if err := ormer.Engine.Find(&organizations, &Organization{Owner: owner}); err != nil {
+		if err := orm.AppOrmer.Engine.Find(&organizations, &Organization{Owner: owner}); err != nil {
 			panic(err)
 		}
 	}()
@@ -52,7 +53,7 @@ func GetDashboard(owner string) (*Dashboard, error) {
 	go func() {
 		defer wg.Done()
 
-		if err := ormer.Engine.Find(&users, &User{Owner: owner}); err != nil {
+		if err := orm.AppOrmer.Engine.Find(&users, &User{Owner: owner}); err != nil {
 			panic(err)
 		}
 	}()
@@ -60,7 +61,7 @@ func GetDashboard(owner string) (*Dashboard, error) {
 	go func() {
 		defer wg.Done()
 
-		if err := ormer.Engine.Find(&providers, &Provider{Owner: owner}); err != nil {
+		if err := orm.AppOrmer.Engine.Find(&providers, &Provider{Owner: owner}); err != nil {
 			panic(err)
 		}
 	}()
@@ -68,7 +69,7 @@ func GetDashboard(owner string) (*Dashboard, error) {
 	go func() {
 		defer wg.Done()
 
-		if err := ormer.Engine.Find(&applications, &Application{Owner: owner}); err != nil {
+		if err := orm.AppOrmer.Engine.Find(&applications, &Application{Owner: owner}); err != nil {
 			panic(err)
 		}
 	}()

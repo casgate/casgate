@@ -1,5 +1,7 @@
 package object
 
+import "github.com/casdoor/casdoor/orm"
+
 func HasOrganizationDependencies(orgName string) (bool, error) {
 	tables := map[string]string{
 		"adapter":     "owner",
@@ -20,7 +22,7 @@ func HasOrganizationDependencies(orgName string) (bool, error) {
 	}
 
 	for table, field := range tables {
-		exists, err := ormer.Engine.Table(table).Where(field+" = ?", orgName).Exist()
+		exists, err := orm.AppOrmer.Engine.Table(table).Where(field+" = ?", orgName).Exist()
 		if err != nil {
 			return false, err
 		}

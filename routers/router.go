@@ -164,7 +164,9 @@ func initAPI() {
 	beego.Router("/api/update-ldap", &controllers.ApiController{}, "POST:UpdateLdap")
 	beego.Router("/api/delete-ldap", &controllers.ApiController{}, "POST:DeleteLdap")
 	beego.Router("/api/sync-ldap-users", &controllers.ApiController{}, "POST:SyncLdapUsers")
+	beego.Router("/api/v2/sync-ldap-users", &controllers.ApiController{}, "POST:SyncLdapUsersV2")
 	beego.Router("/api/test-ldap", &controllers.ApiController{}, "POST:TestLdapConnection")
+	beego.Router("/api/get-ldap-sync-history", &controllers.ApiController{}, "GEt:GetLdapSyncHistory")
 
 	beego.Router("/api/get-providers", &controllers.ApiController{}, "GET:GetProviders")
 	beego.Router("/api/get-provider", &controllers.ApiController{}, "GET:GetProvider")
@@ -207,8 +209,6 @@ func initAPI() {
 	beego.Router("/api/update-webhook", &controllers.ApiController{}, "POST:UpdateWebhook")
 	beego.Router("/api/add-webhook", &controllers.ApiController{}, "POST:AddWebhook")
 	beego.Router("/api/delete-webhook", &controllers.ApiController{}, "POST:DeleteWebhook")
-
-
 
 	beego.Router("/api/get-certs", &controllers.ApiController{}, "GET:GetCerts")
 	beego.Router("/api/get-globle-certs", &controllers.ApiController{}, "GET:GetGlobleCerts")
