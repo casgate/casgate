@@ -30,6 +30,7 @@
     "Unauthorized operation": "未授权的操作",
     "Unknown authentication type (not password or provider), form = %s": "未知的认证类型（非密码或第三方提供商）：%s",
     "User's tag: %s is not listed in the application's tags": "用户的标签: %s不在该应用的标签列表中",
+    "Wrong URL": "Wrong URL",
     "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
   },
   "cas": {

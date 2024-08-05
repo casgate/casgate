@@ -30,6 +30,7 @@
     "Unauthorized operation": "Operasi tidak sah",
     "Unknown authentication type (not password or provider), form = %s": "Jenis otentikasi tidak diketahui (bukan kata sandi atau pemberi), formulir = %s",
     "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
+    "Wrong URL": "Wrong URL",
     "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
   },
   "cas": {
