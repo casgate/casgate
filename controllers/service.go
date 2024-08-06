@@ -19,6 +19,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -90,6 +91,10 @@ func (c *ApiController) SendEmail() {
 	if len(emailForm.Receivers) == 1 && emailForm.Receivers[0] == "TestSmtpServer" {
 		err := object.DailSmtpServer(provider)
 		if err != nil {
+			if errors.Is(err, object.ErrUnencryptedConnection) {
+				c.ResponseError(c.T("provider:The provider's email server does not support insecure connections to the specified port"))
+				return
+			}
 			c.ResponseError(err.Error())
 			return
 		}
@@ -119,6 +124,10 @@ func (c *ApiController) SendEmail() {
 	for _, receiver := range emailForm.Receivers {
 		err = object.SendEmail(provider, emailForm.Title, content, receiver, emailForm.Sender)
 		if err != nil {
+			if errors.Is(err, object.ErrUnencryptedConnection) {
+				c.ResponseError(c.T("provider:The provider's email server does not support insecure connections to the specified port"))
+				return
+			}
 			c.ResponseError(err.Error())
 			return
 		}

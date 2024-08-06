@@ -106,7 +106,8 @@
   },
   "provider": {
     "Invalid application id": "잘못된 애플리케이션 ID입니다",
-    "the provider: %s does not exist": "제공자 %s가 존재하지 않습니다"
+    "the provider: %s does not exist": "제공자 %s가 존재하지 않습니다",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port"
   },
   "resource": {
     "User is nil for tag: avatar": "사용자는 아바타 태그에 대해 nil입니다",

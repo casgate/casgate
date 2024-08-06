@@ -106,7 +106,8 @@
   },
   "provider": {
     "Invalid application id": "アプリケーションIDが無効です",
-    "the provider: %s does not exist": "プロバイダー%sは存在しません"
+    "the provider: %s does not exist": "プロバイダー%sは存在しません",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port"
   },
   "resource": {
     "User is nil for tag: avatar": "ユーザーはタグ「アバター」に対してnilです",
