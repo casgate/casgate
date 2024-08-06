@@ -106,7 +106,8 @@
   },
   "provider": {
     "Invalid application id": "Invalid application id",
-    "the provider: %s does not exist": "the provider: %s does not exist"
+    "the provider: %s does not exist": "the provider: %s does not exist",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port"
   },
   "resource": {
     "User is nil for tag: avatar": "User is nil for tag: avatar",

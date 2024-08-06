@@ -15,6 +15,7 @@
 package object
 
 import (
+	"github.com/casdoor/casdoor/orm"
 	xormadapter "github.com/casdoor/xorm-adapter/v3"
 	"github.com/xorm-io/xorm"
 	"github.com/xorm-io/xorm/migrate"
@@ -23,7 +24,7 @@ import (
 type Migrator_1_235_0_PR_1530 struct{}
 
 func (*Migrator_1_235_0_PR_1530) IsMigrationNeeded() bool {
-	exist, _ := ormer.Engine.IsTableExist("casbin_rule")
+	exist, _ := orm.AppOrmer.Engine.IsTableExist("casbin_rule")
 
 	return exist
 }

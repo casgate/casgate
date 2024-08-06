@@ -17,6 +17,7 @@ package object
 import (
 	"context"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -35,7 +36,7 @@ type Domain struct {
 }
 
 func GetDomainCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Domain{})
 }
 
@@ -50,7 +51,7 @@ func GetDomains(ctx context.Context, owner string) ([]*Domain, error) {
 
 func GetPaginationDomains(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Domain, error) {
 	domains := []*Domain{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&domains)
 	if err != nil {
 		return domains, err
@@ -65,7 +66,7 @@ func getDomain(owner string, name string) (*Domain, error) {
 	}
 
 	domain := Domain{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&domain)
+	existed, err := orm.AppOrmer.Engine.Get(&domain)
 	if err != nil {
 		return &domain, err
 	}
@@ -114,7 +115,7 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 		return false, fmt.Errorf("subRolePermissions: %w", err)
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(domain)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(domain)
 	if err != nil {
 		return false, err
 	}
@@ -135,7 +136,7 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 }
 
 func AddDomain(domain *Domain) (bool, error) {
-	affected, err := ormer.Engine.Insert(domain)
+	affected, err := orm.AppOrmer.Engine.Insert(domain)
 	if err != nil {
 		return false, err
 	}
@@ -193,7 +194,7 @@ func DeleteDomain(domain *Domain) (bool, error) {
 		}
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{domain.Owner, domain.Name}).Delete(&Domain{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{domain.Owner, domain.Name}).Delete(&Domain{})
 	if err != nil {
 		return false, err
 	}
@@ -213,7 +214,7 @@ func (domain *Domain) GetId() string {
 }
 
 func domainChangeTrigger(oldName string, newName string) error {
-	session := ormer.Engine.NewSession()
+	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	err := session.Begin()
@@ -222,7 +223,7 @@ func domainChangeTrigger(oldName string, newName string) error {
 	}
 
 	var roles []*Role
-	err = ormer.Engine.Find(&roles)
+	err = orm.AppOrmer.Engine.Find(&roles)
 	if err != nil {
 		return err
 	}
@@ -241,7 +242,7 @@ func domainChangeTrigger(oldName string, newName string) error {
 	}
 
 	var permissions []*Permission
-	err = ormer.Engine.Find(&permissions)
+	err = orm.AppOrmer.Engine.Find(&permissions)
 	if err != nil {
 		return err
 	}

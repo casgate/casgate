@@ -16,6 +16,7 @@ package object
 
 import (
 	"encoding/json"
+	"github.com/casdoor/casdoor/orm"
 	"strconv"
 	"strings"
 
@@ -127,7 +128,7 @@ func AddRecord(record *Record) bool {
 		logs.Info("webhook: ", errWebhook)
 	}
 
-	affected, err := ormer.Engine.Insert(record)
+	affected, err := orm.AppOrmer.Engine.Insert(record)
 	if err != nil {
 		logs.Error("record not saved: %s", err.Error())
 
@@ -138,7 +139,7 @@ func AddRecord(record *Record) bool {
 }
 
 func GetRecordCount(field, value, fromDate, endDate string, filterRecord *Record) (int64, error) {
-	session := GetSession("", -1, -1, field, value, "", "")
+	session := orm.GetSession("", -1, -1, field, value, "", "")
 	if fromDate != "" {
 		session = session.Where(builder.Gt{"created_time": fromDate})
 	}
@@ -150,7 +151,7 @@ func GetRecordCount(field, value, fromDate, endDate string, filterRecord *Record
 
 func GetRecords(filterRecord *Record) ([]*Record, error) {
 	records := []*Record{}
-	err := ormer.Engine.Desc("id").Find(&records, filterRecord)
+	err := orm.AppOrmer.Engine.Desc("id").Find(&records, filterRecord)
 	if err != nil {
 		return records, err
 	}
@@ -160,7 +161,7 @@ func GetRecords(filterRecord *Record) ([]*Record, error) {
 
 func GetPaginationRecords(offset, limit int, field, value, fromDate, endDate, sortField, sortOrder string, filterRecord *Record) ([]*Record, error) {
 	records := []*Record{}
-	session := GetSession("", offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession("", offset, limit, field, value, sortField, sortOrder)
 	if fromDate != "" {
 		session = session.Where(builder.Gt{"created_time": fromDate})
 	}
@@ -177,7 +178,7 @@ func GetPaginationRecords(offset, limit int, field, value, fromDate, endDate, so
 
 func GetRecordsByField(record *Record) ([]*Record, error) {
 	records := []*Record{}
-	err := ormer.Engine.Find(&records, record)
+	err := orm.AppOrmer.Engine.Find(&records, record)
 	if err != nil {
 		return records, err
 	}

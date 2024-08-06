@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/config"
@@ -40,13 +41,13 @@ type Enforcer struct {
 }
 
 func GetEnforcerCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Enforcer{})
 }
 
 func GetEnforcers(owner string) ([]*Enforcer, error) {
 	enforcers := []*Enforcer{}
-	err := ormer.Engine.Desc("created_time").Find(&enforcers, &Enforcer{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&enforcers, &Enforcer{Owner: owner})
 	if err != nil {
 		return enforcers, err
 	}
@@ -56,7 +57,7 @@ func GetEnforcers(owner string) ([]*Enforcer, error) {
 
 func GetPaginationEnforcers(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Enforcer, error) {
 	enforcers := []*Enforcer{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&enforcers)
 	if err != nil {
 		return enforcers, err
@@ -71,7 +72,7 @@ func getEnforcer(owner string, name string) (*Enforcer, error) {
 	}
 
 	enforcer := Enforcer{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&enforcer)
+	existed, err := orm.AppOrmer.Engine.Get(&enforcer)
 	if err != nil {
 		return &enforcer, err
 	}
@@ -96,7 +97,7 @@ func UpdateEnforcer(id string, enforcer *Enforcer) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(enforcer)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(enforcer)
 	if err != nil {
 		return false, err
 	}
@@ -105,7 +106,7 @@ func UpdateEnforcer(id string, enforcer *Enforcer) (bool, error) {
 }
 
 func AddEnforcer(enforcer *Enforcer) (bool, error) {
-	affected, err := ormer.Engine.Insert(enforcer)
+	affected, err := orm.AppOrmer.Engine.Insert(enforcer)
 	if err != nil {
 		return false, err
 	}
@@ -114,7 +115,7 @@ func AddEnforcer(enforcer *Enforcer) (bool, error) {
 }
 
 func DeleteEnforcer(enforcer *Enforcer) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{enforcer.Owner, enforcer.Name}).Delete(&Enforcer{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{enforcer.Owner, enforcer.Name}).Delete(&Enforcer{})
 	if err != nil {
 		return false, err
 	}

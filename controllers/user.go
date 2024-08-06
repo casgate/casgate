@@ -149,16 +149,16 @@ func (c *ApiController) GetUser() {
 
 	//was allow for anonimus before authz drop
 	request := c.ReadRequestFromQueryParams()
-	
+
 	if request.User == nil {
 		c.CustomAbort(http.StatusUnauthorized, c.makeMessage(http.StatusUnauthorized, c.T("auth:Unauthorized operation")))
 	}
 
-	if request.User.IsForbidden || request.User.IsDeleted {	
+	if request.User.IsForbidden || request.User.IsDeleted {
 		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Forbidden operation")))
 	}
 
-	if request.Organization != "" && request.Organization != request.User.Owner {	
+	if request.Organization != "" && request.Organization != request.User.Owner {
 		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Unable to get data from other organization without global administrator role")))
 	}
 
@@ -207,7 +207,8 @@ func (c *ApiController) GetUser() {
 
 	if !organization.IsProfilePublic {
 		requestUserId := c.GetSessionUsername()
-		hasPermission, err := object.CheckUserPermission(requestUserId, id, false, c.GetAcceptLanguage())
+		goCtx := c.getRequestCtx()
+		hasPermission, err := object.CheckUserPermission(goCtx, requestUserId, id, false, c.GetAcceptLanguage())
 		if _, ok := err.(*object.NotFoundError); ok {
 			c.ResponseNotFound(err.Error())
 			return
@@ -370,14 +371,6 @@ func (c *ApiController) UpdateUser() {
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
-	}
-
-	if affected {
-		err = object.UpdateUserToOriginalDatabase(&user)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
 	}
 
 	record.AddOldObject(oldUser).AddReason("Update user")
@@ -583,7 +576,8 @@ func (c *ApiController) SetPassword() {
 		c.ResponseUnauthorized(c.T("general:Please login first"))
 		return
 	} else if code == "" {
-		hasPermission, err := object.CheckUserPermission(requestUserId, userId, true, c.GetAcceptLanguage())
+		goCtx := c.getRequestCtx()
+		hasPermission, err := object.CheckUserPermission(goCtx, requestUserId, userId, true, c.GetAcceptLanguage())
 		if !hasPermission {
 			c.ResponseForbidden(err.Error())
 			return
@@ -611,7 +605,7 @@ func (c *ApiController) SetPassword() {
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
-	
+
 	isAdmin := c.IsAdmin()
 	if isAdmin {
 		if oldPassword != "" {
@@ -806,7 +800,7 @@ func (c *ApiController) RemoveUserFromGroup() {
 func (c *ApiController) SendInvite() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	ctx := c.getRequestCtx()
 	username := c.Input().Get("name")
 

@@ -30,12 +30,9 @@ type InitData struct {
 	Ldaps         []*Ldap         `json:"ldaps"`
 	Models        []*Model        `json:"models"`
 	Permissions   []*Permission   `json:"permissions"`
-	Payments      []*Payment      `json:"payments"`
-	Products      []*Product      `json:"products"`
 	Resources     []*Resource     `json:"resources"`
 	Roles         []*Role         `json:"roles"`
 	Domains       []*Domain       `json:"domains"`
-	Syncers       []*Syncer       `json:"syncers"`
 	Tokens        []*Token        `json:"tokens"`
 	Webhooks      []*Webhook      `json:"webhooks"`
 }
@@ -76,12 +73,6 @@ func InitFromFile(ctx context.Context) {
 		for _, permission := range initData.Permissions {
 			initDefinedPermission(permission)
 		}
-		for _, payment := range initData.Payments {
-			initDefinedPayment(payment)
-		}
-		for _, product := range initData.Products {
-			initDefinedProduct(product)
-		}
 		for _, resource := range initData.Resources {
 			initDefinedResource(resource)
 		}
@@ -90,9 +81,6 @@ func InitFromFile(ctx context.Context) {
 		}
 		for _, domain := range initData.Domains {
 			initDefinedDomain(domain)
-		}
-		for _, syncer := range initData.Syncers {
-			initDefinedSyncer(syncer)
 		}
 		for _, token := range initData.Tokens {
 			initDefinedToken(token)
@@ -119,12 +107,9 @@ func readInitDataFromFile(filePath string) (*InitData, error) {
 		Ldaps:         []*Ldap{},
 		Models:        []*Model{},
 		Permissions:   []*Permission{},
-		Payments:      []*Payment{},
-		Products:      []*Product{},
 		Resources:     []*Resource{},
 		Roles:         []*Role{},
 		Domains:       []*Domain{},
-		Syncers:       []*Syncer{},
 		Tokens:        []*Token{},
 		Webhooks:      []*Webhook{},
 	}
@@ -176,11 +161,6 @@ func readInitDataFromFile(filePath string) (*InitData, error) {
 		}
 		if role.Users == nil {
 			role.Users = []string{}
-		}
-	}
-	for _, syncer := range data.Syncers {
-		if syncer.TableColumns == nil {
-			syncer.TableColumns = []*TableColumn{}
 		}
 	}
 	for _, webhook := range data.Webhooks {
@@ -332,38 +312,6 @@ func initDefinedPermission(permission *Permission) {
 	}
 }
 
-func initDefinedPayment(payment *Payment) {
-	existed, err := GetPayment(payment.GetId())
-	if err != nil {
-		panic(err)
-	}
-
-	if existed != nil {
-		return
-	}
-	payment.CreatedTime = util.GetCurrentTime()
-	_, err = AddPayment(payment)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func initDefinedProduct(product *Product) {
-	existed, err := GetProduct(product.GetId())
-	if err != nil {
-		panic(err)
-	}
-
-	if existed != nil {
-		return
-	}
-	product.CreatedTime = util.GetCurrentTime()
-	_, err = AddProduct(product)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func initDefinedResource(resource *Resource) {
 	existed, err := GetResource(resource.GetId())
 	if err != nil {
@@ -407,22 +355,6 @@ func initDefinedDomain(domain *Domain) {
 	}
 	domain.CreatedTime = util.GetCurrentTime()
 	_, err = AddDomain(domain)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func initDefinedSyncer(syncer *Syncer) {
-	existed, err := GetSyncer(syncer.GetId())
-	if err != nil {
-		panic(err)
-	}
-
-	if existed != nil {
-		return
-	}
-	syncer.CreatedTime = util.GetCurrentTime()
-	_, err = AddSyncer(syncer)
 	if err != nil {
 		panic(err)
 	}

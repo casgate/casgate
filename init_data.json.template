@@ -16,7 +16,7 @@
       "languages": ["en", "zh", "es", "fr", "de", "id", "ja", "ko", "ru", "vi", "it", "ms", "tr","ar", "he", "nl", "pl", "fi", "sv", "uk", "kk", "fa"],
       "masterPassword": "",
       "initScore": 2000,
-      "passwordMinLength: 1,
+      "passwordMinLength": 1,
       "passwordMaxLength": 100,
       "enableSoftDeletion": false,
       "isProfilePublic": true,
@@ -192,69 +192,6 @@
       "users": []
     }
   ],
-  "payments": [
-    {
-      "currency": "",
-      "detail": "",
-      "displayName": "",
-      "invoiceRemark": "",
-      "invoiceTaxId": "",
-      "invoiceTitle": "",
-      "invoiceType": "",
-      "invoiceUrl": "",
-      "message": "",
-      "name": "",
-      "organization": "",
-      "owner": "",
-      "payUrl": "",
-      "personEmail": "",
-      "personIdCard": "",
-      "personName": "",
-      "personPhone": "",
-      "price": 0,
-      "productDisplayName": "",
-      "productName": "",
-      "provider": "",
-      "returnUrl": "",
-      "state": "",
-      "tag": "",
-      "type": "",
-      "user": ""
-    }
-  ],
-  "products": [
-    {
-      "currency": "",
-      "detail": "",
-      "displayName": "",
-      "image": "",
-      "name": "",
-      "owner": "",
-      "price": 0,
-      "providers": [],
-      "quantity": 0,
-      "returnUrl": "",
-      "sold": 0,
-      "state": "",
-      "tag": ""
-    }
-  ],
-  "resources": [
-    {
-      "owner": "",
-      "name": "",
-      "user": "",
-      "provider": "",
-      "application": "",
-      "tag": "",
-      "parent": "",
-      "fileName": "",
-      "fileType": "",
-      "fileFormat": "",
-      "url": "",
-      "description": ""
-    }
-  ],
   "roles": [
     {
       "displayName": "",
@@ -263,36 +200,6 @@
       "owner": "",
       "roles": [],
       "users": []
-    }
-  ],
-  "syncers": [
-    {
-      "affiliationTable": "",
-      "avatarBaseUrl": "",
-      "database": "",
-      "databaseType": "",
-      "errorText": "",
-      "host": "",
-      "isEnabled": false,
-      "name": "",
-      "organization": "",
-      "owner": "",
-      "password": "",
-      "port": 0,
-      "syncInterval": 0,
-      "table": "",
-      "tableColumns": [
-        {
-          "casdoorName": "",
-          "isHashed": true,
-          "name": "",
-          "type": "",
-          "values": []
-        }
-      ],
-      "tablePrimaryKey": "",
-      "type": "",
-      "user": ""
     }
   ],
   "tokens": [

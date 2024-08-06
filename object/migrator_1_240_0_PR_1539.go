@@ -16,6 +16,7 @@ package object
 
 import (
 	"errors"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/xorm-io/xorm"
 	"github.com/xorm-io/xorm/migrate"
@@ -24,8 +25,8 @@ import (
 type Migrator_1_240_0_PR_1539 struct{}
 
 func (*Migrator_1_240_0_PR_1539) IsMigrationNeeded() bool {
-	exist, _ := ormer.Engine.IsTableExist("session")
-	err := ormer.Engine.Table("session").Find(&[]*Session{})
+	exist, _ := orm.AppOrmer.Engine.IsTableExist("session")
+	err := orm.AppOrmer.Engine.Table("session").Find(&[]*Session{})
 
 	if exist && err != nil {
 		return true
