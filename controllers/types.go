@@ -27,3 +27,7 @@ type TokenRequest struct {
 	Avatar       string `json:"avatar"`
 	RefreshToken string `json:"refresh_token"`
 }
+
+const (
+	productNameTarget = "%productName"
+)
