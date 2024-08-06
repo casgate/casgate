@@ -1294,9 +1294,12 @@ func (c *ApiController) SendInvite() {
 		return
 	}
 
-	content := fmt.Sprintf(provider.InviteContent, link)
+	titleWithProductName := fillWithProductName(provider.InviteTitle, application.Name)
 
-	err = object.SendEmail(provider, provider.InviteTitle, content, user.Email, sender)
+	contentWithProductName := fillWithProductName(provider.InviteContent, application.Name)
+	contentWithProductNameAndLink := fmt.Sprintf(contentWithProductName, link)
+
+	err = object.SendEmail(provider, titleWithProductName, contentWithProductNameAndLink, user.Email, sender)
 	if err != nil {
 		logs.Error("send email: %s", err.Error())
 		c.ResponseInternalServerError("internal server error")
@@ -1305,6 +1308,10 @@ func (c *ApiController) SendInvite() {
 	}
 
 	c.ResponseOk()
+}
+
+func fillWithProductName(content, applicationName string) string {
+	return strings.ReplaceAll(content, productNameTarget, applicationName)
 }
 
 func fillUserIdProviders(users []*object.User, userIdProviders []*object.UserIdProvider) {
