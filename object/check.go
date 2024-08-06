@@ -31,13 +31,12 @@ import (
 	goldap "github.com/go-ldap/ldap/v3"
 )
 
-
 type CheckUserPasswordOptions struct {
-	Lang         		      string
-	LdapId       		      string
-	EnableCaptcha 	    	  bool
-	IsSigninViaLdap 		  bool
-	IsPasswordWithLdapEnabled bool	
+	Lang                      string
+	LdapId                    string
+	EnableCaptcha             bool
+	IsSigninViaLdap           bool
+	IsPasswordWithLdapEnabled bool
 }
 
 const (
@@ -253,8 +252,7 @@ func CheckPasswordComplexity(user *User, password string, lang string) string {
 	return CheckPasswordComplexityByOrg(organization, password, lang)
 }
 
-
-//check user pwd only in selected ldap
+// check user pwd only in selected ldap
 func CheckLdapUserPassword(user *User, password string, lang string, ldapId string) (string, error) {
 	var ldaps []*Ldap
 	var err error
@@ -270,7 +268,7 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 	if err != nil {
 		return "", err
 	}
-	
+
 	ldapLoginSuccess := false
 	hit := false
 	var ldapServerId string
@@ -396,11 +394,11 @@ func CheckUserPassword(ctx context.Context, organization string, username string
 	enableCaptcha := false
 	isSigninViaLdap := false
 	isPasswordWithLdapEnabled := false
-	
+
 	enableCaptcha = options.EnableCaptcha
 	isSigninViaLdap = options.IsSigninViaLdap
 	isPasswordWithLdapEnabled = options.IsPasswordWithLdapEnabled
-	
+
 	user, err := GetUserByFields(organization, username)
 	if err != nil {
 		return nil, err

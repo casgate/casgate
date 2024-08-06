@@ -108,7 +108,7 @@ func TestLoggerWithContext(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	Debug(ctx, "This is a debug message with context", "key", "value")
+	Debug(ctx, "This is a debug message with context", "key", "value", "userID", "1234")
 
 	if !bytes.Contains(buf.Bytes(), []byte(`"userID":"1234"`)) {
 		t.Errorf("expected userID to be logged")
@@ -118,5 +118,8 @@ func TestLoggerWithContext(t *testing.T) {
 	}
 	if !bytes.Contains(buf.Bytes(), []byte(`"key":"value"`)) {
 		t.Errorf("expected key-value to be logged with message")
+	}
+	if bytes.Count(buf.Bytes(), []byte(`"userID"`)) > 1 {
+		t.Errorf("same key from arg must overlapp value in context")
 	}
 }

@@ -111,6 +111,8 @@ func (c *ApiController) UpdateWebhook() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(webhook.Organization)
+
 	webhookFromDb, _ := object.GetWebhook(request.Id)
 	if webhookFromDb == nil {
 		c.Data["json"] = wrapActionResponse(false)
