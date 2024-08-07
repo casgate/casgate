@@ -515,11 +515,6 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 		return err
 	}
 
-	err = repo.UpdateEntitiesFieldValue(ctx, "payment", "owner", newName, map[string]interface{}{"owner": oldName})
-	if err != nil {
-		return err
-	}
-
 	err = repo.UpdateEntitiesFieldValue(ctx, "resource", "owner", newName, map[string]interface{}{"owner": oldName})
 	if err != nil {
 		return err

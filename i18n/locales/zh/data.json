@@ -29,8 +29,7 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "未授权的操作",
     "Unknown authentication type (not password or provider), form = %s": "未知的认证类型（非密码或第三方提供商）：%s",
-    "User's tag: %s is not listed in the application's tags": "用户的标签: %s不在该应用的标签列表中",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "用户的标签: %s不在该应用的标签列表中"
   },
   "cas": {
     "Service %s and %s do not match": "服务%s与%s不匹配"
@@ -73,6 +72,7 @@
   },
   "general": {
     "Invalid username or password/code": "用户名或密码无效",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -106,12 +106,8 @@
   },
   "provider": {
     "Invalid application id": "无效的应用ID",
-    "the provider: %s does not exist": "提供商: %s不存在",
-    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "上传头像时用户为空",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "username或fullFilePath为空: username = %s, fullFilePath = %s"
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
+    "the provider: %s does not exist": "提供商: %s不存在"
   },
   "saml": {
     "Application %s not found": "未找到应用: %s"
@@ -129,7 +125,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "objectKey: %s被禁止",
     "The provider type: %s is not supported": "不支持的提供商类型: %s"
   },
   "token": {
