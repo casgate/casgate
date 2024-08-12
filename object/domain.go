@@ -17,8 +17,9 @@ package object
 import (
 	"context"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"slices"
+
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -101,8 +102,11 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 	needCheckCrossDeps := len(domain.Domains) > 0 && !slices.Equal(oldDomain.Domains, domain.Domains)
 
 	if needCheckCrossDeps {
-		allMyParents, _ := GetAncestorDomains(ctx, id);
+		allMyParents, _ := GetAncestorDomains(ctx, id)
 		for _, d := range domain.Domains {
+			if d == id {
+				return false, fmt.Errorf("domain %s is in the child domain of %s", id, id)
+			}
 			for _, pd := range allMyParents {
 				if pd.GetId() == id {
 					continue // self
@@ -111,9 +115,9 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 				if d == pd.GetId() {
 					return false, fmt.Errorf("domain %s is in the child domain of %s", id, pd.GetId())
 				}
-	   	    }
-    	}
-    }
+			}
+		}
+	}
 
 	if name != domain.Name {
 		err := domainChangeTrigger(name, domain.Name)
@@ -148,6 +152,11 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 }
 
 func AddDomain(domain *Domain) (bool, error) {
+	id := domain.GetId()
+	if slices.Contains(domain.Domains, id) {
+		return false, fmt.Errorf("domain %s is in the child domain of %s", id, id)
+	}
+
 	affected, err := orm.AppOrmer.Engine.Insert(domain)
 	if err != nil {
 		return false, err

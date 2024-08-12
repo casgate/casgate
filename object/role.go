@@ -17,9 +17,10 @@ package object
 import (
 	"errors"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"slices"
 	"strings"
+
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/conf"
@@ -134,8 +135,11 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	needCheckCrossDeps := len(role.Roles) > 0 && !slices.Equal(oldRole.Roles, role.Roles)
 
 	if needCheckCrossDeps {
-		allMyParents, _ := GetAncestorRoles(id);
+		allMyParents, _ := GetAncestorRoles(id)
 		for _, r := range role.Roles {
+			if r == id {
+				return false, fmt.Errorf("role %s is in the child roles of %s", id, id)
+			}
 			for _, pr := range allMyParents {
 				if pr.GetId() == id {
 					continue // self
@@ -144,9 +148,9 @@ func UpdateRole(id string, role *Role) (bool, error) {
 				if r == pr.GetId() {
 					return false, fmt.Errorf("role %s is in the child roles of %s", id, pr.GetId())
 				}
-	   	    }
-    	}
-    }
+			}
+		}
+	}
 
 	if name != role.Name {
 		err := roleChangeTrigger(name, role.Name)
@@ -181,6 +185,11 @@ func UpdateRole(id string, role *Role) (bool, error) {
 }
 
 func AddRole(role *Role) (bool, error) {
+	id := role.GetId()
+	if slices.Contains(role.Roles, id) {
+		return false, fmt.Errorf("role %s is in the child roles of %s", id, id)
+	}
+
 	affected, err := orm.AppOrmer.Engine.Insert(role)
 	if err != nil {
 		return false, err
