@@ -16,7 +16,8 @@ package object
 
 import (
 	"fmt"
-	"strings"
+
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
@@ -44,13 +45,13 @@ type Adapter struct {
 }
 
 func GetAdapterCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Adapter{})
 }
 
 func GetAdapters(owner string) ([]*Adapter, error) {
 	adapters := []*Adapter{}
-	err := ormer.Engine.Desc("created_time").Find(&adapters, &Adapter{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&adapters, &Adapter{Owner: owner})
 	if err != nil {
 		return adapters, err
 	}
@@ -60,7 +61,7 @@ func GetAdapters(owner string) ([]*Adapter, error) {
 
 func GetPaginationAdapters(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Adapter, error) {
 	adapters := []*Adapter{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&adapters)
 	if err != nil {
 		return adapters, err
@@ -75,7 +76,7 @@ func getAdapter(owner, name string) (*Adapter, error) {
 	}
 
 	adapter := Adapter{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&adapter)
+	existed, err := orm.AppOrmer.Engine.Get(&adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +106,7 @@ func UpdateAdapter(id string, adapter *Adapter) (bool, error) {
 		}
 	}
 
-	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
+	session := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols()
 	if adapter.Password == "***" {
 		session.Omit("password")
 	}
@@ -118,7 +119,7 @@ func UpdateAdapter(id string, adapter *Adapter) (bool, error) {
 }
 
 func AddAdapter(adapter *Adapter) (bool, error) {
-	affected, err := ormer.Engine.Insert(adapter)
+	affected, err := orm.AppOrmer.Engine.Insert(adapter)
 	if err != nil {
 		return false, err
 	}
@@ -127,7 +128,7 @@ func AddAdapter(adapter *Adapter) (bool, error) {
 }
 
 func DeleteAdapter(adapter *Adapter) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{adapter.Owner, adapter.Name}).Delete(&Adapter{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{adapter.Owner, adapter.Name}).Delete(&Adapter{})
 	if err != nil {
 		return false, err
 	}
@@ -174,9 +175,9 @@ func (adapter *Adapter) InitAdapter() error {
 		}
 	}
 
-	if !isCloudIntranet {
-		dataSourceName = strings.ReplaceAll(dataSourceName, "dbi.", "db.")
-	}
+	// if !isCloudIntranet {
+	// 	dataSourceName = strings.ReplaceAll(dataSourceName, "dbi.", "db.")
+	// }
 
 	engine, err := xorm.NewEngine(driverName, dataSourceName)
 	if err != nil {
@@ -206,7 +207,7 @@ func (adapter *Adapter) InitAdapter() error {
 }
 
 func adapterChangeTrigger(oldName string, newName string) error {
-	session := ormer.Engine.NewSession()
+	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	err := session.Begin()

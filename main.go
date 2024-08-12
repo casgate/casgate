@@ -17,6 +17,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
 	"net/http"
 
 	"github.com/beego/beego"
@@ -30,12 +32,11 @@ import (
 	"github.com/casdoor/casdoor/repository"
 	"github.com/casdoor/casdoor/routers"
 	"github.com/casdoor/casdoor/txmanager"
-	"github.com/casdoor/casdoor/util"
 )
 
 func main() {
-	object.InitFlag()
-	ormer := object.InitAdapter()
+	orm.InitFlag()
+	ormer := orm.InitAdapter()
 	trm := txmanager.NewTransactionManager(ormer.Engine)
 	repo := repository.NewRepo(trm)
 	object.InitRepo(trm, repo)
@@ -46,12 +47,9 @@ func main() {
 
 	object.InitDb(ctx)
 	object.InitFromFile(ctx)
-	object.InitDefaultStorageProvider()
 	object.InitLdapAutoSynchronizer(ctx)
 	proxy.InitHttpClient()
 	object.InitUserManager()
-
-	util.SafeGoroutine(func() { object.RunSyncUsersJob() })
 
 	// beego.DelStaticPath("/static")
 	// beego.SetStaticPath("/static", "web/build/static")
@@ -83,6 +81,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	logger.InitGlobal(&logger.Config{Level: conf.GetConfigString("logLevel")})
 	port := beego.AppConfig.DefaultInt("httpport", 8000)
 	// logs.SetLevel(logs.LevelInformational)
 	logs.SetLogFuncCall(false)

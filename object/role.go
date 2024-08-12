@@ -17,6 +17,7 @@ package object
 import (
 	"errors"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"slices"
 	"strings"
 
@@ -45,7 +46,7 @@ type Role struct {
 }
 
 func GetRoleCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Role{})
 }
 
@@ -60,7 +61,7 @@ func GetRolesByIds(roleIds []string) ([]*Role, error) {
 		condBuilder = condBuilder.Or(builder.Eq{"owner": owner, "name": name})
 	}
 	roles := []*Role{}
-	err := ormer.Engine.Desc("created_time").Where(condBuilder).Find(&roles)
+	err := orm.AppOrmer.Engine.Desc("created_time").Where(condBuilder).Find(&roles)
 	if err != nil {
 		return roles, err
 	}
@@ -70,7 +71,7 @@ func GetRolesByIds(roleIds []string) ([]*Role, error) {
 
 func GetRoles(owner string) ([]*Role, error) {
 	roles := []*Role{}
-	err := ormer.Engine.Desc("created_time").Find(&roles, &Role{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&roles, &Role{Owner: owner})
 	if err != nil {
 		return roles, err
 	}
@@ -80,7 +81,7 @@ func GetRoles(owner string) ([]*Role, error) {
 
 func GetPaginationRoles(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Role, error) {
 	roles := []*Role{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&roles)
 	if err != nil {
 		return roles, err
@@ -95,7 +96,7 @@ func getRole(owner string, name string) (*Role, error) {
 	}
 
 	role := Role{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&role)
+	existed, err := orm.AppOrmer.Engine.Get(&role)
 	if err != nil {
 		return &role, err
 	}
@@ -126,7 +127,7 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	if oldRole == nil {
 		return false, nil
 	}
-	
+
 	slices.Sort(oldRole.Roles)
 	slices.Sort(role.Roles)
 
@@ -137,7 +138,7 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		for _, r := range role.Roles {
 			for _, pr := range allMyParents {
 				if pr.GetId() == id {
-					continue // self 
+					continue // self
 				}
 
 				if r == pr.GetId() {
@@ -159,7 +160,7 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, fmt.Errorf("subRolePermissions: %w", err)
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(role)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(role)
 	if err != nil {
 		return false, err
 	}
@@ -180,7 +181,7 @@ func UpdateRole(id string, role *Role) (bool, error) {
 }
 
 func AddRole(role *Role) (bool, error) {
-	affected, err := ormer.Engine.Insert(role)
+	affected, err := orm.AppOrmer.Engine.Insert(role)
 	if err != nil {
 		return false, err
 	}
@@ -204,7 +205,7 @@ func AddRoles(roles []*Role) bool {
 	if len(roles) == 0 {
 		return false
 	}
-	affected, err := ormer.Engine.Insert(roles)
+	affected, err := orm.AppOrmer.Engine.Insert(roles)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Duplicate entry") {
 			panic(err)
@@ -256,41 +257,17 @@ func AddRolesInBatch(roles []*Role) bool {
 }
 
 func DeleteRole(role *Role) (bool, error) {
-	roleId := role.GetId()
+	err := roleChangeTrigger(role.Name, "")
+	if err != nil {
+		return false, err
+	}
+
 	oldRoleReachablePermissions, err := subRolePermissions(role)
 	if err != nil {
 		return false, fmt.Errorf("subRolePermissions: %w", err)
 	}
 
-	ancestorRoles, err := GetAncestorRoles(roleId)
-	if err != nil {
-		return false, err
-	}
-
-	for _, permission := range oldRoleReachablePermissions {
-		if util.InSlice(permission.Roles, roleId) {
-			permission.Roles = util.DeleteVal(permission.Roles, roleId)
-			_, err := UpdatePermission(permission.GetId(), permission)
-			if err != nil {
-				return false, err
-			}
-		}
-	}
-
-	for _, ancestorRole := range ancestorRoles {
-		if ancestorRole.GetId() == roleId {
-			continue
-		}
-		if util.InSlice(ancestorRole.Roles, roleId) {
-			ancestorRole.Roles = util.DeleteVal(ancestorRole.Roles, roleId)
-			affected, err := UpdateRole(ancestorRole.GetId(), ancestorRole)
-			if err != nil || !affected {
-				return false, err
-			}
-		}
-	}
-
-	affected, err := ormer.Engine.ID(core.PK{role.Owner, role.Name}).Delete(&Role{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{role.Owner, role.Name}).Delete(&Role{})
 	if err != nil {
 		return false, err
 	}
@@ -311,7 +288,7 @@ func (role *Role) GetId() string {
 
 func GetRolesByDomain(domainId string) ([]*Role, error) {
 	roles := []*Role{}
-	err := ormer.Engine.Where("domains like ?", "%"+domainId+"\"%").Find(&roles)
+	err := orm.AppOrmer.Engine.Where("domains like ?", "%"+domainId+"\"%").Find(&roles)
 	if err != nil {
 		return roles, err
 	}
@@ -321,7 +298,7 @@ func GetRolesByDomain(domainId string) ([]*Role, error) {
 
 func getRolesByUserInternal(userId string) ([]*Role, error) {
 	roles := []*Role{}
-	err := ormer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&roles)
+	err := orm.AppOrmer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&roles)
 	if err != nil {
 		return roles, err
 	}
@@ -359,8 +336,9 @@ func getRolesByUser(userId string) ([]*Role, error) {
 	return allRoles, nil
 }
 
+// roleChangeTrigger changes dependents when the role changes. Empty new name to remove the dependency.
 func roleChangeTrigger(oldName string, newName string) error {
-	session := ormer.Engine.NewSession()
+	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	err := session.Begin()
@@ -369,7 +347,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	}
 
 	var roles []*Role
-	err = ormer.Engine.Find(&roles)
+	err = orm.AppOrmer.Engine.Find(&roles)
 	if err != nil {
 		return err
 	}
@@ -378,17 +356,22 @@ func roleChangeTrigger(oldName string, newName string) error {
 		for j, u := range role.Roles {
 			owner, name := util.GetOwnerAndNameFromId(u)
 			if name == oldName {
-				role.Roles[j] = util.GetId(owner, newName)
+				if newName != "" {
+					role.Roles[j] = util.GetId(owner, newName)
+				} else {
+					role.Roles = util.DeleteVal(role.Roles, u)
+				}
+
+				_, err = session.Where("name=?", role.Name).And("owner=?", role.Owner).Cols("roles").Update(role)
+				if err != nil {
+					return err
+				}
 			}
-		}
-		_, err = session.Where("name=?", role.Name).And("owner=?", role.Owner).Update(role)
-		if err != nil {
-			return err
 		}
 	}
 
 	var permissions []*Permission
-	err = ormer.Engine.Find(&permissions)
+	err = orm.AppOrmer.Engine.Find(&permissions)
 	if err != nil {
 		return err
 	}
@@ -398,13 +381,71 @@ func roleChangeTrigger(oldName string, newName string) error {
 			// u = organization/username
 			owner, name := util.GetOwnerAndNameFromId(u)
 			if name == oldName {
-				permission.Roles[j] = util.GetId(owner, newName)
+				if newName != "" {
+					permission.Roles[j] = util.GetId(owner, newName)
+				} else {
+					permission.Roles = util.DeleteVal(permission.Roles, u)
+				}
+
+				_, err = session.Where("name=?", permission.Name).And("owner=?", permission.Owner).Cols("roles").Update(permission)
+				if err != nil {
+					return err
+				}
 			}
 		}
-		_, err = session.Where("name=?", permission.Name).And("owner=?", permission.Owner).Update(permission)
-		if err != nil {
-			return err
+
+	}
+
+	var providers []*Provider
+	err = orm.AppOrmer.Engine.Find(&providers)
+	if err != nil {
+		return err
+	}
+
+	for _, provider := range providers {
+		for j, u := range provider.RoleMappingItems {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(u.Role)
+			if name == oldName {
+				if newName != "" {
+					provider.RoleMappingItems[j].Role = util.GetId(owner, newName)
+				} else {
+					provider.RoleMappingItems = append(provider.RoleMappingItems[:j], provider.RoleMappingItems[j+1:]...)
+				}
+
+				_, err = session.Where("name=?", provider.Name).And("owner=?", provider.Owner).Cols("role_mapping_items").Update(provider)
+				if err != nil {
+					return err
+				}
+			}
 		}
+
+	}
+
+	var ldaps []*Ldap
+	err = orm.AppOrmer.Engine.Find(&ldaps)
+	if err != nil {
+		return err
+	}
+
+	for _, ldap := range ldaps {
+		for j, u := range ldap.RoleMappingItems {
+			// u = organization/username
+			owner, name := util.GetOwnerAndNameFromId(u.Role)
+			if name == oldName {
+				if newName != "" {
+					ldap.RoleMappingItems[j].Role = util.GetId(owner, newName)
+				} else {
+					ldap.RoleMappingItems = append(ldap.RoleMappingItems[:j], ldap.RoleMappingItems[j+1:]...)
+				}
+
+				_, err = session.Where("id=?", ldap.Id).And("owner=?", ldap.Owner).Cols("role_mapping_items").Update(ldap)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
 	}
 
 	return session.Commit()

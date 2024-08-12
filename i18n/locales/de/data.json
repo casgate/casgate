@@ -4,12 +4,13 @@
     "Get init score failed, error: %w": "Init-Score konnte nicht abgerufen werden, Fehler: %w",
     "Please sign out first": "Bitte melden Sie sich zuerst ab",
     "The application does not allow to sign up new account": "Die Anwendung erlaubt es nicht, sich für ein neues Konto anzumelden",
+    "User already registered": "User already registered",
     "Wrong email for invited user": "Wrong email for invited user",
-    "Wrong user type": "Wrong user type",
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
+    "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "Die Challenge-Methode sollte S256 sein",
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Konnte nicht anmelden: %s",
@@ -24,11 +25,11 @@
     "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "Die Anmeldeart \"Anmeldung mit Passwort\" ist für die Anwendung nicht aktiviert",
     "The provider: %s is not enabled for the application": "Der Anbieter: %s ist nicht für die Anwendung aktiviert",
+    "Unable to get data from other organization without global administrator role": "Unable to get data from other organization without global administrator role",
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Nicht autorisierte Operation",
     "Unknown authentication type (not password or provider), form = %s": "Unbekannter Authentifizierungstyp (nicht Passwort oder Anbieter), Formular = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
   },
   "cas": {
     "Service %s and %s do not match": "Service %s und %s stimmen nicht überein"
@@ -42,6 +43,7 @@
     "Email is invalid": "E-Mail ist ungültig",
     "Empty username.": "Leerer Benutzername.",
     "FirstName cannot be blank": "Vorname darf nicht leer sein",
+    "Go to the LDAP tab and select the specific connection you have configured": "Go to the LDAP tab and select the specific connection you have configured",
     "Invitation code cannot be blank": "Invitation code cannot be blank",
     "Invitation code is invalid": "Invitation code is invalid",
     "LDAP user name or password incorrect": "Ldap Benutzername oder Passwort falsch",
@@ -70,6 +72,7 @@
   },
   "general": {
     "Invalid username or password/code": "Ungültiger Benutzername oder Passwort/Code",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -93,6 +96,9 @@
     "You are not the global admin, you can't unlink other users": "Sie sind nicht der globale Administrator, Sie können keine anderen Benutzer trennen",
     "You can't unlink yourself, you are not a member of any application": "Du kannst dich nicht abmelden, du bist kein Mitglied einer Anwendung"
   },
+  "mt.Sprintf(\"auth": {
+    "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
+  },
   "organization": {
     "Only admin can modify the %s.": "Nur der Administrator kann das %s ändern.",
     "The %s is immutable.": "Das %s ist unveränderlich.",
@@ -100,11 +106,8 @@
   },
   "provider": {
     "Invalid application id": "Ungültige Anwendungs-ID",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "Der Anbieter %s existiert nicht"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "Benutzer ist null für Tag: Avatar",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "Benutzername oder vollständiger Dateipfad sind leer: Benutzername = %s, vollständiger Dateipfad = %s"
   },
   "saml": {
     "Application %s not found": "Anwendung %s wurde nicht gefunden"
@@ -122,7 +125,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "Der Objektschlüssel %s ist nicht erlaubt",
     "The provider type: %s is not supported": "Der Anbieter-Typ %s wird nicht unterstützt"
   },
   "token": {
@@ -141,8 +143,8 @@
   "util": {
     "No application is found for userId: %s": "Es wurde keine Anwendung für die Benutzer-ID gefunden: %s",
     "No provider for category: %s is found for application: %s": "Kein Anbieter für die Kategorie %s gefunden für die Anwendung: %s",
-    "The provider: %s is not found": "Der Anbieter: %s wurde nicht gefunden",
-    "The organization %s has dependencies and cannot be deleted": "Die Organisation %s hat Abhängigkeiten und kann nicht gelöscht werden"
+    "The organization %s has dependencies and cannot be deleted": "Die Organisation %s hat Abhängigkeiten und kann nicht gelöscht werden",
+    "The provider: %s is not found": "Der Anbieter: %s wurde nicht gefunden"
   },
   "verification": {
     "Code has not been sent yet!": "Der Code wurde noch nicht versendet!",

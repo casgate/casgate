@@ -135,6 +135,22 @@ export function loginWithSaml(values, param) {
   }).then(res => res.json());
 }
 
+export function getAuthURL(providerID, applicationID, method) {
+  const params = new URLSearchParams({
+    providerID,
+    applicationID,
+    method,
+  });
+
+  return fetch(`${authConfig.serverUrl}/api/get-auth-url?${params.toString()}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Accept-Language": Setting.getAcceptLanguage(),
+    },
+  }).then(res => res.json());
+}
+
 export function getWechatMessageEvent() {
   return fetch(`${Setting.ServerUrl}/api/get-webhook-event`, {
     method: "GET",

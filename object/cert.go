@@ -19,6 +19,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
 )
@@ -53,6 +54,10 @@ func GetMaskedCert(cert *Cert) *Cert {
 		return nil
 	}
 
+	if cert.PrivateKey != "" {
+		cert.PrivateKey = "***"
+	}
+
 	return cert
 }
 
@@ -68,13 +73,13 @@ func GetMaskedCerts(certs []*Cert, err error) ([]*Cert, error) {
 }
 
 func GetCertCount(owner, field, value string) (int64, error) {
-	session := GetSession("", -1, -1, field, value, "", "")
+	session := orm.GetSession("", -1, -1, field, value, "", "")
 	return session.Where("owner = ? or owner = ? ", "admin", owner).Count(&Cert{})
 }
 
 func GetCerts(owner string) ([]*Cert, error) {
 	certs := []*Cert{}
-	err := ormer.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&certs, &Cert{})
+	err := orm.AppOrmer.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&certs, &Cert{})
 	if err != nil {
 		return certs, err
 	}
@@ -84,7 +89,7 @@ func GetCerts(owner string) ([]*Cert, error) {
 
 func GetPaginationCerts(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Cert, error) {
 	certs := []*Cert{}
-	session := GetSession("", offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession("", offset, limit, field, value, sortField, sortOrder)
 	err := session.Where("owner = ? or owner = ? ", "admin", owner).Find(&certs)
 	if err != nil {
 		return certs, err
@@ -94,13 +99,13 @@ func GetPaginationCerts(owner string, offset, limit int, field, value, sortField
 }
 
 func GetGlobalCertsCount(field, value string) (int64, error) {
-	session := GetSession("", -1, -1, field, value, "", "")
+	session := orm.GetSession("", -1, -1, field, value, "", "")
 	return session.Count(&Cert{})
 }
 
 func GetGlobleCerts(owner string) ([]*Cert, error) {
 	certs := []*Cert{}
-	session := GetSession("",  -1, -1, "", "", "", "")
+	session := orm.GetSession("", -1, -1, "", "", "", "")
 
 	var err error
 	if owner != "" {
@@ -108,7 +113,7 @@ func GetGlobleCerts(owner string) ([]*Cert, error) {
 	} else {
 		session.Desc("created_time").Find(&certs)
 	}
-	
+
 	if err != nil {
 		return certs, err
 	}
@@ -118,7 +123,7 @@ func GetGlobleCerts(owner string) ([]*Cert, error) {
 
 func GetPaginationGlobalCerts(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Cert, error) {
 	certs := []*Cert{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&certs)
 	if err != nil {
 		return certs, err
@@ -133,7 +138,7 @@ func getCert(owner string, name string) (*Cert, error) {
 	}
 
 	cert := Cert{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&cert)
+	existed, err := orm.AppOrmer.Engine.Get(&cert)
 	if err != nil {
 		return &cert, err
 	}
@@ -151,7 +156,7 @@ func getCertByName(name string) (*Cert, error) {
 	}
 
 	cert := Cert{Name: name}
-	existed, err := ormer.Engine.Get(&cert)
+	existed, err := orm.AppOrmer.Engine.Get(&cert)
 	if err != nil {
 		return &cert, nil
 	}
@@ -199,7 +204,11 @@ func UpdateCert(id string, cert *Cert) (bool, error) {
 			return false, err
 		}
 	}
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(cert)
+	session := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols()
+	if cert.PrivateKey == "***" {
+		session.Omit("private_key")
+	}
+	affected, err := session.Update(cert)
 	if err != nil {
 		return false, err
 	}
@@ -214,7 +223,7 @@ func AddCert(cert *Cert) (bool, error) {
 		cert.PrivateKey = privateKey
 	}
 
-	affected, err := ormer.Engine.Insert(cert)
+	affected, err := orm.AppOrmer.Engine.Insert(cert)
 	if err != nil {
 		return false, err
 	}
@@ -223,7 +232,7 @@ func AddCert(cert *Cert) (bool, error) {
 }
 
 func DeleteCert(cert *Cert) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{cert.Owner, cert.Name}).Delete(&Cert{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{cert.Owner, cert.Name}).Delete(&Cert{})
 	if err != nil {
 		return false, err
 	}
@@ -248,7 +257,7 @@ func GetDefaultCert() (*Cert, error) {
 }
 
 func certChangeTrigger(oldName string, newName string) error {
-	session := ormer.Engine.NewSession()
+	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	err := session.Begin()
