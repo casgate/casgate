@@ -17,8 +17,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"net/http"
+
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/beego/beego"
 	"github.com/beego/beego/logs"
@@ -31,7 +32,6 @@ import (
 	"github.com/casdoor/casdoor/repository"
 	"github.com/casdoor/casdoor/routers"
 	"github.com/casdoor/casdoor/txmanager"
-	"github.com/casdoor/casdoor/util"
 	"github.com/casdoor/casdoor/util/logger"
 )
 
