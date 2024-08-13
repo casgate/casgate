@@ -36,7 +36,7 @@ var (
 func init() {
 	rePhone, _ = regexp.Compile(`(\d{3})\d*(\d{4})`)
 	ReWhiteSpace, _ = regexp.Compile(`\s`)
-	ReFieldWhiteList, _ = regexp.Compile("^[`A-Za-z0-9]+$")
+	ReFieldWhiteList, _ = regexp.Compile("^[A-Za-z0-9]+$")
 
 	specialSymbolsPattern := regexp.QuoteMeta(usernameAllowedSpecialSymbols)
 	ReUserName, _ = regexp.Compile(fmt.Sprintf("^([a-zA-Z0-9]+[a-zA-Z0-9\\-_%s]*[a-zA-Z0-9]+|[a-zA-Z0-9]+)$", specialSymbolsPattern))

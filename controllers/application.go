@@ -52,7 +52,7 @@ func (c *ApiController) GetApplications() {
 			applications, err = object.GetOrganizationApplications(request.Owner, request.Organization)
 		}
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 		c.ResponseOk(object.GetMaskedApplications(applications, userId))
@@ -60,14 +60,14 @@ func (c *ApiController) GetApplications() {
 		limit := util.ParseInt(limit)
 		count, err := object.GetApplicationCount(request.Owner, request.Field, request.Value)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
 		application, err := object.GetPaginationApplications(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 
@@ -221,7 +221,7 @@ func (c *ApiController) UpdateApplication() {
 		c.ResponseError(err.Error())
 		return
 	}
-	
+
 	application.Owner = "admin"
 	c.ValidateOrganization(application.Organization)
 
@@ -263,8 +263,6 @@ func (c *ApiController) AddApplication() {
 		return
 	}
 
-
-
 	c.Data["json"] = wrapActionResponse(object.AddApplication(goCtx, &application))
 	c.ServeJSON()
 }
@@ -279,7 +277,7 @@ func (c *ApiController) AddApplication() {
 func (c *ApiController) DeleteApplication() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	var application object.Application
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &application)
 	if err != nil {

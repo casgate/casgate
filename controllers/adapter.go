@@ -31,17 +31,17 @@ import (
 func (c *ApiController) GetAdapters() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	count, err := object.GetAdapterCount(request.Owner, request.Field, request.Value)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
 	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
 	adapters, err := object.GetPaginationAdapters(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
@@ -84,7 +84,7 @@ func (c *ApiController) GetAdapter() {
 func (c *ApiController) UpdateAdapter() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	var adapter object.Adapter
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &adapter)
 	if err != nil {

@@ -32,17 +32,17 @@ import (
 func (c *ApiController) GetRoles() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	count, err := object.GetRoleCount(request.Owner, request.Field, request.Value)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
 	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
 	roles, err := object.GetPaginationRoles(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
@@ -60,7 +60,7 @@ func (c *ApiController) GetRoles() {
 func (c *ApiController) GetRole() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	role, err := object.GetRole(request.Id)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
@@ -101,7 +101,7 @@ func (c *ApiController) UpdateRole() {
 		return
 	}
 	c.ValidateOrganization(roleFromDb.Owner)
-	
+
 	c.Data["json"] = wrapActionResponse(object.UpdateRole(request.Id, &role))
 	c.ServeJSON()
 }

@@ -100,14 +100,14 @@ func (c *ApiController) GetUsers() {
 
 	count, err := object.GetUserCount(request.Owner, request.Field, request.Value, groupName)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
 	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
 	users, err := object.GetPaginationUsers(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder, groupName)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
@@ -149,16 +149,16 @@ func (c *ApiController) GetUser() {
 
 	//was allow for anonimus before authz drop
 	request := c.ReadRequestFromQueryParams()
-	
+
 	if request.User == nil {
 		c.CustomAbort(http.StatusUnauthorized, c.makeMessage(http.StatusUnauthorized, c.T("auth:Unauthorized operation")))
 	}
 
-	if request.User.IsForbidden || request.User.IsDeleted {	
+	if request.User.IsForbidden || request.User.IsDeleted {
 		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Forbidden operation")))
 	}
 
-	if request.Organization != "" && request.Organization != request.User.Owner {	
+	if request.Organization != "" && request.Organization != request.User.Owner {
 		c.CustomAbort(http.StatusForbidden, c.makeMessage(http.StatusForbidden, c.T("auth:Unable to get data from other organization without global administrator role")))
 	}
 
@@ -611,7 +611,7 @@ func (c *ApiController) SetPassword() {
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
-	
+
 	isAdmin := c.IsAdmin()
 	if isAdmin {
 		if oldPassword != "" {
@@ -806,7 +806,7 @@ func (c *ApiController) RemoveUserFromGroup() {
 func (c *ApiController) SendInvite() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	ctx := c.getRequestCtx()
 	username := c.Input().Get("name")
 

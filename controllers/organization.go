@@ -56,7 +56,7 @@ func (c *ApiController) GetOrganizations() {
 		}
 
 		if err != nil {
-			c.ResponseInternalServerError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 
@@ -65,7 +65,7 @@ func (c *ApiController) GetOrganizations() {
 		if !isGlobalAdmin {
 			maskedOrganizations, err := object.GetMaskedOrganizations(object.GetOrganizations(owner, c.getCurrentUser().Owner))
 			if err != nil {
-				c.ResponseInternalServerError(err.Error())
+				c.ResponseDBError(err)
 				return
 			}
 			c.ResponseOk(maskedOrganizations)
@@ -73,14 +73,14 @@ func (c *ApiController) GetOrganizations() {
 			limit := util.ParseInt(limit)
 			count, err := object.GetOrganizationCount(owner, field, value)
 			if err != nil {
-				c.ResponseInternalServerError(err.Error())
+				c.ResponseDBError(err)
 				return
 			}
 
 			paginator := pagination.SetPaginator(c.Ctx, limit, count)
 			organizations, err := object.GetMaskedOrganizations(object.GetPaginationOrganizations(owner, organizationName, paginator.Offset(), limit, field, value, sortField, sortOrder))
 			if err != nil {
-				c.ResponseInternalServerError(err.Error())
+				c.ResponseDBError(err)
 				return
 			}
 
@@ -127,7 +127,7 @@ func (c *ApiController) GetOrganization() {
 func (c *ApiController) UpdateOrganization() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
