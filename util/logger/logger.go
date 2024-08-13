@@ -19,6 +19,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"slices"
 )
 
 // global usage logging functions
@@ -77,6 +78,23 @@ func Create(config *Config) *Logger {
 	logger := &Logger{
 		l: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 			Level: logLevel,
+			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+				// Remove time from the output for predictable test output.
+				if a.Key == slog.TimeKey {
+					// Rename the time key from "time" to "dt".
+					a.Key = "dt"
+					a.Value = slog.StringValue(a.Value.Time().Format("2006-01-02 15:04:05.000"))
+				}
+
+				// Customize the name of the level key and the output string, including
+				// custom level values.
+				if a.Key == slog.LevelKey {
+					// Rename the level key from "level" to "lvl".
+					a.Key = "lvl"
+				}
+
+				return a
+			},
 		})),
 	}
 
@@ -114,7 +132,9 @@ func getArgs(ctx context.Context, args ...any) []any {
 	attrs := getAttrs(ctx)
 	a := make([]any, 0, len(attrs)*2+len(args)) // attrs contains 2 value (key+value)
 	for _, attr := range attrs {
-		a = append(a, attr.Key, attr.Value.String())
+		if !slices.Contains(args, any(attr.Key)) {
+			a = append(a, attr.Key, attr.Value.String())
+		}
 	}
 	if len(args) > 0 {
 		a = append(a, args...)

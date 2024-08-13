@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/casdoor/casdoor/orm"
-	"github.com/casdoor/casdoor/util/logger"
 	"net/http"
 
 	"github.com/beego/beego"
@@ -32,6 +31,8 @@ import (
 	"github.com/casdoor/casdoor/repository"
 	"github.com/casdoor/casdoor/routers"
 	"github.com/casdoor/casdoor/txmanager"
+	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 func main() {
@@ -63,6 +64,7 @@ func main() {
 	beego.InsertFilter("*", beego.BeforeRouter, routers.AutoSigninFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.CorsFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PrometheusFilter)
+	beego.InsertFilter("*", beego.BeforeRouter, routers.LoggerFilter)
 	beego.InsertFilter("*", beego.AfterExec, routers.LogRecordMessage, false)
 
 	beego.BConfig.WebConfig.Session.SessionOn = true
