@@ -15,6 +15,7 @@
 package object
 
 import (
+	"github.com/casdoor/casdoor/orm"
 	"strings"
 
 	"github.com/casdoor/casdoor/conf"
@@ -62,13 +63,13 @@ type PermissionRule struct {
 const builtInAvailableField = 5 // Casdoor built-in adapter, use V5 to filter permission, so has 5 available field
 
 func GetPermissionCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Permission{})
 }
 
 func GetPermissions(owner string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Desc("created_time").Find(&permissions, &Permission{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&permissions, &Permission{Owner: owner})
 	if err != nil {
 		return permissions, err
 	}
@@ -78,7 +79,7 @@ func GetPermissions(owner string) ([]*Permission, error) {
 
 func GetPaginationPermissions(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&permissions)
 	if err != nil {
 		return permissions, err
@@ -93,7 +94,7 @@ func getPermission(owner string, name string) (*Permission, error) {
 	}
 
 	permission := Permission{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&permission)
+	existed, err := orm.AppOrmer.Engine.Get(&permission)
 	if err != nil {
 		return &permission, err
 	}
@@ -117,7 +118,7 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(permission)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(permission)
 	if err != nil {
 		return false, err
 	}
@@ -133,7 +134,7 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 }
 
 func AddPermission(permission *Permission) (bool, error) {
-	affected, err := ormer.Engine.Insert(permission)
+	affected, err := orm.AppOrmer.Engine.Insert(permission)
 	if err != nil {
 		return false, err
 	}
@@ -153,7 +154,7 @@ func AddPermissions(permissions []*Permission) bool {
 		return false
 	}
 
-	affected, err := ormer.Engine.Insert(permissions)
+	affected, err := orm.AppOrmer.Engine.Insert(permissions)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Duplicate entry") {
 			panic(err)
@@ -199,7 +200,7 @@ func DeletePermission(permission *Permission) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{permission.Owner, permission.Name}).Delete(&Permission{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{permission.Owner, permission.Name}).Delete(&Permission{})
 	if err != nil {
 		return false, err
 	}
@@ -216,7 +217,7 @@ func DeletePermission(permission *Permission) (bool, error) {
 
 func getPermissionsByUser(userId string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&permissions)
+	err := orm.AppOrmer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&permissions)
 	if err != nil {
 		return permissions, err
 	}
@@ -233,7 +234,7 @@ func getPermissionsByUser(userId string) ([]*Permission, error) {
 
 func GetPermissionsByRole(roleId string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Where("roles like ?", "%"+roleId+"\"%").Find(&permissions)
+	err := orm.AppOrmer.Engine.Where("roles like ?", "%"+roleId+"\"%").Find(&permissions)
 	if err != nil {
 		return permissions, err
 	}
@@ -250,7 +251,7 @@ func GetPermissionsByRole(roleId string) ([]*Permission, error) {
 
 func GetPermissionsByResource(resourceId string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Where("resources like ?", "%"+resourceId+"\"%").Find(&permissions)
+	err := orm.AppOrmer.Engine.Where("resources like ?", "%"+resourceId+"\"%").Find(&permissions)
 	if err != nil {
 		return permissions, err
 	}
@@ -309,7 +310,7 @@ func getPermissionsAndRolesByUser(userId string) ([]*Permission, []*Role, error)
 
 func GetPermissionsByGroup(groupId string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Where("`groups` like ?", "%"+groupId+"\"%").Find(&permissions)
+	err := orm.AppOrmer.Engine.Where("`groups` like ?", "%"+groupId+"\"%").Find(&permissions)
 	if err != nil {
 		return permissions, err
 	}
@@ -319,7 +320,7 @@ func GetPermissionsByGroup(groupId string) ([]*Permission, error) {
 
 func GetPermissionsByDomain(domainId string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Where("domains like ?", "%"+domainId+"\"%").Find(&permissions)
+	err := orm.AppOrmer.Engine.Where("domains like ?", "%"+domainId+"\"%").Find(&permissions)
 	if err != nil {
 		return permissions, err
 	}
@@ -329,7 +330,7 @@ func GetPermissionsByDomain(domainId string) ([]*Permission, error) {
 
 func GetPermissionsBySubmitter(owner string, submitter string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Desc("created_time").Find(&permissions, &Permission{Owner: owner, Submitter: submitter})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&permissions, &Permission{Owner: owner, Submitter: submitter})
 	if err != nil {
 		return permissions, err
 	}
@@ -339,7 +340,7 @@ func GetPermissionsBySubmitter(owner string, submitter string) ([]*Permission, e
 
 func GetPermissionsByModel(owner string, model string) ([]*Permission, error) {
 	permissions := []*Permission{}
-	err := ormer.Engine.Desc("created_time").Where("owner = ? and model = ?", owner, model).Find(&permissions)
+	err := orm.AppOrmer.Engine.Desc("created_time").Where("owner = ? and model = ?", owner, model).Find(&permissions)
 	if err != nil {
 		return permissions, err
 	}

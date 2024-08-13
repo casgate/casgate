@@ -29,8 +29,7 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "不正操作",
     "Unknown authentication type (not password or provider), form = %s": "不明な認証タイプ（パスワードまたはプロバイダーではない）フォーム=%s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
   },
   "cas": {
     "Service %s and %s do not match": "サービス%sと%sは一致しません"
@@ -73,6 +72,7 @@
   },
   "general": {
     "Invalid username or password/code": "Invalid username or password/code",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -106,11 +106,8 @@
   },
   "provider": {
     "Invalid application id": "アプリケーションIDが無効です",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "プロバイダー%sは存在しません"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "ユーザーはタグ「アバター」に対してnilです",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "ユーザー名または完全なファイルパスが空です：ユーザー名 = %s、完全なファイルパス = %s"
   },
   "saml": {
     "Application %s not found": "アプリケーション%sは見つかりません"
@@ -128,7 +125,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "オブジェクトキー %s は許可されていません",
     "The provider type: %s is not supported": "プロバイダータイプ：%sはサポートされていません"
   },
   "token": {

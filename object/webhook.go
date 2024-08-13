@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -43,13 +44,13 @@ type Webhook struct {
 }
 
 func GetWebhookCount(owner, organization, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Webhook{Organization: organization})
 }
 
 func GetWebhooks(owner string, organization string) ([]*Webhook, error) {
 	webhooks := []*Webhook{}
-	err := ormer.Engine.Desc("created_time").Find(&webhooks, &Webhook{Owner: owner, Organization: organization})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&webhooks, &Webhook{Owner: owner, Organization: organization})
 	if err != nil {
 		return webhooks, err
 	}
@@ -59,7 +60,7 @@ func GetWebhooks(owner string, organization string) ([]*Webhook, error) {
 
 func GetPaginationWebhooks(owner, organization string, offset, limit int, field, value, sortField, sortOrder string) ([]*Webhook, error) {
 	webhooks := []*Webhook{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&webhooks, &Webhook{Organization: organization})
 	if err != nil {
 		return nil, err
@@ -70,7 +71,7 @@ func GetPaginationWebhooks(owner, organization string, offset, limit int, field,
 
 func getWebhooksByOrganization(organization string) ([]*Webhook, error) {
 	webhooks := []*Webhook{}
-	err := ormer.Engine.Desc("created_time").Find(&webhooks, &Webhook{Organization: organization})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&webhooks, &Webhook{Organization: organization})
 	if err != nil {
 		return webhooks, err
 	}
@@ -84,7 +85,7 @@ func getWebhook(owner string, name string) (*Webhook, error) {
 	}
 
 	webhook := Webhook{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&webhook)
+	existed, err := orm.AppOrmer.Engine.Get(&webhook)
 	if err != nil {
 		return &webhook, err
 	}
@@ -109,7 +110,7 @@ func UpdateWebhook(id string, webhook *Webhook) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(webhook)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(webhook)
 	if err != nil {
 		return false, err
 	}
@@ -118,7 +119,7 @@ func UpdateWebhook(id string, webhook *Webhook) (bool, error) {
 }
 
 func AddWebhook(webhook *Webhook) (bool, error) {
-	affected, err := ormer.Engine.Insert(webhook)
+	affected, err := orm.AppOrmer.Engine.Insert(webhook)
 	if err != nil {
 		return false, err
 	}
@@ -127,7 +128,7 @@ func AddWebhook(webhook *Webhook) (bool, error) {
 }
 
 func DeleteWebhook(webhook *Webhook) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{webhook.Owner, webhook.Name}).Delete(&Webhook{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{webhook.Owner, webhook.Name}).Delete(&Webhook{})
 	if err != nil {
 		return false, err
 	}

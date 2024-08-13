@@ -16,6 +16,7 @@ package object
 
 import (
 	"github.com/beego/beego/logs"
+	"github.com/casdoor/casdoor/orm"
 	"github.com/xorm-io/xorm"
 	"github.com/xorm-io/xorm/migrate"
 	"github.com/xorm-io/xorm/schemas"
@@ -24,7 +25,7 @@ import (
 type Migrator_1_198_0_PR_56 struct{}
 
 func (*Migrator_1_198_0_PR_56) IsMigrationNeeded() bool {
-	exist, _ := ormer.Engine.IsTableExist("user")
+	exist, _ := orm.AppOrmer.Engine.IsTableExist("user")
 
 	if exist {
 		return true

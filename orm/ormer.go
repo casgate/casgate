@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package object
+package orm
 
 import (
-	"context"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -24,10 +23,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/beego/beego"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
-	xormadapter "github.com/casdoor/xorm-adapter/v3"
 	_ "github.com/denisenkom/go-mssqldb" // db = mssql
 	_ "github.com/go-sql-driver/mysql"   // db = mysql
 	_ "github.com/lib/pq"                // db = postgres
@@ -36,22 +33,16 @@ import (
 	_ "modernc.org/sqlite" // db = sqlite
 )
 
-type TransactionManager interface {
-	WithTx(parentCtx context.Context, f func(ctx context.Context) error) error
-}
-
 var (
-	ormer                   *Ormer             = nil
-	trm                     TransactionManager = nil
-	repo                    Repository         = nil
-	isCreateDatabaseDefined                    = false
-	createDatabase                             = true
+	AppOrmer                *Ormer = nil
+	IsCreateDatabaseDefined        = false
+	CreateDatabase                 = true
 )
 
 func InitFlag() {
-	if !isCreateDatabaseDefined {
-		isCreateDatabaseDefined = true
-		createDatabase = getCreateDatabaseFlag()
+	if !IsCreateDatabaseDefined {
+		IsCreateDatabaseDefined = true
+		CreateDatabase = getCreateDatabaseFlag()
 	}
 }
 
@@ -59,19 +50,6 @@ func getCreateDatabaseFlag() bool {
 	res := flag.Bool("createDatabase", false, "true if you need to create database")
 	flag.Parse()
 	return *res
-}
-
-func InitConfig() {
-	err := beego.LoadAppConfig("ini", "../conf/app.conf")
-	if err != nil {
-		panic(err)
-	}
-
-	beego.BConfig.WebConfig.Session.SessionOn = true
-
-	InitAdapter()
-	CreateTables()
-	DoMigration()
 }
 
 func InitAdapter() *Ormer {
@@ -86,7 +64,7 @@ func InitAdapter() *Ormer {
 		}
 	}
 
-	if createDatabase {
+	if CreateDatabase {
 		err := createDatabaseForPostgres(conf.GetConfigString("driverName"), conf.GetConfigDataSourceName(), conf.GetConfigString("dbName"))
 		if err != nil {
 			panic(err)
@@ -94,32 +72,16 @@ func InitAdapter() *Ormer {
 	}
 
 	var err error
-	ormer, err = NewAdapter(conf.GetConfigString("driverName"), conf.GetConfigDataSourceName(), conf.GetConfigString("dbName"))
+	AppOrmer, err = NewAdapter(conf.GetConfigString("driverName"), conf.GetConfigDataSourceName(), conf.GetConfigString("dbName"))
 	if err != nil {
 		panic(err)
 	}
 
 	tableNamePrefix := conf.GetConfigString("tableNamePrefix")
 	tbMapper := core.NewPrefixMapper(core.SnakeMapper{}, tableNamePrefix)
-	ormer.Engine.SetTableMapper(tbMapper)
+	AppOrmer.Engine.SetTableMapper(tbMapper)
 
-	return ormer
-}
-
-func InitRepo(txmanager TransactionManager, repository Repository) {
-	trm = txmanager
-	repo = repository
-}
-
-func CreateTables() {
-	if createDatabase {
-		err := ormer.CreateDatabase()
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	ormer.createTable()
+	return AppOrmer
 }
 
 // Ormer represents the MySQL adapter for policy storage.
@@ -238,154 +200,4 @@ func (a *Ormer) open() error {
 func (a *Ormer) close() {
 	_ = a.Engine.Close()
 	a.Engine = nil
-}
-
-func (a *Ormer) createTable() {
-	showSql := conf.GetConfigBool("showSql")
-	a.Engine.ShowSQL(showSql)
-
-	err := a.Engine.Sync2(new(Organization))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(User))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Group))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Role))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Domain))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Permission))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Model))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Adapter))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Enforcer))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Provider))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Application))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Resource))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Token))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Record))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(VerificationRecord))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Webhook))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Syncer))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Cert))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Product))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Payment))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Ldap))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(RadiusAccounting))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(PermissionRule))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(xormadapter.CasbinRule))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Session))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Subscription))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Plan))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Pricing))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(UserIdProvider))
-	if err != nil {
-		panic(err)
-	}
 }

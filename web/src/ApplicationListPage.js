@@ -55,7 +55,6 @@ class ApplicationListPage extends BaseListPage {
         {name: "LDAP", displayName: "LDAP", rule: "None"},
       ],
       signupItems: [
-        {name: "ID", visible: false, required: true, rule: "Random"},
         {name: "Username", visible: true, required: true, rule: "None"},
         {name: "Display name", visible: true, required: true, rule: "None"},
         {name: "Password", visible: true, required: true, rule: "None"},

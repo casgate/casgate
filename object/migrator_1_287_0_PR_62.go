@@ -15,6 +15,7 @@
 package object
 
 import (
+	"github.com/casdoor/casdoor/orm"
 	"time"
 
 	"github.com/beego/beego/logs"
@@ -26,7 +27,7 @@ import (
 type Migrator_1_287_0_PR_62 struct{}
 
 func (*Migrator_1_287_0_PR_62) IsMigrationNeeded() bool {
-	metas, err := ormer.Engine.DBMetas()
+	metas, err := orm.AppOrmer.Engine.DBMetas()
 	if err != nil {
 		return false
 	}

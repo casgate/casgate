@@ -17,7 +17,10 @@ package object
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
+
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/conf"
@@ -44,7 +47,7 @@ type Role struct {
 }
 
 func GetRoleCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Role{})
 }
 
@@ -59,7 +62,7 @@ func GetRolesByIds(roleIds []string) ([]*Role, error) {
 		condBuilder = condBuilder.Or(builder.Eq{"owner": owner, "name": name})
 	}
 	roles := []*Role{}
-	err := ormer.Engine.Desc("created_time").Where(condBuilder).Find(&roles)
+	err := orm.AppOrmer.Engine.Desc("created_time").Where(condBuilder).Find(&roles)
 	if err != nil {
 		return roles, err
 	}
@@ -69,7 +72,7 @@ func GetRolesByIds(roleIds []string) ([]*Role, error) {
 
 func GetRoles(owner string) ([]*Role, error) {
 	roles := []*Role{}
-	err := ormer.Engine.Desc("created_time").Find(&roles, &Role{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&roles, &Role{Owner: owner})
 	if err != nil {
 		return roles, err
 	}
@@ -79,7 +82,7 @@ func GetRoles(owner string) ([]*Role, error) {
 
 func GetPaginationRoles(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Role, error) {
 	roles := []*Role{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&roles)
 	if err != nil {
 		return roles, err
@@ -94,7 +97,7 @@ func getRole(owner string, name string) (*Role, error) {
 	}
 
 	role := Role{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&role)
+	existed, err := orm.AppOrmer.Engine.Get(&role)
 	if err != nil {
 		return &role, err
 	}
@@ -126,6 +129,29 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, nil
 	}
 
+	slices.Sort(oldRole.Roles)
+	slices.Sort(role.Roles)
+
+	needCheckCrossDeps := len(role.Roles) > 0 && !slices.Equal(oldRole.Roles, role.Roles)
+
+	if needCheckCrossDeps {
+		allMyParents, _ := GetAncestorRoles(id)
+		for _, r := range role.Roles {
+			if r == id {
+				return false, fmt.Errorf("role %s is in the child roles of %s", id, id)
+			}
+			for _, pr := range allMyParents {
+				if pr.GetId() == id {
+					continue // self
+				}
+
+				if r == pr.GetId() {
+					return false, fmt.Errorf("role %s is in the child roles of %s", id, pr.GetId())
+				}
+			}
+		}
+	}
+
 	if name != role.Name {
 		err := roleChangeTrigger(name, role.Name)
 		if err != nil {
@@ -138,7 +164,7 @@ func UpdateRole(id string, role *Role) (bool, error) {
 		return false, fmt.Errorf("subRolePermissions: %w", err)
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(role)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(role)
 	if err != nil {
 		return false, err
 	}
@@ -159,7 +185,12 @@ func UpdateRole(id string, role *Role) (bool, error) {
 }
 
 func AddRole(role *Role) (bool, error) {
-	affected, err := ormer.Engine.Insert(role)
+	id := role.GetId()
+	if slices.Contains(role.Roles, id) {
+		return false, fmt.Errorf("role %s is in the child roles of %s", id, id)
+	}
+
+	affected, err := orm.AppOrmer.Engine.Insert(role)
 	if err != nil {
 		return false, err
 	}
@@ -183,7 +214,7 @@ func AddRoles(roles []*Role) bool {
 	if len(roles) == 0 {
 		return false
 	}
-	affected, err := ormer.Engine.Insert(roles)
+	affected, err := orm.AppOrmer.Engine.Insert(roles)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Duplicate entry") {
 			panic(err)
@@ -245,7 +276,7 @@ func DeleteRole(role *Role) (bool, error) {
 		return false, fmt.Errorf("subRolePermissions: %w", err)
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{role.Owner, role.Name}).Delete(&Role{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{role.Owner, role.Name}).Delete(&Role{})
 	if err != nil {
 		return false, err
 	}
@@ -266,7 +297,7 @@ func (role *Role) GetId() string {
 
 func GetRolesByDomain(domainId string) ([]*Role, error) {
 	roles := []*Role{}
-	err := ormer.Engine.Where("domains like ?", "%"+domainId+"\"%").Find(&roles)
+	err := orm.AppOrmer.Engine.Where("domains like ?", "%"+domainId+"\"%").Find(&roles)
 	if err != nil {
 		return roles, err
 	}
@@ -276,7 +307,7 @@ func GetRolesByDomain(domainId string) ([]*Role, error) {
 
 func getRolesByUserInternal(userId string) ([]*Role, error) {
 	roles := []*Role{}
-	err := ormer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&roles)
+	err := orm.AppOrmer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&roles)
 	if err != nil {
 		return roles, err
 	}
@@ -316,7 +347,7 @@ func getRolesByUser(userId string) ([]*Role, error) {
 
 // roleChangeTrigger changes dependents when the role changes. Empty new name to remove the dependency.
 func roleChangeTrigger(oldName string, newName string) error {
-	session := ormer.Engine.NewSession()
+	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	err := session.Begin()
@@ -325,7 +356,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	}
 
 	var roles []*Role
-	err = ormer.Engine.Find(&roles)
+	err = orm.AppOrmer.Engine.Find(&roles)
 	if err != nil {
 		return err
 	}
@@ -349,7 +380,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	}
 
 	var permissions []*Permission
-	err = ormer.Engine.Find(&permissions)
+	err = orm.AppOrmer.Engine.Find(&permissions)
 	if err != nil {
 		return err
 	}
@@ -375,7 +406,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	}
 
 	var providers []*Provider
-	err = ormer.Engine.Find(&providers)
+	err = orm.AppOrmer.Engine.Find(&providers)
 	if err != nil {
 		return err
 	}
@@ -401,7 +432,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	}
 
 	var ldaps []*Ldap
-	err = ormer.Engine.Find(&ldaps)
+	err = orm.AppOrmer.Engine.Find(&ldaps)
 	if err != nil {
 		return err
 	}

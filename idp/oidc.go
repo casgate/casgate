@@ -128,23 +128,21 @@ func (idp *OpenIdProvider) GetToken(code string) (*oauth2.Token, error) {
 }
 
 func (idp *OpenIdProvider) TestConnection() error {
-	if util.IsStringsEmpty(idp.Config.ClientID, idp.Config.ClientSecret, idp.AuthURL) {
+	if util.IsStringsEmpty(idp.Config.ClientID, idp.Config.ClientSecret) {
 		return NewMissingParameterError("Missing parameter")
 	}
 
-	httpClient := new(http.Client)
 	data := url.Values{}
 	data.Add("grant_type", "client_credentials")
 	data.Add("client_id", idp.Config.ClientID)
 	data.Add("client_secret", idp.Config.ClientSecret)
 
-	idp.SetHttpClient(httpClient)
 	err := idp.EnrichOauthURLs()
 	if err != nil {
 		return err
 	}
 
-	tokenResponse, err := httpClient.Post(idp.TokenURL, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
+	tokenResponse, err := idp.Client.Post(idp.TokenURL, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()))
 	if err != nil || tokenResponse.StatusCode != 200 {
 		return NewStatusError(tokenResponse.StatusCode)
 	}

@@ -2,6 +2,7 @@ package object
 
 import (
 	"github.com/beego/beego/logs"
+	"github.com/casdoor/casdoor/orm"
 	"github.com/xorm-io/xorm"
 	"github.com/xorm-io/xorm/migrate"
 	"github.com/xorm-io/xorm/schemas"
@@ -10,7 +11,7 @@ import (
 type Migrator_1_19503_0_PR_106 struct{}
 
 func (*Migrator_1_19503_0_PR_106) IsMigrationNeeded() bool {
-	table, err := ormer.Engine.TableInfo(&Organization{})
+	table, err := orm.AppOrmer.Engine.TableInfo(&Organization{})
 	if err != nil {
 		logs.Warn("Table 'organization' does not exist")
 		return false
