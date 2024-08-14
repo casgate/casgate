@@ -39,8 +39,7 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Unauthorized operation",
     "Unknown authentication type (not password or provider), form = %s": "Unknown authentication type (not password or provider), form = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
   },
   "cas": {
     "Service %s and %s do not match": "Service %s and %s do not match"
@@ -84,6 +83,7 @@
   "general": {
     "%s field is not valid URL": "%s field is not valid URL",
     "Invalid username or password/code": "Invalid username or password/code",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -130,11 +130,8 @@
     "IssuerUrl": "IssuerUrl",
     "ProviderUrl": "ProviderUrl",
     "SingleLogoutServiceUrl": "SingleLogoutServiceUrl",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "the provider: %s does not exist"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "User is nil for tag: avatar",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "Username or fullFilePath is empty: username = %s, fullFilePath = %s"
   },
   "saml": {
     "Application %s not found": "Application %s not found"
@@ -152,7 +149,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "The objectKey: %s is not allowed",
     "The provider type: %s is not supported": "The provider type: %s is not supported"
   },
   "token": {

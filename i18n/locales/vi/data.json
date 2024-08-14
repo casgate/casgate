@@ -39,8 +39,7 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Hoạt động không được ủy quyền",
     "Unknown authentication type (not password or provider), form = %s": "Loại xác thực không xác định (không phải mật khẩu hoặc nhà cung cấp), biểu mẫu = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
   },
   "cas": {
     "Service %s and %s do not match": "Dịch sang tiếng Việt: Dịch vụ %s và %s không khớp"
@@ -84,6 +83,7 @@
   "general": {
     "%s field is not valid URL": "%s field is not valid URL",
     "Invalid username or password/code": "Invalid username or password/code",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -130,11 +130,8 @@
     "IssuerUrl": "IssuerUrl",
     "ProviderUrl": "ProviderUrl",
     "SingleLogoutServiceUrl": "SingleLogoutServiceUrl",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "Nhà cung cấp: %s không tồn tại"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "Người dùng không có giá trị cho thẻ: hình đại diện",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "Tên người dùng hoặc đường dẫn tệp đầy đủ trống: tên người dùng = %s, đường dẫn tệp đầy đủ = %s"
   },
   "saml": {
     "Application %s not found": "Ứng dụng %s không tìm thấy"
@@ -152,7 +149,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "Khóa đối tượng: %s không được phép",
     "The provider type: %s is not supported": "Loại nhà cung cấp: %s không được hỗ trợ"
   },
   "token": {

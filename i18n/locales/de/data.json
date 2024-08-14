@@ -39,8 +39,7 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Nicht autorisierte Operation",
     "Unknown authentication type (not password or provider), form = %s": "Unbekannter Authentifizierungstyp (nicht Passwort oder Anbieter), Formular = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
   },
   "cas": {
     "Service %s and %s do not match": "Service %s und %s stimmen nicht überein"
@@ -84,6 +83,7 @@
   "general": {
     "%s field is not valid URL": "%s field is not valid URL",
     "Invalid username or password/code": "Ungültiger Benutzername oder Passwort/Code",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -130,11 +130,8 @@
     "IssuerUrl": "IssuerUrl",
     "ProviderUrl": "ProviderUrl",
     "SingleLogoutServiceUrl": "SingleLogoutServiceUrl",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "Der Anbieter %s existiert nicht"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "Benutzer ist null für Tag: Avatar",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "Benutzername oder vollständiger Dateipfad sind leer: Benutzername = %s, vollständiger Dateipfad = %s"
   },
   "saml": {
     "Application %s not found": "Anwendung %s wurde nicht gefunden"
@@ -152,7 +149,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "Der Objektschlüssel %s ist nicht erlaubt",
     "The provider type: %s is not supported": "Der Anbieter-Typ %s wird nicht unterstützt"
   },
   "token": {

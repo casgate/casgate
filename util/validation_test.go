@@ -16,6 +16,7 @@ func TestIsURLValid(t *testing.T) {
 	assert.False(t, IsURLValid("javascript:alert()//."))
 	assert.False(t, IsURLValid("javascript://192.158.1/1"))
 	assert.False(t, IsURLValid("javascript:alert()"))
+}
 
 func TestIsFieldValueAllowedForDB(t *testing.T) {
 	testCases := []struct {
