@@ -88,15 +88,38 @@ func (c *ApiController) GetRole() {
 func (c *ApiController) UpdateRole() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
+	ctx := c.getRequestCtx()
+
+	logger.SetItem(ctx, "obj-type", ObjectTypeRole)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
 
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameRoleUpdate,
+			OperationResultFailure,
+		)
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+
+	logger.SetItem(ctx, "obj", role.GetId())
+
 	roleFromDb, _ := object.GetRole(request.Id)
 	if roleFromDb == nil {
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": "role not found",
+			},
+			OperationNameRoleUpdate,
+			OperationResultFailure,
+		)
 		c.Data["json"] = wrapActionResponse(false)
 		c.ServeJSON()
 		return
@@ -105,20 +128,31 @@ func (c *ApiController) UpdateRole() {
 
 	affected, err := object.UpdateRole(request.Id, &role)
 
-	ctx := c.getRequestCtx()
-
 	if err != nil {
-		logger.Error(ctx, "UpdateRole: failed to update role",
-			"old_role", roleFromDb,
-			"new_role", role,
-			"error", err.Error())
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameRoleUpdate,
+			OperationResultFailure,
+		)
 	} else if !affected {
-		logger.Error(ctx, "UpdateRole: failed to update role: not affected",
-			"old_role", roleFromDb,
-			"new_role", role)
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": "not affected",
+			},
+			OperationNameRoleUpdate,
+			OperationResultFailure,
+		)
 	} else {
-		logger.Info(ctx, "UpdateRole: role updated successfully",
-			"role_id", role.GetId())
+		logWithInfo(
+			ctx,
+			"",
+			OperationNameRoleUpdate,
+			OperationResultSuccess,
+		)
 
 		oldUsers := make(map[string]struct{})
 		newUsers := make(map[string]struct{})
@@ -133,19 +167,29 @@ func (c *ApiController) UpdateRole() {
 
 		for userID := range oldUsers {
 			if _, found := newUsers[userID]; !found {
-				logger.Info(ctx, "UpdateRole: role removed from user",
-					"role_id", role.GetId(),
-					"user_id", userID,
-					"by_user", c.getCurrentUser().GetId())
+				logWithInfo(
+					ctx,
+					LogMsgDetailed{
+						"info":   "role removed from user",
+						"userID": userID,
+					},
+					OperationNameRoleUpdate,
+					OperationResultSuccess,
+				)
 			}
 		}
 
 		for userID := range newUsers {
 			if _, found := oldUsers[userID]; !found {
-				logger.Info(ctx, "UpdateRole: role added to user",
-					"role_id", role.GetId(),
-					"user_id", userID,
-					"by_user", c.getCurrentUser().GetId())
+				logWithInfo(
+					ctx,
+					LogMsgDetailed{
+						"info":   "role added to user",
+						"userID": userID,
+					},
+					OperationNameRoleUpdate,
+					OperationResultSuccess,
+				)
 			}
 		}
 	}

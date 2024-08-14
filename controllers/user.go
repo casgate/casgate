@@ -312,23 +312,39 @@ func (c *ApiController) UpdateUser() {
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
 
+	logger.SetItem(goCtx, "obj-type", ObjectTypeUser)
+	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
+
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
-		logger.Error(goCtx, "UpdateUser: failed to unmarshall user",
-			"error", err.Error())
+		logWithInfo(
+			goCtx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameUserUpdate,
+			OperationResultFailure,
+		)
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+
+	logger.SetItem(goCtx, "obj", user.GetId())
 
 	c.ValidateOrganization(user.Owner)
 
 	if id == "" {
 		id = c.GetSessionUsername()
 		if id == "" {
-			logger.Error(goCtx, "UpdateUser: missed parameter",
-				"user", user.GetId(),
-				"parameter", "id")
+			logWithInfo(
+				goCtx,
+				LogMsgDetailed{
+					"error": "missed parameter: id",
+				},
+				OperationNameUserUpdate,
+				OperationResultFailure,
+			)
 			c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
 			return
 		}
@@ -336,50 +352,82 @@ func (c *ApiController) UpdateUser() {
 
 	oldUser, err := object.GetUser(id)
 	if err != nil {
-		logger.Error(goCtx, "UpdateUser: failed to get user from database",
-			"id", id,
-			"error", err.Error())
+		logWithInfo(
+			goCtx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameUserUpdate,
+			OperationResultFailure,
+		)
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
 	if oldUser == nil {
-		logger.Error(goCtx, "UpdateUser: user not found",
-			"id", id)
+		logWithInfo(
+			goCtx,
+			LogMsgDetailed{
+				"error": "user not found",
+			},
+			OperationNameUserUpdate,
+			OperationResultFailure,
+		)
 		c.ResponseNotFound(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), id))
 		return
 	}
 
 	if oldUser.Owner == "built-in" && oldUser.Name == "admin" && (user.Owner != "built-in" || user.Name != "admin") {
-		logger.Error(goCtx, "UpdateUser: tried to update admin user")
+		logWithInfo(
+			goCtx,
+			LogMsgDetailed{
+				"error": "update admin user",
+			},
+			OperationNameUserUpdate,
+			OperationResultFailure,
+		)
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
 
 	if c.Input().Get("allowEmpty") == "" {
 		if user.DisplayName == "" {
-			logger.Error(goCtx, "UpdateUser: empty display name not allowed",
-				"user", oldUser.GetId())
+			logWithInfo(
+				goCtx,
+				LogMsgDetailed{
+					"error": "empty display name",
+				},
+				OperationNameUserUpdate,
+				OperationResultFailure,
+			)
 			c.ResponseInternalServerError(c.T("user:Display name cannot be empty"))
 			return
 		}
 	}
 
 	if msg := object.CheckUpdateUser(oldUser, &user, c.GetAcceptLanguage()); msg != "" {
-		logger.Error(goCtx, "UpdateUser: validation failed",
-			"old_user", oldUser,
-			"new_user", user,
-			"message", msg)
+		logWithInfo(
+			goCtx,
+			LogMsgDetailed{
+				"error": "validation failed",
+			},
+			OperationNameUserUpdate,
+			OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(msg)
 		return
 	}
 
 	isAdmin := c.IsAdmin()
 	if pass, err := object.CheckPermissionForUpdateUser(oldUser, &user, isAdmin, c.GetAcceptLanguage()); !pass {
-		logger.Error(goCtx, "UpdateUser: permission check not passed",
-			"old_user", oldUser,
-			"new_user", user,
-			"is_admin", isAdmin)
+		logWithInfo(
+			goCtx,
+			LogMsgDetailed{
+				"error": "permission check not passed",
+			},
+			OperationNameUserUpdate,
+			OperationResultFailure,
+		)
 		c.ResponseForbidden(err)
 		return
 	}
@@ -391,37 +439,62 @@ func (c *ApiController) UpdateUser() {
 
 	affected, err := object.UpdateUser(id, &user, columns, isAdmin)
 	if err != nil {
-		logger.Error(goCtx, "UpdateUser: failed to update user",
-			"id", id,
-			"old_user", oldUser,
-			"new_user", user,
-			"error", err.Error())
+		logWithInfo(
+			goCtx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameUserUpdate,
+			OperationResultFailure,
+		)
 		c.ResponseInternalServerError(err.Error())
 		return
 	} else if !affected {
-		logger.Error(goCtx, "UpdateUser: not affected",
-			"id", id,
-			"old_user", oldUser,
-			"new_user", user)
+		logWithInfo(
+			goCtx,
+			LogMsgDetailed{
+				"error": "not affected",
+			},
+			OperationNameUserUpdate,
+			OperationResultFailure,
+		)
 		c.ResponseError(c.T("account:Failed to update user"), util.StructToJson(user))
 	} else {
-		logger.Info(goCtx, "UpdateUser: user updated successfully",
-			"id", id)
+		logWithInfo(
+			goCtx,
+			"",
+			OperationNameUserUpdate,
+			OperationResultSuccess,
+		)
 
 		if !oldUser.IsForbidden && user.IsForbidden {
-			logger.Info(goCtx, "UpdateUser: user has been blocked",
-				"id", id)
+			logWithInfo(
+				goCtx,
+				"user has been blocked",
+				OperationNameUserUpdate,
+				OperationResultSuccess,
+			)
 		}
 
 		if oldUser.IsForbidden && !user.IsForbidden {
-			logger.Info(goCtx, "UpdateUser: user has been unblocked",
-				"id", id)
+			logWithInfo(
+				goCtx,
+				"user has been unblocked",
+				OperationNameUserUpdate,
+				OperationResultSuccess,
+			)
 		}
 
 		if oldUser.Password != user.Password {
-			logger.Info(goCtx, "UpdateUser: user's password has been changed",
-				"id", id,
-				"isAdmin", isAdmin)
+			logWithInfo(
+				goCtx,
+				LogMsgDetailed{
+					"info":    "user's password has been changed",
+					"isAdmin": isAdmin,
+				},
+				OperationNameUserUpdate,
+				OperationResultSuccess,
+			)
 		}
 
 		oldGroups := make(map[string]struct{})
@@ -451,17 +524,27 @@ func (c *ApiController) UpdateUser() {
 		}
 
 		if len(joinedGroups) > 0 {
-			logger.Info(goCtx, "UpdateUser: user joined groups",
-				"user_id", id,
-				"groups", joinedGroups,
-				"by_user", c.getCurrentUser().GetId())
+			logWithInfo(
+				goCtx,
+				LogMsgDetailed{
+					"info":   "user joined groups",
+					"groups": joinedGroups,
+				},
+				OperationNameUserUpdate,
+				OperationResultSuccess,
+			)
 		}
 
 		if len(leftGroups) > 0 {
-			logger.Info(goCtx, "UpdateUser: user left groups",
-				"user_id", id,
-				"groups", leftGroups,
-				"by_user", c.getCurrentUser().GetId())
+			logWithInfo(
+				goCtx,
+				LogMsgDetailed{
+					"info":   "user left groups",
+					"groups": leftGroups,
+				},
+				OperationNameUserUpdate,
+				OperationResultSuccess,
+			)
 		}
 	}
 
@@ -486,6 +569,9 @@ func (c *ApiController) AddUser() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	ctx := c.getRequestCtx()
+	logger.SetItem(ctx, "obj-type", ObjectTypeUser)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
+
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
@@ -494,28 +580,48 @@ func (c *ApiController) AddUser() {
 		return
 	}
 
+	logger.SetItem(ctx, "obj", user.GetId())
+
 	c.ValidateOrganization(user.Owner)
 
 	count, err := object.GetUserCount("", "", "", "")
 	if err != nil {
-		logger.Error(ctx, "failed to get user count",
-			"error", err.Error())
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameAddUser,
+			OperationResultFailure,
+		)
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
 	if err := checkQuotaForUser(int(count)); err != nil {
-		logger.Warn(ctx, "quota check failed for user",
-			"user", user.GetId(),
-			"error", err.Error())
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameAddUser,
+			OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(err.Error())
 		return
 	}
 
 	msg := object.CheckUsername(user.Name, c.GetAcceptLanguage())
 	if msg != "" {
-		logger.Warn(ctx, "username check failed",
-			"message", msg)
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error":   "username check failed",
+				"details": msg,
+			},
+			OperationNameAddUser,
+			OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(msg)
 		return
 	}
@@ -523,15 +629,30 @@ func (c *ApiController) AddUser() {
 	affected, err := object.AddUser(ctx, &user)
 
 	if err != nil {
-		logger.Error(ctx, "failed to create user",
-			"user", user,
-			"error", err.Error())
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameAddUser,
+			OperationResultFailure,
+		)
 	} else if !affected {
-		logger.Error(ctx, "failed to create user: not affected",
-			"user", user)
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": "not affected",
+			},
+			OperationNameAddUser,
+			OperationResultFailure,
+		)
 	} else {
-		logger.Info(ctx, "user added successfully",
-			"user", user.GetId())
+		logWithInfo(
+			ctx,
+			"",
+			OperationNameAddUser,
+			OperationResultSuccess,
+		)
 	}
 
 	c.Data["json"] = wrapActionResponse(affected, err)
@@ -552,19 +673,36 @@ func (c *ApiController) DeleteUser() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	ctx := c.getRequestCtx()
+	logger.SetItem(ctx, "obj-type", ObjectTypeUser)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
+
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
-		logger.Error(ctx, "failed to unmarshall user",
-			"error", err.Error())
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 		c.ResponseBadRequest(err.Error())
 		return
 	}
 
+	logger.SetItem(ctx, "obj", user.GetId())
+
 	userFromDb, _ := object.GetUser(user.GetId())
 	if userFromDb == nil {
-		logger.Error(ctx, "failed to get user from database",
-			"user", user.GetId())
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": "failed to get user from db",
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 		c.Data["json"] = wrapActionResponse(false)
 		c.ServeJSON()
 		return
@@ -572,22 +710,44 @@ func (c *ApiController) DeleteUser() {
 	c.ValidateOrganization(userFromDb.Owner)
 
 	if user.Owner == "built-in" && user.Name == "admin" {
-		logger.Warn(ctx, "tried to delete root user")
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": "deleting root user",
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
 
 	affected, err := object.DeleteUser(ctx, &user)
 	if err != nil {
-		logger.Error(ctx, "failed to delete user",
-			"user", user.GetId(),
-			"error", err.Error())
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 	} else if !affected {
-		logger.Error(ctx, "failed to delete user: not affected",
-			"user", user.GetId())
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": "not affected",
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 	} else {
-		logger.Info(ctx, "user deleted successfully",
-			"user", user.GetId())
+		logWithInfo(
+			ctx,
+			"",
+			OperationNameUserDelete,
+			OperationResultSuccess,
+		)
 	}
 
 	c.Data["json"] = wrapActionResponse(affected, err)
@@ -689,12 +849,25 @@ func (c *ApiController) SetPassword() {
 	newPassword := c.Ctx.Request.Form.Get("newPassword")
 	code := c.Ctx.Request.Form.Get("code")
 
+	logger.SetItem(ctx, "obj-type", ObjectTypeUser)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
+
 	if strings.Contains(newPassword, " ") {
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": "password contain blank space",
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(c.T("user:New password cannot contain blank space."))
 		return
 	}
 
 	userId := util.GetId(userOwner, userName)
+
+	logger.SetItem(ctx, "obj", userId)
 
 	requestUserId := c.GetSessionUsername()
 
@@ -705,17 +878,41 @@ func (c *ApiController) SetPassword() {
 	}
 
 	if requestUserId == "" && code == "" {
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": "unauthrorized",
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 		c.ResponseUnauthorized(c.T("general:Please login first"))
 		return
 	} else if code == "" {
 		goCtx := c.getRequestCtx()
 		hasPermission, err := object.CheckUserPermission(goCtx, requestUserId, userId, true, c.GetAcceptLanguage())
 		if !hasPermission {
+			logWithInfo(
+				ctx,
+				LogMsgDetailed{
+					"error": err.Error(),
+				},
+				OperationNameUserDelete,
+				OperationResultFailure,
+			)
 			c.ResponseForbidden(err.Error())
 			return
 		}
 	} else {
 		if code != c.GetSession("verifiedCode") || userId != c.GetSession("verifiedUserId") {
+			logWithInfo(
+				ctx,
+				LogMsgDetailed{
+					"error": "missing parameter",
+				},
+				OperationNameUserDelete,
+				OperationResultFailure,
+			)
 			c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
 			return
 		}
@@ -725,15 +922,39 @@ func (c *ApiController) SetPassword() {
 
 	targetUser, err := object.GetUser(userId)
 	if targetUser == nil {
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": "user not found",
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 		c.ResponseNotFound(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), userId))
 		return
 	}
 	if err != nil {
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": err.Error(),
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
 	if targetUser.Type == "invited-user" {
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": "unauthorized",
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
@@ -743,6 +964,14 @@ func (c *ApiController) SetPassword() {
 		if oldPassword != "" {
 			err := object.CheckPassword(ctx, targetUser, oldPassword, c.GetAcceptLanguage())
 			if err != nil {
+				logWithInfo(
+					ctx,
+					LogMsgDetailed{
+						"error": err.Error(),
+					},
+					OperationNameUserDelete,
+					OperationResultFailure,
+				)
 				c.ResponseUnauthorized(err.Error())
 				return
 			}
@@ -750,6 +979,14 @@ func (c *ApiController) SetPassword() {
 	} else if code == "" {
 		err := object.CheckPassword(ctx, targetUser, oldPassword, c.GetAcceptLanguage())
 		if err != nil {
+			logWithInfo(
+				ctx,
+				LogMsgDetailed{
+					"error": err.Error(),
+				},
+				OperationNameUserDelete,
+				OperationResultFailure,
+			)
 			c.ResponseUnauthorized(err.Error())
 			return
 		}
@@ -757,12 +994,28 @@ func (c *ApiController) SetPassword() {
 
 	msg := object.CheckPasswordComplexity(targetUser, newPassword, c.GetAcceptLanguage())
 	if msg != "" {
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": msg,
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(msg)
 		return
 	}
 
 	msg = object.CheckPasswordSame(targetUser, newPassword, c.GetAcceptLanguage())
 	if msg != "" {
+		logWithInfo(
+			ctx,
+			LogMsgDetailed{
+				"error": msg,
+			},
+			OperationNameUserDelete,
+			OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(msg)
 		return
 	}
@@ -774,9 +1027,12 @@ func (c *ApiController) SetPassword() {
 		return
 	}
 
-	logger.Info(ctx, "password has been changed",
-		"for_user", userId,
-		"by_user", c.getCurrentUser().GetId())
+	logWithInfo(
+		ctx,
+		"",
+		OperationNameUserDelete,
+		OperationResultSuccess,
+	)
 
 	c.ResponseOk()
 }
@@ -954,7 +1210,7 @@ func (c *ApiController) SendInvite() {
 	}
 
 	if user.Email == "" {
-		c.ResponseUnprocessableEntity(fmt.Sprintf(c.T("service:Missing email for send invite")))
+		c.ResponseUnprocessableEntity(c.T("service:Missing email for send invite"))
 		return
 	}
 
