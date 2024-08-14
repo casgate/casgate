@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package object
+package orm
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ import (
 )
 
 func GetSession(owner string, offset, limit int, field, value, sortField, sortOrder string) *xorm.Session {
-	session := ormer.Engine.Prepare()
+	session := AppOrmer.Engine.Prepare()
 	if offset != -1 && limit != -1 {
 		session.Limit(limit, offset)
 	}
@@ -43,7 +43,7 @@ func GetSession(owner string, offset, limit int, field, value, sortField, sortOr
 		if value != "" {
 			filterValue = fmt.Sprintf("%%%s%%", value)
 		}
-		if util.FilterField(field) {
+		if util.IsFieldValueAllowedForDB(field) {
 			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), filterValue)
 		}
 	}
@@ -65,7 +65,7 @@ func GetSession(owner string, offset, limit int, field, value, sortField, sortOr
 }
 
 func GetSessionForUser(owner string, offset, limit int, field, value, sortField, sortOrder string) *xorm.Session {
-	session := ormer.Engine.Prepare()
+	session := AppOrmer.Engine.Prepare()
 	if offset != -1 && limit != -1 {
 		session.Limit(limit, offset)
 	}
@@ -83,7 +83,7 @@ func GetSessionForUser(owner string, offset, limit int, field, value, sortField,
 	}
 
 	if field != "" && value != "" {
-		if util.FilterField(field) {
+		if util.IsFieldValueAllowedForDB(field) {
 			if offset != -1 {
 				field = fmt.Sprintf("a.%s", field)
 			}

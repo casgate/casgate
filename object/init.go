@@ -18,6 +18,8 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/xorm-adapter/v3"
 	"os"
 
 	"github.com/casdoor/casdoor/conf"
@@ -109,7 +111,6 @@ func initBuiltInOrganization() bool {
 		PasswordType:       "argon2id",
 		PasswordOptions:    []string{"AtLeast6"},
 		CountryCodes:       []string{"US", "ES", "FR", "DE", "GB", "CN", "JP", "KR", "VN", "ID", "SG", "IN"},
-		DefaultAvatar:      fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
 		Tags:               []string{},
 		Languages:          []string{"en", "zh", "es", "fr", "de", "id", "ja", "ko", "ru", "vi", "pt"},
 		InitScore:          2000,
@@ -144,7 +145,6 @@ func initBuiltInUser(ctx context.Context) {
 		Type:              "normal-user",
 		Password:          "123",
 		DisplayName:       "Admin",
-		Avatar:            fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
 		Email:             "admin@example.com",
 		Phone:             "12345678910",
 		CountryCode:       "US",
@@ -516,6 +516,137 @@ func initBuiltInApiEnforcer() {
 	}
 
 	_, err = AddEnforcer(enforcer)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func CreateTables() {
+	if orm.CreateDatabase {
+		err := orm.AppOrmer.CreateDatabase()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	CreateTable(orm.AppOrmer)
+}
+
+func CreateTable(a *orm.Ormer) {
+	showSql := conf.GetConfigBool("showSql")
+	a.Engine.ShowSQL(showSql)
+
+	err := a.Engine.Sync2(new(Organization))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(User))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Group))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Role))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Domain))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Permission))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Model))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Adapter))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Enforcer))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Provider))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Application))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Resource))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Token))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Record))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(VerificationRecord))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Webhook))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Cert))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Ldap))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(RadiusAccounting))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(PermissionRule))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(xormadapter.CasbinRule))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Session))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(UserIdProvider))
 	if err != nil {
 		panic(err)
 	}

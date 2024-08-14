@@ -214,32 +214,6 @@ export const OtherProviderInfo = {
       url: "",
     },
   },
-  Payment: {
-    "Dummy": {
-      logo: `${StaticBaseUrl}/img/payment_paypal.png`,
-      url: "",
-    },
-    "Alipay": {
-      logo: `${StaticBaseUrl}/img/payment_alipay.png`,
-      url: "https://www.alipay.com/",
-    },
-    "WeChat Pay": {
-      logo: `${StaticBaseUrl}/img/payment_wechat_pay.png`,
-      url: "https://pay.weixin.qq.com/",
-    },
-    "PayPal": {
-      logo: `${StaticBaseUrl}/img/payment_paypal.png`,
-      url: "https://www.paypal.com/",
-    },
-    "Stripe": {
-      logo: `${StaticBaseUrl}/img/social_stripe.png`,
-      url: "https://stripe.com/",
-    },
-    "GC": {
-      logo: `${StaticBaseUrl}/img/payment_gc.png`,
-      url: "https://gc.org",
-    },
-  },
   Captcha: {
     "Default": {
       logo: `${StaticBaseUrl}/img/captcha_default.png`,
@@ -1059,15 +1033,6 @@ export function getProviderTypeOptions(category) {
       {id: "Aliyun IDaaS", name: "Aliyun IDaaS"},
       {id: "GenericSAML", name: "Generic"},
       {id: "Keycloak", name: "Keycloak"},
-    ]);
-  } else if (category === "Payment") {
-    return ([
-      {id: "Dummy", name: "Dummy"},
-      {id: "Alipay", name: "Alipay"},
-      {id: "WeChat Pay", name: "WeChat Pay"},
-      {id: "PayPal", name: "PayPal"},
-      {id: "Stripe", name: "Stripe"},
-      {id: "GC", name: "GC"},
     ]);
   } else if (category === "Captcha") {
     return ([

@@ -31,13 +31,12 @@ import (
 	goldap "github.com/go-ldap/ldap/v3"
 )
 
-
 type CheckUserPasswordOptions struct {
-	Lang         		      string
-	LdapId       		      string
-	EnableCaptcha 	    	  bool
-	IsSigninViaLdap 		  bool
-	IsPasswordWithLdapEnabled bool	
+	Lang                      string
+	LdapId                    string
+	EnableCaptcha             bool
+	IsSigninViaLdap           bool
+	IsPasswordWithLdapEnabled bool
 }
 
 const (
@@ -46,6 +45,8 @@ const (
 
 	DefaultFailedSigninLimit      = 5
 	DefaultFailedSigninFrozenTime = 15
+
+	builtInOrganization = "built-in"
 )
 
 func CheckUserSignup(application *Application, organization *Organization, form *form.AuthForm, lang string) string {
@@ -253,8 +254,7 @@ func CheckPasswordComplexity(user *User, password string, lang string) string {
 	return CheckPasswordComplexityByOrg(organization, password, lang)
 }
 
-
-//check user pwd only in selected ldap
+// check user pwd only in selected ldap
 func CheckLdapUserPassword(user *User, password string, lang string, ldapId string) (string, error) {
 	var ldaps []*Ldap
 	var err error
@@ -270,7 +270,7 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 	if err != nil {
 		return "", err
 	}
-	
+
 	ldapLoginSuccess := false
 	hit := false
 	var ldapServerId string
@@ -396,11 +396,11 @@ func CheckUserPassword(ctx context.Context, organization string, username string
 	enableCaptcha := false
 	isSigninViaLdap := false
 	isPasswordWithLdapEnabled := false
-	
+
 	enableCaptcha = options.EnableCaptcha
 	isSigninViaLdap = options.IsSigninViaLdap
 	isPasswordWithLdapEnabled = options.IsPasswordWithLdapEnabled
-	
+
 	user, err := GetUserByFields(organization, username)
 	if err != nil {
 		return nil, err
@@ -482,7 +482,7 @@ func CheckPassErrorToMessage(err error, lang string) string {
 	return err.Error()
 }
 
-func CheckUserPermission(requestUserId, userId string, strict bool, lang string) (bool, error) {
+func CheckUserPermission(ctx context.Context, requestUserId, userId string, strict bool, lang string) (bool, error) {
 	if requestUserId == "" {
 		return false, fmt.Errorf(i18n.Translate(lang, "general:Please login first"))
 	}
@@ -508,7 +508,21 @@ func CheckUserPermission(requestUserId, userId string, strict bool, lang string)
 
 	hasPermission := false
 	if strings.HasPrefix(requestUserId, "app/") {
-		hasPermission = true
+		requestApp, err := GetApplication(ctx, fmt.Sprintf("admin/%s", strings.Split(requestUserId, "/")[1]))
+		if err != nil {
+			return false, err
+		}
+		if requestApp == nil {
+			return false, fmt.Errorf(i18n.Translate(lang, "check:Session outdated, please login again"))
+		}
+
+		if requestApp.Organization == builtInOrganization {
+			hasPermission = true
+		}
+
+		if requestApp.Organization == userOwner {
+			hasPermission = true
+		}
 	} else {
 		requestUser, err := GetUser(requestUserId)
 		if err != nil {

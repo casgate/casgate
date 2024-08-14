@@ -15,6 +15,7 @@
 package object
 
 import (
+	"github.com/casdoor/casdoor/orm"
 	"github.com/xorm-io/xorm"
 	"github.com/xorm-io/xorm/migrate"
 )
@@ -22,7 +23,7 @@ import (
 type Migrator_1_336_0_PR_1970 struct{}
 
 func (*Migrator_1_336_0_PR_1970) IsMigrationNeeded() bool {
-	count, err := ormer.Engine.Where("password_type=? and password_salt=?", "salt", "").Count(&User{})
+	count, err := orm.AppOrmer.Engine.Where("password_type=? and password_salt=?", "salt", "").Count(&User{})
 	if err != nil {
 		// table doesn't exist
 		return false

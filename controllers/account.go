@@ -15,6 +15,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -23,6 +24,7 @@ import (
 	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 const (
@@ -126,11 +128,7 @@ func (c *ApiController) Signup() {
 		}
 	}
 
-	id, err := object.GenerateIdForNewUser(application)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
-	}
+	id := util.GenerateId()
 
 	username := authForm.Username
 	if !application.IsSignupItemVisible("Username") {
@@ -144,14 +142,6 @@ func (c *ApiController) Signup() {
 	}
 
 	userType := "normal-user"
-	if authForm.Plan != "" && authForm.Pricing != "" {
-		err = object.CheckPricingAndPlan(authForm.Organization, authForm.Pricing, authForm.Plan)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-		userType = "paid-user"
-	}
 
 	user := &object.User{
 		Owner:             authForm.Organization,
@@ -268,12 +258,6 @@ func (c *ApiController) Signup() {
 		return
 	}
 
-	err = object.AddUserToOriginalDatabase(user)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
-	}
-
 	if application.HasPromptPage() && user.Type == "normal-user" {
 		// The prompt page needs the user to be signed in
 		c.SetSessionUsername(user.GetId())
@@ -320,6 +304,9 @@ func (c *ApiController) Logout() {
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx).WithUsername(user)
 
+	logger.SetItem(goCtx, "obj-type", "application")
+	logger.SetItem(goCtx, "usr", user)
+
 	if accessToken == "" && redirectUri == "" {
 		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
 		if user == "" {
@@ -327,19 +314,28 @@ func (c *ApiController) Logout() {
 			return
 		}
 
+		logger.SetItem(goCtx, "obj", object.CasdoorApplication)
+
 		c.ClearUserSession()
 		owner, username := util.GetOwnerAndNameFromId(user)
 		_, err := object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
-
+			logLogoutErr(goCtx, fmt.Sprintf("Logout error: %s", err.Error()))
 			c.ResponseError(err.Error())
 			return
 		}
 
-		util.LogInfo(c.Ctx, "API: [%s] logged out", user)
-
 		application := c.GetSessionApplication()
+
+		if application != nil {
+			logger.SetItem(goCtx, "obj", application.GetId())
+		}
+		logger.Info(goCtx,
+			"",
+			"act", "logout",
+			"r", "success",
+		)
+
 		if application == nil || application.Name == "app-built-in" || application.HomepageUrl == "" {
 			record.AddReason("Logout error: application mismatch")
 
@@ -355,36 +351,36 @@ func (c *ApiController) Logout() {
 		// 	return
 		// }
 		if accessToken == "" {
-			record.AddReason("Logout error: missing id_token_hint")
-
+			logLogoutErr(goCtx, "Logout error: missing id_token_hint")
 			c.ResponseError(c.T("general:Missing parameter") + ": id_token_hint")
 			return
 		}
 
 		affected, application, token, err := object.ExpireTokenByAccessToken(goCtx, accessToken)
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
-
+			logLogoutErr(goCtx, fmt.Sprintf("Logout error: %s", err.Error()))
 			c.ResponseError(err.Error())
 			return
 		}
 
 		if !affected {
-			record.AddReason("Logout error: token not found, invalid access token")
-
+			logLogoutErr(goCtx, "Logout error: token not found, invalid access token")
 			c.ResponseError(c.T("token:Token not found, invalid accessToken"))
 			return
 		}
 
 		if application == nil {
-			record.AddReason(fmt.Sprintf("Logout error: application does not exist %s", token.Application))
-
+			logger.SetItem(goCtx, "obj", util.GetId(token.Organization, token.Application))
+			logLogoutErr(goCtx, fmt.Sprintf("Logout error: application does not exist %s", token.Application))
 			c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist")), token.Application)
 			return
 		}
 
+		logger.SetItem(goCtx, "obj", application.GetId())
+
 		if user == "" {
 			user = util.GetId(token.Organization, token.User)
+			logger.SetItem(goCtx, "usr", user)
 		}
 
 		c.ClearUserSession()
@@ -393,8 +389,8 @@ func (c *ApiController) Logout() {
 
 		_, err = object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
-
+			logger.SetItem(goCtx, "obj", object.CasdoorApplication)
+			logLogoutErr(goCtx, fmt.Sprintf("Logout error: %s", err.Error()))
 			c.ResponseError(err.Error())
 			return
 		}
@@ -402,19 +398,53 @@ func (c *ApiController) Logout() {
 		util.LogInfo(c.Ctx, "API: [%s] logged out", user)
 
 		if redirectUri == "" {
+			logger.Info(goCtx,
+				"",
+				"obj-type", "application",
+				"usr", user,
+				"obj", application.GetId(),
+				"act", "logout",
+				"r", "success",
+			)
 			c.ResponseOk()
 			return
 		} else {
 			if application.IsRedirectUriValid(redirectUri) {
+				logger.Info(goCtx,
+					"",
+					"obj-type", "application",
+					"usr", user,
+					"obj", application.GetId(),
+					"act", "logout",
+					"r", "success",
+				)
 				c.Ctx.Redirect(http.StatusFound, fmt.Sprintf("%s?state=%s", strings.TrimRight(redirectUri, "/"), state))
 			} else {
-				record.AddReason(fmt.Sprintf("Logout error: wrong redirect URI: %s", redirectUri))
-
+				logLogoutErr(goCtx, fmt.Sprintf("Logout error: wrong redirect URI: %s", redirectUri))
 				c.ResponseError(fmt.Sprintf(c.T("token:Redirect URI: %s doesn't exist in the allowed Redirect URI list"), redirectUri))
 				return
 			}
 		}
 	}
+}
+
+func logLogoutErr(ctx context.Context, errText string) {
+	record := object.GetRecord(ctx)
+	record.AddReason(errText)
+
+	logMsg := map[string]string{
+		"error": errText,
+	}
+
+	logMsgStr, err := json.Marshal(logMsg)
+	if err != nil {
+		return
+	}
+	logger.Error(ctx,
+		string(logMsgStr),
+		"act", "logout",
+		"r", "failure",
+	)
 }
 
 // GetAccount

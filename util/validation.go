@@ -39,7 +39,7 @@ var (
 func init() {
 	rePhone, _ = regexp.Compile(`(\d{3})\d*(\d{4})`)
 	ReWhiteSpace, _ = regexp.Compile(`\s`)
-	ReFieldWhiteList, _ = regexp.Compile("^[`A-Za-z0-9]+$")
+	ReFieldWhiteList, _ = regexp.Compile("^[A-Za-z0-9]+$")
 
 	specialSymbolsPattern := regexp.QuoteMeta(usernameAllowedSpecialSymbols)
 	ReUserName, _ = regexp.Compile(fmt.Sprintf("^([a-zA-Z0-9]+[a-zA-Z0-9\\-_%s]*[a-zA-Z0-9]+|[a-zA-Z0-9]+)$", specialSymbolsPattern))
@@ -88,7 +88,7 @@ func GetCountryCode(prefix string, phone string) (string, error) {
 	return countryCode, nil
 }
 
-func FilterField(field string) bool {
+func IsFieldValueAllowedForDB(field string) bool {
 	return ReFieldWhiteList.MatchString(field)
 }
 

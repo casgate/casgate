@@ -22,7 +22,7 @@ import (
 )
 
 func TestGenerateRsaKeys(t *testing.T) {
-	fileId := "token_jwt_key"
+	fileId := "../tmpFiles/token_jwt_key"
 	certificate, privateKey := generateRsaKeys(4096, 20, "Casdoor Cert", "Casdoor Organization")
 
 	// Write certificate (aka certificate) to file.

@@ -15,6 +15,7 @@
 package object
 
 import (
+	"github.com/casdoor/casdoor/orm"
 	"time"
 
 	"github.com/casdoor/casdoor/util"
@@ -25,7 +26,7 @@ import (
 type Migrator_1_376_2_PR_10 struct{}
 
 func (*Migrator_1_376_2_PR_10) IsMigrationNeeded() bool {
-	exist, _ := ormer.Engine.IsTableExist("domain")
+	exist, _ := orm.AppOrmer.Engine.IsTableExist("domain")
 
 	return exist
 }

@@ -100,14 +100,14 @@ func (c *ApiController) GetUsers() {
 
 	count, err := object.GetUserCount(request.Owner, request.Field, request.Value, groupName)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
 	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
 	users, err := object.GetPaginationUsers(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder, groupName)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
@@ -207,7 +207,8 @@ func (c *ApiController) GetUser() {
 
 	if !organization.IsProfilePublic {
 		requestUserId := c.GetSessionUsername()
-		hasPermission, err := object.CheckUserPermission(requestUserId, id, false, c.GetAcceptLanguage())
+		goCtx := c.getRequestCtx()
+		hasPermission, err := object.CheckUserPermission(goCtx, requestUserId, id, false, c.GetAcceptLanguage())
 		if _, ok := err.(*object.NotFoundError); ok {
 			c.ResponseNotFound(err.Error())
 			return
@@ -372,14 +373,6 @@ func (c *ApiController) UpdateUser() {
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
-	}
-
-	if affected {
-		err = object.UpdateUserToOriginalDatabase(&user)
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
 	}
 
 	record.AddOldObject(oldUser).AddReason("Update user")
@@ -587,7 +580,8 @@ func (c *ApiController) SetPassword() {
 		c.ResponseUnauthorized(c.T("general:Please login first"))
 		return
 	} else if code == "" {
-		hasPermission, err := object.CheckUserPermission(requestUserId, userId, true, c.GetAcceptLanguage())
+		goCtx := c.getRequestCtx()
+		hasPermission, err := object.CheckUserPermission(goCtx, requestUserId, userId, true, c.GetAcceptLanguage())
 		if !hasPermission {
 			c.ResponseForbidden(err.Error())
 			return

@@ -15,9 +15,11 @@
 package object
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -26,9 +28,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
+	"github.com/casdoor/casdoor/util/logger"
 	saml2 "github.com/russellhaering/gosaml2"
 	dsig "github.com/russellhaering/goxmldsig"
 )
@@ -63,9 +65,9 @@ var signatureAlgorithms = map[string]string{
 
 var samlSertRegex = regexp.MustCompile("<[[[:alpha:]]+:]?X509Certificate>([\\s\\S]*?)</[[[:alpha:]]+:]?X509Certificate>")
 
-func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*idp.UserInfo, map[string]any, error) {
+func ParseSamlResponse(ctx context.Context, samlResponse string, provider *Provider, host string) (*idp.UserInfo, map[string]any, error) {
 	samlResponse, _ = url.QueryUnescape(samlResponse)
-	sp, err := BuildSp(provider, samlResponse, host)
+	sp, err := BuildSp(ctx, provider, samlResponse, host)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -80,7 +82,7 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 		"username":    assertionInfo.NameID,
 		"displayName": fmt.Sprintf("%s %s", assertionInfo.Values.Get(defaultFirstNameOid), assertionInfo.Values.Get(defaultLastNameOid)),
 		"email":       assertionInfo.Values.Get(defaultEmailOid),
-		"avatarUrl":   fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
+		"avatarUrl":   "",
 	}
 
 	if strings.Trim(dataMap["displayName"], " ") == "" {
@@ -162,7 +164,7 @@ func getAuthData(assertionInfo *saml2.AssertionInfo, provider *Provider) map[str
 	return authData
 }
 
-func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method string, err error) {
+func GenerateSamlRequest(ctx context.Context, id, relayState, host, lang string) (auth string, method string, err error) {
 	provider, err := GetProvider(id)
 	if err != nil {
 		return "", "", err
@@ -171,7 +173,7 @@ func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method
 		return "", "", fmt.Errorf(i18n.Translate(lang, "saml_sp:provider %s's category is not SAML"), provider.Name)
 	}
 
-	sp, err := BuildSp(provider, "", host)
+	sp, err := BuildSp(ctx, provider, "", host)
 	if err != nil {
 		return "", "", err
 	}
@@ -202,7 +204,7 @@ func buildSAMLRequest(sp *saml2.SAMLServiceProvider, httpMethod string, relaySta
 	return string(postData[:]), err
 }
 
-func BuildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLServiceProvider, error) {
+func BuildSp(ctx context.Context, provider *Provider, samlResponse string, host string) (*saml2.SAMLServiceProvider, error) {
 	_, origin := getOriginFromHostWithConfPriority(host)
 
 	issuer := provider.ClientId
@@ -241,6 +243,23 @@ func BuildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 			return nil, err
 		}
 	}
+
+	if !provider.ValidateIdpSignature {
+		logMsg := map[string]string{
+			"msg": "signature validation for saml response disabled",
+		}
+		logMsgStr, err := json.Marshal(logMsg)
+		if err != nil {
+			return nil, err
+		}
+		logger.Warn(ctx,
+			string(logMsgStr),
+			"obj-type", "provider",
+			"obj", provider.GetId(),
+			"act", "login",
+		)
+	}
+
 	if provider.ValidateIdpSignature && samlResponse != "" {
 		sp.IDPCertificateStore, err = buildIdPCertificateStore(provider, samlResponse)
 		if err != nil {

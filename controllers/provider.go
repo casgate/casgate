@@ -312,6 +312,9 @@ func (c *ApiController) TestProviderConnection() {
 	c.ValidateOrganization(provider.Owner)
 	idpInfo := object.FromProviderToIdpInfo(nil, &provider)
 	idProvider := idp.GetIdProvider(idpInfo, idpInfo.RedirectUrl)
+	if provider.Type == "OpenID" {
+		object.SetHttpClientToOIDCProvider(idpInfo, idProvider)
+	}
 
 	err = idProvider.TestConnection()
 	if err != nil {
@@ -321,13 +324,10 @@ func (c *ApiController) TestProviderConnection() {
 		switch {
 		case errors.As(err, &missingParameterError):
 			c.ResponseError(c.T("general:Missing parameter"))
-			break
 		case errors.As(err, &statusError):
 			c.ResponseError(fmt.Sprintf(c.T("general:Unexpected status code %s"), err.Error()))
-			break
 		case errors.As(err, &notImplementedError):
 			c.ResponseError(c.T("general:Not implemented"))
-			break
 		default:
 			c.ResponseError(c.T(err.Error()))
 		}

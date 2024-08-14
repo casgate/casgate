@@ -18,10 +18,16 @@ package object
 
 import (
 	"crypto/tls"
+	"errors"
 
 	"github.com/casdoor/casdoor/email"
 	"github.com/casdoor/gomail/v2"
 )
+
+// We do not use the error from the net/smtp package because
+// the error from net/smtp is not exported (it is declared within the function)
+//https://github.com/golang/go/blob/master/src/net/smtp/auth.go#L68
+var ErrUnencryptedConnection = errors.New("unencrypted connection")
 
 func getDialer(provider *Provider) (*gomail.Dialer, error) {
 	dialer := &gomail.Dialer{}
@@ -66,8 +72,14 @@ func SendEmail(provider *Provider, title string, content string, dest string, se
 	if fromName == "" {
 		fromName = sender
 	}
-
-	return emailProvider.Send(fromAddress, fromName, dest, title, content)
+	err = emailProvider.Send(fromAddress, fromName, dest, title, content)
+	if err != nil {
+		if err.Error() == ErrUnencryptedConnection.Error() {
+			return ErrUnencryptedConnection
+		}
+		return err
+	}
+	return nil
 }
 
 // DailSmtpServer Dail Smtp server
@@ -79,6 +91,9 @@ func DailSmtpServer(provider *Provider) error {
 
 	sender, err := dialer.Dial()
 	if err != nil {
+		if err.Error() == ErrUnencryptedConnection.Error() {
+			return ErrUnencryptedConnection
+		}
 		return err
 	}
 	defer sender.Close()

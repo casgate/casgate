@@ -17,6 +17,7 @@ package object
 import (
 	"errors"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/builder"
@@ -48,7 +49,7 @@ type Group struct {
 type GroupNode struct{}
 
 func GetGroupCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	count, err := session.Count(&Group{})
 	if err != nil {
 		return 0, err
@@ -58,7 +59,7 @@ func GetGroupCount(owner, field, value string) (int64, error) {
 
 func GetGroups(owner string) ([]*Group, error) {
 	groups := []*Group{}
-	err := ormer.Engine.Desc("created_time").Find(&groups, &Group{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&groups, &Group{Owner: owner})
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func GetGroups(owner string) ([]*Group, error) {
 
 func GetPaginationGroups(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Group, error) {
 	groups := []*Group{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&groups)
 	if err != nil {
 		return nil, err
@@ -83,7 +84,7 @@ func getGroup(owner string, name string) (*Group, error) {
 	}
 
 	group := Group{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&group)
+	existed, err := orm.AppOrmer.Engine.Get(&group)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +125,7 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 		return false, fmt.Errorf("subGroupPermissions: %w", err)
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(group)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(group)
 	if err != nil {
 		return false, err
 	}
@@ -150,7 +151,7 @@ func AddGroup(group *Group) (bool, error) {
 		return false, err
 	}
 
-	affected, err := ormer.Engine.Insert(group)
+	affected, err := orm.AppOrmer.Engine.Insert(group)
 	if err != nil {
 		return false, err
 	}
@@ -174,7 +175,7 @@ func AddGroups(groups []*Group) (bool, error) {
 	if len(groups) == 0 {
 		return false, nil
 	}
-	affected, err := ormer.Engine.Insert(groups)
+	affected, err := orm.AppOrmer.Engine.Insert(groups)
 	if err != nil {
 		return false, err
 	}
@@ -182,12 +183,12 @@ func AddGroups(groups []*Group) (bool, error) {
 }
 
 func DeleteGroup(group *Group) (bool, error) {
-	_, err := ormer.Engine.Get(group)
+	_, err := orm.AppOrmer.Engine.Get(group)
 	if err != nil {
 		return false, err
 	}
 
-	if count, err := ormer.Engine.Where("parent_id = ?", group.Name).Count(&Group{}); err != nil {
+	if count, err := orm.AppOrmer.Engine.Where("parent_id = ?", group.Name).Count(&Group{}); err != nil {
 		return false, err
 	} else if count > 0 {
 		return false, errors.New("group has children group")
@@ -216,7 +217,7 @@ func DeleteGroup(group *Group) (bool, error) {
 		return false, fmt.Errorf("subGroupPermissions: %w", err)
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{group.Owner, group.Name}).Delete(&Group{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{group.Owner, group.Name}).Delete(&Group{})
 	if err != nil {
 		return false, err
 	}
@@ -232,7 +233,7 @@ func DeleteGroup(group *Group) (bool, error) {
 }
 
 func checkGroupName(name string) error {
-	exist, err := ormer.Engine.Exist(&Organization{Owner: "admin", Name: name})
+	exist, err := orm.AppOrmer.Engine.Exist(&Organization{Owner: "admin", Name: name})
 	if err != nil {
 		return err
 	}
@@ -317,7 +318,7 @@ func GetGroupUserCount(groupId string, field, value string) (int64, error) {
 	if field == "" && value == "" {
 		return int64(len(names)), nil
 	} else {
-		return ormer.Engine.Table("user").
+		return orm.AppOrmer.Engine.Table("user").
 			Where("owner = ?", owner).In("name", names).
 			And(builder.Like{util.CamelToSnakeCase(field), value}).
 			Count()
@@ -332,7 +333,7 @@ func GetPaginationGroupUsers(groupId string, offset, limit int, field, value, so
 		return nil, err
 	}
 
-	session := ormer.Engine.Table("user").
+	session := orm.AppOrmer.Engine.Table("user").
 		Where("owner = ?", owner).In("name", names)
 
 	if offset != -1 && limit != -1 {
@@ -365,7 +366,7 @@ func GetGroupUsers(groupId string) ([]*User, error) {
 	owner, _ := util.GetOwnerAndNameFromId(groupId)
 	names, err := userEnforcer.GetUserNamesByGroupName(groupId)
 
-	err = ormer.Engine.Where("owner = ?", owner).In("name", names).Find(&users)
+	err = orm.AppOrmer.Engine.Where("owner = ?", owner).In("name", names).Find(&users)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +374,7 @@ func GetGroupUsers(groupId string) ([]*User, error) {
 }
 
 func GroupChangeTrigger(oldName, newName string) error {
-	session := ormer.Engine.NewSession()
+	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 	err := session.Begin()
 	if err != nil {
@@ -467,7 +468,7 @@ func getGroupsInGroup(groupId string) ([]*Group, error) {
 func getGroupsByParentGroup(groupId string) ([]*Group, error) {
 	owner, parentName := util.GetOwnerAndNameFromId(groupId)
 
-	session := ormer.Engine.NewSession()
+	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	groups := []*Group{}

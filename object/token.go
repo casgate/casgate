@@ -19,6 +19,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"time"
 
 	"github.com/casdoor/casdoor/i18n"
@@ -93,19 +94,19 @@ type IntrospectionResponse struct {
 }
 
 func GetTokenCount(owner, organization, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Token{Organization: organization})
 }
 
 func GetTokens(owner string, organization string) ([]*Token, error) {
 	tokens := []*Token{}
-	err := ormer.Engine.Desc("created_time").Find(&tokens, &Token{Owner: owner, Organization: organization})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&tokens, &Token{Owner: owner, Organization: organization})
 	return tokens, err
 }
 
 func GetPaginationTokens(owner, organization string, offset, limit int, field, value, sortField, sortOrder string) ([]*Token, error) {
 	tokens := []*Token{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&tokens, &Token{Organization: organization})
 	return tokens, err
 }
@@ -116,7 +117,7 @@ func getToken(owner string, name string) (*Token, error) {
 	}
 
 	token := Token{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&token)
+	existed, err := orm.AppOrmer.Engine.Get(&token)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +131,7 @@ func getToken(owner string, name string) (*Token, error) {
 
 func getTokenByCode(code string) (*Token, error) {
 	token := Token{Code: code}
-	existed, err := ormer.Engine.Get(&token)
+	existed, err := orm.AppOrmer.Engine.Get(&token)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +144,7 @@ func getTokenByCode(code string) (*Token, error) {
 }
 
 func updateUsedByCode(token *Token) bool {
-	affected, err := ormer.Engine.Where("code=?", token.Code).Cols("code_is_used").Update(token)
+	affected, err := orm.AppOrmer.Engine.Where("code=?", token.Code).Cols("code_is_used").Update(token)
 	if err != nil {
 		panic(err)
 	}
@@ -168,7 +169,7 @@ func UpdateToken(id string, token *Token) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(token)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(token)
 	if err != nil {
 		return false, err
 	}
@@ -177,7 +178,7 @@ func UpdateToken(id string, token *Token) (bool, error) {
 }
 
 func AddToken(token *Token) (bool, error) {
-	affected, err := ormer.Engine.Insert(token)
+	affected, err := orm.AppOrmer.Engine.Insert(token)
 	if err != nil {
 		return false, err
 	}
@@ -186,7 +187,7 @@ func AddToken(token *Token) (bool, error) {
 }
 
 func DeleteToken(token *Token) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{token.Owner, token.Name}).Delete(&Token{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{token.Owner, token.Name}).Delete(&Token{})
 	if err != nil {
 		return false, err
 	}
@@ -196,7 +197,7 @@ func DeleteToken(token *Token) (bool, error) {
 
 func ExpireTokenByAccessToken(ctx context.Context, accessToken string) (bool, *Application, *Token, error) {
 	token := Token{AccessToken: accessToken}
-	existed, err := ormer.Engine.Get(&token)
+	existed, err := orm.AppOrmer.Engine.Get(&token)
 	if err != nil {
 		return false, nil, nil, err
 	}
@@ -206,7 +207,7 @@ func ExpireTokenByAccessToken(ctx context.Context, accessToken string) (bool, *A
 	}
 
 	token.ExpiresIn = 0
-	affected, err := ormer.Engine.ID(core.PK{token.Owner, token.Name}).Cols("expires_in").Update(&token)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{token.Owner, token.Name}).Cols("expires_in").Update(&token)
 	if err != nil {
 		return false, nil, nil, err
 	}
@@ -222,7 +223,7 @@ func ExpireTokenByAccessToken(ctx context.Context, accessToken string) (bool, *A
 func GetTokenByAccessToken(accessToken string) (*Token, error) {
 	// Check if the accessToken is in the database
 	token := Token{AccessToken: accessToken}
-	existed, err := ormer.Engine.Get(&token)
+	existed, err := orm.AppOrmer.Engine.Get(&token)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +237,7 @@ func GetTokenByAccessToken(accessToken string) (*Token, error) {
 
 func GetTokenByTokenAndApplication(token string, application string) (*Token, error) {
 	tokenResult := Token{}
-	existed, err := ormer.Engine.Where("(refresh_token = ? or access_token = ? ) and application = ?", token, token, application).Get(&tokenResult)
+	existed, err := orm.AppOrmer.Engine.Where("(refresh_token = ? or access_token = ? ) and application = ?", token, token, application).Get(&tokenResult)
 	if err != nil {
 		return nil, err
 	}
@@ -441,7 +442,7 @@ func RefreshToken(ctx context.Context, grantType string, refreshToken string, sc
 	}
 	// check whether the refresh token is valid, and has not expired.
 	token := Token{RefreshToken: refreshToken}
-	existed, err := ormer.Engine.Get(&token)
+	existed, err := orm.AppOrmer.Engine.Get(&token)
 	if err != nil || !existed {
 		return &TokenError{
 			Error:            InvalidGrant,
@@ -462,7 +463,7 @@ func RefreshToken(ctx context.Context, grantType string, refreshToken string, sc
 		}, nil
 	}
 	// generate a new token
-	user, err := getUser(application.Organization, token.User)
+	user, err := getUser(token.Organization, token.User)
 	if err != nil {
 		return nil, err
 	}

@@ -71,6 +71,19 @@ func (c *ApiController) ReadRequestFromQueryParams() BaseDataManageRequest {
 		Organization: c.Input().Get("organization"),
 	}
 
+	if !util.IsFieldValueAllowedForDB(result.Field) {
+		result.Field = ""
+		result.Value = ""
+	}
+
+	if !util.IsFieldValueAllowedForDB(result.SortField) {
+		result.SortField = ""
+	}
+
+	if !util.IsFieldValueAllowedForDB(result.SortOrder) {
+		result.SortOrder = ""
+	}
+
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
 
@@ -120,12 +133,11 @@ func (c *ApiController) ContinueIfHasRightsOrDenyRequest(request BaseDataManageR
 }
 
 func (c *ApiController) ValidateOrganization(organization string) {
-	globalAdmin, _ := c.isGlobalAdmin()
+	globalAdmin, user := c.isGlobalAdmin()
 	if globalAdmin {
 		return
 	}
 
-	user := c.getCurrentUser()
 	if user == nil {
 		c.CustomAbort(http.StatusUnauthorized, c.makeMessage(http.StatusUnauthorized, c.T("auth:Unauthorized operation")))
 	}

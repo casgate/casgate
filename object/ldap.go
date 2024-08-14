@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/util"
 )
@@ -67,7 +68,7 @@ func AddLdap(ldap *Ldap) (bool, error) {
 		ldap.CreatedTime = util.GetCurrentTime()
 	}
 
-	affected, err := ormer.Engine.Insert(ldap)
+	affected, err := orm.AppOrmer.Engine.Insert(ldap)
 	if err != nil {
 		return false, err
 	}
@@ -77,7 +78,7 @@ func AddLdap(ldap *Ldap) (bool, error) {
 
 func CheckLdapExist(ldap *Ldap) (bool, error) {
 	var result []*Ldap
-	err := ormer.Engine.Find(&result, &Ldap{
+	err := orm.AppOrmer.Engine.Find(&result, &Ldap{
 		Id: ldap.Id,
 	})
 	if err != nil {
@@ -93,7 +94,7 @@ func CheckLdapExist(ldap *Ldap) (bool, error) {
 
 func GetLdaps(owner string) ([]*Ldap, error) {
 	var ldaps []*Ldap
-	err := ormer.Engine.Desc("created_time").Find(&ldaps, &Ldap{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&ldaps, &Ldap{Owner: owner})
 	if err != nil {
 		return ldaps, err
 	}
@@ -102,12 +103,16 @@ func GetLdaps(owner string) ([]*Ldap, error) {
 }
 
 func GetLdap(id string) (*Ldap, error) {
+	return getLdap(id)
+}
+
+func getLdap(id string) (*Ldap, error) {
 	if util.IsStringsEmpty(id) {
 		return nil, nil
 	}
 
 	ldap := Ldap{Id: id}
-	existed, err := ormer.Engine.Get(&ldap)
+	existed, err := orm.AppOrmer.Engine.Get(&ldap)
 	if err != nil {
 		return &ldap, nil
 	}
@@ -163,7 +168,7 @@ func UpdateLdap(ldap *Ldap) (bool, error) {
 		ldap.Password = l.Password
 	}
 
-	affected, err := ormer.Engine.ID(ldap.Id).Cols("owner", "server_name", "host", "cert",
+	affected, err := orm.AppOrmer.Engine.ID(ldap.Id).Cols("owner", "server_name", "host", "cert",
 		"port", "enable_ssl", "username", "password", "base_dn", "filter", "filter_fields", "auto_sync",
 		"role_mapping_items", "enable_case_insensitivity", "enable_role_mapping", "attribute_mapping_items", "enable_attribute_mapping",
 		"enable_cryptographic_auth", "client_cert", "user_mapping_strategy").Update(ldap)
@@ -175,7 +180,7 @@ func UpdateLdap(ldap *Ldap) (bool, error) {
 }
 
 func DeleteLdap(ldap *Ldap) (bool, error) {
-	affected, err := ormer.Engine.ID(ldap.Id).Delete(&Ldap{})
+	affected, err := orm.AppOrmer.Engine.ID(ldap.Id).Delete(&Ldap{})
 	if err != nil {
 		return false, err
 	}
@@ -191,7 +196,7 @@ func GetLdapPassword(ldap Ldap) (string, error) {
 		Username: ldap.Username,
 	}
 
-	existed, err := ormer.Engine.Get(&ldapFromDB)
+	existed, err := orm.AppOrmer.Engine.Get(&ldapFromDB)
 	if err != nil {
 		return "", err
 	}
@@ -201,4 +206,11 @@ func GetLdapPassword(ldap Ldap) (string, error) {
 	}
 
 	return ldapFromDB.Password, nil
+}
+
+type LdapRepository struct {
+}
+
+func (r *LdapRepository) GetLdap(id string) (*Ldap, error) {
+	return getLdap(id)
 }

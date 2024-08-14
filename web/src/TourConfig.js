@@ -29,12 +29,6 @@ export const TourObj = {
       description: "Event systems allow you to build integrations, which subscribe to certain events on Casdoor. When one of those event is triggered, we'll send a POST json payload to the configured URL. The application parsed the json payload and carry out the hooked function. Events consist of signup, login, logout, update users, which are stored in the action field of the record. Event systems can be used to update an external issue from users.",
     },
   ],
-  syncers: [
-    {
-      title: "Syncer List",
-      description: "Casdoor stores users in user table. Don't worry about migrating your application user data into Casdoor, when you plan to use Casdoor as an authentication platform. Casdoor provides syncer to quickly help you sync user data to Casdoor.",
-    },
-  ],
   sysinfo: [
     {
       title: "CPU Usage",
@@ -60,36 +54,6 @@ export const TourObj = {
       title: "About Casdoor",
       description: "You can get more Casdoor information in this card.",
       id: "about-card",
-    },
-  ],
-  subscriptions: [
-    {
-      title: "Subscription List",
-      description: "Subscription helps to manage user's selected plan that make easy to control application's features access.",
-    },
-  ],
-  pricings: [
-    {
-      title: "Price List",
-      description: "Casdoor can be used as subscription management system via plan, pricing and subscription.",
-    },
-  ],
-  plans: [
-    {
-      title: "Plan List",
-      description: "Plan  describe list of application's features with own name and price. Plan features depends on Casdoor role with set of permissions.That allow to describe plan's features independ on naming and price. For example: plan may has diffrent prices depends on county or date.",
-    },
-  ],
-  payments: [
-    {
-      title: "Payment List",
-      description: "After the payment is successful, you can see the transaction information of the products in Payment, such as organization, user, purchase time, product name, etc.",
-    },
-  ],
-  products: [
-    {
-      title: "Session List",
-      description: "You can add the product (or service) you want to sell. The following will tell you how to add a product.",
     },
   ],
   sessions: [
@@ -158,7 +122,7 @@ export const TourObj = {
   providers: [
     {
       title: "Provider List",
-      description: "We have 6 kinds of providers:OAuth providers、SMS Providers、Email Providers、Storage Providers、Payment Provider、Captcha Provider.",
+      description: "We have 4 kinds of providers:OAuth providers、SMS Providers、Email Providers、Captcha Provider.",
     },
     {
       title: "Provider Add",
@@ -197,7 +161,7 @@ export const TourObj = {
   ],
 };
 
-export const TourUrlList = ["home", "organizations", "groups", "users", "applications", "providers", "resources", "roles", "permissions", "models", "adapters", "enforcers", "tokens", "sessions", "products", "payments", "plans", "pricings", "subscriptions", "sysinfo", "syncers", "webhooks"];
+export const TourUrlList = ["home", "organizations", "groups", "users", "applications", "providers", "roles", "permissions", "models", "adapters", "enforcers", "tokens", "sessions", "sysinfo", "webhooks"];
 
 export function getNextUrl(pathName = window.location.pathname) {
   return TourUrlList[TourUrlList.indexOf(pathName.replace("/", "")) + 1] || "";

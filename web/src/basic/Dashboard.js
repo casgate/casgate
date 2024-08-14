@@ -114,7 +114,6 @@ const Dashboard = (props) => {
         {name: i18next.t("general:Users"), type: "line", data: dashboardData.userCounts},
         {name: i18next.t("general:Providers"), type: "line", data: dashboardData.providerCounts},
         {name: i18next.t("general:Applications"), type: "line", data: dashboardData.applicationCounts},
-        {name: i18next.t("general:Subscriptions"), type: "line", data: dashboardData.subscriptionCounts},
       ],
     };
     myChart.setOption(option);
