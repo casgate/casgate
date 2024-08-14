@@ -16,7 +16,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -26,7 +25,6 @@ import (
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
-	"github.com/casdoor/casdoor/util/logger"
 	"github.com/lib/pq"
 )
 
@@ -335,34 +333,4 @@ func getInvalidSmsReceivers(smsForm SmsForm) []string {
 		}
 	}
 	return invalidReceivers
-}
-
-func logWithInfo(ctx context.Context, msg interface{}, operation OperationName, result OperationResult) {
-	logMsg, err := json.Marshal(msg)
-	if err != nil {
-		logger.Warn(
-			ctx,
-			"failed to marshal log message",
-			"act", operation,
-			"r", OperationResultFailure,
-		)
-	}
-
-	switch result {
-	case OperationResultSuccess:
-		logger.Info(
-			ctx,
-			string(logMsg),
-			"act", operation,
-			"r", result,
-		)
-
-	case OperationResultFailure:
-		logger.Error(
-			ctx,
-			string(logMsg),
-			"act", operation,
-			"r", result,
-		)
-	}
 }

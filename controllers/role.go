@@ -96,13 +96,13 @@ func (c *ApiController) UpdateRole() {
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {
-		logWithInfo(
+		logger.LogWithInfo(
 			ctx,
 			LogMsgDetailed{
 				"error": err.Error(),
 			},
-			OperationNameRoleUpdate,
-			OperationResultFailure,
+			logger.OperationNameRoleUpdate,
+			logger.OperationResultFailure,
 		)
 		c.ResponseBadRequest(err.Error())
 		return
@@ -112,13 +112,13 @@ func (c *ApiController) UpdateRole() {
 
 	roleFromDb, _ := object.GetRole(request.Id)
 	if roleFromDb == nil {
-		logWithInfo(
+		logger.LogWithInfo(
 			ctx,
 			LogMsgDetailed{
 				"error": "role not found",
 			},
-			OperationNameRoleUpdate,
-			OperationResultFailure,
+			logger.OperationNameRoleUpdate,
+			logger.OperationResultFailure,
 		)
 		c.Data["json"] = wrapActionResponse(false)
 		c.ServeJSON()
@@ -129,29 +129,29 @@ func (c *ApiController) UpdateRole() {
 	affected, err := object.UpdateRole(request.Id, &role)
 
 	if err != nil {
-		logWithInfo(
+		logger.LogWithInfo(
 			ctx,
 			LogMsgDetailed{
 				"error": err.Error(),
 			},
-			OperationNameRoleUpdate,
-			OperationResultFailure,
+			logger.OperationNameRoleUpdate,
+			logger.OperationResultFailure,
 		)
 	} else if !affected {
-		logWithInfo(
+		logger.LogWithInfo(
 			ctx,
 			LogMsgDetailed{
 				"error": "not affected",
 			},
-			OperationNameRoleUpdate,
-			OperationResultFailure,
+			logger.OperationNameRoleUpdate,
+			logger.OperationResultFailure,
 		)
 	} else {
-		logWithInfo(
+		logger.LogWithInfo(
 			ctx,
 			"",
-			OperationNameRoleUpdate,
-			OperationResultSuccess,
+			logger.OperationNameRoleUpdate,
+			logger.OperationResultSuccess,
 		)
 
 		oldUsers := make(map[string]struct{})
@@ -167,28 +167,28 @@ func (c *ApiController) UpdateRole() {
 
 		for userID := range oldUsers {
 			if _, found := newUsers[userID]; !found {
-				logWithInfo(
+				logger.LogWithInfo(
 					ctx,
 					LogMsgDetailed{
 						"info":   "role removed from user",
 						"userID": userID,
 					},
-					OperationNameRoleUpdate,
-					OperationResultSuccess,
+					logger.OperationNameRoleUpdate,
+					logger.OperationResultSuccess,
 				)
 			}
 		}
 
 		for userID := range newUsers {
 			if _, found := oldUsers[userID]; !found {
-				logWithInfo(
+				logger.LogWithInfo(
 					ctx,
 					LogMsgDetailed{
 						"info":   "role added to user",
 						"userID": userID,
 					},
-					OperationNameRoleUpdate,
-					OperationResultSuccess,
+					logger.OperationNameRoleUpdate,
+					logger.OperationResultSuccess,
 				)
 			}
 		}
