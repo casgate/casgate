@@ -44,7 +44,7 @@ func (c *ApiController) GetGroups() {
 	if limit == "" || page == "" {
 		groups, err := object.GetGroups(owner)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		} else {
 			if withTree == "true" {
@@ -57,14 +57,14 @@ func (c *ApiController) GetGroups() {
 		limit := util.ParseInt(limit)
 		count, err := object.GetGroupCount(owner, field, value)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
 		groups, err := object.GetPaginationGroups(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		} else {
 			c.ResponseOk(groups, paginator.Nums())
@@ -145,7 +145,7 @@ func (c *ApiController) AddGroup() {
 		return
 	}
 	c.ValidateOrganization(group.Owner)
-	
+
 	c.Data["json"] = wrapActionResponse(object.AddGroup(&group))
 	c.ServeJSON()
 }

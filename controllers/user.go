@@ -100,14 +100,14 @@ func (c *ApiController) GetUsers() {
 
 	count, err := object.GetUserCount(request.Owner, request.Field, request.Value, groupName)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
 	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
 	users, err := object.GetPaginationUsers(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder, groupName)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 

@@ -33,17 +33,17 @@ import (
 func (c *ApiController) GetPermissions() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	count, err := object.GetPermissionCount(request.Owner, request.Field, request.Value)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
 	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
 	permissions, err := object.GetPaginationPermissions(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
@@ -197,7 +197,7 @@ func (c *ApiController) AddPermission() {
 func (c *ApiController) DeletePermission() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	var permission object.Permission
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &permission)
 	if err != nil {

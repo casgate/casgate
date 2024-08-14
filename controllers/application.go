@@ -52,7 +52,7 @@ func (c *ApiController) GetApplications() {
 			applications, err = object.GetOrganizationApplications(request.Owner, request.Organization)
 		}
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 		c.ResponseOk(object.GetMaskedApplications(applications, userId))
@@ -60,14 +60,14 @@ func (c *ApiController) GetApplications() {
 		limit := util.ParseInt(limit)
 		count, err := object.GetOrganizationApplicationCount("admin", request.Organization, request.Field, request.Value)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
 		application, err := object.GetPaginationOrganizationApplications("admin", request.Organization, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 
