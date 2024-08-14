@@ -15,6 +15,7 @@
 package ldap
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -268,7 +269,8 @@ func GetFilteredUsers(m *ldap.Message) (filteredUsers []*object.User, code int) 
 		requestUserId := util.GetId(m.Client.OrgName, m.Client.UserName)
 		userId := util.GetId(org, name)
 
-		hasPermission, err := object.CheckUserPermission(requestUserId, userId, true, "en")
+		goCtx := context.Background()
+		hasPermission, err := object.CheckUserPermission(goCtx, requestUserId, userId, true, "en")
 		if !hasPermission {
 			log.Printf("err = %v", err.Error())
 			return nil, ldap.LDAPResultInsufficientAccessRights

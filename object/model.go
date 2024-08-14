@@ -17,6 +17,7 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casdoor/casdoor/util"
@@ -39,13 +40,13 @@ type Model struct {
 }
 
 func GetModelCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Model{})
 }
 
 func GetModels(owner string) ([]*Model, error) {
 	models := []*Model{}
-	err := ormer.Engine.Desc("created_time").Find(&models, &Model{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&models, &Model{Owner: owner})
 	if err != nil {
 		return models, err
 	}
@@ -55,7 +56,7 @@ func GetModels(owner string) ([]*Model, error) {
 
 func GetPaginationModels(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Model, error) {
 	models := []*Model{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&models)
 	if err != nil {
 		return models, err
@@ -70,7 +71,7 @@ func getModel(owner string, name string) (*Model, error) {
 	}
 
 	m := Model{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&m)
+	existed, err := orm.AppOrmer.Engine.Get(&m)
 	if err != nil {
 		return &m, err
 	}
@@ -117,7 +118,7 @@ func UpdateModel(id string, modelObj *Model) (bool, error) {
 		}
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(modelObj)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(modelObj)
 	if err != nil {
 		return false, err
 	}
@@ -141,7 +142,7 @@ func UpdateModel(id string, modelObj *Model) (bool, error) {
 }
 
 func AddModel(model *Model) (bool, error) {
-	affected, err := ormer.Engine.Insert(model)
+	affected, err := orm.AppOrmer.Engine.Insert(model)
 	if err != nil {
 		return false, err
 	}
@@ -150,7 +151,7 @@ func AddModel(model *Model) (bool, error) {
 }
 
 func DeleteModel(model *Model) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{model.Owner, model.Name}).Delete(&Model{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{model.Owner, model.Name}).Delete(&Model{})
 	if err != nil {
 		return false, err
 	}
@@ -163,7 +164,7 @@ func (m *Model) GetId() string {
 }
 
 func modelChangeTrigger(oldName string, newName string) error {
-	session := ormer.Engine.NewSession()
+	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	err := session.Begin()

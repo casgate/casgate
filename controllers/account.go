@@ -128,11 +128,7 @@ func (c *ApiController) Signup() {
 		}
 	}
 
-	id, err := object.GenerateIdForNewUser(application)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
-	}
+	id := util.GenerateId()
 
 	username := authForm.Username
 	if !application.IsSignupItemVisible("Username") {
@@ -146,14 +142,6 @@ func (c *ApiController) Signup() {
 	}
 
 	userType := "normal-user"
-	if authForm.Plan != "" && authForm.Pricing != "" {
-		err = object.CheckPricingAndPlan(authForm.Organization, authForm.Pricing, authForm.Plan)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-		userType = "paid-user"
-	}
 
 	user := &object.User{
 		Owner:             authForm.Organization,
@@ -267,12 +255,6 @@ func (c *ApiController) Signup() {
 
 	if !affected {
 		c.ResponseError(c.T("account:Failed to add user"), util.StructToJson(user))
-		return
-	}
-
-	err = object.AddUserToOriginalDatabase(user)
-	if err != nil {
-		c.ResponseError(err.Error())
 		return
 	}
 

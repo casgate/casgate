@@ -22,7 +22,6 @@ import * as UserBackend from "./backend/UserBackend";
 import i18next from "i18next";
 import BaseListPage from "./BaseListPage";
 import PopconfirmModal from "./common/modal/PopconfirmModal";
-import AccountAvatar from "./account/AccountAvatar";
 
 class UserListPage extends BaseListPage {
   constructor(props) {
@@ -70,7 +69,6 @@ class UserListPage extends BaseListPage {
       password: "123",
       passwordSalt: "",
       displayName: `New User - ${randomName}`,
-      avatar: `${Setting.StaticBaseUrl}/img/casbin.svg`,
       email: `${randomName}@example.com`,
       phone: Setting.getRandomNumber(),
       countryCode: this.state.organization.countryCodes?.length > 0 ? this.state.organization.countryCodes[0] : "",
@@ -225,19 +223,6 @@ class UserListPage extends BaseListPage {
         // width: '100px',
         sorter: true,
         ...this.getColumnSearchProps("displayName"),
-      },
-      {
-        title: i18next.t("general:Avatar"),
-        dataIndex: "avatar",
-        key: "avatar",
-        width: "80px",
-        render: (text, record, index) => {
-          return (
-            <a target="_blank" rel="noreferrer" href={text}>
-              <AccountAvatar referrerPolicy="no-referrer" src={text} alt={text} size={50} />
-            </a>
-          );
-        },
       },
       {
         title: i18next.t("general:Email"),

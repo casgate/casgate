@@ -14,7 +14,11 @@
 
 package object
 
-import "github.com/xorm-io/xorm/migrate"
+import (
+	"github.com/beego/beego"
+	"github.com/casdoor/casdoor/orm"
+	"github.com/xorm-io/xorm/migrate"
+)
 
 type Migrator interface {
 	IsMigrationNeeded() bool
@@ -36,6 +40,7 @@ func DoMigration() {
 		&Migrator_1_19504_0_PR_105{},
 		&Migrator_1_19503_0_PR_106{},
 		&Migrator_1_19505_0_PR_191{},
+		&Migrator_202407151619{},
 		// more migrators add here in chronological order...
 	}
 
@@ -52,9 +57,24 @@ func DoMigration() {
 		IDColumnName: "id",
 	}
 
-	m := migrate.New(ormer.Engine, options, migrations)
+	m := migrate.New(orm.AppOrmer.Engine, options, migrations)
 	err := m.Migrate()
 	if err != nil {
 		panic(err)
 	}
+}
+
+// InitTestConfig
+// Initialize database fixtures for testing.
+func InitTestConfig() {
+	err := beego.LoadAppConfig("ini", "../conf/app.conf")
+	if err != nil {
+		panic(err)
+	}
+
+	beego.BConfig.WebConfig.Session.SessionOn = true
+
+	orm.InitAdapter()
+	CreateTables()
+	DoMigration()
 }

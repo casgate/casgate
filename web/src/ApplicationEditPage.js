@@ -88,9 +88,6 @@ const sideTemplate = `<style>
   <span class="side-logo"> <img src="${Setting.StaticBaseUrl}/img/cg_logo.png" alt="Casgate" style="width: 120px"> 
     <span>SSO</span> 
   </span>
-  <div class="img">
-    <img src="${Setting.StaticBaseUrl}/img/casbin.svg" alt="Casdoor"/>
-  </div>
 </div>
 `;
 

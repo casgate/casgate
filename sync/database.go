@@ -35,36 +35,6 @@ type Database struct {
 	canal.DummyEventHandler
 }
 
-func newDatabase(host string, port int, database string, username string, password string) *Database {
-	db := &Database{
-		host:     host,
-		port:     port,
-		database: database,
-		username: username,
-		password: password,
-	}
-
-	dataSourceName := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username, password, host, port, database)
-	engine, err := createEngine(dataSourceName)
-	if err != nil {
-		panic(err)
-	}
-
-	db.engine = engine
-
-	db.serverId, err = getServerId(engine)
-	if err != nil {
-		panic(err)
-	}
-
-	db.serverUuid, err = getServerUuid(engine)
-	if err != nil {
-		panic(err)
-	}
-
-	return db
-}
-
 func (db *Database) getCanalConfig() *canal.Config {
 	// config canal
 	cfg := canal.NewDefaultConfig()

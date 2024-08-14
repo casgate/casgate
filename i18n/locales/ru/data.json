@@ -29,8 +29,7 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Несанкционированная операция",
     "Unknown authentication type (not password or provider), form = %s": "Неизвестный тип аутентификации (не пароль и не провайдер), форма = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
   },
   "cas": {
     "Service %s and %s do not match": "Сервисы %s и %s не совпадают"
@@ -73,6 +72,7 @@
   },
   "general": {
     "Invalid username or password/code": "Неправильное имя пользователя или пароль/код",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -106,11 +106,8 @@
   },
   "provider": {
     "Invalid application id": "Неверный идентификатор приложения",
+    "The provider's email server does not support insecure connections to the specified port": "Сервер провайдера электронной почты не поддерживает безопасное соединение с указанным портом",
     "the provider: %s does not exist": "провайдер: %s не существует"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "Пользователь равен нулю для тега: аватар",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "Имя пользователя или полный путь к файлу пусты: имя_пользователя = %s, полный_путь_к_файлу = %s"
   },
   "saml": {
     "Application %s not found": "Приложение %s не найдено"
@@ -128,7 +125,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "Объект «objectKey: %s» не разрешен",
     "The provider type: %s is not supported": "Тип поставщика: %s не поддерживается"
   },
   "token": {

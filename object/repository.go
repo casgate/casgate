@@ -33,3 +33,17 @@ type Repository interface {
 
 	UpdateEntitiesFieldValue(ctx context.Context, entityName string, fieldName, newValue string, findConditions map[string]interface{}) error
 }
+
+func InitRepo(txmanager TransactionManager, repository Repository) {
+	trm = txmanager
+	repo = repository
+}
+
+type TransactionManager interface {
+	WithTx(parentCtx context.Context, f func(ctx context.Context) error) error
+}
+
+var (
+	repo Repository         = nil
+	trm  TransactionManager = nil
+)

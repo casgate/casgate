@@ -29,8 +29,7 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Operación no autorizada",
     "Unknown authentication type (not password or provider), form = %s": "Tipo de autenticación desconocido (no es contraseña o proveedor), formulario = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
   },
   "cas": {
     "Service %s and %s do not match": "Los servicios %s y %s no coinciden"
@@ -73,6 +72,7 @@
   },
   "general": {
     "Invalid username or password/code": "Nombre de usuario o contraseña/código no válido",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -106,11 +106,8 @@
   },
   "provider": {
     "Invalid application id": "Identificación de aplicación no válida",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "El proveedor: %s no existe"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "El usuario es nulo para la etiqueta: avatar",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "Nombre de usuario o ruta completa de archivo está vacío: nombre de usuario = %s, ruta completa de archivo = %s"
   },
   "saml": {
     "Application %s not found": "Aplicación %s no encontrada"
@@ -128,7 +125,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "El objectKey: %s no está permitido",
     "The provider type: %s is not supported": "El tipo de proveedor: %s no es compatible"
   },
   "token": {

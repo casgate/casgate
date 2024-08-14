@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/casdoor/casdoor/orm"
+
 	"github.com/beego/beego"
 	"github.com/beego/beego/logs"
 	_ "github.com/beego/beego/session/redis"
@@ -30,13 +32,12 @@ import (
 	"github.com/casdoor/casdoor/repository"
 	"github.com/casdoor/casdoor/routers"
 	"github.com/casdoor/casdoor/txmanager"
-	"github.com/casdoor/casdoor/util"
 	"github.com/casdoor/casdoor/util/logger"
 )
 
 func main() {
-	object.InitFlag()
-	ormer := object.InitAdapter()
+	orm.InitFlag()
+	ormer := orm.InitAdapter()
 	trm := txmanager.NewTransactionManager(ormer.Engine)
 	repo := repository.NewRepo(trm)
 	object.InitRepo(trm, repo)
@@ -47,12 +48,9 @@ func main() {
 
 	object.InitDb(ctx)
 	object.InitFromFile(ctx)
-	object.InitDefaultStorageProvider()
 	object.InitLdapAutoSynchronizer(ctx)
 	proxy.InitHttpClient()
 	object.InitUserManager()
-
-	util.SafeGoroutine(func() { object.RunSyncUsersJob() })
 
 	// beego.DelStaticPath("/static")
 	// beego.SetStaticPath("/static", "web/build/static")

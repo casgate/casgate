@@ -157,6 +157,11 @@ func (c *ApiController) RequireSignedInUser() (*object.User, bool) {
 		return nil, false
 	}
 
+	app := c.getUserByClientIdSecret()
+	if app != nil {
+		return app, true
+	}
+
 	user, err := object.GetUser(userId)
 	if err != nil {
 		c.ResponseError(err.Error())

@@ -44,7 +44,7 @@ export const CaptchaModal = (props) => {
   }, [visible]);
 
   const handleOk = () => {
-    onOk?.(captchaType, captchaToken, clientSecret);
+    isCaptchaTokenValid() && onOk?.(captchaType, captchaToken, clientSecret);
   };
 
   const handleCancel = () => {
@@ -103,6 +103,15 @@ export const CaptchaModal = (props) => {
     );
   };
 
+  const isCaptchaTokenValid = () => {
+    if (captchaType === "Default") {
+      const regex = /^\d{5}$/;
+      return regex.test(captchaToken);
+    } else {
+      return captchaToken !== "";
+    }
+  };
+
   const onChange = (token) => {
     setCaptchaToken(token);
   };
@@ -130,19 +139,9 @@ export const CaptchaModal = (props) => {
   };
 
   const renderFooter = () => {
-    let isOkDisabled = false;
-    if (captchaType === "Default") {
-      const regex = /^\d{5}$/;
-      if (!regex.test(captchaToken)) {
-        isOkDisabled = true;
-      }
-    } else if (captchaToken === "") {
-      isOkDisabled = true;
-    }
-
     return [
       <Button key="cancel" onClick={handleCancel}>{i18next.t("general:Cancel")}</Button>,
-      <Button key="ok" disabled={isOkDisabled} type="primary" onClick={handleOk}>{i18next.t("general:OK")}</Button>,
+      <Button key="ok" disabled={!isCaptchaTokenValid()} type="primary" onClick={handleOk}>{i18next.t("general:OK")}</Button>,
     ];
   };
 

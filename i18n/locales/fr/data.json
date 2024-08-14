@@ -29,8 +29,7 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Opération non autorisée",
     "Unknown authentication type (not password or provider), form = %s": "Type d'authentification inconnu (pas de mot de passe ou de fournisseur), formulaire = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
   },
   "cas": {
     "Service %s and %s do not match": "Les services %s et %s ne correspondent pas"
@@ -73,6 +72,7 @@
   },
   "general": {
     "Invalid username or password/code": "Nom d'utilisateur ou mot de passe/code invalide",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -106,11 +106,8 @@
   },
   "provider": {
     "Invalid application id": "Identifiant d'application invalide",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "Le fournisseur : %s n'existe pas"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "L'utilisateur est nul pour la balise : avatar",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "Nom d'utilisateur ou chemin complet du fichier est vide : nom d'utilisateur = %s, chemin complet du fichier = %s"
   },
   "saml": {
     "Application %s not found": "L'application %s n'a pas été trouvée"
@@ -128,7 +125,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "La clé d'objet : %s n'est pas autorisée",
     "The provider type: %s is not supported": "Le type de fournisseur : %s n'est pas pris en charge"
   },
   "token": {

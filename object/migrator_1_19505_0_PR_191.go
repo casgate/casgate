@@ -2,6 +2,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/beego/beego/logs"
 	"github.com/xorm-io/xorm"
@@ -12,7 +13,7 @@ import (
 type Migrator_1_19505_0_PR_191 struct{}
 
 func (*Migrator_1_19505_0_PR_191) IsMigrationNeeded() bool {
-	applicationTable, err := ormer.Engine.TableInfo(&Application{})
+	applicationTable, err := orm.AppOrmer.Engine.TableInfo(&Application{})
 	if err != nil {
 		logs.Warn("Table 'Application' does not exist")
 		return false

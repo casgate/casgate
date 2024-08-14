@@ -220,24 +220,6 @@ paths:
           description: Unprocessable entity
         "500":
           description: Internal server error
-  /api/add-payment:
-    post:
-      tags:
-      - Payment API
-      description: add payment
-      operationId: ApiController.AddPayment
-      parameters:
-      - in: body
-        name: body
-        description: The details of the payment
-        required: true
-        schema:
-          $ref: '#/definitions/object.Payment'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/add-permission:
     post:
       tags:
@@ -258,60 +240,6 @@ paths:
             $ref: '#/definitions/controllers.Response'
         "400":
           description: Bad request
-  /api/add-plan:
-    post:
-      tags:
-      - Plan API
-      description: add plan
-      operationId: ApiController.AddPlan
-      parameters:
-      - in: body
-        name: body
-        description: The details of the plan
-        required: true
-        schema:
-          $ref: '#/definitions/object.Plan'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/add-pricing:
-    post:
-      tags:
-      - Pricing API
-      description: add pricing
-      operationId: ApiController.AddPricing
-      parameters:
-      - in: body
-        name: body
-        description: The details of the pricing
-        required: true
-        schema:
-          $ref: '#/definitions/object.Pricing'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/add-product:
-    post:
-      tags:
-      - Product API
-      description: add product
-      operationId: ApiController.AddProduct
-      parameters:
-      - in: body
-        name: body
-        description: The details of the product
-        required: true
-        schema:
-          $ref: '#/definitions/object.Product'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/add-provider:
     post:
       tags:
@@ -346,23 +274,6 @@ paths:
       responses:
         "200":
           description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/add-resource:
-    post:
-      tags:
-      - Resource API
-      operationId: ApiController.AddResource
-      parameters:
-      - in: body
-        name: resource
-        description: Resource object
-        required: true
-        schema:
-          $ref: '#/definitions/object.Resource'
-      responses:
-        "200":
-          description: Success or error
           schema:
             $ref: '#/definitions/controllers.Response'
   /api/add-role:
@@ -409,42 +320,6 @@ paths:
             type: array
             items:
               type: string
-  /api/add-subscription:
-    post:
-      tags:
-      - Subscription API
-      description: add subscription
-      operationId: ApiController.AddSubscription
-      parameters:
-      - in: body
-        name: body
-        description: The details of the subscription
-        required: true
-        schema:
-          $ref: '#/definitions/object.Subscription'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/add-syncer:
-    post:
-      tags:
-      - Syncer API
-      description: add syncer
-      operationId: ApiController.AddSyncer
-      parameters:
-      - in: body
-        name: body
-        description: The details of the syncer
-        required: true
-        schema:
-          $ref: '#/definitions/object.Syncer'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/add-token:
     post:
       tags:
@@ -553,28 +428,6 @@ paths:
       - in: query
         name: modelId
         description: model id
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/buy-product:
-    post:
-      tags:
-      - Product API
-      description: buy product
-      operationId: ApiController.BuyProduct
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the product
-        required: true
-        type: string
-      - in: query
-        name: providerName
-        description: The name of the provider
-        required: true
         type: string
       responses:
         "200":
@@ -809,24 +662,6 @@ paths:
             $ref: '#/definitions/controllers.Response'
         "400":
           description: Bad request
-  /api/delete-payment:
-    post:
-      tags:
-      - Payment API
-      description: delete payment
-      operationId: ApiController.DeletePayment
-      parameters:
-      - in: body
-        name: body
-        description: The details of the payment
-        required: true
-        schema:
-          $ref: '#/definitions/object.Payment'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/delete-permission:
     post:
       tags:
@@ -847,60 +682,6 @@ paths:
             $ref: '#/definitions/controllers.Response'
         "400":
           description: Bad request
-  /api/delete-plan:
-    post:
-      tags:
-      - Plan API
-      description: delete plan
-      operationId: ApiController.DeletePlan
-      parameters:
-      - in: body
-        name: body
-        description: The details of the plan
-        required: true
-        schema:
-          $ref: '#/definitions/object.Plan'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/delete-pricing:
-    post:
-      tags:
-      - Pricing API
-      description: delete pricing
-      operationId: ApiController.DeletePricing
-      parameters:
-      - in: body
-        name: body
-        description: The details of the pricing
-        required: true
-        schema:
-          $ref: '#/definitions/object.Pricing'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/delete-product:
-    post:
-      tags:
-      - Product API
-      description: delete product
-      operationId: ApiController.DeleteProduct
-      parameters:
-      - in: body
-        name: body
-        description: The details of the product
-        required: true
-        schema:
-          $ref: '#/definitions/object.Product'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/delete-provider:
     post:
       tags:
@@ -925,23 +706,6 @@ paths:
           description: Conflict
         "500":
           description: Internal server error
-  /api/delete-resource:
-    post:
-      tags:
-      - Resource API
-      operationId: ApiController.DeleteResource
-      parameters:
-      - in: body
-        name: resource
-        description: Resource object
-        required: true
-        schema:
-          $ref: '#/definitions/object.Resource'
-      responses:
-        "200":
-          description: Success or error
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/delete-role:
     post:
       tags:
@@ -981,42 +745,6 @@ paths:
             type: array
             items:
               type: string
-  /api/delete-subscription:
-    post:
-      tags:
-      - Subscription API
-      description: delete subscription
-      operationId: ApiController.DeleteSubscription
-      parameters:
-      - in: body
-        name: body
-        description: The details of the subscription
-        required: true
-        schema:
-          $ref: '#/definitions/object.Subscription'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/delete-syncer:
-    post:
-      tags:
-      - Syncer API
-      description: delete syncer
-      operationId: ApiController.DeleteSyncer
-      parameters:
-      - in: body
-        name: body
-        description: The details of the syncer
-        required: true
-        schema:
-          $ref: '#/definitions/object.Syncer'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/delete-token:
     post:
       tags:
@@ -1189,39 +917,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/Response'
-  /api/get-auth-url:
-    get:
-      tags:
-        - Login API
-      description: get auth url
-      operationId: ApiController.GetAuthURL
-      parameters:
-        - name: providerID
-          in: query
-          required: true
-          type: string
-          description: "The id ( owner/name ) of the provider"
-        - name: applicationID
-          in: query
-          required: true
-          type: string
-          description: "The id ( owner/name ) of the application"
-        - name: method
-          in: query
-          required: true
-          type: string
-          description: "Query method"
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-        "400":
-          description: Bad Request
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
   /api/get-application:
     get:
       tags:
@@ -1258,6 +953,39 @@ paths:
             type: array
             items:
               $ref: '#/definitions/object.Application'
+  /api/get-auth-url:
+    get:
+      tags:
+      - Login API
+      description: get auth url
+      operationId: ApiController.GetAuthURL
+      parameters:
+      - in: query
+        name: providerID
+        description: The id ( owner/name ) of the provider
+        required: true
+        type: string
+      - in: query
+        name: applicationID
+        description: The id ( owner/name ) of the application
+        required: true
+        type: string
+      - in: query
+        name: method
+        description: Query method
+        required: true
+        type: string
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/Response'
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
   /api/get-captcha:
     get:
       tags:
@@ -1570,6 +1298,40 @@ paths:
             type: array
             items:
               $ref: '#/definitions/LdapIdWithNameResp'
+  /api/get-ldap-sync-history:
+    get:
+      tags:
+      - Account API
+      description: get detailed ldap sync history info, with list of users and what happened to them
+      operationId: ApiController.GetLdapSyncHistory
+      parameters:
+      - in: query
+        name: id
+        description: Ldap UUID
+        required: true
+        type: string
+      - in: query
+        name: limit
+        description: Results per page
+        type: string
+        default: "10"
+      - in: query
+        name: sortOrder
+        description: descend/ascend
+        type: string
+        default: descend
+      - in: query
+        name: p
+        description: Page number
+        type: string
+        default: "1"
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ldap_sync.LdapSyncHistory'
   /api/get-ldap-users:
     get:
       tags:
@@ -1715,42 +1477,6 @@ paths:
               $ref: '#/definitions/object.Organization'
         "500":
           description: Internal server error
-  /api/get-payment:
-    get:
-      tags:
-      - Payment API
-      description: get payment
-      operationId: ApiController.GetPayment
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the payment
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Payment'
-  /api/get-payments:
-    get:
-      tags:
-      - Payment API
-      description: get payments
-      operationId: ApiController.GetPayments
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of payments
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Payment'
   /api/get-permission:
     get:
       tags:
@@ -1831,118 +1557,6 @@ paths:
           description: Unauthorized
         "500":
           description: Internal server error
-  /api/get-plan:
-    get:
-      tags:
-      - Plan API
-      description: get plan
-      operationId: ApiController.GetPlan
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the plan
-        required: true
-        type: string
-      - in: query
-        name: includeOption
-        description: Should include plan's option
-        type: boolean
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Plan'
-  /api/get-plans:
-    get:
-      tags:
-      - Plan API
-      description: get plans
-      operationId: ApiController.GetPlans
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of plans
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Plan'
-  /api/get-pricing:
-    get:
-      tags:
-      - Pricing API
-      description: get pricing
-      operationId: ApiController.GetPricing
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the pricing
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Pricing'
-  /api/get-pricings:
-    get:
-      tags:
-      - Pricing API
-      description: get pricings
-      operationId: ApiController.GetPricings
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of pricings
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Pricing'
-  /api/get-product:
-    get:
-      tags:
-      - Product API
-      description: get product
-      operationId: ApiController.GetProduct
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the product
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Product'
-  /api/get-products:
-    get:
-      tags:
-      - Product API
-      description: get products
-      operationId: ApiController.GetProducts
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of products
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Product'
   /api/get-prometheus-info:
     get:
       tags:
@@ -2042,71 +1656,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Record'
-  /api/get-resource:
-    get:
-      tags:
-      - Resource API
-      description: get resource
-      operationId: ApiController.GetResource
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of resource
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Resource'
-  /api/get-resources:
-    get:
-      tags:
-      - Resource API
-      description: get resources
-      operationId: ApiController.GetResources
-      parameters:
-      - in: query
-        name: owner
-        description: Owner
-        required: true
-        type: string
-      - in: query
-        name: user
-        description: User
-        required: true
-        type: string
-      - in: query
-        name: pageSize
-        description: Page Size
-        type: integer
-      - in: query
-        name: p
-        description: Page Number
-        type: integer
-      - in: query
-        name: field
-        description: Field
-        type: string
-      - in: query
-        name: value
-        description: Value
-        type: string
-      - in: query
-        name: sortField
-        description: Sort Field
-        type: string
-      - in: query
-        name: sortOrder
-        description: Sort Order
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Resource'
   /api/get-role:
     get:
       tags:
@@ -2215,78 +1764,6 @@ paths:
               $ref: '#/definitions/object.User'
         "500":
           description: Internal server error
-  /api/get-subscription:
-    get:
-      tags:
-      - Subscription API
-      description: get subscription
-      operationId: ApiController.GetSubscription
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the subscription
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Subscription'
-  /api/get-subscriptions:
-    get:
-      tags:
-      - Subscription API
-      description: get subscriptions
-      operationId: ApiController.GetSubscriptions
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of subscriptions
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Subscription'
-  /api/get-syncer:
-    get:
-      tags:
-      - Syncer API
-      description: get syncer
-      operationId: ApiController.GetSyncer
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the syncer
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/object.Syncer'
-  /api/get-syncers:
-    get:
-      tags:
-      - Syncer API
-      description: get syncers
-      operationId: ApiController.GetSyncers
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of syncers
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Syncer'
   /api/get-system-info:
     get:
       tags:
@@ -2447,35 +1924,6 @@ paths:
           description: '{int} int The count of filtered users for an organization'
         "500":
           description: Internal server error
-  /api/get-user-payments:
-    get:
-      tags:
-      - Payment API
-      description: get payments for a user
-      operationId: ApiController.GetUserPayments
-      parameters:
-      - in: query
-        name: owner
-        description: The owner of payments
-        required: true
-        type: string
-      - in: query
-        name: organization
-        description: The organization of the user
-        required: true
-        type: string
-      - in: query
-        name: user
-        description: The username of the user
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Payment'
   /api/get-user-tokens:
     get:
       tags:
@@ -2592,23 +2040,6 @@ paths:
       - System API
       description: check if the system is live
       operationId: ApiController.Health
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/invoice-payment:
-    post:
-      tags:
-      - Payment API
-      description: invoice payment
-      operationId: ApiController.InvoicePayment
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the payment
-        required: true
-        type: string
       responses:
         "200":
           description: The Response object
@@ -2880,24 +2311,6 @@ paths:
           description: object
           schema:
             $ref: '#/definitions/Response'
-  /api/notify-payment:
-    post:
-      tags:
-      - Payment API
-      description: notify payment
-      operationId: ApiController.NotifyPayment
-      parameters:
-      - in: body
-        name: body
-        description: The details of the payment
-        required: true
-        schema:
-          $ref: '#/definitions/object.Payment'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/recreate-api-token:
     post:
       tags:
@@ -2942,24 +2355,6 @@ paths:
       responses:
         "200":
           description: '"The Response object"'
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/run-syncer:
-    get:
-      tags:
-      - Syncer API
-      description: run syncer
-      operationId: ApiController.RunSyncer
-      parameters:
-      - in: body
-        name: body
-        description: The details of the syncer
-        required: true
-        schema:
-          $ref: '#/definitions/object.Syncer'
-      responses:
-        "200":
-          description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
   /api/send-email:
@@ -3399,29 +2794,6 @@ paths:
             $ref: '#/definitions/controllers.Response'
         "400":
           description: Bad request
-  /api/update-payment:
-    post:
-      tags:
-      - Payment API
-      description: update payment
-      operationId: ApiController.UpdatePayment
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the payment
-        required: true
-        type: string
-      - in: body
-        name: body
-        description: The details of the payment
-        required: true
-        schema:
-          $ref: '#/definitions/object.Payment'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/update-permission:
     post:
       tags:
@@ -3447,75 +2819,6 @@ paths:
             $ref: '#/definitions/controllers.Response'
         "400":
           description: Bad request
-  /api/update-plan:
-    post:
-      tags:
-      - Plan API
-      description: update plan
-      operationId: ApiController.UpdatePlan
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the plan
-        required: true
-        type: string
-      - in: body
-        name: body
-        description: The details of the plan
-        required: true
-        schema:
-          $ref: '#/definitions/object.Plan'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/update-pricing:
-    post:
-      tags:
-      - Pricing API
-      description: update pricing
-      operationId: ApiController.UpdatePricing
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the pricing
-        required: true
-        type: string
-      - in: body
-        name: body
-        description: The details of the pricing
-        required: true
-        schema:
-          $ref: '#/definitions/object.Pricing'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/update-product:
-    post:
-      tags:
-      - Product API
-      description: update product
-      operationId: ApiController.UpdateProduct
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the product
-        required: true
-        type: string
-      - in: body
-        name: body
-        description: The details of the product
-        required: true
-        schema:
-          $ref: '#/definitions/object.Product'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/update-provider:
     post:
       tags:
@@ -3537,29 +2840,6 @@ paths:
       responses:
         "200":
           description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/update-resource:
-    post:
-      tags:
-      - Resource API
-      description: get resource
-      operationId: ApiController.UpdateResource
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of resource
-        required: true
-        type: string
-      - in: body
-        name: resource
-        description: The resource object
-        required: true
-        schema:
-          $ref: '#/definitions/object.Resource'
-      responses:
-        "200":
-          description: Success or error
           schema:
             $ref: '#/definitions/controllers.Response'
   /api/update-role:
@@ -3606,52 +2886,6 @@ paths:
             type: array
             items:
               type: string
-  /api/update-subscription:
-    post:
-      tags:
-      - Subscription API
-      description: update subscription
-      operationId: ApiController.UpdateSubscription
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the subscription
-        required: true
-        type: string
-      - in: body
-        name: body
-        description: The details of the subscription
-        required: true
-        schema:
-          $ref: '#/definitions/object.Subscription'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
-  /api/update-syncer:
-    post:
-      tags:
-      - Syncer API
-      description: update syncer
-      operationId: ApiController.UpdateSyncer
-      parameters:
-      - in: query
-        name: id
-        description: The id ( owner/name ) of the syncer
-        required: true
-        type: string
-      - in: body
-        name: body
-        description: The details of the syncer
-        required: true
-        schema:
-          $ref: '#/definitions/object.Syncer'
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            $ref: '#/definitions/controllers.Response'
   /api/update-token:
     post:
       tags:
@@ -3732,58 +2966,6 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/controllers.Response'
-  /api/upload-resource:
-    post:
-      tags:
-      - Resource API
-      operationId: ApiController.UploadResource
-      parameters:
-      - in: query
-        name: owner
-        description: Owner
-        required: true
-        type: string
-      - in: query
-        name: user
-        description: User
-        required: true
-        type: string
-      - in: query
-        name: application
-        description: Application
-        required: true
-        type: string
-      - in: query
-        name: tag
-        description: Tag
-        type: string
-      - in: query
-        name: parent
-        description: Parent
-        type: string
-      - in: query
-        name: fullFilePath
-        description: Full File Path
-        required: true
-        type: string
-      - in: query
-        name: createdTime
-        description: Created Time
-        type: string
-      - in: query
-        name: description
-        description: Description
-        type: string
-      - in: formData
-        name: file
-        description: Resource file
-        required: true
-        type: file
-      responses:
-        "200":
-          description: FileUrl, objectKey
-          schema:
-            $ref: '#/definitions/object.Resource'
   /api/user:
     get:
       tags:
@@ -3806,6 +2988,23 @@ paths:
           description: The Response object
           schema:
             $ref: '#/definitions/object.Userinfo'
+  /api/v2/sync-ldap-users:
+    post:
+      tags:
+      - Account API
+      description: sync ldap users by ldap uuid
+      operationId: ApiController.SyncLdapUsersV2
+      parameters:
+      - in: body
+        name: body
+        description: "true"
+        schema:
+          $ref: '#/definitions/SyncLdapUsersRequest'
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/LdapSyncResp'
   /api/verify-captcha:
     post:
       tags:
@@ -3906,10 +3105,10 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  195958.<nil>.string:
+  228634.<nil>.string:
     title: string
     type: object
-  319386.<nil>.string:
+  315541.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -3927,6 +3126,9 @@ definitions:
   Response:
     title: Response
     type: object
+  SyncLdapUsersRequest:
+    title: SyncLdapUsersRequest
+    type: object
   casbin.Enforcer:
     title: Enforcer
     type: object
@@ -3938,6 +3140,8 @@ definitions:
     type: object
     properties:
       content:
+        type: string
+      owner:
         type: string
       provider:
         type: string
@@ -3990,6 +3194,40 @@ definitions:
   jose.JSONWebKey:
     title: JSONWebKey
     type: object
+  ldap_sync.LdapSyncHistory:
+    title: LdapSyncHistory
+    type: object
+    properties:
+      ended_at:
+        type: string
+        format: datetime
+      id:
+        type: integer
+        format: int64
+      ldap_id:
+        type: string
+      ldap_sync_id:
+        type: integer
+        format: int64
+      reason:
+        type: string
+      result:
+        type: array
+        items:
+          $ref: '#/definitions/ldap_sync.LdapSyncHistoryUser'
+      started_at:
+        type: string
+        format: datetime
+      synced_by_user_id:
+        type: string
+  ldap_sync.LdapSyncHistoryUser:
+    title: LdapSyncHistoryUser
+    type: object
+    properties:
+      Action:
+        type: string
+      UUID:
+        type: string
   model.Model:
     title: Model
     type: object
@@ -4061,6 +3299,10 @@ definitions:
         type: boolean
       enableCodeSignin:
         type: boolean
+      enableIdpSignUp:
+        type: boolean
+      enableInternalSignUp:
+        type: boolean
       enableLinkWithEmail:
         type: boolean
       enablePassword:
@@ -4068,10 +3310,6 @@ definitions:
       enablePasswordRecovery:
         type: boolean
       enableSamlCompress:
-        type: boolean
-      enableInternalSignUp:
-        type: boolean
-      enableIdpSignUp:
         type: boolean
       enableSigninSession:
         type: boolean
@@ -4393,6 +3631,8 @@ definitions:
         type: string
       enableAttributeMapping:
         type: boolean
+      enableCaseInsensitivity:
+        type: boolean
       enableCryptographicAuth:
         type: boolean
       enableRoleMapping:
@@ -4424,9 +3664,9 @@ definitions:
           $ref: '#/definitions/object.RoleMappingItem'
       serverName:
         type: string
-      username:
-        type: string
       userMappingStrategy:
+        type: string
+      username:
         type: string
   object.ManagedAccount:
     title: ManagedAccount
@@ -4479,7 +3719,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/195958.<nil>.string'
+          $ref: '#/definitions/228634.<nil>.string'
       description:
         type: string
       displayName:
@@ -4614,79 +3854,6 @@ definitions:
         $ref: '#/definitions/object.ThemeData'
       websiteUrl:
         type: string
-  object.Ormer:
-    title: Ormer
-    type: object
-    properties:
-      Engine:
-        $ref: '#/definitions/xorm.Engine'
-      dataSourceName:
-        type: string
-      dbName:
-        type: string
-      driverName:
-        type: string
-  object.Payment:
-    title: Payment
-    type: object
-    properties:
-      createdTime:
-        type: string
-      currency:
-        type: string
-      detail:
-        type: string
-      displayName:
-        type: string
-      invoiceRemark:
-        type: string
-      invoiceTaxId:
-        type: string
-      invoiceTitle:
-        type: string
-      invoiceType:
-        type: string
-      invoiceUrl:
-        type: string
-      message:
-        type: string
-      name:
-        type: string
-      outOrderId:
-        type: string
-      owner:
-        type: string
-      payUrl:
-        type: string
-      personEmail:
-        type: string
-      personIdCard:
-        type: string
-      personName:
-        type: string
-      personPhone:
-        type: string
-      price:
-        type: number
-        format: double
-      productDisplayName:
-        type: string
-      productName:
-        type: string
-      provider:
-        type: string
-      returnUrl:
-        type: string
-      state:
-        $ref: '#/definitions/pp.PaymentState'
-      successUrl:
-        type: string
-      tag:
-        type: string
-      type:
-        type: string
-      user:
-        type: string
   object.Permission:
     title: Permission
     type: object
@@ -4743,109 +3910,6 @@ definitions:
         type: array
         items:
           type: string
-  object.Plan:
-    title: Plan
-    type: object
-    properties:
-      createdTime:
-        type: string
-      currency:
-        type: string
-      description:
-        type: string
-      displayName:
-        type: string
-      isEnabled:
-        type: boolean
-      name:
-        type: string
-      options:
-        type: array
-        items:
-          type: string
-      owner:
-        type: string
-      paymentProviders:
-        type: array
-        items:
-          type: string
-      period:
-        type: string
-      price:
-        type: number
-        format: double
-      product:
-        type: string
-      role:
-        type: string
-  object.Pricing:
-    title: Pricing
-    type: object
-    properties:
-      application:
-        type: string
-      createdTime:
-        type: string
-      description:
-        type: string
-      displayName:
-        type: string
-      isEnabled:
-        type: boolean
-      name:
-        type: string
-      owner:
-        type: string
-      plans:
-        type: array
-        items:
-          type: string
-      trialDuration:
-        type: integer
-        format: int64
-  object.Product:
-    title: Product
-    type: object
-    properties:
-      createdTime:
-        type: string
-      currency:
-        type: string
-      description:
-        type: string
-      detail:
-        type: string
-      displayName:
-        type: string
-      image:
-        type: string
-      name:
-        type: string
-      owner:
-        type: string
-      price:
-        type: number
-        format: double
-      providerObjs:
-        type: array
-        items:
-          $ref: '#/definitions/object.Provider'
-      providers:
-        type: array
-        items:
-          type: string
-      quantity:
-        type: integer
-        format: int64
-      returnUrl:
-        type: string
-      sold:
-        type: integer
-        format: int64
-      state:
-        type: string
-      tag:
-        type: string
   object.PrometheusInfo:
     title: PrometheusInfo
     type: object
@@ -4967,7 +4031,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/319386.<nil>.string'
+        $ref: '#/definitions/315541.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:
@@ -5041,39 +4105,6 @@ definitions:
         type: array
         items:
           type: string
-  object.Resource:
-    title: Resource
-    type: object
-    properties:
-      application:
-        type: string
-      createdTime:
-        type: string
-      description:
-        type: string
-      fileFormat:
-        type: string
-      fileName:
-        type: string
-      fileSize:
-        type: integer
-        format: int64
-      fileType:
-        type: string
-      name:
-        type: string
-      owner:
-        type: string
-      parent:
-        type: string
-      provider:
-        type: string
-      tag:
-        type: string
-      url:
-        type: string
-      user:
-        type: string
   object.Role:
     title: Role
     type: object
@@ -5094,6 +4125,8 @@ definitions:
           type: string
       isEnabled:
         type: boolean
+      manualOverride:
+        type: boolean
       name:
         type: string
       owner:
@@ -5110,8 +4143,6 @@ definitions:
         type: array
         items:
           type: string
-      manualOverride:
-        type: boolean
   object.RoleMappingItem:
     title: RoleMappingItem
     type: object
@@ -5164,115 +4195,6 @@ definitions:
         type: string
       visible:
         type: boolean
-  object.Subscription:
-    title: Subscription
-    type: object
-    properties:
-      createdTime:
-        type: string
-      description:
-        type: string
-      displayName:
-        type: string
-      endTime:
-        type: string
-        format: datetime
-      name:
-        type: string
-      owner:
-        type: string
-      payment:
-        type: string
-      period:
-        type: string
-      plan:
-        type: string
-      pricing:
-        type: string
-      startTime:
-        type: string
-        format: datetime
-      state:
-        $ref: '#/definitions/object.SubscriptionState'
-      user:
-        type: string
-  object.SubscriptionState:
-    title: SubscriptionState
-    type: string
-    enum:
-    - SubStatePending = "Pending"
-    - SubStateError = "Error"
-    - SubStateSuspended = "Suspended"
-    - SubStateActive = "Active"
-    - SubStateUpcoming = "Upcoming"
-    - SubStateExpired = "Expired"
-    example: Pending
-  object.Syncer:
-    title: Syncer
-    type: object
-    properties:
-      affiliationTable:
-        type: string
-      avatarBaseUrl:
-        type: string
-      createdTime:
-        type: string
-      database:
-        type: string
-      databaseType:
-        type: string
-      errorText:
-        type: string
-      host:
-        type: string
-      isEnabled:
-        type: boolean
-      isReadOnly:
-        type: boolean
-      name:
-        type: string
-      organization:
-        type: string
-      owner:
-        type: string
-      password:
-        type: string
-      port:
-        type: integer
-        format: int64
-      sslMode:
-        type: string
-      syncInterval:
-        type: integer
-        format: int64
-      table:
-        type: string
-      tableColumns:
-        type: array
-        items:
-          $ref: '#/definitions/object.TableColumn'
-      type:
-        type: string
-      user:
-        type: string
-  object.TableColumn:
-    title: TableColumn
-    type: object
-    properties:
-      casdoorName:
-        type: string
-      isHashed:
-        type: boolean
-      isKey:
-        type: boolean
-      name:
-        type: string
-      type:
-        type: string
-      values:
-        type: array
-        items:
-          type: string
   object.ThemeData:
     title: ThemeData
     type: object
@@ -5520,6 +4442,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/object.ManagedAccount'
+      mappingStrategy:
+        type: string
       meetup:
         type: string
       metamask:
@@ -5666,8 +4590,6 @@ definitions:
         type: string
       zoom:
         type: string
-      mappingStrategy:
-        type: string
   object.UserApiToken:
     title: UserApiToken
     type: object
@@ -5756,16 +4678,6 @@ definitions:
         type: string
       url:
         type: string
-  pp.PaymentState:
-    title: PaymentState
-    type: string
-    enum:
-    - PaymentStatePaid = "Paid"
-    - PaymentStateCreated = "Created"
-    - PaymentStateCanceled = "Canceled"
-    - PaymentStateTimeout = "Timeout"
-    - PaymentStateError = "Error"
-    example: Paid
   protocol.CredentialAssertion:
     title: CredentialAssertion
     type: object
@@ -5777,9 +4689,6 @@ definitions:
     type: object
   protocol.CredentialCreationResponse:
     title: CredentialCreationResponse
-    type: object
-  "true":
-    title: "true"
     type: object
   util.SystemInfo:
     title: SystemInfo
@@ -5810,9 +4719,6 @@ definitions:
         type: string
   webauthn.Credential:
     title: Credential
-    type: object
-  xorm.Engine:
-    title: Engine
     type: object
   xormadapter.Adapter:
     title: Adapter
