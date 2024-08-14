@@ -4,8 +4,8 @@
     "Get init score failed, error: %w": "Не удалось получить исходный балл, ошибка: %w",
     "Please sign out first": "Пожалуйста, сначала выйдите из системы",
     "The application does not allow to sign up new account": "Приложение не позволяет зарегистрироваться новому аккаунту",
+    "User already registered": "User already registered",
     "Wrong email for invited user": "Неверный email приглашенного пользователя",
-    "Wrong user type": "Неверный тип пользователя",
     "Wrong username for invited user": "Неверное имя пользователя приглашенного пользователя",
     "organization in request differs from application organization": "Организация в запросе отличается от организации приложения"
   },

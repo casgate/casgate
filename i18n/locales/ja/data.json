@@ -4,8 +4,8 @@
     "Get init score failed, error: %w": "イニットスコアの取得に失敗しました。エラー：%w",
     "Please sign out first": "最初にサインアウトしてください",
     "The application does not allow to sign up new account": "アプリケーションは新しいアカウントの登録を許可しません",
+    "User already registered": "User already registered",
     "Wrong email for invited user": "Wrong email for invited user",
-    "Wrong user type": "Wrong user type",
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
   },

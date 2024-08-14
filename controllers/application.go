@@ -58,14 +58,14 @@ func (c *ApiController) GetApplications() {
 		c.ResponseOk(object.GetMaskedApplications(applications, userId))
 	} else {
 		limit := util.ParseInt(limit)
-		count, err := object.GetApplicationCount(request.Owner, request.Field, request.Value)
+		count, err := object.GetOrganizationApplicationCount("admin", request.Organization, request.Field, request.Value)
 		if err != nil {
 			c.ResponseDBError(err)
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		application, err := object.GetPaginationApplications(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
+		application, err := object.GetPaginationOrganizationApplications("admin", request.Organization, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
 			c.ResponseDBError(err)
 			return

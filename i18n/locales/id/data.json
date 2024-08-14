@@ -4,8 +4,8 @@
     "Get init score failed, error: %w": "Gagal mendapatkan nilai init, kesalahan: %w",
     "Please sign out first": "Silakan keluar terlebih dahulu",
     "The application does not allow to sign up new account": "Aplikasi tidak memperbolehkan untuk mendaftar akun baru",
+    "User already registered": "User already registered",
     "Wrong email for invited user": "Wrong email for invited user",
-    "Wrong user type": "Wrong user type",
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
