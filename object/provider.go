@@ -17,10 +17,11 @@ package object
 import (
 	"context"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/casdoor/casdoor/orm"
 
 	bCtx "github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/i18n"
@@ -263,13 +264,16 @@ func UpdateProvider(ctx context.Context, id string, provider *Provider) (bool, e
 
 	affected, err := session.Update(provider)
 	if err != nil {
-		logger.Error(ctx, "failed to update provider", "provider", provider.GetId())
 		return false, err
 	} else {
 		if !IsRoleMappingsEqual(provider.RoleMappingItems, p.RoleMappingItems) {
-			logger.Info(ctx, "successfully updated provider mappings", "provider", provider.GetId())
+			logger.LogWithInfo(
+				ctx,
+				"provider mappings has been updated",
+				logger.OperationNameProviderUpdate,
+				logger.OperationResultSuccess,
+			)
 		}
-		logger.Info(ctx, "successfully updated provider", "provider", provider.GetId())
 	}
 
 	return affected != 0, nil

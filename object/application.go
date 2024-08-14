@@ -538,21 +538,29 @@ func UpdateApplication(ctx context.Context, id string, application *Application)
 
 	for _, provider := range application.Providers {
 		if !oldSSOProvidersMap[provider.Name] {
-			logger.Info(
+			logger.LogWithInfo(
 				ctx,
-				"provider turned on",
-				"application", application.GetId(),
-				"provider", provider.Name)
+				logger.LogMsgDetailed{
+					"info":     "provider has been turned on",
+					"provider": provider.Name,
+				},
+				logger.OperationNameApplicationUpdate,
+				logger.OperationResultSuccess,
+			)
 		}
 	}
 
 	for _, provider := range oldApplication.Providers {
 		if !newSSOProvidersMap[provider.Name] {
-			logger.Info(
+			logger.LogWithInfo(
 				ctx,
-				"provider turned off",
-				"application", application.GetId(),
-				"provider", provider.Name)
+				logger.LogMsgDetailed{
+					"info":     "provider has been turned off",
+					"provider": provider.Name,
+				},
+				logger.OperationNameApplicationUpdate,
+				logger.OperationResultSuccess,
+			)
 		}
 	}
 
