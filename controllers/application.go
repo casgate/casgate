@@ -149,58 +149,6 @@ func (c *ApiController) GetUserApplication() {
 	c.ResponseOk(object.GetMaskedApplication(application, userId))
 }
 
-// GetOrganizationApplications
-// @Title GetOrganizationApplications
-// @Tag Application API
-// @Description get the detail of the organization's application
-// @Param   organization     query    string  true        "The organization name"
-// @Success 200 {array} object.Application The Response object
-// @router /get-organization-applications [get]
-func (c *ApiController) GetOrganizationApplications() {
-	userId := c.GetSessionUsername()
-	organization := c.Input().Get("organization")
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-
-	if organization == "" {
-		c.ResponseBadRequest(c.T("general:Missing parameter") + ": organization")
-		return
-	}
-
-	if limit == "" || page == "" {
-		applications, err := object.GetOrganizationApplications(owner, organization)
-		if err != nil {
-			c.ResponseBadRequest(err.Error())
-			return
-		}
-
-		c.ResponseOk(object.GetMaskedApplications(applications, userId))
-	} else {
-		limit := util.ParseInt(limit)
-
-		count, err := object.GetOrganizationApplicationCount(owner, organization, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		application, err := object.GetPaginationOrganizationApplications(owner, organization, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		applications := object.GetMaskedApplications(application, userId)
-		c.ResponseOk(applications, paginator.Nums())
-	}
-}
-
 // UpdateApplication
 // @Title UpdateApplication
 // @Tag Application API
