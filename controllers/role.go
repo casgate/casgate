@@ -90,7 +90,7 @@ func (c *ApiController) UpdateRole() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 	ctx := c.getRequestCtx()
 
-	logger.SetItem(ctx, "obj-type", ObjectTypeRole)
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeRole)
 	logger.SetItem(ctx, "usr", c.GetSessionUsername())
 
 	var role object.Role
@@ -98,7 +98,7 @@ func (c *ApiController) UpdateRole() {
 	if err != nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameRoleUpdate,
@@ -114,7 +114,7 @@ func (c *ApiController) UpdateRole() {
 	if roleFromDb == nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "role not found",
 			},
 			logger.OperationNameRoleUpdate,
@@ -131,7 +131,7 @@ func (c *ApiController) UpdateRole() {
 	if err != nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameRoleUpdate,
@@ -140,7 +140,7 @@ func (c *ApiController) UpdateRole() {
 	} else if !affected {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "not affected",
 			},
 			logger.OperationNameRoleUpdate,
@@ -169,7 +169,7 @@ func (c *ApiController) UpdateRole() {
 			if _, found := newUsers[userID]; !found {
 				logger.LogWithInfo(
 					ctx,
-					LogMsgDetailed{
+					logger.LogMsgDetailed{
 						"info":   "role removed from user",
 						"userID": userID,
 					},
@@ -183,7 +183,7 @@ func (c *ApiController) UpdateRole() {
 			if _, found := oldUsers[userID]; !found {
 				logger.LogWithInfo(
 					ctx,
-					LogMsgDetailed{
+					logger.LogMsgDetailed{
 						"info":   "role added to user",
 						"userID": userID,
 					},

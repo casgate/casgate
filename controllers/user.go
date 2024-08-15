@@ -312,7 +312,7 @@ func (c *ApiController) UpdateUser() {
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
 
-	logger.SetItem(goCtx, "obj-type", ObjectTypeUser)
+	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeUser)
 	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
 
 	var user object.User
@@ -320,7 +320,7 @@ func (c *ApiController) UpdateUser() {
 	if err != nil {
 		logger.LogWithInfo(
 			goCtx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameUserUpdate,
@@ -339,7 +339,7 @@ func (c *ApiController) UpdateUser() {
 		if id == "" {
 			logger.LogWithInfo(
 				goCtx,
-				LogMsgDetailed{
+				logger.LogMsgDetailed{
 					"error": "missed parameter: id",
 				},
 				logger.OperationNameUserUpdate,
@@ -354,7 +354,7 @@ func (c *ApiController) UpdateUser() {
 	if err != nil {
 		logger.LogWithInfo(
 			goCtx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameUserUpdate,
@@ -367,7 +367,7 @@ func (c *ApiController) UpdateUser() {
 	if oldUser == nil {
 		logger.LogWithInfo(
 			goCtx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "user not found",
 			},
 			logger.OperationNameUserUpdate,
@@ -380,7 +380,7 @@ func (c *ApiController) UpdateUser() {
 	if oldUser.Owner == "built-in" && oldUser.Name == "admin" && (user.Owner != "built-in" || user.Name != "admin") {
 		logger.LogWithInfo(
 			goCtx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "update admin user",
 			},
 			logger.OperationNameUserUpdate,
@@ -394,7 +394,7 @@ func (c *ApiController) UpdateUser() {
 		if user.DisplayName == "" {
 			logger.LogWithInfo(
 				goCtx,
-				LogMsgDetailed{
+				logger.LogMsgDetailed{
 					"error": "empty display name",
 				},
 				logger.OperationNameUserUpdate,
@@ -408,7 +408,7 @@ func (c *ApiController) UpdateUser() {
 	if msg := object.CheckUpdateUser(oldUser, &user, c.GetAcceptLanguage()); msg != "" {
 		logger.LogWithInfo(
 			goCtx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "validation failed",
 			},
 			logger.OperationNameUserUpdate,
@@ -422,7 +422,7 @@ func (c *ApiController) UpdateUser() {
 	if pass, err := object.CheckPermissionForUpdateUser(oldUser, &user, isAdmin, c.GetAcceptLanguage()); !pass {
 		logger.LogWithInfo(
 			goCtx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "permission check not passed",
 			},
 			logger.OperationNameUserUpdate,
@@ -441,7 +441,7 @@ func (c *ApiController) UpdateUser() {
 	if err != nil {
 		logger.LogWithInfo(
 			goCtx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameUserUpdate,
@@ -452,7 +452,7 @@ func (c *ApiController) UpdateUser() {
 	} else if !affected {
 		logger.LogWithInfo(
 			goCtx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "not affected",
 			},
 			logger.OperationNameUserUpdate,
@@ -488,7 +488,7 @@ func (c *ApiController) UpdateUser() {
 		if oldUser.Password != user.Password {
 			logger.LogWithInfo(
 				goCtx,
-				LogMsgDetailed{
+				logger.LogMsgDetailed{
 					"info":    "user's password has been changed",
 					"isAdmin": isAdmin,
 				},
@@ -526,7 +526,7 @@ func (c *ApiController) UpdateUser() {
 		if len(joinedGroups) > 0 {
 			logger.LogWithInfo(
 				goCtx,
-				LogMsgDetailed{
+				logger.LogMsgDetailed{
 					"info":   "user joined groups",
 					"groups": joinedGroups,
 				},
@@ -538,7 +538,7 @@ func (c *ApiController) UpdateUser() {
 		if len(leftGroups) > 0 {
 			logger.LogWithInfo(
 				goCtx,
-				LogMsgDetailed{
+				logger.LogMsgDetailed{
 					"info":   "user left groups",
 					"groups": leftGroups,
 				},
@@ -569,7 +569,7 @@ func (c *ApiController) AddUser() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	ctx := c.getRequestCtx()
-	logger.SetItem(ctx, "obj-type", ObjectTypeUser)
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeUser)
 	logger.SetItem(ctx, "usr", c.GetSessionUsername())
 
 	var user object.User
@@ -588,7 +588,7 @@ func (c *ApiController) AddUser() {
 	if err != nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameAddUser,
@@ -601,7 +601,7 @@ func (c *ApiController) AddUser() {
 	if err := checkQuotaForUser(int(count)); err != nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameAddUser,
@@ -615,7 +615,7 @@ func (c *ApiController) AddUser() {
 	if msg != "" {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error":   "username check failed",
 				"details": msg,
 			},
@@ -631,7 +631,7 @@ func (c *ApiController) AddUser() {
 	if err != nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameAddUser,
@@ -640,7 +640,7 @@ func (c *ApiController) AddUser() {
 	} else if !affected {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "not affected",
 			},
 			logger.OperationNameAddUser,
@@ -673,7 +673,7 @@ func (c *ApiController) DeleteUser() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	ctx := c.getRequestCtx()
-	logger.SetItem(ctx, "obj-type", ObjectTypeUser)
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeUser)
 	logger.SetItem(ctx, "usr", c.GetSessionUsername())
 
 	var user object.User
@@ -681,7 +681,7 @@ func (c *ApiController) DeleteUser() {
 	if err != nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameUserDelete,
@@ -697,7 +697,7 @@ func (c *ApiController) DeleteUser() {
 	if userFromDb == nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "failed to get user from db",
 			},
 			logger.OperationNameUserDelete,
@@ -712,7 +712,7 @@ func (c *ApiController) DeleteUser() {
 	if user.Owner == "built-in" && user.Name == "admin" {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "deleting root user",
 			},
 			logger.OperationNameUserDelete,
@@ -726,7 +726,7 @@ func (c *ApiController) DeleteUser() {
 	if err != nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameUserDelete,
@@ -735,7 +735,7 @@ func (c *ApiController) DeleteUser() {
 	} else if !affected {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "not affected",
 			},
 			logger.OperationNameUserDelete,
@@ -849,13 +849,13 @@ func (c *ApiController) SetPassword() {
 	newPassword := c.Ctx.Request.Form.Get("newPassword")
 	code := c.Ctx.Request.Form.Get("code")
 
-	logger.SetItem(ctx, "obj-type", ObjectTypeUser)
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeUser)
 	logger.SetItem(ctx, "usr", c.GetSessionUsername())
 
 	if strings.Contains(newPassword, " ") {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "password contain blank space",
 			},
 			logger.OperationNameUserDelete,
@@ -880,7 +880,7 @@ func (c *ApiController) SetPassword() {
 	if requestUserId == "" && code == "" {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "unauthrorized",
 			},
 			logger.OperationNameUserDelete,
@@ -894,7 +894,7 @@ func (c *ApiController) SetPassword() {
 		if !hasPermission {
 			logger.LogWithInfo(
 				ctx,
-				LogMsgDetailed{
+				logger.LogMsgDetailed{
 					"error": err.Error(),
 				},
 				logger.OperationNameUserDelete,
@@ -907,7 +907,7 @@ func (c *ApiController) SetPassword() {
 		if code != c.GetSession("verifiedCode") || userId != c.GetSession("verifiedUserId") {
 			logger.LogWithInfo(
 				ctx,
-				LogMsgDetailed{
+				logger.LogMsgDetailed{
 					"error": "missing parameter",
 				},
 				logger.OperationNameUserDelete,
@@ -924,7 +924,7 @@ func (c *ApiController) SetPassword() {
 	if targetUser == nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "user not found",
 			},
 			logger.OperationNameUserDelete,
@@ -936,7 +936,7 @@ func (c *ApiController) SetPassword() {
 	if err != nil {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
 			logger.OperationNameUserDelete,
@@ -949,7 +949,7 @@ func (c *ApiController) SetPassword() {
 	if targetUser.Type == "invited-user" {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": "unauthorized",
 			},
 			logger.OperationNameUserDelete,
@@ -966,7 +966,7 @@ func (c *ApiController) SetPassword() {
 			if err != nil {
 				logger.LogWithInfo(
 					ctx,
-					LogMsgDetailed{
+					logger.LogMsgDetailed{
 						"error": err.Error(),
 					},
 					logger.OperationNameUserDelete,
@@ -981,7 +981,7 @@ func (c *ApiController) SetPassword() {
 		if err != nil {
 			logger.LogWithInfo(
 				ctx,
-				LogMsgDetailed{
+				logger.LogMsgDetailed{
 					"error": err.Error(),
 				},
 				logger.OperationNameUserDelete,
@@ -996,7 +996,7 @@ func (c *ApiController) SetPassword() {
 	if msg != "" {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": msg,
 			},
 			logger.OperationNameUserDelete,
@@ -1010,7 +1010,7 @@ func (c *ApiController) SetPassword() {
 	if msg != "" {
 		logger.LogWithInfo(
 			ctx,
-			LogMsgDetailed{
+			logger.LogMsgDetailed{
 				"error": msg,
 			},
 			logger.OperationNameUserDelete,
