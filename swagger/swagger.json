@@ -2175,35 +2175,6 @@
                 }
             }
         },
-        "/api/get-organization-applications": {
-            "get": {
-                "tags": [
-                    "Application API"
-                ],
-                "description": "get the detail of the organization's application",
-                "operationId": "ApiController.GetOrganizationApplications",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "organization",
-                        "description": "The organization name",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The Response object",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/object.Application"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/get-organization-names": {
             "get": {
                 "tags": [
@@ -4752,11 +4723,11 @@
         }
     },
     "definitions": {
-        "228634.\u003cnil\u003e.string": {
+        "230728.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "315541.\u003cnil\u003e.string": {
+        "317223.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -5653,7 +5624,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/228634.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/230728.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6119,7 +6090,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/315541.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/317223.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"
