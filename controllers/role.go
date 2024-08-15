@@ -19,6 +19,7 @@ import (
 
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 // GetRoles
@@ -87,22 +88,113 @@ func (c *ApiController) GetRole() {
 func (c *ApiController) UpdateRole() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
+	ctx := c.getRequestCtx()
+
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeRole)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
 
 	var role object.Role
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &role)
 	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameRoleUpdate,
+			logger.OperationResultFailure,
+		)
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+
+	logger.SetItem(ctx, "obj", role.GetId())
+
 	roleFromDb, _ := object.GetRole(request.Id)
 	if roleFromDb == nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "role not found",
+			},
+			logger.OperationNameRoleUpdate,
+			logger.OperationResultFailure,
+		)
 		c.Data["json"] = wrapActionResponse(false)
 		c.ServeJSON()
 		return
 	}
 	c.ValidateOrganization(roleFromDb.Owner)
 
-	c.Data["json"] = wrapActionResponse(object.UpdateRole(request.Id, &role))
+	affected, err := object.UpdateRole(request.Id, &role)
+
+	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameRoleUpdate,
+			logger.OperationResultFailure,
+		)
+	} else if !affected {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "not affected",
+			},
+			logger.OperationNameRoleUpdate,
+			logger.OperationResultFailure,
+		)
+	} else {
+		logger.LogWithInfo(
+			ctx,
+			"",
+			logger.OperationNameRoleUpdate,
+			logger.OperationResultSuccess,
+		)
+
+		oldUsers := make(map[string]struct{})
+		newUsers := make(map[string]struct{})
+
+		for _, userID := range roleFromDb.Users {
+			oldUsers[userID] = struct{}{}
+		}
+
+		for _, userID := range role.Users {
+			newUsers[userID] = struct{}{}
+		}
+
+		for userID := range oldUsers {
+			if _, found := newUsers[userID]; !found {
+				logger.LogWithInfo(
+					ctx,
+					logger.LogMsgDetailed{
+						"info":   "role removed from user",
+						"userID": userID,
+					},
+					logger.OperationNameRoleUpdate,
+					logger.OperationResultSuccess,
+				)
+			}
+		}
+
+		for userID := range newUsers {
+			if _, found := oldUsers[userID]; !found {
+				logger.LogWithInfo(
+					ctx,
+					logger.LogMsgDetailed{
+						"info":   "role added to user",
+						"userID": userID,
+					},
+					logger.OperationNameRoleUpdate,
+					logger.OperationResultSuccess,
+				)
+			}
+		}
+	}
+
+	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 }
 
