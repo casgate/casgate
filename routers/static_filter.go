@@ -85,6 +85,10 @@ func fastAutoSignin(ctx *context.Context) (string, error) {
 		return "", nil
 	}
 
+	if application.Organization != util.GetOwnerFromId(userId) {
+		return "", nil
+	}
+
 	code, err := object.GetOAuthCode(userId, clientId, responseType, redirectUri, scope, state, nonce, codeChallenge, ctx.Request.Host, sid, getAcceptLanguage(ctx))
 	if err != nil {
 		return "", err
