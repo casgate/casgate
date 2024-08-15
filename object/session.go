@@ -15,7 +15,9 @@
 package object
 
 import (
+	"context"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/beego/beego"
 	"github.com/casdoor/casdoor/util"
@@ -40,9 +42,9 @@ func GetSessions(owner string) ([]*Session, error) {
 	sessions := []*Session{}
 	var err error
 	if owner != "" {
-		err = ormer.Engine.Desc("created_time").Where("owner = ?", owner).Find(&sessions)
+		err = orm.AppOrmer.Engine.Desc("created_time").Where("owner = ?", owner).Find(&sessions)
 	} else {
-		err = ormer.Engine.Desc("created_time").Find(&sessions)
+		err = orm.AppOrmer.Engine.Desc("created_time").Find(&sessions)
 	}
 	if err != nil {
 		return sessions, err
@@ -53,7 +55,7 @@ func GetSessions(owner string) ([]*Session, error) {
 
 func GetPaginationSessions(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Session, error) {
 	sessions := []*Session{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&sessions)
 	if err != nil {
 		return sessions, err
@@ -63,14 +65,14 @@ func GetPaginationSessions(owner string, offset, limit int, field, value, sortFi
 }
 
 func GetSessionCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Session{})
 }
 
 func GetSingleSession(id string) (*Session, error) {
 	owner, name, application := util.GetOwnerAndNameAndOtherFromId(id)
 	session := Session{Owner: owner, Name: name, Application: application}
-	get, err := ormer.Engine.Get(&session)
+	get, err := orm.AppOrmer.Engine.Get(&session)
 	if err != nil {
 		return &session, err
 	}
@@ -91,7 +93,7 @@ func UpdateSession(id string, session *Session) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name, application}).Update(session)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name, application}).Update(session)
 	if err != nil {
 		return false, err
 	}
@@ -114,7 +116,7 @@ func AddSession(session *Session) (bool, error) {
 	if dbSession == nil {
 		session.CreatedTime = util.GetCurrentTime()
 
-		affected, err := ormer.Engine.Insert(session)
+		affected, err := orm.AppOrmer.Engine.Insert(session)
 		if err != nil {
 			return false, err
 		}
@@ -137,10 +139,10 @@ func AddSession(session *Session) (bool, error) {
 	}
 }
 
-func DeleteSession(id string) (bool, error) {
+func DeleteSession(ctx context.Context, id string) (bool, error) {
 	owner, name, applicationName := util.GetOwnerAndNameAndOtherFromId(id)
 
-	application, err := GetApplication(util.GetId("admin", applicationName))
+	application, err := GetApplication(ctx, util.GetId("admin", applicationName))
 	if err != nil {
 		return false, err
 	}
@@ -156,7 +158,7 @@ func DeleteSession(id string) (bool, error) {
 		}
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name, application.Name}).Delete(&Session{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name, application.Name}).Delete(&Session{})
 	if err != nil {
 		return false, err
 	}
@@ -164,7 +166,7 @@ func DeleteSession(id string) (bool, error) {
 	return affected != 0, nil
 }
 
-func DeleteSessionId(id string, sessionId string) (bool, error) {
+func DeleteSessionId(ctx context.Context, id string, sessionId string) (bool, error) {
 	session, err := GetSingleSession(id)
 	if err != nil {
 		return false, err
@@ -180,7 +182,7 @@ func DeleteSessionId(id string, sessionId string) (bool, error) {
 
 	session.SessionId = util.DeleteVal(session.SessionId, sessionId)
 	if len(session.SessionId) == 0 {
-		return DeleteSession(id)
+		return DeleteSession(ctx, id)
 	} else {
 		return UpdateSession(id, session)
 	}

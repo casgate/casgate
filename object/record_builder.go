@@ -82,6 +82,17 @@ func (rb *RecordBuilder) WithResponse(response string) *RecordBuilder {
 }
 
 func (rb *RecordBuilder) AddReason(detail string) *RecordBuilder {
+	if rb.record == nil {
+		rb.record = &Record{
+			Name:        util.GenerateId(),
+			CreatedTime: util.GetCurrentTime(),
+		}
+	}
+
+	if rb.record.Detail == nil {
+		rb.setDefaultFieldValues()
+	}
+
 	rb.record.Detail.Reasons = append(rb.record.Detail.Reasons, detail)
 
 	return rb
@@ -115,10 +126,13 @@ func GetRecord(ctx goCtx.Context) *RecordBuilder {
 
 	logs.Error("extract record from context: %s", err.Error())
 
-	return &RecordBuilder{}
+	return NewRecordBuilder()
 }
 
-var ErrExtractRecordFromCtx = errors.New("extract record from ctx")
+var (
+	ErrExtractRecordFromCtx = errors.New("record is not present")
+	ErrCastingToRecord      = errors.New("casting to record")
+)
 
 func extractRecordFromCtx(goCtx goCtx.Context) (*RecordBuilder, error) {
 	recordVal := goCtx.Value(RecordDataKey)
@@ -129,7 +143,7 @@ func extractRecordFromCtx(goCtx goCtx.Context) (*RecordBuilder, error) {
 
 	rb, ok := recordVal.(*RecordBuilder)
 	if !ok {
-		return nil, ErrExtractRecordFromCtx
+		return nil, ErrCastingToRecord
 	}
 
 	return rb, nil

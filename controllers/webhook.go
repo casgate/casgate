@@ -31,6 +31,9 @@ import (
 // @router /get-webhooks [get]
 // @Security test_apiKey
 func (c *ApiController) GetWebhooks() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	owner := c.Input().Get("owner")
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
@@ -76,9 +79,12 @@ func (c *ApiController) GetWebhooks() {
 // @Success 200 {object} object.Webhook The Response object
 // @router /get-webhook [get]
 func (c *ApiController) GetWebhook() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	webhook, err := object.GetWebhook(id)
+	webhook, err := object.GetWebhook(request.Id)
+	c.ValidateOrganization(webhook.Organization)
+
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -96,7 +102,8 @@ func (c *ApiController) GetWebhook() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-webhook [post]
 func (c *ApiController) UpdateWebhook() {
-	id := c.Input().Get("id")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	var webhook object.Webhook
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &webhook)
@@ -104,8 +111,17 @@ func (c *ApiController) UpdateWebhook() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(webhook.Organization)
 
-	c.Data["json"] = wrapActionResponse(object.UpdateWebhook(id, &webhook))
+	webhookFromDb, _ := object.GetWebhook(request.Id)
+	if webhookFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(webhookFromDb.Organization)
+
+	c.Data["json"] = wrapActionResponse(object.UpdateWebhook(request.Id, &webhook))
 	c.ServeJSON()
 }
 
@@ -117,12 +133,16 @@ func (c *ApiController) UpdateWebhook() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-webhook [post]
 func (c *ApiController) AddWebhook() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var webhook object.Webhook
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &webhook)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(webhook.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.AddWebhook(&webhook))
 	c.ServeJSON()
@@ -136,12 +156,21 @@ func (c *ApiController) AddWebhook() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-webhook [post]
 func (c *ApiController) DeleteWebhook() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var webhook object.Webhook
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &webhook)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	webhookFromDb, _ := object.GetWebhook(webhook.GetId())
+	if webhookFromDb == nil {
+		c.ResponseBadRequest("webhook does't exist")
+		return
+	}
+	c.ValidateOrganization(webhookFromDb.Organization)
 
 	c.Data["json"] = wrapActionResponse(object.DeleteWebhook(&webhook))
 	c.ServeJSON()

@@ -15,6 +15,7 @@
 package object
 
 import (
+	"github.com/casdoor/casdoor/orm"
 	"strings"
 
 	"github.com/xorm-io/xorm"
@@ -24,9 +25,9 @@ import (
 type Migrator_1_101_0_PR_1083 struct{}
 
 func (*Migrator_1_101_0_PR_1083) IsMigrationNeeded() bool {
-	exist1, _ := ormer.Engine.IsTableExist("model")
-	exist2, _ := ormer.Engine.IsTableExist("permission")
-	exist3, _ := ormer.Engine.IsTableExist("permission_rule")
+	exist1, _ := orm.AppOrmer.Engine.IsTableExist("model")
+	exist2, _ := orm.AppOrmer.Engine.IsTableExist("permission")
+	exist3, _ := orm.AppOrmer.Engine.IsTableExist("permission_rule")
 
 	if exist1 && exist2 && exist3 {
 		return true

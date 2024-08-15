@@ -26,7 +26,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
 	saml2 "github.com/russellhaering/gosaml2"
@@ -80,7 +79,7 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 		"username":    assertionInfo.NameID,
 		"displayName": fmt.Sprintf("%s %s", assertionInfo.Values.Get(defaultFirstNameOid), assertionInfo.Values.Get(defaultLastNameOid)),
 		"email":       assertionInfo.Values.Get(defaultEmailOid),
-		"avatarUrl":   fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
+		"avatarUrl":   "",
 	}
 
 	if strings.Trim(dataMap["displayName"], " ") == "" {

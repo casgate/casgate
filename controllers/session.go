@@ -30,43 +30,28 @@ import (
 // @Success 200 {array} string The Response object
 // @router /get-sessions [get]
 func (c *ApiController) GetSessions() {
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-	owner := c.Input().Get("owner")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	if !c.IsGlobalAdmin() && owner == "" {
+	if !c.IsGlobalAdmin() && request.Owner == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
-
-	if limit == "" || page == "" {
-		sessions, err := object.GetSessions(owner)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(sessions)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetSessionCount(owner, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		sessions, err := object.GetPaginationSessions(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(sessions, paginator.Nums())
+	
+	count, err := object.GetSessionCount(request.Owner, request.Field, request.Value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
 	}
+
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	sessions, err := object.GetPaginationSessions(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.ResponseOk(sessions, paginator.Nums())
 }
 
 // GetSingleSession
@@ -77,9 +62,10 @@ func (c *ApiController) GetSessions() {
 // @Success 200 {array} string The Response object
 // @router /get-session [get]
 func (c *ApiController) GetSingleSession() {
-	id := c.Input().Get("sessionPkId")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	session, err := object.GetSingleSession(id)
+	session, err := object.GetSingleSession(request.Id)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -96,12 +82,23 @@ func (c *ApiController) GetSingleSession() {
 // @Success 200 {array} string The Response object
 // @router /update-session [post]
 func (c *ApiController) UpdateSession() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var session object.Session
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &session)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	sessionFromDb, _ := object.GetSingleSession(util.GetSessionId(session.Owner, session.Name, session.Application))
+	if sessionFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(sessionFromDb.Owner) 
 
 	c.Data["json"] = wrapActionResponse(object.UpdateSession(util.GetSessionId(session.Owner, session.Name, session.Application), &session))
 	c.ServeJSON()
@@ -116,6 +113,9 @@ func (c *ApiController) UpdateSession() {
 // @Success 200 {array} string The Response object
 // @router /add-session [post]
 func (c *ApiController) AddSession() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var session object.Session
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &session)
 	if err != nil {
@@ -135,6 +135,10 @@ func (c *ApiController) AddSession() {
 // @Success 200 {array} string The Response object
 // @router /delete-session [post]
 func (c *ApiController) DeleteSession() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
+	ctx := c.getRequestCtx()
 	var session object.Session
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &session)
 	if err != nil {
@@ -142,7 +146,15 @@ func (c *ApiController) DeleteSession() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.DeleteSession(util.GetSessionId(session.Owner, session.Name, session.Application)))
+	sessionFromDb, _ := object.GetSingleSession(util.GetSessionId(session.Owner, session.Name, session.Application))
+	if sessionFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(sessionFromDb.Owner) 
+
+	c.Data["json"] = wrapActionResponse(object.DeleteSession(ctx, util.GetSessionId(session.Owner, session.Name, session.Application)))
 	c.ServeJSON()
 }
 
@@ -155,6 +167,9 @@ func (c *ApiController) DeleteSession() {
 // @Success 200 {array} string The Response object
 // @router /is-session-duplicated [get]
 func (c *ApiController) IsSessionDuplicated() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	id := c.Input().Get("sessionPkId")
 	sessionId := c.Input().Get("sessionId")
 

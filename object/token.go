@@ -15,9 +15,11 @@
 package object
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"time"
 
 	"github.com/casdoor/casdoor/i18n"
@@ -92,19 +94,19 @@ type IntrospectionResponse struct {
 }
 
 func GetTokenCount(owner, organization, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Token{Organization: organization})
 }
 
 func GetTokens(owner string, organization string) ([]*Token, error) {
 	tokens := []*Token{}
-	err := ormer.Engine.Desc("created_time").Find(&tokens, &Token{Owner: owner, Organization: organization})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&tokens, &Token{Owner: owner, Organization: organization})
 	return tokens, err
 }
 
 func GetPaginationTokens(owner, organization string, offset, limit int, field, value, sortField, sortOrder string) ([]*Token, error) {
 	tokens := []*Token{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&tokens, &Token{Organization: organization})
 	return tokens, err
 }
@@ -115,7 +117,7 @@ func getToken(owner string, name string) (*Token, error) {
 	}
 
 	token := Token{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&token)
+	existed, err := orm.AppOrmer.Engine.Get(&token)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +131,7 @@ func getToken(owner string, name string) (*Token, error) {
 
 func getTokenByCode(code string) (*Token, error) {
 	token := Token{Code: code}
-	existed, err := ormer.Engine.Get(&token)
+	existed, err := orm.AppOrmer.Engine.Get(&token)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +144,7 @@ func getTokenByCode(code string) (*Token, error) {
 }
 
 func updateUsedByCode(token *Token) bool {
-	affected, err := ormer.Engine.Where("code=?", token.Code).Cols("code_is_used").Update(token)
+	affected, err := orm.AppOrmer.Engine.Where("code=?", token.Code).Cols("code_is_used").Update(token)
 	if err != nil {
 		panic(err)
 	}
@@ -167,7 +169,7 @@ func UpdateToken(id string, token *Token) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(token)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(token)
 	if err != nil {
 		return false, err
 	}
@@ -176,7 +178,7 @@ func UpdateToken(id string, token *Token) (bool, error) {
 }
 
 func AddToken(token *Token) (bool, error) {
-	affected, err := ormer.Engine.Insert(token)
+	affected, err := orm.AppOrmer.Engine.Insert(token)
 	if err != nil {
 		return false, err
 	}
@@ -185,7 +187,7 @@ func AddToken(token *Token) (bool, error) {
 }
 
 func DeleteToken(token *Token) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{token.Owner, token.Name}).Delete(&Token{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{token.Owner, token.Name}).Delete(&Token{})
 	if err != nil {
 		return false, err
 	}
@@ -193,9 +195,9 @@ func DeleteToken(token *Token) (bool, error) {
 	return affected != 0, nil
 }
 
-func ExpireTokenByAccessToken(accessToken string) (bool, *Application, *Token, error) {
+func ExpireTokenByAccessToken(ctx context.Context, accessToken string) (bool, *Application, *Token, error) {
 	token := Token{AccessToken: accessToken}
-	existed, err := ormer.Engine.Get(&token)
+	existed, err := orm.AppOrmer.Engine.Get(&token)
 	if err != nil {
 		return false, nil, nil, err
 	}
@@ -205,12 +207,12 @@ func ExpireTokenByAccessToken(accessToken string) (bool, *Application, *Token, e
 	}
 
 	token.ExpiresIn = 0
-	affected, err := ormer.Engine.ID(core.PK{token.Owner, token.Name}).Cols("expires_in").Update(&token)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{token.Owner, token.Name}).Cols("expires_in").Update(&token)
 	if err != nil {
 		return false, nil, nil, err
 	}
 
-	application, err := getApplication(token.Owner, token.Application)
+	application, err := getApplication(ctx, token.Owner, token.Application, nil)
 	if err != nil {
 		return false, nil, nil, err
 	}
@@ -221,7 +223,7 @@ func ExpireTokenByAccessToken(accessToken string) (bool, *Application, *Token, e
 func GetTokenByAccessToken(accessToken string) (*Token, error) {
 	// Check if the accessToken is in the database
 	token := Token{AccessToken: accessToken}
-	existed, err := ormer.Engine.Get(&token)
+	existed, err := orm.AppOrmer.Engine.Get(&token)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +237,7 @@ func GetTokenByAccessToken(accessToken string) (*Token, error) {
 
 func GetTokenByTokenAndApplication(token string, application string) (*Token, error) {
 	tokenResult := Token{}
-	existed, err := ormer.Engine.Where("(refresh_token = ? or access_token = ? ) and application = ?", token, token, application).Get(&tokenResult)
+	existed, err := orm.AppOrmer.Engine.Where("(refresh_token = ? or access_token = ? ) and application = ?", token, token, application).Get(&tokenResult)
 	if err != nil {
 		return nil, err
 	}
@@ -247,12 +249,12 @@ func GetTokenByTokenAndApplication(token string, application string) (*Token, er
 	return &tokenResult, nil
 }
 
-func CheckOAuthLogin(clientId string, responseType string, redirectUri string, scope string, state string, lang string) (string, *Application, error) {
+func CheckOAuthLogin(ctx context.Context, clientId string, responseType string, redirectUri string, scope string, state string, lang string) (string, *Application, error) {
 	if responseType != "code" && responseType != "token" && responseType != "id_token" {
 		return fmt.Sprintf(i18n.Translate(lang, "token:Grant_type: %s is not supported in this application"), responseType), nil, nil
 	}
 
-	application, err := GetApplicationByClientId(clientId)
+	application, err := GetApplicationByClientId(ctx, clientId)
 	if err != nil {
 		return "", nil, err
 	}
@@ -289,7 +291,7 @@ func GetOAuthCode(userId string, clientId string, responseType string, redirectU
 		}, nil
 	}
 
-	msg, application, err := CheckOAuthLogin(clientId, responseType, redirectUri, scope, state, lang)
+	msg, application, err := CheckOAuthLogin(context.Background(), clientId, responseType, redirectUri, scope, state, lang)
 	if err != nil {
 		return nil, err
 	}
@@ -342,8 +344,8 @@ func GetOAuthCode(userId string, clientId string, responseType string, redirectU
 	}, nil
 }
 
-func GetOAuthToken(grantType string, clientId string, clientSecret string, code string, verifier string, scope string, username string, password string, host string, refreshToken string, tag string, avatar string, lang string) (interface{}, error) {
-	application, err := GetApplicationByClientId(clientId)
+func GetOAuthToken(ctx context.Context, grantType string, clientId string, clientSecret string, code string, verifier string, scope string, username string, password string, host string, refreshToken string, tag string, avatar string, lang string) (interface{}, error) {
+	application, err := GetApplicationByClientId(ctx, clientId)
 	if err != nil {
 		return nil, err
 	}
@@ -370,11 +372,11 @@ func GetOAuthToken(grantType string, clientId string, clientSecret string, code 
 	case "authorization_code": // Authorization Code Grant
 		token, tokenError, err = GetAuthorizationCodeToken(application, clientSecret, code, verifier)
 	case "password": //	Resource Owner Password Credentials Grant
-		token, tokenError, err = GetPasswordToken(application, username, password, scope, host)
+		token, tokenError, err = GetPasswordToken(ctx, application, username, password, scope, host)
 	case "client_credentials": // Client Credentials Grant
 		token, tokenError, err = GetClientCredentialsToken(application, clientSecret, scope, host)
 	case "refresh_token":
-		refreshToken2, err := RefreshToken(grantType, refreshToken, scope, clientId, clientSecret, host)
+		refreshToken2, err := RefreshToken(ctx, grantType, refreshToken, scope, clientId, clientSecret, host)
 		if err != nil {
 			return nil, err
 		}
@@ -387,7 +389,7 @@ func GetOAuthToken(grantType string, clientId string, clientSecret string, code 
 
 	if tag == "wechat_miniprogram" {
 		// Wechat Mini Program
-		token, tokenError, err = GetWechatMiniProgramToken(application, code, host, username, avatar, lang)
+		token, tokenError, err = GetWechatMiniProgramToken(ctx, application, code, host, username, avatar, lang)
 		if err != nil {
 			return nil, err
 		}
@@ -413,7 +415,7 @@ func GetOAuthToken(grantType string, clientId string, clientSecret string, code 
 	return tokenWrapper, nil
 }
 
-func RefreshToken(grantType string, refreshToken string, scope string, clientId string, clientSecret string, host string) (interface{}, error) {
+func RefreshToken(ctx context.Context, grantType string, refreshToken string, scope string, clientId string, clientSecret string, host string) (interface{}, error) {
 	// check parameters
 	if grantType != "refresh_token" {
 		return &TokenError{
@@ -421,7 +423,7 @@ func RefreshToken(grantType string, refreshToken string, scope string, clientId 
 			ErrorDescription: "grant_type should be refresh_token",
 		}, nil
 	}
-	application, err := GetApplicationByClientId(clientId)
+	application, err := GetApplicationByClientId(ctx, clientId)
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +442,7 @@ func RefreshToken(grantType string, refreshToken string, scope string, clientId 
 	}
 	// check whether the refresh token is valid, and has not expired.
 	token := Token{RefreshToken: refreshToken}
-	existed, err := ormer.Engine.Get(&token)
+	existed, err := orm.AppOrmer.Engine.Get(&token)
 	if err != nil || !existed {
 		return &TokenError{
 			Error:            InvalidGrant,
@@ -461,7 +463,7 @@ func RefreshToken(grantType string, refreshToken string, scope string, clientId 
 		}, nil
 	}
 	// generate a new token
-	user, err := getUser(application.Organization, token.User)
+	user, err := getUser(token.Organization, token.User)
 	if err != nil {
 		return nil, err
 	}
@@ -616,7 +618,7 @@ func GetAuthorizationCodeToken(application *Application, clientSecret string, co
 
 // GetPasswordToken
 // Resource Owner Password Credentials flow
-func GetPasswordToken(application *Application, username string, password string, scope string, host string) (*Token, *TokenError, error) {
+func GetPasswordToken(ctx context.Context, application *Application, username string, password string, scope string, host string) (*Token, *TokenError, error) {
 	user, err := getUser(application.Organization, username)
 	if err != nil {
 		return nil, nil, err
@@ -630,9 +632,9 @@ func GetPasswordToken(application *Application, username string, password string
 	}
 
 	if user.Ldap != "" {
-		_, err = CheckLdapUserPassword(user, password, "en")
+		_, err = CheckLdapUserPassword(user, password, "en", "")
 	} else {
-		err = CheckPassword(user, password, "en")
+		err = CheckPassword(ctx, user, password, "en")
 	}
 	if err != nil {
 		return nil, &TokenError{
@@ -771,7 +773,7 @@ func GetTokenByUser(application *Application, user *User, scope string, host str
 
 // GetWechatMiniProgramToken
 // Wechat Mini Program flow
-func GetWechatMiniProgramToken(application *Application, code string, host string, username string, avatar string, lang string) (*Token, *TokenError, error) {
+func GetWechatMiniProgramToken(ctx context.Context, application *Application, code string, host string, username string, avatar string, lang string) (*Token, *TokenError, error) {
 	mpProvider := GetWechatMiniProgramProvider(application)
 	if mpProvider == nil {
 		return nil, &TokenError{
@@ -837,7 +839,7 @@ func GetWechatMiniProgramToken(application *Application, code string, host strin
 				UserPropertiesWechatUnionId: unionId,
 			},
 		}
-		_, err = AddUser(user)
+		_, err = AddUser(ctx, user)
 		if err != nil {
 			return nil, nil, err
 		}

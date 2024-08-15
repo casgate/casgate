@@ -35,15 +35,13 @@ import (
 // @Success 200 {array} object.Provider The Response object
 // @router /get-providers [get]
 func (c *ApiController) GetProviders() {
-	owner := c.Input().Get("owner")
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
 
-	if !c.IsGlobalAdmin() && owner == "" {
+	if !c.IsGlobalAdmin() && request.Owner == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
@@ -54,7 +52,7 @@ func (c *ApiController) GetProviders() {
 	}
 
 	if limit == "" || page == "" {
-		providers, err := object.GetProviders(owner)
+		providers, err := object.GetProviders(request.Owner)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -63,14 +61,14 @@ func (c *ApiController) GetProviders() {
 		c.ResponseOk(object.GetMaskedProviders(providers, isMaskEnabled))
 	} else {
 		limit := util.ParseInt(limit)
-		count, err := object.GetProviderCount(owner, field, value)
+		count, err := object.GetProviderCount(request.Owner, request.Field, request.Value)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		paginationProviders, err := object.GetPaginationProviders(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
+		paginationProviders, err := object.GetPaginationProviders(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -88,12 +86,11 @@ func (c *ApiController) GetProviders() {
 // @Success 200 {array} object.Provider The Response object
 // @router /get-global-providers [get]
 func (c *ApiController) GetGlobalProviders() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	limit := c.Input().Get("pageSize")
 	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
 
 	ok, isMaskEnabled := c.IsMaskedEnabled()
 	if !ok {
@@ -110,14 +107,14 @@ func (c *ApiController) GetGlobalProviders() {
 		c.ResponseOk(object.GetMaskedProviders(globalProviders, isMaskEnabled))
 	} else {
 		limit := util.ParseInt(limit)
-		count, err := object.GetGlobalProviderCount(field, value)
+		count, err := object.GetGlobalProviderCount(request.Field, request.Value)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		paginationGlobalProviders, err := object.GetPaginationGlobalProviders(paginator.Offset(), limit, field, value, sortField, sortOrder)
+		paginationGlobalProviders, err := object.GetPaginationGlobalProviders(paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -147,6 +144,10 @@ func (c *ApiController) GetProvider() {
 		c.ResponseError(err.Error())
 		return
 	}
+	if provider == nil {
+		c.ResponseOk()
+		return
+	}
 
 	c.ResponseOk(object.GetMaskedProvider(provider, isMaskEnabled))
 }
@@ -171,6 +172,7 @@ func (c *ApiController) UpdateProvider() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(provider.Owner)
 
 	for _, roleMappingItem := range provider.RoleMappingItems {
 		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
@@ -206,6 +208,8 @@ func (c *ApiController) AddProvider() {
 		return
 	}
 
+	c.ValidateOrganization(provider.Owner)
+
 	count, err := object.GetProviderCount("", "", "")
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -240,6 +244,7 @@ func (c *ApiController) DeleteProvider() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+	c.ValidateOrganization(provider.Owner)
 
 	applications, err := object.CountApplicatoinsByProvider(provider.Name)
 	if err != nil {
@@ -300,8 +305,12 @@ func (c *ApiController) TestProviderConnection() {
 		c.ResponseError(err.Error())
 		return
 	}
+	c.ValidateOrganization(provider.Owner)
 	idpInfo := object.FromProviderToIdpInfo(nil, &provider)
 	idProvider := idp.GetIdProvider(idpInfo, idpInfo.RedirectUrl)
+	if provider.Type == "OpenID" {
+		object.SetHttpClientToOIDCProvider(idpInfo, idProvider)
+	}
 
 	err = idProvider.TestConnection()
 	if err != nil {
@@ -311,13 +320,10 @@ func (c *ApiController) TestProviderConnection() {
 		switch {
 		case errors.As(err, &missingParameterError):
 			c.ResponseError(c.T("general:Missing parameter"))
-			break
 		case errors.As(err, &statusError):
 			c.ResponseError(fmt.Sprintf(c.T("general:Unexpected status code %s"), err.Error()))
-			break
 		case errors.As(err, &notImplementedError):
 			c.ResponseError(c.T("general:Not implemented"))
-			break
 		default:
 			c.ResponseError(c.T(err.Error()))
 		}

@@ -15,6 +15,8 @@
 package object
 
 import (
+	"context"
+
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
 )
@@ -28,17 +30,14 @@ type InitData struct {
 	Ldaps         []*Ldap         `json:"ldaps"`
 	Models        []*Model        `json:"models"`
 	Permissions   []*Permission   `json:"permissions"`
-	Payments      []*Payment      `json:"payments"`
-	Products      []*Product      `json:"products"`
 	Resources     []*Resource     `json:"resources"`
 	Roles         []*Role         `json:"roles"`
 	Domains       []*Domain       `json:"domains"`
-	Syncers       []*Syncer       `json:"syncers"`
 	Tokens        []*Token        `json:"tokens"`
 	Webhooks      []*Webhook      `json:"webhooks"`
 }
 
-func InitFromFile() {
+func InitFromFile(ctx context.Context) {
 	initDataFile := conf.GetConfigString("initDataFile")
 	if initDataFile == "" {
 		return
@@ -57,10 +56,10 @@ func InitFromFile() {
 			initDefinedProvider(provider)
 		}
 		for _, user := range initData.Users {
-			initDefinedUser(user)
+			initDefinedUser(ctx, user)
 		}
 		for _, application := range initData.Applications {
-			initDefinedApplication(application)
+			initDefinedApplication(ctx, application)
 		}
 		for _, cert := range initData.Certs {
 			initDefinedCert(cert)
@@ -74,12 +73,6 @@ func InitFromFile() {
 		for _, permission := range initData.Permissions {
 			initDefinedPermission(permission)
 		}
-		for _, payment := range initData.Payments {
-			initDefinedPayment(payment)
-		}
-		for _, product := range initData.Products {
-			initDefinedProduct(product)
-		}
 		for _, resource := range initData.Resources {
 			initDefinedResource(resource)
 		}
@@ -88,9 +81,6 @@ func InitFromFile() {
 		}
 		for _, domain := range initData.Domains {
 			initDefinedDomain(domain)
-		}
-		for _, syncer := range initData.Syncers {
-			initDefinedSyncer(syncer)
 		}
 		for _, token := range initData.Tokens {
 			initDefinedToken(token)
@@ -117,12 +107,9 @@ func readInitDataFromFile(filePath string) (*InitData, error) {
 		Ldaps:         []*Ldap{},
 		Models:        []*Model{},
 		Permissions:   []*Permission{},
-		Payments:      []*Payment{},
-		Products:      []*Product{},
 		Resources:     []*Resource{},
 		Roles:         []*Role{},
 		Domains:       []*Domain{},
-		Syncers:       []*Syncer{},
 		Tokens:        []*Token{},
 		Webhooks:      []*Webhook{},
 	}
@@ -176,11 +163,6 @@ func readInitDataFromFile(filePath string) (*InitData, error) {
 			role.Users = []string{}
 		}
 	}
-	for _, syncer := range data.Syncers {
-		if syncer.TableColumns == nil {
-			syncer.TableColumns = []*TableColumn{}
-		}
-	}
 	for _, webhook := range data.Webhooks {
 		if webhook.Events == nil {
 			webhook.Events = []string{}
@@ -219,8 +201,8 @@ func initDefinedOrganization(organization *Organization) {
 	}
 }
 
-func initDefinedApplication(application *Application) {
-	existed, err := getApplication(application.Owner, application.Name)
+func initDefinedApplication(ctx context.Context, application *Application) {
+	existed, err := getApplication(ctx, application.Owner, application.Name, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -229,13 +211,13 @@ func initDefinedApplication(application *Application) {
 		return
 	}
 	application.CreatedTime = util.GetCurrentTime()
-	_, err = AddApplication(application)
+	_, err = AddApplication(ctx, application)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func initDefinedUser(user *User) {
+func initDefinedUser(ctx context.Context, user *User) {
 	existed, err := getUser(user.Owner, user.Name)
 	if err != nil {
 		panic(err)
@@ -246,7 +228,7 @@ func initDefinedUser(user *User) {
 	user.CreatedTime = util.GetCurrentTime()
 	user.Id = util.GenerateId()
 	user.Properties = make(map[string]string)
-	_, err = AddUser(user)
+	_, err = AddUser(ctx, user)
 	if err != nil {
 		panic(err)
 	}
@@ -330,38 +312,6 @@ func initDefinedPermission(permission *Permission) {
 	}
 }
 
-func initDefinedPayment(payment *Payment) {
-	existed, err := GetPayment(payment.GetId())
-	if err != nil {
-		panic(err)
-	}
-
-	if existed != nil {
-		return
-	}
-	payment.CreatedTime = util.GetCurrentTime()
-	_, err = AddPayment(payment)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func initDefinedProduct(product *Product) {
-	existed, err := GetProduct(product.GetId())
-	if err != nil {
-		panic(err)
-	}
-
-	if existed != nil {
-		return
-	}
-	product.CreatedTime = util.GetCurrentTime()
-	_, err = AddProduct(product)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func initDefinedResource(resource *Resource) {
 	existed, err := GetResource(resource.GetId())
 	if err != nil {
@@ -405,22 +355,6 @@ func initDefinedDomain(domain *Domain) {
 	}
 	domain.CreatedTime = util.GetCurrentTime()
 	_, err = AddDomain(domain)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func initDefinedSyncer(syncer *Syncer) {
-	existed, err := GetSyncer(syncer.GetId())
-	if err != nil {
-		panic(err)
-	}
-
-	if existed != nil {
-		return
-	}
-	syncer.CreatedTime = util.GetCurrentTime()
-	_, err = AddSyncer(syncer)
 	if err != nil {
 		panic(err)
 	}

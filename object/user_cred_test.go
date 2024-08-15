@@ -24,8 +24,8 @@ func TestSaltedPasswordsGeneration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			organization := Organization{PasswordType: tt.name}
-			user1.UpdateUserPassword(&organization)
-			user2.UpdateUserPassword(&organization)
+			_ = user1.UpdateUserPassword(&organization)
+			_ = user2.UpdateUserPassword(&organization)
 			if user1.Password == user2.Password {
 				t.Error("Password hashes should be different but they are the same")
 			}

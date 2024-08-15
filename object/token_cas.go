@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"crypto"
 	"encoding/base64"
 	"encoding/json"
@@ -244,7 +245,7 @@ func GenerateCasToken(userId string, service string) (string, error) {
 @ret2: the service URL who requested to issue this token
 @ret3: error
 */
-func GetValidationBySaml(samlRequest string, host string) (string, string, error) {
+func GetValidationBySaml(ctx context.Context, samlRequest string, host string) (string, string, error) {
 	var request Saml11Request
 	err := xml.Unmarshal([]byte(samlRequest), &request)
 	if err != nil {
@@ -270,7 +271,7 @@ func GetValidationBySaml(samlRequest string, host string) (string, string, error
 		return "", "", fmt.Errorf("user %s found", userId)
 	}
 
-	application, err := GetApplicationByUser(user)
+	application, err := GetApplicationByUser(ctx, user)
 	if err != nil {
 		return "", "", err
 	}
@@ -293,9 +294,9 @@ func GetValidationBySaml(samlRequest string, host string) (string, string, error
 		X509Certificate: certificate,
 	}
 
-	ctx := dsig.NewDefaultSigningContext(randomKeyStore)
-	ctx.Hash = crypto.SHA1
-	signedXML, err := ctx.SignEnveloped(samlResponse)
+	sigCtx := dsig.NewDefaultSigningContext(randomKeyStore)
+	sigCtx.Hash = crypto.SHA1
+	signedXML, err := sigCtx.SignEnveloped(samlResponse)
 	if err != nil {
 		return "", "", fmt.Errorf("err: %s", err.Error())
 	}

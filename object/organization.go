@@ -17,6 +17,7 @@ package object
 import (
 	"context"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"strconv"
 
 	"github.com/casdoor/casdoor/conf"
@@ -80,19 +81,19 @@ type Organization struct {
 }
 
 func GetOrganizationCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Organization{})
 }
 
 func GetOrganizations(owner string, name ...string) ([]*Organization, error) {
 	organizations := []*Organization{}
 	if name != nil && len(name) > 0 {
-		err := ormer.Engine.Desc("created_time").Where(builder.In("name", name)).Find(&organizations)
+		err := orm.AppOrmer.Engine.Desc("created_time").Where(builder.In("name", name)).Find(&organizations)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err := ormer.Engine.Desc("created_time").Find(&organizations, &Organization{Owner: owner})
+		err := orm.AppOrmer.Engine.Desc("created_time").Find(&organizations, &Organization{Owner: owner})
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +104,7 @@ func GetOrganizations(owner string, name ...string) ([]*Organization, error) {
 
 func GetOrganizationsByFields(owner string, fields ...string) ([]*Organization, error) {
 	organizations := []*Organization{}
-	err := ormer.Engine.Desc("created_time").Cols(fields...).Find(&organizations, &Organization{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Cols(fields...).Find(&organizations, &Organization{Owner: owner})
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +114,7 @@ func GetOrganizationsByFields(owner string, fields ...string) ([]*Organization, 
 
 func GetPaginationOrganizations(owner string, name string, offset, limit int, field, value, sortField, sortOrder string) ([]*Organization, error) {
 	organizations := []*Organization{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	var err error
 	if name != "" {
 		err = session.Find(&organizations, &Organization{Name: name})
@@ -133,7 +134,7 @@ func getOrganization(owner string, name string) (*Organization, error) {
 	}
 
 	organization := Organization{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&organization)
+	existed, err := orm.AppOrmer.Engine.Get(&organization)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +257,7 @@ func AddOrganization(organization *Organization) (bool, error) {
 	if organization.PasswordSpecialChars == "" {
 		organization.PasswordSpecialChars = DefaultOrganizationPasswordSpecialChars
 	}
-	affected, err := ormer.Engine.Insert(organization)
+	affected, err := orm.AppOrmer.Engine.Insert(organization)
 	if err != nil {
 		return false, err
 	}
@@ -264,12 +265,21 @@ func AddOrganization(organization *Organization) (bool, error) {
 	return affected != 0, nil
 }
 
-func DeleteOrganization(organization *Organization) (bool, error) {
+func DeleteOrganization(lang string, organization *Organization) (bool, error) {
 	if organization.Name == "built-in" {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{organization.Owner, organization.Name}).Delete(&Organization{})
+	hasDependencies, err := HasOrganizationDependencies(organization.Name)
+	if err != nil {
+		return false, err
+	}
+
+	if hasDependencies {
+		return false, fmt.Errorf(i18n.Translate(lang, "util:The organization %s has dependencies and cannot be deleted"), organization.DisplayName)
+	}
+
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{organization.Owner, organization.Name}).Delete(&Organization{})
 	if err != nil {
 		return false, err
 	}
@@ -317,7 +327,7 @@ func CheckAccountItemModifyRule(accountItem *AccountItem, isAdmin bool, lang str
 	return true, ""
 }
 
-func GetDefaultApplication(id string) (*Application, error) {
+func GetDefaultApplication(ctx context.Context, id string) (*Application, error) {
 	organization, err := GetOrganization(id)
 	if err != nil {
 		return nil, err
@@ -328,7 +338,7 @@ func GetDefaultApplication(id string) (*Application, error) {
 	}
 
 	if organization.DefaultApplication != "" {
-		defaultApplication, err := getApplication("admin", organization.DefaultApplication)
+		defaultApplication, err := getApplication(ctx, "admin", organization.DefaultApplication, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -341,7 +351,7 @@ func GetDefaultApplication(id string) (*Application, error) {
 	}
 
 	applications := []*Application{}
-	err = ormer.Engine.Asc("created_time").Find(&applications, &Application{Organization: organization.Name})
+	err = orm.AppOrmer.Engine.Asc("created_time").Find(&applications, &Application{Organization: organization.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +368,7 @@ func GetDefaultApplication(id string) (*Application, error) {
 		}
 	}
 
-	err = extendApplicationWithProviders(defaultApplication)
+	err = extendApplicationWithProviders(ctx, defaultApplication, false)
 	if err != nil {
 		return nil, err
 	}
@@ -501,21 +511,6 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 	}
 
 	err = repo.UpdateEntitiesFieldValue(ctx, "model", "owner", newName, map[string]interface{}{"owner": oldName})
-	if err != nil {
-		return err
-	}
-
-	err = repo.UpdateEntitiesFieldValue(ctx, "payment", "owner", newName, map[string]interface{}{"owner": oldName})
-	if err != nil {
-		return err
-	}
-
-	err = repo.UpdateEntitiesFieldValue(ctx, "resource", "owner", newName, map[string]interface{}{"owner": oldName})
-	if err != nil {
-		return err
-	}
-
-	err = repo.UpdateEntitiesFieldValue(ctx, "syncer", "organization", newName, map[string]interface{}{"organization": oldName})
 	if err != nil {
 		return err
 	}

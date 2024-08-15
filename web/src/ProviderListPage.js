@@ -56,6 +56,7 @@ class ProviderListPage extends BaseListPage {
       host: "",
       port: 0,
       providerUrl: "https://github.com/organizations/xxx/settings/applications/1234567",
+      userMappingStrategy: "all",
     };
   }
 
@@ -150,7 +151,6 @@ class ProviderListPage extends BaseListPage {
           {text: "Email", value: "Email"},
           {text: "Notification", value: "Notification"},
           {text: "OAuth", value: "OAuth"},
-          {text: "Payment", value: "Payment"},
           {text: "SAML", value: "SAML"},
           {text: "SMS", value: "SMS"},
           {text: "Storage", value: "Storage"},
@@ -181,7 +181,6 @@ class ProviderListPage extends BaseListPage {
           {text: "Email", value: "Email", children: Setting.getProviderTypeOptions("Email").map((o) => {return {text: o.id, value: o.name};})},
           {text: "Notification", value: "Notification", children: Setting.getProviderTypeOptions("Notification").map((o) => {return {text: o.id, value: o.name};})},
           {text: "OAuth", value: "OAuth", children: Setting.getProviderTypeOptions("OAuth").map((o) => {return {text: o.id, value: o.name};})},
-          {text: "Payment", value: "Payment", children: Setting.getProviderTypeOptions("Payment").map((o) => {return {text: o.id, value: o.name};})},
           {text: "SAML", value: "SAML", children: Setting.getProviderTypeOptions("SAML").map((o) => {return {text: o.id, value: o.name};})},
           {text: "SMS", value: "SMS", children: Setting.getProviderTypeOptions("SMS").map((o) => {return {text: o.id, value: o.name};})},
           {text: "Storage", value: "Storage", children: Setting.getProviderTypeOptions("Storage").map((o) => {return {text: o.id, value: o.name};})},

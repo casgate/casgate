@@ -29,9 +29,21 @@ import (
 // @Failure 500 Internal Server Error
 // @router /add-api-token [post]
 func (c *ApiController) AddApiToken() {
+	ctx := c.getRequestCtx()
 	owner := c.Input().Get("owner")
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
+	if owner == "" {
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
+		return
+	}
+
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
 		return
 	}
 
@@ -42,10 +54,18 @@ func (c *ApiController) AddApiToken() {
 		c.ResponseInternalServerError("Internal server error")
 		return
 	}
+	c.ValidateOrganization(user.Owner)
+
+	currentUser := c.getCurrentUser()
+	isSelfOrAdmin := currentUser.Id == user.Id || currentUser.IsAdmin
+	if !isSelfOrAdmin {
+		logs.Error("add api token for user: %s. Only self or admin can release token", user.Name)
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+	}
 
 	tokenUser := object.MakeUserForToken(user)
 
-	affected, err := object.AddUser(tokenUser)
+	affected, err := object.AddUser(ctx, tokenUser)
 	if err != nil {
 		logs.Error("token creation: %s", err.Error())
 
@@ -67,7 +87,7 @@ func (c *ApiController) AddApiToken() {
 // @Tag Api Token API
 // @Description delete api token
 // @Param owner query string true "The owner of token"
-// @Param api_token string true "The user api token"
+// @Param api_token query string true "The user api token"
 // @Success 200 Ok
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
@@ -75,8 +95,19 @@ func (c *ApiController) AddApiToken() {
 // @router /delete-api-token [post]
 func (c *ApiController) DeleteApiToken() {
 	owner := c.Input().Get("owner")
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
+	if owner == "" { 
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
+		return
+	}
+
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
 		return
 	}
 
@@ -86,12 +117,25 @@ func (c *ApiController) DeleteApiToken() {
 		return
 	}
 
+	isValid = object.ValidateToken(token)
+	if !isValid {
+		c.ResponseUnprocessableEntity("token is invalid")
+		return
+	}
+
 	user, err := object.GetUser(owner)
 	if err != nil {
 		logs.Error("get user: %s", err.Error())
 
 		c.ResponseInternalServerError("Internal server error")
 		return
+	}
+	c.ValidateOrganization(user.Owner)
+	currentUser := c.getCurrentUser()
+	isSelfOrAdmin := currentUser.Id == user.Id || currentUser.IsAdmin
+	if !isSelfOrAdmin {
+		logs.Error("delete api token for user: %s. Only self or admin can delete token", user.Name)
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 	}
 
 	affected, err := object.DeleteApiToken(user, token)
@@ -116,7 +160,7 @@ func (c *ApiController) DeleteApiToken() {
 // @Tag Api Token API
 // @Description recreate api token
 // @Param owner query string true "The owner of token"
-// @Param api_token string true "The user api token"
+// @Param api_token query string true "The user api token"
 // @Success 200 {object} object.UserApiToken The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
@@ -124,14 +168,32 @@ func (c *ApiController) DeleteApiToken() {
 // @router /recreate-api-token [post]
 func (c *ApiController) RecreateApiToken() {
 	owner := c.Input().Get("owner")
-	if !c.IsGlobalAdmin() && owner == "" {
-		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
+	if owner == "" {
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
+		return
+	}
+	c.ValidateOrganization(owner)
+
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
 		return
 	}
 
 	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
+		return
+	}
+
+	isValid = object.ValidateToken(token)
+	if !isValid {
+		c.ResponseUnprocessableEntity("token is invalid")
 		return
 	}
 
@@ -157,6 +219,15 @@ func (c *ApiController) RecreateApiToken() {
 		return
 	}
 
+	c.ValidateOrganization(tokenOwner.Owner)
+
+	currentUser := c.getCurrentUser()
+	isSelfOrAdmin := currentUser.Id == tokenOwner.Id || currentUser.IsAdmin
+	if !isSelfOrAdmin {
+		logs.Error("recreate api token for user: %s. Only self or admin can recreate token", tokenOwner.Name)
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+	}
+
 	if apiTokenUser.Tag != object.MakeTokenUserTag(tokenOwner) {
 		logs.Error("token owner mismatch")
 
@@ -179,16 +250,22 @@ func (c *ApiController) RecreateApiToken() {
 // @Title GetUserByApiToken
 // @Tag Api Token API
 // @Description get user by API token
-// @Param api_token string true "The user api token"
+// @Param api_token query string true "The user api token"
 // @Success 200 {object} object.User The Response object
 // @Failure 403 Unauthorized operation
 // @Failure 422 Unprocessable entity
 // @Failure 500 Internal Server Error
-// @router /get-user-by-api-token [post]
+// @router /get-user-by-api-token [get]
 func (c *ApiController) GetUserByApiToken() {
 	token := c.Input().Get("api_token")
 	if token == "" {
 		c.ResponseUnprocessableEntity("token not provided")
+		return
+	}
+
+	isValid := object.ValidateToken(token)
+	if !isValid {
+		c.ResponseUnprocessableEntity("token is invalid")
 		return
 	}
 
@@ -201,4 +278,60 @@ func (c *ApiController) GetUserByApiToken() {
 	}
 
 	c.ResponseOk(owner)
+}
+
+// GetUserTokens
+// @Title GetUserTokens
+// @Tag Api Token API
+// @Description get user tokens
+// @Param owner query string true "The owner of token"
+// @Success 200 {array} object.User The Response object
+// @Failure 403 Unauthorized operation
+// @Failure 422 Unprocessable entity
+// @Failure 500 Internal Server Error
+// @router /get-user-tokens [get]
+func (c *ApiController) GetUserTokens() {
+	owner := c.Input().Get("owner")
+	if owner == "" {
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
+		return
+	}
+
+	if owner == "" {
+		c.ResponseUnprocessableEntity("owner not provided")
+		return
+	}
+
+	isValid := object.ValidateUserID(owner)
+	if !isValid {
+		c.ResponseUnprocessableEntity("owner is invalid")
+		return
+	}
+
+	tokenOwner, err := object.GetUser(owner)
+	if err != nil {
+		logs.Error("get user: %s", err.Error())
+
+		c.ResponseInternalServerError("Internal server error")
+		return
+	}
+
+	c.ValidateOrganization(tokenOwner.Owner)
+
+	currentUser := c.getCurrentUser()
+	isSelfOrAdmin := currentUser.Id == tokenOwner.Id || currentUser.IsAdmin
+	if !isSelfOrAdmin {
+		logs.Error("add api token for user: %s. Only self or admin can get token", tokenOwner.Name)
+		c.ResponseForbidden(c.T("auth:Forbidden operation"))
+	}
+
+	tokens, err := object.GetUserTokens(tokenOwner)
+	if err != nil {
+		logs.Error("get user tokens: %s", err.Error())
+
+		c.ResponseInternalServerError("Internal server error")
+		return
+	}
+
+	c.ResponseOk(tokens)
 }

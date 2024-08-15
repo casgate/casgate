@@ -15,8 +15,11 @@
 package object
 
 import (
+	"context"
 	"encoding/gob"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/xorm-adapter/v3"
 	"os"
 
 	"github.com/casdoor/casdoor/conf"
@@ -24,13 +27,13 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
-func InitDb() {
+func InitDb(ctx context.Context) {
 	existed := initBuiltInOrganization()
 	if !existed {
 		initBuiltInPermission()
 		initBuiltInProvider()
-		initBuiltInUser()
-		initBuiltInApplication()
+		initBuiltInUser(ctx)
+		initBuiltInApplication(ctx)
 		initBuiltInCert()
 		initBuiltInLdap()
 	}
@@ -68,6 +71,7 @@ func getBuiltInAccountItems() []*AccountItem {
 		{Name: "Bio", Visible: true, ViewRule: "Public", ModifyRule: "Self"},
 		{Name: "Tag", Visible: true, ViewRule: "Public", ModifyRule: "Admin"},
 		{Name: "Signup application", Visible: true, ViewRule: "Public", ModifyRule: "Admin"},
+		{Name: "Mapping strategy", Visible: true, ViewRule: "Public", ModifyRule: "Admin"},
 		{Name: "Roles", Visible: true, ViewRule: "Public", ModifyRule: "Immutable"},
 		{Name: "Permissions", Visible: true, ViewRule: "Public", ModifyRule: "Immutable"},
 		{Name: "Groups", Visible: true, ViewRule: "Public", ModifyRule: "Admin"},
@@ -107,7 +111,6 @@ func initBuiltInOrganization() bool {
 		PasswordType:       "argon2id",
 		PasswordOptions:    []string{"AtLeast6"},
 		CountryCodes:       []string{"US", "ES", "FR", "DE", "GB", "CN", "JP", "KR", "VN", "ID", "SG", "IN"},
-		DefaultAvatar:      fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
 		Tags:               []string{},
 		Languages:          []string{"en", "zh", "es", "fr", "de", "id", "ja", "ko", "ru", "vi", "pt"},
 		InitScore:          2000,
@@ -125,7 +128,7 @@ func initBuiltInOrganization() bool {
 	return false
 }
 
-func initBuiltInUser() {
+func initBuiltInUser(ctx context.Context) {
 	user, err := getUser("built-in", "admin")
 	if err != nil {
 		panic(err)
@@ -142,7 +145,6 @@ func initBuiltInUser() {
 		Type:              "normal-user",
 		Password:          "123",
 		DisplayName:       "Admin",
-		Avatar:            fmt.Sprintf("%s/img/casbin.svg", conf.GetConfigString("staticBaseUrl")),
 		Email:             "admin@example.com",
 		Phone:             "12345678910",
 		CountryCode:       "US",
@@ -157,15 +159,16 @@ func initBuiltInUser() {
 		SignupApplication: "app-built-in",
 		CreatedIp:         "127.0.0.1",
 		Properties:        make(map[string]string),
+		MappingStrategy:   "all",
 	}
-	_, err = AddUser(user)
+	_, err = AddUser(ctx, user)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func initBuiltInApplication() {
-	application, err := getApplication("admin", "app-built-in")
+func initBuiltInApplication(ctx context.Context) {
+	application, err := getApplication(ctx, "admin", "app-built-in", nil)
 	if err != nil {
 		panic(err)
 	}
@@ -179,13 +182,13 @@ func initBuiltInApplication() {
 		Name:                 "app-built-in",
 		CreatedTime:          util.GetCurrentTime(),
 		DisplayName:          "Casdoor",
-		Logo:                 fmt.Sprintf("%s/img/casdoor-logo_1185x256.png", conf.GetConfigString("staticBaseUrl")),
+		Logo:                 fmt.Sprintf("%s/img/cg_logo.png", conf.GetConfigString("staticBaseUrl")),
 		HomepageUrl:          "https://casdoor.org",
 		Organization:         "built-in",
 		Cert:                 "cert-built-in",
 		EnablePassword:       true,
-		EnableInternalSignUp: true,
-		EnableIdpSignUp:      true,
+		EnableInternalSignUp: false,
+		EnableIdpSignUp:      false,
 		Providers: []*ProviderItem{
 			{Name: "provider_captcha_default", CanSignUp: false, CanSignIn: false, CanUnlink: false, Prompted: false, AlertType: "None", Rule: "None", Provider: nil},
 		},
@@ -205,7 +208,7 @@ func initBuiltInApplication() {
 		FormOffset:    2,
 		FooterText:    "Powered by Casgate",
 	}
-	_, err = AddApplication(application)
+	_, err = AddApplication(ctx, application)
 	if err != nil {
 		panic(err)
 	}
@@ -371,7 +374,7 @@ e = some(where (p.eft == allow))
 
 [matchers]
 m = (r.subOwner == p.subOwner || p.subOwner == "*") && \
-    (r.subName == p.subName || p.subName == "*" || r.subName != "anonymous" && p.subName == "!anonymous") && \
+    (r.subName == p.subName || p.subName == "*" || (r.subName != "anonymous" && p.subName == "!anonymous" && r.subOwner == p.subOwner)) && \
     (r.method == p.method || p.method == "*") && \
     (r.urlPath == p.urlPath || p.urlPath == "*") && \
     (r.objOwner == p.objOwner || p.objOwner == "*") && \
@@ -513,6 +516,137 @@ func initBuiltInApiEnforcer() {
 	}
 
 	_, err = AddEnforcer(enforcer)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func CreateTables() {
+	if orm.CreateDatabase {
+		err := orm.AppOrmer.CreateDatabase()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	CreateTable(orm.AppOrmer)
+}
+
+func CreateTable(a *orm.Ormer) {
+	showSql := conf.GetConfigBool("showSql")
+	a.Engine.ShowSQL(showSql)
+
+	err := a.Engine.Sync2(new(Organization))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(User))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Group))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Role))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Domain))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Permission))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Model))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Adapter))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Enforcer))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Provider))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Application))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Resource))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Token))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Record))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(VerificationRecord))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Webhook))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Cert))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Ldap))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(RadiusAccounting))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(PermissionRule))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(xormadapter.CasbinRule))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Session))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(UserIdProvider))
 	if err != nil {
 		panic(err)
 	}

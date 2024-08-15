@@ -15,6 +15,7 @@
 package object
 
 import (
+	"errors"
 	"math/rand"
 	"time"
 
@@ -24,17 +25,10 @@ import (
 const saltLenth = 16
 
 func calculateHash(user *User) (string, error) {
-	syncer, err := getDbSyncerForUser(user)
-	if err != nil {
-		return "", err
-	}
-
-	if syncer == nil {
-		return "", nil
-	}
-
-	return syncer.calculateHash(user), nil
+	return "", nil
 }
+
+
 
 func (user *User) UpdateUserHash() error {
 	hash, err := calculateHash(user)
@@ -46,14 +40,26 @@ func (user *User) UpdateUserHash() error {
 	return nil
 }
 
-func (user *User) UpdateUserPassword(organization *Organization) {
-	credManager := cred.GetCredManager(organization.PasswordType)
-	if credManager != nil {
-		user.PasswordSalt = getRandomString(saltLenth)
-		hashedPassword := credManager.GetHashedPassword(user.Password, user.PasswordSalt)
-		user.Password = hashedPassword
+func (user *User) UpdateUserPassword(organization *Organization) error {
+	var credManager cred.CredManager
+
+	switch user.PasswordType {
+	case "", "plain":
 		user.PasswordType = organization.PasswordType
+		credManager = cred.GetCredManager(organization.PasswordType)
+	default:
+		credManager = cred.GetCredManager(user.PasswordType)
 	}
+
+	if credManager == nil {
+		return errors.New("invalid password type")
+	}
+
+	user.PasswordSalt = getRandomString(saltLenth)
+	hashedPassword := credManager.GetHashedPassword(user.Password, user.PasswordSalt)
+	user.Password = hashedPassword
+
+	return nil
 }
 
 func getRandomString(n int) string {

@@ -16,6 +16,7 @@ package routers
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/object"
@@ -23,6 +24,8 @@ import (
 )
 
 func AutoSigninFilter(ctx *context.Context) {
+	goCtx := ctx.Request.Context()
+
 	//if getSessionUser(ctx) != "" {
 	//	return
 	//}
@@ -40,22 +43,22 @@ func AutoSigninFilter(ctx *context.Context) {
 	if accessToken != "" {
 		token, err := object.GetTokenByAccessToken(accessToken)
 		if err != nil {
-			responseError(ctx, err.Error())
+			responseError(ctx, err.Error(), http.StatusForbidden)
 			return
 		}
 
 		if token == nil {
-			responseError(ctx, "Access token doesn't exist")
+			responseError(ctx, "Access token doesn't exist", http.StatusForbidden)
 			return
 		}
 
 		if util.IsTokenExpired(token.CreatedTime, token.ExpiresIn) {
-			responseError(ctx, "Access token has expired")
+			responseError(ctx, "Access token has expired", http.StatusForbidden)
 			return
 		}
 
 		userId := util.GetId(token.Organization, token.User)
-		application, err := object.GetApplicationByUserId(fmt.Sprintf("app/%s", token.Application))
+		application, err := object.GetApplicationByUserId(goCtx, fmt.Sprintf("app/%s", token.Application))
 		if err != nil {
 			panic(err)
 		}
@@ -77,10 +80,13 @@ func AutoSigninFilter(ctx *context.Context) {
 	password := ctx.Input.Query("password")
 	if userId != "" && password != "" && ctx.Input.Query("grant_type") == "" {
 		owner, name := util.GetOwnerAndNameFromId(userId)
-		_, err := object.CheckUserPassword(owner, name, password, "en")
+		options := object.CheckUserPasswordOptions{
+			Lang: "en",
+		}
+		_, err := object.CheckUserPassword(goCtx, owner, name, password, options)
 		if err != nil {
 			msg := object.CheckPassErrorToMessage(err, "en")
-			responseError(ctx, msg)
+			responseError(ctx, msg, http.StatusForbidden)
 			return
 		}
 

@@ -2,6 +2,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"time"
 
 	"github.com/casdoor/casdoor/util"
@@ -48,7 +49,7 @@ func getRadiusAccounting(owner, name string) (*RadiusAccounting, error) {
 		return nil, nil
 	}
 	ra := RadiusAccounting{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&ra)
+	existed, err := orm.AppOrmer.Engine.Get(&ra)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +62,7 @@ func getRadiusAccounting(owner, name string) (*RadiusAccounting, error) {
 
 func getPaginationRadiusAccounting(owner, field, value, sortField, sortOrder string, offset, limit int) ([]*RadiusAccounting, error) {
 	ras := []*RadiusAccounting{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&ras)
 	if err != nil {
 		return ras, err
@@ -86,18 +87,18 @@ func GetRadiusAccountingBySessionId(sessionId string) (*RadiusAccounting, error)
 }
 
 func AddRadiusAccounting(ra *RadiusAccounting) error {
-	_, err := ormer.Engine.Insert(ra)
+	_, err := orm.AppOrmer.Engine.Insert(ra)
 	return err
 }
 
 func DeleteRadiusAccounting(ra *RadiusAccounting) error {
-	_, err := ormer.Engine.ID(core.PK{ra.Owner, ra.Name}).Delete(&RadiusAccounting{})
+	_, err := orm.AppOrmer.Engine.ID(core.PK{ra.Owner, ra.Name}).Delete(&RadiusAccounting{})
 	return err
 }
 
 func UpdateRadiusAccounting(id string, ra *RadiusAccounting) error {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	_, err := ormer.Engine.ID(core.PK{owner, name}).Update(ra)
+	_, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).Update(ra)
 	return err
 }
 

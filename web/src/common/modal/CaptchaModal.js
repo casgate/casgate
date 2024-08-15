@@ -17,7 +17,6 @@ import i18next from "i18next";
 import React, {useEffect} from "react";
 import * as UserBackend from "../../backend/UserBackend";
 import {CaptchaWidget} from "../CaptchaWidget";
-import {SafetyOutlined} from "@ant-design/icons";
 
 export const CaptchaModal = (props) => {
   const {owner, name, visible, onOk, onCancel, isCurrentProvider} = props;
@@ -45,7 +44,7 @@ export const CaptchaModal = (props) => {
   }, [visible]);
 
   const handleOk = () => {
-    onOk?.(captchaType, captchaToken, clientSecret);
+    isCaptchaTokenValid() && onOk?.(captchaType, captchaToken, clientSecret);
   };
 
   const handleCancel = () => {
@@ -94,7 +93,6 @@ export const CaptchaModal = (props) => {
               ref={defaultInputRef}
               style={{width: "200px"}}
               value={captchaToken}
-              prefix={<SafetyOutlined />}
               placeholder={i18next.t("general:Captcha")}
               onPressEnter={handleOk}
               onChange={(e) => setCaptchaToken(e.target.value)}
@@ -103,6 +101,15 @@ export const CaptchaModal = (props) => {
         </div>
       </Col>
     );
+  };
+
+  const isCaptchaTokenValid = () => {
+    if (captchaType === "Default") {
+      const regex = /^\d{5}$/;
+      return regex.test(captchaToken);
+    } else {
+      return captchaToken !== "";
+    }
   };
 
   const onChange = (token) => {
@@ -132,19 +139,9 @@ export const CaptchaModal = (props) => {
   };
 
   const renderFooter = () => {
-    let isOkDisabled = false;
-    if (captchaType === "Default") {
-      const regex = /^\d{5}$/;
-      if (!regex.test(captchaToken)) {
-        isOkDisabled = true;
-      }
-    } else if (captchaToken === "") {
-      isOkDisabled = true;
-    }
-
     return [
       <Button key="cancel" onClick={handleCancel}>{i18next.t("general:Cancel")}</Button>,
-      <Button key="ok" disabled={isOkDisabled} type="primary" onClick={handleOk}>{i18next.t("general:OK")}</Button>,
+      <Button key="ok" disabled={!isCaptchaTokenValid()} type="primary" onClick={handleOk}>{i18next.t("general:OK")}</Button>,
     ];
   };
 

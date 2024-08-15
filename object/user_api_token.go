@@ -17,6 +17,7 @@ package object
 import (
 	"errors"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"regexp"
 
 	"github.com/casdoor/casdoor/util"
@@ -28,7 +29,8 @@ const (
 )
 
 var (
-	tagExtractionRegexp = regexp.MustCompile("<access-token><access-token-user-id:(.+)>")
+	tagExtractionRegexp   = regexp.MustCompile("<access-token><access-token-user-id:(.+)>")
+	tokenValidationRegexp = `^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`
 
 	ExtractOwnerIdError = errors.New("could not extract owner id from tag")
 )
@@ -68,7 +70,7 @@ func DeleteApiToken(user *User, token string) (bool, error) {
 		Tag:          tag,
 	}
 
-	affected, err := ormer.Engine.Delete(token_user)
+	affected, err := orm.AppOrmer.Engine.Delete(token_user)
 
 	return affected != 0, err
 }
@@ -77,7 +79,7 @@ func RecreateApiToken(tokenOwner, tokenUser *User) error {
 	tokenUser.AccessKey = util.GenerateId()
 	tokenUser.AccessSecret = util.GenerateId()
 
-	affected, err := ormer.Engine.ID(core.PK{tokenUser.Owner, tokenUser.Name}).Update(tokenUser)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{tokenUser.Owner, tokenUser.Name}).Update(tokenUser)
 	if err != nil {
 		return err
 	}
@@ -96,7 +98,7 @@ func GetApiKeyUser(token string) (*User, error) {
 		AccessSecret: accessSecret,
 	}
 
-	present, err := ormer.Engine.Get(token_user)
+	present, err := orm.AppOrmer.Engine.Get(token_user)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +125,7 @@ func GetApiKeyOwner(token string) (*User, error) {
 		Id: ownerId,
 	}
 
-	present, err := ormer.Engine.Get(owner)
+	present, err := orm.AppOrmer.Engine.Get(owner)
 	if err != nil {
 		return nil, err
 	}
@@ -163,4 +165,26 @@ func MakeUserApiToken(user *User) UserApiToken {
 		Owner:    user.Owner,
 		ApiToken: user.AccessKey + user.AccessSecret,
 	}
+}
+
+func GetUserTokens(user *User) ([]User, error) {
+	var tokens []User
+
+	tagPattern := fmt.Sprintf("<access-token><access-token-user-id:%s>", user.Id)
+
+	err := orm.AppOrmer.Engine.Where("tag LIKE ?", tagPattern).Find(&tokens)
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
+}
+
+func ValidateToken(token string) bool {
+	matched, err := regexp.MatchString(tokenValidationRegexp, token)
+	if err != nil {
+		fmt.Println("Ошибка при проверке токена:", err)
+		return false
+	}
+	return matched
 }

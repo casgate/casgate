@@ -15,13 +15,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
 	"net/http"
 
 	"github.com/beego/beego"
 	"github.com/beego/beego/logs"
 	_ "github.com/beego/beego/session/redis"
-	"github.com/casdoor/casdoor/authz"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/ldap"
 	"github.com/casdoor/casdoor/object"
@@ -30,27 +32,24 @@ import (
 	"github.com/casdoor/casdoor/repository"
 	"github.com/casdoor/casdoor/routers"
 	"github.com/casdoor/casdoor/txmanager"
-	"github.com/casdoor/casdoor/util"
 )
 
 func main() {
-	object.InitFlag()
-	ormer := object.InitAdapter()
+	orm.InitFlag()
+	ormer := orm.InitAdapter()
 	trm := txmanager.NewTransactionManager(ormer.Engine)
 	repo := repository.NewRepo(trm)
 	object.InitRepo(trm, repo)
 	object.CreateTables()
 	object.DoMigration()
 
-	object.InitDb()
-	object.InitFromFile()
-	object.InitDefaultStorageProvider()
-	object.InitLdapAutoSynchronizer()
-	proxy.InitHttpClient()
-	authz.InitApi()
-	object.InitUserManager()
+	ctx := context.Background()
 
-	util.SafeGoroutine(func() { object.RunSyncUsersJob() })
+	object.InitDb(ctx)
+	object.InitFromFile(ctx)
+	object.InitLdapAutoSynchronizer(ctx)
+	proxy.InitHttpClient()
+	object.InitUserManager()
 
 	// beego.DelStaticPath("/static")
 	// beego.SetStaticPath("/static", "web/build/static")
@@ -60,10 +59,9 @@ func main() {
 	beego.SetStaticPath("/files", "files")
 	// https://studygolang.com/articles/2303
 	beego.InsertFilter("*", beego.BeforeRouter, routers.StaticFilter)
-	beego.InsertFilter("*", beego.BeforeRouter, routers.AutoSigninFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.InitRecordMessage, false)
+	beego.InsertFilter("*", beego.BeforeRouter, routers.AutoSigninFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.CorsFilter)
-	beego.InsertFilter("*", beego.BeforeRouter, routers.ApiFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PrometheusFilter)
 	beego.InsertFilter("*", beego.AfterExec, routers.LogRecordMessage, false)
 
@@ -83,6 +81,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	logger.InitGlobal(&logger.Config{Level: conf.GetConfigString("logLevel")})
 	port := beego.AppConfig.DefaultInt("httpport", 8000)
 	// logs.SetLevel(logs.LevelInformational)
 	logs.SetLogFuncCall(false)

@@ -30,6 +30,8 @@ type LinkForm struct {
 // @Success 200 {object} controllers.Response "The Response object"
 // @Tag Login API
 func (c *ApiController) Unlink() {
+	ctx := c.getRequestCtx()
+
 	user, ok := c.RequireSignedInUser()
 	if !ok {
 		return
@@ -54,7 +56,7 @@ func (c *ApiController) Unlink() {
 
 	if user.Id == unlinkedUser.Id && !user.IsGlobalAdmin() {
 		// if the user is unlinking themselves, should check the provider can be unlinked, if not, we should return an error.
-		application, err := object.GetApplicationByUser(user)
+		application, err := object.GetApplicationByUser(ctx, user)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return

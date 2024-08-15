@@ -15,8 +15,10 @@
 package object
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"strings"
 	"time"
 
@@ -65,7 +67,7 @@ func IsAllowSend(user *User, remoteAddr, recordType string) error {
 	if user != nil {
 		record.User = user.GetId()
 	}
-	has, err := ormer.Engine.Desc("created_time").Get(&record)
+	has, err := orm.AppOrmer.Engine.Desc("created_time").Get(&record)
 	if err != nil {
 		return err
 	}
@@ -142,7 +144,7 @@ func AddToVerificationRecord(user *User, provider *Provider, remoteAddr, recordT
 	record.Time = time.Now().Unix()
 	record.IsUsed = false
 
-	_, err := ormer.Engine.Insert(record)
+	_, err := orm.AppOrmer.Engine.Insert(record)
 	if err != nil {
 		return err
 	}
@@ -153,7 +155,7 @@ func AddToVerificationRecord(user *User, provider *Provider, remoteAddr, recordT
 func getVerificationRecord(dest string) (*VerificationRecord, error) {
 	var record VerificationRecord
 	record.Receiver = dest
-	has, err := ormer.Engine.Desc("time").Where("is_used = false").Get(&record)
+	has, err := orm.AppOrmer.Engine.Desc("time").Where("is_used = false").Get(&record)
 	if err != nil {
 		return nil, err
 	}
@@ -197,13 +199,13 @@ func DisableVerificationCode(dest string) (err error) {
 	}
 
 	record.IsUsed = true
-	_, err = ormer.Engine.ID(core.PK{record.Owner, record.Name}).AllCols().Update(record)
+	_, err = orm.AppOrmer.Engine.ID(core.PK{record.Owner, record.Name}).AllCols().Update(record)
 	return
 }
 
-func CheckSigninCode(user *User, dest, code, lang string) error {
+func CheckSigninCode(ctx context.Context, user *User, dest, code, lang string) error {
 	// check the login error times
-	err := checkSigninErrorTimes(user, lang)
+	err := checkSigninErrorTimes(ctx, user, lang)
 	if err != nil {
 		return err
 	}
@@ -213,7 +215,7 @@ func CheckSigninCode(user *User, dest, code, lang string) error {
 	case VerificationSuccess:
 		return resetUserSigninErrorTimes(user)
 	case wrongCodeError:
-		return recordSigninErrorInfo(user, lang)
+		return recordSigninErrorInfo(ctx, user, lang)
 	default:
 		return fmt.Errorf(result.Msg)
 	}

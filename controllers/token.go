@@ -1,4 +1,4 @@
-// Copyright 2021 The Casdoor Authors. All Rights Reserved.
+// Copyright 2023 The Casgate Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,8 @@ package controllers
 
 import (
 	"encoding/json"
-
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // GetTokens
@@ -31,40 +29,24 @@ import (
 // @Param   p     query    string  true        "The number of the page"
 // @Success 200 {array} object.Token The Response object
 // @router /get-tokens [get]
-func (c *ApiController) GetTokens() {
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-	organization := c.Input().Get("organization")
-	if limit == "" || page == "" {
-		token, err := object.GetTokens(owner, organization)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(token)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetTokenCount(owner, organization, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		tokens, err := object.GetPaginationTokens(owner, organization, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(tokens, paginator.Nums())
+func (c *ApiController) GetTokens() {	
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+    
+	count, err := object.GetTokenCount(request.Owner, request.Organization, request.Field, request.Value)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
 	}
+
+	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
+	tokens, err := object.GetPaginationTokens(request.Owner, request.Organization, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
+
+	c.ResponseOk(tokens, paginator.Nums())
 }
 
 // GetToken
@@ -75,8 +57,12 @@ func (c *ApiController) GetTokens() {
 // @Success 200 {object} object.Token The Response object
 // @router /get-token [get]
 func (c *ApiController) GetToken() {
-	id := c.Input().Get("id")
-	token, err := object.GetToken(id)
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
+	token, err := object.GetToken(request.Id)
+	c.ValidateOrganization(token.Organization)
+
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -94,8 +80,9 @@ func (c *ApiController) GetToken() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-token [post]
 func (c *ApiController) UpdateToken() {
-	id := c.Input().Get("id")
-
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+	
 	var token object.Token
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &token)
 	if err != nil {
@@ -103,7 +90,17 @@ func (c *ApiController) UpdateToken() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.UpdateToken(id, &token))
+
+	tokenFromDb, _ := object.GetToken(request.Id)
+	if tokenFromDb == nil {
+		c.Data["json"] = wrapActionResponse(false)
+		c.ServeJSON()
+		return
+	}
+	c.ValidateOrganization(tokenFromDb.Owner) 
+	c.ValidateOrganization(tokenFromDb.Organization) 
+
+	c.Data["json"] = wrapActionResponse(object.UpdateToken(request.Id, &token))
 	c.ServeJSON()
 }
 
@@ -115,12 +112,17 @@ func (c *ApiController) UpdateToken() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-token [post]
 func (c *ApiController) AddToken() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
 	var token object.Token
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &token)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	c.ValidateOrganization(token.Owner) 
+	c.ValidateOrganization(token.Organization) 
 
 	c.Data["json"] = wrapActionResponse(object.AddToken(&token))
 	c.ServeJSON()
@@ -134,12 +136,19 @@ func (c *ApiController) AddToken() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /delete-token [post]
 func (c *ApiController) DeleteToken() {
+	request := c.ReadRequestFromQueryParams()
+	c.ContinueIfHasRightsOrDenyRequest(request)
+
 	var token object.Token
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &token)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	c.ValidateOrganization(token.Owner) 
+	c.ValidateOrganization(token.Organization) 
+
 
 	c.Data["json"] = wrapActionResponse(object.DeleteToken(&token))
 	c.ServeJSON()
@@ -158,6 +167,7 @@ func (c *ApiController) DeleteToken() {
 // @Success 401 {object} object.TokenError The Response object
 // @router /login/oauth/access_token [post]
 func (c *ApiController) GetOAuthToken() {
+	ctx := c.getRequestCtx()
 	grantType := c.Input().Get("grant_type")
 	refreshToken := c.Input().Get("refresh_token")
 	clientId := c.Input().Get("client_id")
@@ -191,7 +201,7 @@ func (c *ApiController) GetOAuthToken() {
 		}
 	}
 	host := c.Ctx.Request.Host
-	oAuthtoken, err := object.GetOAuthToken(grantType, clientId, clientSecret, code, verifier, scope, username, password, host, refreshToken, tag, avatar, c.GetAcceptLanguage())
+	oAuthtoken, err := object.GetOAuthToken(ctx, grantType, clientId, clientSecret, code, verifier, scope, username, password, host, refreshToken, tag, avatar, c.GetAcceptLanguage())
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -216,6 +226,7 @@ func (c *ApiController) GetOAuthToken() {
 // @Success 401 {object} object.TokenError The Response object
 // @router /login/oauth/refresh_token [post]
 func (c *ApiController) RefreshToken() {
+	ctx := c.getRequestCtx()
 	grantType := c.Input().Get("grant_type")
 	refreshToken := c.Input().Get("refresh_token")
 	scope := c.Input().Get("scope")
@@ -235,7 +246,7 @@ func (c *ApiController) RefreshToken() {
 		}
 	}
 
-	refreshToken2, err := object.RefreshToken(grantType, refreshToken, scope, clientId, clientSecret, host)
+	refreshToken2, err := object.RefreshToken(ctx, grantType, refreshToken, scope, clientId, clientSecret, host)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -261,6 +272,7 @@ func (c *ApiController) RefreshToken() {
 // @Success 401 {object} object.TokenError The Response object
 // @router /login/oauth/introspect [post]
 func (c *ApiController) IntrospectToken() {
+	ctx := c.getRequestCtx()
 	tokenValue := c.Input().Get("token")
 	clientId, clientSecret, ok := c.Ctx.Request.BasicAuth()
 	if !ok {
@@ -276,7 +288,7 @@ func (c *ApiController) IntrospectToken() {
 			return
 		}
 	}
-	application, err := object.GetApplicationByClientId(clientId)
+	application, err := object.GetApplicationByClientId(ctx, clientId)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

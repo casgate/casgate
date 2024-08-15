@@ -17,6 +17,7 @@ package object
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"reflect"
 	"regexp"
 	"strings"
@@ -41,7 +42,31 @@ func GetUserByField(organizationName string, field string, value string) (*User,
 		field = ""
 	}
 
-	existed, err := ormer.Engine.Where(fmt.Sprintf("%s=?", strings.ToLower(field)), value).Get(&user)
+	existed, err := orm.AppOrmer.Engine.Where(fmt.Sprintf("%s=?", strings.ToLower(field)), value).Get(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	if existed {
+		return &user, nil
+	} else {
+		return nil, nil
+	}
+}
+
+func GetUserByFieldCaseInsensitively(organizationName string, field string, value string) (*User, error) {
+	if field == "" || value == "" {
+		return nil, nil
+	}
+
+	user := User{Owner: organizationName}
+
+	match, mErr := regexp.MatchString("^[a-z_]+$", util.SnakeString(field))
+	if !match || mErr != nil {
+		field = ""
+	}
+
+	existed, err := orm.AppOrmer.Engine.Where(fmt.Sprintf("LOWER(%s) = LOWER(?)", field), value).Get(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +79,10 @@ func GetUserByField(organizationName string, field string, value string) (*User,
 }
 
 func HasUserByField(organizationName string, field string, value string) bool {
+	if field == "email" {
+		value = strings.ToLower(value)
+	}
+
 	user, err := GetUserByField(organizationName, field, value)
 	if err != nil {
 		panic(err)
@@ -84,6 +113,36 @@ func GetUserByFields(organization string, field string) (*User, error) {
 
 	// check ID card
 	user, err = GetUserByField(organization, "id_card", field)
+	if user != nil || err != nil {
+		return user, err
+	}
+
+	return nil, nil
+}
+
+func GetUserByFieldsCaseInsensitively(organization string, field string) (*User, error) {
+	// check username
+	user, err := GetUserByFieldCaseInsensitively(organization, "name", field)
+	if err != nil || user != nil {
+		return user, err
+	}
+
+	// check email
+	if strings.Contains(field, "@") {
+		user, err = GetUserByFieldCaseInsensitively(organization, "email", field)
+		if user != nil || err != nil {
+			return user, err
+		}
+	}
+
+	// check phone
+	user, err = GetUserByFieldCaseInsensitively(organization, "phone", field)
+	if user != nil || err != nil {
+		return user, err
+	}
+
+	// check ID card
+	user, err = GetUserByFieldCaseInsensitively(organization, "id_card", field)
 	if user != nil || err != nil {
 		return user, err
 	}
@@ -123,7 +182,9 @@ func SetUserField(user *User, field string, value string) (bool, error) {
 			return false, err
 		}
 
-		user.UpdateUserPassword(organization)
+		if err := user.UpdateUserPassword(organization); err != nil {
+			return false, err
+		}
 		bean[strings.ToLower(field)] = user.Password
 		bean["password_type"] = user.PasswordType
 		bean["password_change_time"] = nil
@@ -137,7 +198,7 @@ func SetUserField(user *User, field string, value string) (bool, error) {
 		bean[strings.ToLower(field)] = value
 	}
 
-	affected, err := ormer.Engine.Table(user).ID(core.PK{user.Owner, user.Name}).Update(bean)
+	affected, err := orm.AppOrmer.Engine.Table(user).ID(core.PK{user.Owner, user.Name}).Update(bean)
 	if err != nil {
 		return false, err
 	}
@@ -152,7 +213,7 @@ func SetUserField(user *User, field string, value string) (bool, error) {
 		return false, err
 	}
 
-	_, err = ormer.Engine.ID(core.PK{user.Owner, user.Name}).Cols("hash").Update(user)
+	_, err = orm.AppOrmer.Engine.ID(core.PK{user.Owner, user.Name}).Cols("hash").Update(user)
 	if err != nil {
 		return false, err
 	}
@@ -233,7 +294,7 @@ func ClearUserOAuthProperties(user *User, providerType string) (bool, error) {
 		}
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{user.Owner, user.Name}).Cols("properties").Update(user)
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{user.Owner, user.Name}).Cols("properties").Update(user)
 	if err != nil {
 		return false, err
 	}
@@ -408,4 +469,14 @@ func getNextPasswordChangeTime(passwordChangeInterval int) time.Time {
 
 func getIntervalFromdays(days int) time.Duration {
 	return time.Hour * 24 * time.Duration(days)
+}
+
+func ValidateUserID(userID string) bool {
+	var userIDPattern = `^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$`
+	matched, err := regexp.MatchString(userIDPattern, userID)
+	if err != nil {
+		fmt.Println("Ошибка при проверке userID:", err)
+		return false
+	}
+	return matched
 }

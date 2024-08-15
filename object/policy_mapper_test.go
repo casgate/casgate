@@ -1,7 +1,9 @@
 package object
 
 import (
+	"context"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"testing"
 	"time"
 )
@@ -37,14 +39,14 @@ var modelRules = [][]string{
 func benchmarkUpdateRole(N int64, b *testing.B) {
 	testOrgName := fmt.Sprintf("%s-%d", testOrgNameDefault, N)
 	testModelName := fmt.Sprintf("%s-%d", testModelNameDefault, N)
-	InitConfig()
+	InitTestConfig()
 	clearDB(testOrgName, testModelName)
 	err := generateInitialData(N, testOrgName, testModelName)
 	if err != nil {
 		b.Errorf("generateInitialData error: %s", err)
 	}
 
-	defer ormer.Engine.Close()
+	defer orm.AppOrmer.Engine.Close()
 	defer clearDB(testOrgName, testModelName)
 
 	roles, err := GetRoles(testOrgName)
@@ -59,7 +61,7 @@ func benchmarkUpdateRole(N int64, b *testing.B) {
 			Owner: testOrgName,
 			Name:  fmt.Sprintf("user_test-%d", i),
 		}
-		_, err = AddUser(new_user)
+		_, err = AddUser(context.Background(), new_user)
 		if err != nil {
 			b.Errorf("AddUser: %s", err)
 		}
@@ -97,14 +99,14 @@ func BenchmarkUpdateRole(b *testing.B) {
 func benchmarkDeleteRoleFromPermission(N int64, b *testing.B) {
 	testOrgName := fmt.Sprintf("%s-%d", testOrgNameDefault, N)
 	testModelName := fmt.Sprintf("%s-%d", testModelNameDefault, N)
-	InitConfig()
+	InitTestConfig()
 	clearDB(testOrgName, testModelName)
 	err := generateInitialData(N, testOrgName, testModelName)
 	if err != nil {
 		b.Errorf("generateInitialData error: %s", err)
 	}
 
-	defer ormer.Engine.Close()
+	defer orm.AppOrmer.Engine.Close()
 	defer clearDB(testOrgName, testModelName)
 
 	permissions, err := GetPermissions(testOrgName)
@@ -119,7 +121,7 @@ func benchmarkDeleteRoleFromPermission(N int64, b *testing.B) {
 			Owner: testOrgName,
 			Name:  fmt.Sprintf("user_test-%d", i),
 		}
-		_, err = AddUser(new_user)
+		_, err = AddUser(context.Background(), new_user)
 		if err != nil {
 			b.Errorf("AddUser: %s", err)
 		}
@@ -180,7 +182,7 @@ func generateInitialData(N int64, testOrgName, testModelName string) error {
 		Owner: testOrgName,
 		Name:  "admin",
 	}
-	_, err = ormer.Engine.Insert(new_role)
+	_, err = orm.AppOrmer.Engine.Insert(new_role)
 	if err != nil {
 		return fmt.Errorf("AddRole: %w", err)
 	}
@@ -202,7 +204,7 @@ func generateInitialData(N int64, testOrgName, testModelName string) error {
 			Effect:       "Allow",
 			IsEnabled:    true,
 		}
-		_, err = ormer.Engine.Insert(new_permission)
+		_, err = orm.AppOrmer.Engine.Insert(new_permission)
 		if err != nil {
 			return fmt.Errorf("AddPermission: %w", err)
 		}
@@ -211,7 +213,7 @@ func generateInitialData(N int64, testOrgName, testModelName string) error {
 			Owner: testOrgName,
 			Name:  fmt.Sprintf("domain%d", i),
 		}
-		_, err = ormer.Engine.Insert(new_domain)
+		_, err = orm.AppOrmer.Engine.Insert(new_domain)
 		if err != nil {
 			return fmt.Errorf("AddDomain: %w", err)
 		}
@@ -220,7 +222,7 @@ func generateInitialData(N int64, testOrgName, testModelName string) error {
 			Owner: testOrgName,
 			Name:  fmt.Sprintf("user%d", i),
 		}
-		_, err = ormer.Engine.Insert(new_user)
+		_, err = orm.AppOrmer.Engine.Insert(new_user)
 		if err != nil {
 			return fmt.Errorf("AddUser: %w", err)
 		}
@@ -232,7 +234,7 @@ func generateInitialData(N int64, testOrgName, testModelName string) error {
 			Users:   []string{new_user.GetId()},
 			Domains: []string{new_domain.GetId()},
 		}
-		_, err = ormer.Engine.Insert(new_role2)
+		_, err = orm.AppOrmer.Engine.Insert(new_role2)
 		if err != nil {
 			return fmt.Errorf("AddRole: %w", err)
 		}
@@ -255,22 +257,22 @@ func generateInitialData(N int64, testOrgName, testModelName string) error {
 }
 
 func clearDB(testOrgName, testModelName string) {
-	_, err := ormer.Engine.Delete(&Role{Owner: testOrgName})
+	_, err := orm.AppOrmer.Engine.Delete(&Role{Owner: testOrgName})
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = ormer.Engine.Delete(&User{Owner: testOrgName})
+	_, err = orm.AppOrmer.Engine.Delete(&User{Owner: testOrgName})
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = ormer.Engine.Delete(&Domain{Owner: testOrgName})
+	_, err = orm.AppOrmer.Engine.Delete(&Domain{Owner: testOrgName})
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = ormer.Engine.Where("owner = ?", testOrgName).Cols("roles").Update(&Permission{Roles: []string{}})
+	_, err = orm.AppOrmer.Engine.Where("owner = ?", testOrgName).Cols("roles").Update(&Permission{Roles: []string{}})
 	if err != nil {
 		panic(err)
 	}
@@ -286,7 +288,7 @@ func clearDB(testOrgName, testModelName string) {
 		panic(fmt.Errorf("UpdateModel: %w", err))
 	}
 
-	_, err = ormer.Engine.Delete(&Permission{Owner: testOrgName})
+	_, err = orm.AppOrmer.Engine.Delete(&Permission{Owner: testOrgName})
 	if err != nil {
 		panic(err)
 	}
@@ -296,7 +298,7 @@ func clearDB(testOrgName, testModelName string) {
 		panic(fmt.Errorf("DeleteModel: %w", err))
 	}
 
-	_, err = DeleteOrganization(&Organization{
+	_, err = DeleteOrganization("en", &Organization{
 		Owner: "admin",
 		Name:  testOrgName,
 	})

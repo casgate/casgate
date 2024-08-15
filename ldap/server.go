@@ -15,6 +15,7 @@
 package ldap
 
 import (
+	"context"
 	"fmt"
 	"hash/fnv"
 	"log"
@@ -45,6 +46,7 @@ func StartLdapServer() {
 }
 
 func handleBind(w ldap.ResponseWriter, m *ldap.Message) {
+	ctx := context.Background()
 	r := m.GetBindRequest()
 	res := ldap.NewBindResponse(ldap.LDAPResultSuccess)
 
@@ -59,7 +61,10 @@ func handleBind(w ldap.ResponseWriter, m *ldap.Message) {
 		}
 
 		bindPassword := string(r.AuthenticationSimple())
-		bindUser, checkPassErr := object.CheckUserPassword(bindOrg, bindUsername, bindPassword, "en")
+		options := object.CheckUserPasswordOptions{
+			Lang: "en",
+		}
+		bindUser, checkPassErr := object.CheckUserPassword(ctx, bindOrg, bindUsername, bindPassword, options)
 		if checkPassErr != nil {
 			log.Printf("Bind failed User=%s, Pass=%#v, ErrMsg=%s", string(r.Name()), r.Authentication(), checkPassErr)
 			res.SetResultCode(ldap.LDAPResultInvalidCredentials)

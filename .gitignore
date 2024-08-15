@@ -29,9 +29,12 @@ lastupdate.tmp
 commentsRouter*.go
 
 # ignore build result
-casdoor
+/casdoor
 server_linux_arm64
 server_linux_amd64
 
 # ignore config
 # conf/app.conf
+
+# vscode workspaces
+*.code-workspace

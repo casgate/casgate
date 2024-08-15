@@ -62,7 +62,7 @@ class LdapEditPage extends React.Component {
   }
 
   getLdap() {
-    LdapBackend.getLdap(this.state.organizationName, this.state.ldapId)
+    LdapBackend.getLdap(this.state.ldapId)
       .then((res) => {
         if (res.status === "ok") {
           this.setState({
@@ -315,6 +315,16 @@ class LdapEditPage extends React.Component {
         </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+            {Setting.getLabel(i18next.t("ldap:Enable Case Insensitivity"), i18next.t("ldap:Enable Case Insensitivity - Tooltip"))} :
+          </Col>
+          <Col span={20}>
+            <Switch checked={this.state.ldap.enableCaseInsensitivity} onChange={checked => {
+              this.updateLdapField("enableCaseInsensitivity", checked);
+            }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Enable Attribute Mapping"), i18next.t("ldap:Enable Attribute Mapping - Tooltip"))} :
           </Col>
           <Col span={20} >
@@ -337,6 +347,27 @@ class LdapEditPage extends React.Component {
             </Col>
           </Row>
         }
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
+            {Setting.getLabel(i18next.t("ldap:User mapping strategy"), i18next.t("ldap:User mapping strategy - Tooltip"))} :
+          </Col>
+          <Col span={20} >
+            <Select virtual={false} style={{width: "100%"}}
+              options={[
+                {label: "all", value: "all"},
+                {label: "attribute", value: "attribute"},
+                {label: "role", value: "role"},
+                {label: "nothing", value: "nothing"},
+              ].map((item) => {
+                return Setting.getOption(item.label, item.value);
+              })}
+              value={this.state.ldap.userMappingStrategy ?? "all"}
+              onChange={(value => {
+                this.updateLdapField("userMappingStrategy", value);
+              })} >
+            </Select>
+          </Col>
+        </Row>
         <Row style={{marginTop: "20px"}} >
           <Col style={{lineHeight: "32px", textAlign: "right", paddingRight: "25px"}} span={4}>
             {Setting.getLabel(i18next.t("ldap:Enable Role Mapping"), i18next.t("ldap:Enable Role Mapping - Tooltip"))} :

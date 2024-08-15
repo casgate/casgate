@@ -1,6 +1,8 @@
 package object
 
 import (
+	"strings"
+
 	"github.com/casdoor/casdoor/util"
 	goldap "github.com/go-ldap/ldap/v3"
 )
@@ -20,14 +22,20 @@ func (a AttributeMappingMap) Keys() []string {
 	return keys
 }
 
-func buildAttributeMappingMap(attributeMappingItems []*AttributeMappingItem) AttributeMappingMap {
+func buildAttributeMappingMap(attributeMappingItems []*AttributeMappingItem, enableCaseInsesitivity bool) AttributeMappingMap {
 	attributeMappingMap := make(AttributeMappingMap)
 	for _, item := range attributeMappingItems {
 		if item.Attribute == "" || item.UserField == "" {
 			continue
 		}
 
-		itemAttribute := AttributeMappingAttribute(item.Attribute)
+		var itemAttribute AttributeMappingAttribute
+		if enableCaseInsesitivity {
+			itemAttribute = AttributeMappingAttribute(strings.ToLower(item.Attribute))
+		} else {
+			itemAttribute = AttributeMappingAttribute(item.Attribute)
+		}
+
 		itemUserField := AttributeMappingUserField(item.UserField)
 
 		if _, ok := attributeMappingMap[itemAttribute]; !ok {
@@ -39,30 +47,47 @@ func buildAttributeMappingMap(attributeMappingItems []*AttributeMappingItem) Att
 	return attributeMappingMap
 }
 
-func MapAttributeToUser(attribute *goldap.EntryAttribute, user *LdapUser, attributeMappingMap AttributeMappingMap) {
-	if attributeMappingMap == nil {
-		return
+func MapAttributesToUser(entry *goldap.Entry, user *LdapUser, attributeMappingMap AttributeMappingMap, enableCaseInsensitivity bool) []string {
+	unmappedAttributes := make([]string, 0)
+
+	// creating map for quick access to LDAP attributes by name
+	ldapAttributes := make(map[string]*goldap.EntryAttribute)
+	for _, attribute := range entry.Attributes {
+		if enableCaseInsensitivity {
+			ldapAttributes[strings.ToLower(attribute.Name)] = attribute
+		} else {
+			ldapAttributes[attribute.Name] = attribute
+		}
+		
 	}
+	
 
-	if attribute == nil {
-		return
-	}
+	// iterating over expected attributes from attributeMappingMap
+	for mappingAttr, userFields := range attributeMappingMap {
+		attribute, ok := ldapAttributes[string(mappingAttr)]
+		if !ok {
+			// attribute from map was not found in LDAP, we add it to the list of unmapped
+			unmappedAttributes = append(unmappedAttributes, string(mappingAttr))
+			continue
+		}
 
-	userFields := attributeMappingMap[AttributeMappingAttribute(attribute.Name)]
-	attributeValue := attribute.Values[0]
-
-	for _, userField := range userFields {
-		switch userField {
-		case "uid":
-			user.Uid = util.TruncateIfTooLong(attributeValue, 100)
-		case "email":
-			user.Email = util.TruncateIfTooLong(attributeValue, 100)
-		case "displayName":
-			user.Cn = util.TruncateIfTooLong(attributeValue, 100)
-		case "Phone":
-			user.MobileTelephoneNumber = util.TruncateIfTooLong(attributeValue, 20)
-		case "Address":
-			user.Address = attributeValue
+		// if attribute is found, process its values
+		attributeValue := attribute.Values[0] // take first value as specified in original function
+		for _, userField := range userFields {
+			switch userField {
+			case "uid":
+				user.Uid = util.TruncateIfTooLong(attributeValue, 100)
+			case "email":
+				user.Email = util.TruncateIfTooLong(attributeValue, 100)
+			case "displayName":
+				user.Cn = util.TruncateIfTooLong(attributeValue, 100)
+			case "Phone":
+				user.MobileTelephoneNumber = util.TruncateIfTooLong(attributeValue, 20)
+			case "Address":
+				user.Address = attributeValue
+			}
 		}
 	}
+
+	return unmappedAttributes
 }

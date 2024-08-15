@@ -30,7 +30,7 @@ const {Option} = Select;
 
 export let ServerUrl = "";
 
-export const StaticBaseUrl = "https://cdn.casbin.org";
+export const StaticBaseUrl = "/assets";
 
 export const Countries = [
   {label: "English", key: "en", country: "US", alt: "English"},
@@ -176,7 +176,7 @@ export const OtherProviderInfo = {
       url: "https://aws.amazon.com/s3",
     },
     "MinIO": {
-      logo: "https://min.io/resources/img/logo.svg",
+      logo: `${StaticBaseUrl}/img/social_minio.svg`,
       url: "https://min.io/",
     },
     "Aliyun OSS": {
@@ -212,32 +212,6 @@ export const OtherProviderInfo = {
     "GenericSAML": {
       logo: `${StaticBaseUrl}/img/social_saml.png`,
       url: "",
-    },
-  },
-  Payment: {
-    "Dummy": {
-      logo: `${StaticBaseUrl}/img/payment_paypal.png`,
-      url: "",
-    },
-    "Alipay": {
-      logo: `${StaticBaseUrl}/img/payment_alipay.png`,
-      url: "https://www.alipay.com/",
-    },
-    "WeChat Pay": {
-      logo: `${StaticBaseUrl}/img/payment_wechat_pay.png`,
-      url: "https://pay.weixin.qq.com/",
-    },
-    "PayPal": {
-      logo: `${StaticBaseUrl}/img/payment_paypal.png`,
-      url: "https://www.paypal.com/",
-    },
-    "Stripe": {
-      logo: `${StaticBaseUrl}/img/social_stripe.png`,
-      url: "https://stripe.com/",
-    },
-    "GC": {
-      logo: `${StaticBaseUrl}/img/payment_gc.png`,
-      url: "https://gc.org",
     },
   },
   Captcha: {
@@ -431,8 +405,12 @@ export function isLdapEnabled(application) {
   }
 }
 
+export function getCountryImageUrl(country) {
+  return `${StaticBaseUrl}/flag-icons/${country}.svg`;
+}
+
 export function getCountryImage(country) {
-  return <img src={`${StaticBaseUrl}/flag-icons/${country.code}.svg`} alt={country.name} height={20} style={{marginRight: 10}} />;
+  return <img src={getCountryImageUrl(country.code)} alt={country.name} height={20} style={{marginRight: 10}} />;
 }
 
 export function initServerUrl(serverUrl) {
@@ -1055,15 +1033,6 @@ export function getProviderTypeOptions(category) {
       {id: "Aliyun IDaaS", name: "Aliyun IDaaS"},
       {id: "GenericSAML", name: "Generic"},
       {id: "Keycloak", name: "Keycloak"},
-    ]);
-  } else if (category === "Payment") {
-    return ([
-      {id: "Dummy", name: "Dummy"},
-      {id: "Alipay", name: "Alipay"},
-      {id: "WeChat Pay", name: "WeChat Pay"},
-      {id: "PayPal", name: "PayPal"},
-      {id: "Stripe", name: "Stripe"},
-      {id: "GC", name: "GC"},
     ]);
   } else if (category === "Captcha") {
     return ([
