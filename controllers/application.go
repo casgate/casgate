@@ -21,6 +21,7 @@ import (
 	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 // GetApplications
@@ -215,17 +216,61 @@ func (c *ApiController) UpdateApplication() {
 	id := c.Input().Get("id")
 	goCtx := c.getRequestCtx()
 
+	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeApplication)
+	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
+
 	var application object.Application
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &application)
 	if err != nil {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameApplicationUpdate,
+			logger.OperationResultFailure,
+		)
 		c.ResponseError(err.Error())
 		return
 	}
 
+	logger.SetItem(goCtx, "obj", application.GetId())
+
 	application.Owner = "admin"
 	c.ValidateOrganization(application.Organization)
 
-	c.Data["json"] = wrapActionResponse(object.UpdateApplication(goCtx, id, &application))
+	affected, err := object.UpdateApplication(goCtx, id, &application)
+
+	if err != nil {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameApplicationUpdate,
+			logger.OperationResultFailure,
+		)
+	} else {
+		if !affected {
+			logger.LogWithInfo(
+				goCtx,
+				logger.LogMsgDetailed{
+					"error": "not affected",
+				},
+				logger.OperationNameApplicationUpdate,
+				logger.OperationResultFailure,
+			)
+		} else {
+			logger.LogWithInfo(
+				goCtx,
+				"application has been successfully updated",
+				logger.OperationNameApplicationUpdate,
+				logger.OperationResultSuccess,
+			)
+		}
+	}
+
+	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 }
 
