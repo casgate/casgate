@@ -23,11 +23,13 @@ import (
 	"github.com/casdoor/casdoor/orm"
 
 	"github.com/beego/beego/logs"
-	"github.com/casdoor/casdoor/conf"
 	"github.com/xorm-io/builder"
 
-	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/conf"
+
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Role struct {
@@ -110,7 +112,7 @@ func getRole(owner string, name string) (*Role, error) {
 }
 
 func GetRole(id string) (*Role, error) {
-	owner, name, err := util.GetOwnerAndNameFromIdWithError(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid role id: %s", id))
 	}
@@ -363,7 +365,10 @@ func roleChangeTrigger(oldName string, newName string) error {
 
 	for _, role := range roles {
 		for j, u := range role.Roles {
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.GetOwnerAndNameFromId(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				if newName != "" {
 					role.Roles[j] = util.GetId(owner, newName)
@@ -388,7 +393,10 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Roles {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.GetOwnerAndNameFromId(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				if newName != "" {
 					permission.Roles[j] = util.GetId(owner, newName)
@@ -414,7 +422,10 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, provider := range providers {
 		for j, u := range provider.RoleMappingItems {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u.Role)
+			owner, name, err := util.GetOwnerAndNameFromId(u.Role)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				if newName != "" {
 					provider.RoleMappingItems[j].Role = util.GetId(owner, newName)
@@ -440,7 +451,10 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, ldap := range ldaps {
 		for j, u := range ldap.RoleMappingItems {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u.Role)
+			owner, name, err := util.GetOwnerAndNameFromId(u.Role)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				if newName != "" {
 					ldap.RoleMappingItems[j].Role = util.GetId(owner, newName)
@@ -510,29 +524,6 @@ func makeAncestorRolesTreeMap(roles []*Role) map[string]*TreeNode[*Role] {
 	}
 
 	return roleMap
-}
-
-// containsRole is a helper function to check if a roles is related to any role in the given list roles
-func containsRole(role *Role, roleMap map[string]*Role, visited map[string]bool, roleIds ...string) bool {
-	roleId := role.GetId()
-	if isContain, ok := visited[roleId]; ok {
-		return isContain
-	}
-
-	visited[role.GetId()] = false
-
-	for _, subRole := range role.Roles {
-		if util.HasString(roleIds, subRole) {
-			return true
-		}
-
-		r, ok := roleMap[subRole]
-		if ok && containsRole(r, roleMap, visited, roleIds...) {
-			return true
-		}
-	}
-
-	return false
 }
 
 func subRolePermissions(role *Role) ([]*Permission, error) {

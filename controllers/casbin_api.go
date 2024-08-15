@@ -75,7 +75,11 @@ func (c *ApiController) Enforce() {
 
 	permissions := []*object.Permission{}
 	if modelId != "" {
-		owner, modelName := util.GetOwnerAndNameFromId(modelId)
+		owner, modelName, err := util.GetOwnerAndNameFromId(modelId)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
 		permissions, err = object.GetPermissionsByModel(owner, modelName)
 		if err != nil {
 			c.ResponseError(err.Error())
@@ -167,7 +171,11 @@ func (c *ApiController) BatchEnforce() {
 
 	permissions := []*object.Permission{}
 	if modelId != "" {
-		owner, modelName := util.GetOwnerAndNameFromId(modelId)
+		owner, modelName, err := util.GetOwnerAndNameFromId(modelId)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
 		permissions, err = object.GetPermissionsByModel(owner, modelName)
 		if err != nil {
 			c.ResponseError(err.Error())
@@ -229,7 +237,7 @@ func (c *ApiController) GetAllActions() {
 func (c *ApiController) GetAllRoles() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	userId := c.GetSessionUsername()
 	if userId == "" {
 		c.ResponseError(c.T("general:Please login first"))

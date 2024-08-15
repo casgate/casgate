@@ -16,10 +16,12 @@ package object
 
 import (
 	"fmt"
+
 	"github.com/casdoor/casdoor/orm"
 
-	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Header struct {
@@ -98,12 +100,18 @@ func getWebhook(owner string, name string) (*Webhook, error) {
 }
 
 func GetWebhook(id string) (*Webhook, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getWebhook(owner, name)
 }
 
 func UpdateWebhook(id string, webhook *Webhook) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return false, err
+	}
 	if w, err := getWebhook(owner, name); err != nil {
 		return false, err
 	} else if w == nil {

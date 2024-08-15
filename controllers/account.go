@@ -317,8 +317,18 @@ func (c *ApiController) Logout() {
 		logger.SetItem(goCtx, "obj", object.CasdoorApplication)
 
 		c.ClearUserSession()
-		owner, username := util.GetOwnerAndNameFromId(user)
-		_, err := object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
+		owner, username, err := util.GetOwnerAndNameFromId(user)
+		if err != nil {
+			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
+
+			c.ResponseError(err.Error())
+			return
+		}
+		_, err = object.DeleteSessionId(
+			goCtx,
+			util.GetSessionId(owner, username, object.CasdoorApplication),
+			c.Ctx.Input.CruSession.SessionID(),
+		)
 		if err != nil {
 			logLogoutErr(goCtx, fmt.Sprintf("Logout error: %s", err.Error()))
 			c.ResponseError(err.Error())
@@ -385,7 +395,13 @@ func (c *ApiController) Logout() {
 
 		c.ClearUserSession()
 		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
-		owner, username := util.GetOwnerAndNameFromId(user)
+		owner, username, err := util.GetOwnerAndNameFromId(user)
+		if err != nil {
+			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
+
+			c.ResponseError(err.Error())
+			return
+		}
 
 		_, err = object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
 		if err != nil {

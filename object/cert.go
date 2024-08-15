@@ -19,9 +19,11 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+
+	"github.com/xorm-io/core"
+
 	"github.com/casdoor/casdoor/orm"
 	"github.com/casdoor/casdoor/util"
-	"github.com/xorm-io/core"
 )
 
 const (
@@ -103,24 +105,6 @@ func GetGlobalCertsCount(field, value string) (int64, error) {
 	return session.Count(&Cert{})
 }
 
-func GetGlobleCerts(owner string) ([]*Cert, error) {
-	certs := []*Cert{}
-	session := orm.GetSession("", -1, -1, "", "", "", "")
-
-	var err error
-	if owner != "" {
-		err = session.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&certs)
-	} else {
-		session.Desc("created_time").Find(&certs)
-	}
-
-	if err != nil {
-		return certs, err
-	}
-
-	return certs, nil
-}
-
 func GetPaginationGlobalCerts(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Cert, error) {
 	certs := []*Cert{}
 	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
@@ -186,12 +170,18 @@ func GetTlsConfigForCert(name string) (*tls.Config, error) {
 }
 
 func GetCert(id string) (*Cert, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getCert(owner, name)
 }
 
 func UpdateCert(id string, cert *Cert) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return false, err
+	}
 	if c, err := getCert(owner, name); err != nil {
 		return false, err
 	} else if c == nil {

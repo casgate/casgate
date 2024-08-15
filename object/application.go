@@ -23,11 +23,12 @@ import (
 	"github.com/casdoor/casdoor/orm"
 
 	"github.com/beego/beego/logs"
+	"github.com/r3labs/diff/v3"
+	"github.com/xorm-io/core"
+
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/util"
 	"github.com/casdoor/casdoor/util/logger"
-	"github.com/r3labs/diff/v3"
-	"github.com/xorm-io/core"
 )
 
 type SigninMethod struct {
@@ -368,7 +369,10 @@ func GetApplicationByUser(ctx context.Context, user *User) (*Application, error)
 }
 
 func GetApplicationByUserId(ctx context.Context, userId string) (application *Application, err error) {
-	owner, name := util.GetOwnerAndNameFromId(userId)
+	owner, name, err := util.GetOwnerAndNameFromId(userId)
+	if err != nil {
+		return nil, err
+	}
 	if owner == "app" {
 		application, err = getApplication(ctx, "admin", name, nil)
 		return
@@ -412,12 +416,18 @@ func GetApplicationByClientId(ctx context.Context, clientId string) (*Applicatio
 }
 
 func GetApplication(ctx context.Context, id string) (*Application, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getApplication(ctx, owner, name, nil)
 }
 
 func GetApplicationWithOpts(ctx context.Context, id string, opts *GetApplicationOptions) (*Application, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getApplication(ctx, owner, name, opts)
 }
 
@@ -483,7 +493,10 @@ func GetMaskedApplications(applications []*Application, userId string) []*Applic
 }
 
 func UpdateApplication(ctx context.Context, id string, application *Application) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return false, err
+	}
 	oldApplication, err := getApplication(ctx, owner, name, nil)
 	if oldApplication == nil {
 		return false, err

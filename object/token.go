@@ -19,13 +19,15 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"time"
+
+	"github.com/casdoor/casdoor/orm"
+
+	"github.com/xorm-io/core"
 
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/util"
-	"github.com/xorm-io/core"
 )
 
 const (
@@ -98,12 +100,6 @@ func GetTokenCount(owner, organization, field, value string) (int64, error) {
 	return session.Count(&Token{Organization: organization})
 }
 
-func GetTokens(owner string, organization string) ([]*Token, error) {
-	tokens := []*Token{}
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&tokens, &Token{Owner: owner, Organization: organization})
-	return tokens, err
-}
-
 func GetPaginationTokens(owner, organization string, offset, limit int, field, value, sortField, sortOrder string) ([]*Token, error) {
 	tokens := []*Token{}
 	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
@@ -153,7 +149,10 @@ func updateUsedByCode(token *Token) bool {
 }
 
 func GetToken(id string) (*Token, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getToken(owner, name)
 }
 
@@ -162,7 +161,10 @@ func (token *Token) GetId() string {
 }
 
 func UpdateToken(id string, token *Token) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return false, err
+	}
 	if t, err := getToken(owner, name); err != nil {
 		return false, err
 	} else if t == nil {

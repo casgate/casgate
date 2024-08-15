@@ -17,11 +17,13 @@ package object
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casbin/casbin/v2/model"
-	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Model struct {
@@ -84,7 +86,10 @@ func getModel(owner string, name string) (*Model, error) {
 }
 
 func GetModel(id string) (*Model, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getModel(owner, name)
 }
 
@@ -103,7 +108,10 @@ func UpdateModelWithCheck(id string, modelObj *Model) error {
 }
 
 func UpdateModel(id string, modelObj *Model) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return false, err
+	}
 	m, err := getModel(owner, name)
 	if err != nil {
 		return false, err
