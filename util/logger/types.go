@@ -8,6 +8,7 @@ const (
 	ObjectTypeProvider     ObjectType = "provider"
 	ObjectTypeApplication  ObjectType = "application"
 	ObjectTypeUserApiToken ObjectType = "user-api-token"
+	ObjectTypeLDAP        ObjectType = "ldap"
 )
 
 type OperationResult string
@@ -33,6 +34,8 @@ const (
 
 	OperationNameAddUserApiToken    OperationName = "add-user-api-token"
 	OperationNameUserApiTokenDelete OperationName = "user-api-token-delete"
+	
+	OperationNameLdapSyncUsers OperationName = "ldap-sync-users"
 )
 
 type LogMsgDetailed map[string]interface{}
