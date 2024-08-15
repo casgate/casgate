@@ -3,10 +3,11 @@ package logger
 type ObjectType string
 
 const (
-	ObjectTypeUser        ObjectType = "user"
-	ObjectTypeRole        ObjectType = "role"
-	ObjectTypeProvider    ObjectType = "provider"
-	ObjectTypeApplication ObjectType = "application"
+	ObjectTypeUser         ObjectType = "user"
+	ObjectTypeRole         ObjectType = "role"
+	ObjectTypeProvider     ObjectType = "provider"
+	ObjectTypeApplication  ObjectType = "application"
+	ObjectTypeUserApiToken ObjectType = "user-api-token"
 )
 
 type OperationResult string
@@ -29,6 +30,9 @@ const (
 	OperationNameProviderUpdate OperationName = "provider-update"
 
 	OperationNameApplicationUpdate OperationName = "application-update"
+
+	OperationNameAddUserApiToken    OperationName = "add-user-api-token"
+	OperationNameUserApiTokenDelete OperationName = "user-api-token-delete"
 )
 
 type LogMsgDetailed map[string]interface{}
