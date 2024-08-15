@@ -15,6 +15,8 @@
 package controllers
 
 import (
+	"fmt"
+
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util/logger"
@@ -68,7 +70,7 @@ func (c *ApiController) AddApiToken() {
 		logger.LogWithInfo(
 			ctx,
 			logger.LogMsgDetailed{
-				"error": err.Error(),
+				"error": fmt.Sprintf("object.GetUser: %s", err.Error()),
 			},
 			logger.OperationNameAddUserApiToken,
 			logger.OperationResultFailure,
@@ -102,7 +104,7 @@ func (c *ApiController) AddApiToken() {
 		logger.LogWithInfo(
 			ctx,
 			logger.LogMsgDetailed{
-				"error": err.Error(),
+				"error": fmt.Sprintf("object.AddUser: %s", err.Error()),
 			},
 			logger.OperationNameAddUserApiToken,
 			logger.OperationResultFailure,
@@ -217,7 +219,7 @@ func (c *ApiController) DeleteApiToken() {
 		logger.LogWithInfo(
 			ctx,
 			logger.LogMsgDetailed{
-				"error": err.Error(),
+				"error": fmt.Sprintf("object.GetUser: %s", err.Error()),
 			},
 			logger.OperationNameUserApiTokenDelete,
 			logger.OperationResultFailure,
@@ -246,7 +248,7 @@ func (c *ApiController) DeleteApiToken() {
 		logger.LogWithInfo(
 			ctx,
 			logger.LogMsgDetailed{
-				"error": err.Error(),
+				"error": fmt.Sprintf("object.DeleteApiToken: %s", err.Error()),
 			},
 			logger.OperationNameUserApiTokenDelete,
 			logger.OperationResultFailure,
