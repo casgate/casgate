@@ -239,6 +239,8 @@ func (c *ApiController) UpdateApplication() {
 	application.Owner = "admin"
 	c.ValidateOrganization(application.Organization)
 
+	c.validateApplicationURLs(application)
+
 	affected, err := object.UpdateApplication(goCtx, id, &application)
 
 	if err != nil {
@@ -297,6 +299,8 @@ func (c *ApiController) AddApplication() {
 	application.Owner = "admin"
 	c.ValidateOrganization(application.Organization)
 
+	c.validateApplicationURLs(application)
+
 	count, err := object.GetApplicationCount("", "", "")
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -340,4 +344,24 @@ func (c *ApiController) DeleteApplication() {
 
 	c.Data["json"] = wrapActionResponse(object.DeleteApplication(&application))
 	c.ServeJSON()
+}
+
+func (c *ApiController) validateApplicationURLs(application object.Application) {
+	fieldErrMap := map[string]string{
+		application.Logo:              fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:Logo")),
+		application.HomepageUrl:       fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:HomepageUrl")),
+		application.SamlReplyUrl:      fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:SamlReplyUrl")),
+		application.SignupUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:SignupUrl")),
+		application.SigninUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:SigninUrl")),
+		application.ForgetUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:ForgetUrl")),
+		application.AffiliationUrl:    fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:AffiliationUrl")),
+		application.FormBackgroundUrl: fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:FormBackgroundUrl")),
+	}
+
+	for field, err := range fieldErrMap {
+		if field != "" && !util.IsURLValid(field) {
+			c.ResponseError(err)
+			return
+		}
+	}
 }

@@ -334,6 +334,8 @@ func (c *ApiController) UpdateUser() {
 
 	c.ValidateOrganization(user.Owner)
 
+	c.validateUserURLs(user)
+
 	if id == "" {
 		id = c.GetSessionUsername()
 		if id == "" {
@@ -583,6 +585,8 @@ func (c *ApiController) AddUser() {
 	logger.SetItem(ctx, "obj", user.GetId())
 
 	c.ValidateOrganization(user.Owner)
+
+	c.validateUserURLs(user)
 
 	count, err := object.GetUserCount("", "", "", "")
 	if err != nil {
@@ -1303,5 +1307,17 @@ func fillUserIdProviders(users []*object.User, userIdProviders []*object.UserIdP
 		if userIdProvider, ok := userIdProviderMap[users[i].Id]; ok {
 			users[i].UserIdProvider = userIdProvider
 		}
+	}
+}
+
+func (c *ApiController) validateUserURLs(user object.User) {
+	if user.Avatar != "" && !util.IsURLValid(user.Avatar) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("user:Avatar")))
+		return
+	}
+
+	if user.PermanentAvatar != "" && !util.IsURLValid(user.PermanentAvatar) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("user:PermanentAvatar")))
+		return
 	}
 }

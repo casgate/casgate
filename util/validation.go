@@ -17,6 +17,7 @@ package util
 import (
 	"fmt"
 	"net/mail"
+	"net/url"
 	"regexp"
 
 	"github.com/nyaruka/phonenumbers"
@@ -24,6 +25,8 @@ import (
 
 const (
 	usernameAllowedSpecialSymbols = "!#$%&'*+/=?^{|}~@.\x60"
+
+	javascriptURLScheme = "javascript"
 )
 
 var (
@@ -87,4 +90,9 @@ func GetCountryCode(prefix string, phone string) (string, error) {
 
 func IsFieldValueAllowedForDB(field string) bool {
 	return ReFieldWhiteList.MatchString(field)
+}
+
+func IsURLValid(URL string) bool {
+	u, err := url.Parse(URL)
+	return err == nil && u.Scheme != javascriptURLScheme
 }

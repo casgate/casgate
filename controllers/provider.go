@@ -181,6 +181,8 @@ func (c *ApiController) UpdateProvider() {
 
 	c.ValidateOrganization(provider.Owner)
 
+	c.validateProviderURLs(provider)
+
 	for _, roleMappingItem := range provider.RoleMappingItems {
 		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
 			logger.LogWithInfo(
@@ -238,6 +240,8 @@ func (c *ApiController) AddProvider() {
 	}
 
 	c.ValidateOrganization(provider.Owner)
+
+	c.validateProviderURLs(provider)
 
 	count, err := object.GetProviderCount("", "", "")
 	if err != nil {
@@ -359,4 +363,26 @@ func (c *ApiController) TestProviderConnection() {
 		return
 	}
 	c.ResponseOk()
+}
+
+func (c *ApiController) validateProviderURLs(provider object.Provider) {
+	fieldErrMap := map[string]string{
+		provider.Domain:                 fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:Domain")),
+		provider.CustomConfUrl:          fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomConfUrl")),
+		provider.CustomAuthUrl:          fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomAuthUrl")),
+		provider.CustomTokenUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomTokenUrl")),
+		provider.CustomUserInfoUrl:      fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomUserInfoUrl")),
+		provider.CustomLogo:             fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomLogo")),
+		provider.IssuerUrl:              fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:IssuerUrl")),
+		provider.BaseHostUrl:            fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:BaseHostUrl")),
+		provider.ProviderUrl:            fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:ProviderUrl")),
+		provider.SingleLogoutServiceUrl: fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:SingleLogoutServiceUrl")),
+	}
+
+	for field, err := range fieldErrMap {
+		if field != "" && !util.IsURLValid(field) {
+			c.ResponseError(err)
+			return
+		}
+	}
 }

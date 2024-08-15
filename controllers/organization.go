@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/beego/beego/utils/pagination"
@@ -141,6 +142,8 @@ func (c *ApiController) UpdateOrganization() {
 		return
 	}
 
+	c.validateOrganizationURLs(organization)
+
 	c.Data["json"] = wrapActionResponse(object.UpdateOrganization(c.Ctx.Request.Context(), request.Id, &organization, c.GetAcceptLanguage()))
 	c.ServeJSON()
 }
@@ -171,6 +174,8 @@ func (c *ApiController) AddOrganization() {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
+
+	c.validateOrganizationURLs(organization)
 
 	count, err := object.GetOrganizationCount("", "", "")
 	if err != nil {
@@ -269,4 +274,21 @@ func (c *ApiController) GetOrganizationNames() {
 	}
 
 	c.ResponseOk(organizationNames)
+}
+
+func (c *ApiController) validateOrganizationURLs(organization object.Organization) {
+	if organization.Favicon != "" && !util.IsURLValid(organization.Favicon) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:Favicon")))
+		return
+	}
+
+	if organization.WebsiteUrl != "" && !util.IsURLValid(organization.WebsiteUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:WebsiteUrl")))
+		return
+	}
+
+	if organization.DefaultAvatar != "" && !util.IsURLValid(organization.DefaultAvatar) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:DefaultAvatar")))
+		return
+	}
 }
