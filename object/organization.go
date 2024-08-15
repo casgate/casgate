@@ -17,14 +17,14 @@ package object
 import (
 	"context"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"strconv"
+
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/util"
-	"github.com/xorm-io/builder"
 	"github.com/xorm-io/core"
 )
 
@@ -80,26 +80,9 @@ type Organization struct {
 	AccountItems []*AccountItem `xorm:"varchar(5000)" json:"accountItems"`
 }
 
-func GetOrganizationCount(owner, field, value string) (int64, error) {
+func GetOrganizationCount(owner, name, field, value string) (int64, error) {
 	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	return session.Count(&Organization{})
-}
-
-func GetOrganizations(owner string, name ...string) ([]*Organization, error) {
-	organizations := []*Organization{}
-	if name != nil && len(name) > 0 {
-		err := orm.AppOrmer.Engine.Desc("created_time").Where(builder.In("name", name)).Find(&organizations)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err := orm.AppOrmer.Engine.Desc("created_time").Find(&organizations, &Organization{Owner: owner})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return organizations, nil
+	return session.Count(&Organization{Name: name})
 }
 
 func GetOrganizationsByFields(owner string, fields ...string) ([]*Organization, error) {
@@ -115,12 +98,7 @@ func GetOrganizationsByFields(owner string, fields ...string) ([]*Organization, 
 func GetPaginationOrganizations(owner string, name string, offset, limit int, field, value, sortField, sortOrder string) ([]*Organization, error) {
 	organizations := []*Organization{}
 	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
-	var err error
-	if name != "" {
-		err = session.Find(&organizations, &Organization{Name: name})
-	} else {
-		err = session.Find(&organizations)
-	}
+	err := session.Find(&organizations, &Organization{Name: name})
 	if err != nil {
 		return nil, err
 	}
