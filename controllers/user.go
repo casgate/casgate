@@ -23,6 +23,7 @@ import (
 
 	"github.com/beego/beego/logs"
 	"github.com/beego/beego/utils/pagination"
+
 	"github.com/casdoor/casdoor/captcha"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/object"
@@ -195,7 +196,11 @@ func (c *ApiController) GetUser() {
 	id := util.GetId(user.Owner, user.Name)
 
 	if request.Owner == "" {
-		request.Owner = util.GetOwnerFromId(id)
+		request.Owner, err = util.GetOwnerFromId(id)
+		if err != nil {
+			c.ResponseInternalServerError(err.Error())
+			return
+		}
 	}
 
 	request.Id = util.GetId(user.Owner, user.Name)
@@ -237,7 +242,12 @@ func (c *ApiController) GetUser() {
 	}
 
 	if fillUserIdProvider {
-		userIdProviders, err := object.GetUserIdProviders(util.GetOwnerFromId(id))
+		owner, err := util.GetOwnerFromId(id)
+		if err != nil {
+			c.ResponseInternalServerError(err.Error())
+			return
+		}
+		userIdProviders, err := object.GetUserIdProviders(owner)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return

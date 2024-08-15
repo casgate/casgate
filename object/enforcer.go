@@ -16,13 +16,15 @@ package object
 
 import (
 	"fmt"
+
 	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/config"
-	"github.com/casdoor/casdoor/util"
 	xormadapter "github.com/casdoor/xorm-adapter/v3"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Enforcer struct {
@@ -43,16 +45,6 @@ type Enforcer struct {
 func GetEnforcerCount(owner, field, value string) (int64, error) {
 	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Enforcer{})
-}
-
-func GetEnforcers(owner string) ([]*Enforcer, error) {
-	enforcers := []*Enforcer{}
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&enforcers, &Enforcer{Owner: owner})
-	if err != nil {
-		return enforcers, err
-	}
-
-	return enforcers, nil
 }
 
 func GetPaginationEnforcers(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Enforcer, error) {
@@ -85,12 +77,18 @@ func getEnforcer(owner string, name string) (*Enforcer, error) {
 }
 
 func GetEnforcer(id string) (*Enforcer, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getEnforcer(owner, name)
 }
 
 func UpdateEnforcer(id string, enforcer *Enforcer) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return false, err
+	}
 	if oldEnforcer, err := getEnforcer(owner, name); err != nil {
 		return false, err
 	} else if oldEnforcer == nil {

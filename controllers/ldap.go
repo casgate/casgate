@@ -18,12 +18,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/casdoor/casdoor/util/logger"
 	"time"
 
+	"github.com/casdoor/casdoor/util/logger"
+
 	"github.com/beego/beego/utils/pagination"
-	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/pkg/errors"
+
+	"github.com/casdoor/casdoor/ldap_sync"
 
 	goldap "github.com/go-ldap/ldap/v3"
 
@@ -408,9 +410,16 @@ func (c *ApiController) SyncLdapUsers() {
 
 	id := c.Input().Get("id")
 
-	_, ldapId := util.GetOwnerAndNameFromId(id)
+	_, ldapId, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		err = errors.Wrap(err, "SyncLdapUsers error: Invalid id")
+		record.AddReason(err.Error())
+		logger.Error(goCtx, err.Error())
+		c.ResponseError(err.Error())
+		return
+	}
 	var users []object.LdapUser
-	err := json.Unmarshal(c.Ctx.Input.RequestBody, &users)
+	err = json.Unmarshal(c.Ctx.Input.RequestBody, &users)
 	if err != nil {
 		err = errors.Wrap(err, "SyncLdapUsers error: Failed to unmarshal ldap users")
 		record.AddReason(err.Error())

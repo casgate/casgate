@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/beego/beego/context"
+
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
@@ -85,7 +86,11 @@ func fastAutoSignin(ctx *context.Context) (string, error) {
 		return "", nil
 	}
 
-	if application.Organization != util.GetOwnerFromId(userId) {
+	owner, err := util.GetOwnerFromId(userId)
+	if err != nil {
+		return "", err
+	}
+	if application.Organization != owner {
 		return "", nil
 	}
 

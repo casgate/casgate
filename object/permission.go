@@ -15,12 +15,14 @@
 package object
 
 import (
-	"github.com/casdoor/casdoor/orm"
 	"strings"
+
+	"github.com/casdoor/casdoor/orm"
+
+	"github.com/xorm-io/core"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
-	"github.com/xorm-io/core"
 )
 
 type Permission struct {
@@ -382,15 +384,21 @@ func (p *Permission) GetId() string {
 	return util.GetId(p.Owner, p.Name)
 }
 
-func (p *Permission) isUserHit(name string) bool {
-	targetOrg, _ := util.GetOwnerAndNameFromId(name)
+func (p *Permission) isUserHit(name string) (bool, error) {
+	targetOrg, _, err := util.GetOwnerAndNameFromId(name)
+	if err != nil {
+		return false, err
+	}
 	for _, user := range p.Users {
-		userOrg, userName := util.GetOwnerAndNameFromId(user)
+		userOrg, userName, err := util.GetOwnerAndNameFromId(user)
+		if err != nil {
+			return false, err
+		}
 		if userOrg == targetOrg && userName == "*" {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 func (p *Permission) isResourceHit(name string) bool {

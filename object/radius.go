@@ -2,11 +2,13 @@ package object
 
 import (
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"time"
 
-	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/orm"
+
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 // https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/sec_usr_radatt/configuration/xe-16/sec-usr-radatt-xe-16-book/sec-rad-ov-ietf-attr.html
@@ -44,22 +46,6 @@ func (ra *RadiusAccounting) GetId() string {
 	return util.GetId(ra.Owner, ra.Name)
 }
 
-func getRadiusAccounting(owner, name string) (*RadiusAccounting, error) {
-	if owner == "" || name == "" {
-		return nil, nil
-	}
-	ra := RadiusAccounting{Owner: owner, Name: name}
-	existed, err := orm.AppOrmer.Engine.Get(&ra)
-	if err != nil {
-		return nil, err
-	}
-	if existed {
-		return &ra, nil
-	} else {
-		return nil, nil
-	}
-}
-
 func getPaginationRadiusAccounting(owner, field, value, sortField, sortOrder string, offset, limit int) ([]*RadiusAccounting, error) {
 	ras := []*RadiusAccounting{}
 	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
@@ -68,11 +54,6 @@ func getPaginationRadiusAccounting(owner, field, value, sortField, sortOrder str
 		return ras, err
 	}
 	return ras, nil
-}
-
-func GetRadiusAccounting(id string) (*RadiusAccounting, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	return getRadiusAccounting(owner, name)
 }
 
 func GetRadiusAccountingBySessionId(sessionId string) (*RadiusAccounting, error) {
@@ -91,14 +72,12 @@ func AddRadiusAccounting(ra *RadiusAccounting) error {
 	return err
 }
 
-func DeleteRadiusAccounting(ra *RadiusAccounting) error {
-	_, err := orm.AppOrmer.Engine.ID(core.PK{ra.Owner, ra.Name}).Delete(&RadiusAccounting{})
-	return err
-}
-
 func UpdateRadiusAccounting(id string, ra *RadiusAccounting) error {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	_, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).Update(ra)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return err
+	}
+	_, err = orm.AppOrmer.Engine.ID(core.PK{owner, name}).Update(ra)
 	return err
 }
 
