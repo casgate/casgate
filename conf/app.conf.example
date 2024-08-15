@@ -2,8 +2,8 @@ appname = casdoor
 httpport = 8000
 runmode = dev
 copyrequestbody = true
-driverName = mysql
-dataSourceName = root:password@tcp(localhost:3306)/
+driverName = postgres
+dataSourceName = "user=postgres password=password host=postgres port=5432 sslmode=disable dbname=casdoor"
 dbName = casdoor
 tableNamePrefix =
 showSql = false
