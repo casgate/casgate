@@ -15,12 +15,14 @@
 package object
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
 	"strings"
 
 	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
 
 	"github.com/beego/beego/logs"
 	"github.com/xorm-io/builder"
@@ -549,7 +551,7 @@ func subRolePermissions(role *Role) ([]*Permission, error) {
 }
 
 // SyncRolesToUser sync user roles
-func SyncRolesToUser(user *User, roleIds []string) error {
+func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 	userId := user.GetId()
 	roles, err := GetRolesByIds(roleIds)
 	if err != nil {
@@ -574,8 +576,26 @@ func SyncRolesToUser(user *User, roleIds []string) error {
 			role.Users = util.DeleteVal(role.Users, userId)
 			_, err = UpdateRole(role.GetId(), role)
 			if err != nil {
+				logger.LogWithInfo(
+					ctx,
+					logger.LogMsgDetailed{
+						"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
+					},
+					logger.OperationNameLdapSyncUsers,
+					logger.OperationResultFailure,
+				)
 				return err
 			}
+			logger.LogWithInfo(
+				ctx,
+				logger.LogMsgDetailed{
+					"info": "role removed from user",
+					"user": userId,
+					"role": role.GetId(),
+				},
+				logger.OperationNameLdapSyncUsers,
+				logger.OperationResultSuccess,
+			)
 		}
 	}
 
@@ -594,8 +614,26 @@ func SyncRolesToUser(user *User, roleIds []string) error {
 
 			_, err = UpdateRole(role.GetId(), role)
 			if err != nil {
+				logger.LogWithInfo(
+					ctx,
+					logger.LogMsgDetailed{
+						"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
+					},
+					logger.OperationNameLdapSyncUsers,
+					logger.OperationResultFailure,
+				)
 				return err
 			}
+			logger.LogWithInfo(
+				ctx,
+				logger.LogMsgDetailed{
+					"info": "role added to user",
+					"user": userId,
+					"role": role.GetId(),
+				},
+				logger.OperationNameLdapSyncUsers,
+				logger.OperationResultSuccess,
+			)
 		}
 	}
 	return nil

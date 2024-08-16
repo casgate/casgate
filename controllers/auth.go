@@ -948,7 +948,7 @@ func (c *ApiController) Login() {
 					}
 
 					userRoles := mapper.GetRoles()
-					err = object.SyncRolesToUser(user, userRoles)
+					err = object.SyncRolesToUser(goCtx, user, userRoles)
 					if err != nil {
 						logLoginErr(goCtx, fmt.Sprintf("Role mapping error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")

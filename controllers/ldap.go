@@ -406,9 +406,13 @@ func (c *ApiController) SyncLdapUsers() {
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
 
+	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeLDAP)
+	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
+
 	record.AddReason("SyncLdapUsers: start sync users")
 
 	id := c.Input().Get("id")
+	logger.SetItem(goCtx, "obj", id)
 
 	_, ldapId, err := util.GetOwnerAndNameFromId(id)
 	if err != nil {
@@ -423,7 +427,14 @@ func (c *ApiController) SyncLdapUsers() {
 	if err != nil {
 		err = errors.Wrap(err, "SyncLdapUsers error: Failed to unmarshal ldap users")
 		record.AddReason(err.Error())
-		logger.Error(goCtx, err.Error())
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": fmt.Sprintf("json.Unmarshal: %s", err.Error()),
+			},
+			logger.OperationNameLdapSyncUsers,
+			logger.OperationResultFailure,
+		)
 		c.ResponseError(err.Error())
 		return
 	}
@@ -439,7 +450,14 @@ func (c *ApiController) SyncLdapUsers() {
 	syncResult, err := object.SyncLdapUsers(goCtx, command)
 	if err != nil {
 		record.AddReason(fmt.Sprintf("SyncLdapUsers error: %s", err.Error()))
-		logger.Error(goCtx, err.Error())
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": fmt.Sprintf("object.SyncLdapUsers: %s", err.Error()),
+			},
+			logger.OperationNameLdapSyncUsers,
+			logger.OperationResultFailure,
+		)
 		c.ResponseError(err.Error())
 		return
 	}
@@ -447,16 +465,43 @@ func (c *ApiController) SyncLdapUsers() {
 	err = object.UpdateLdapSyncTime(ldapId)
 	if err != nil {
 		record.AddReason(fmt.Sprintf("SyncLdapUsers error: %s", err.Error()))
-		logger.Error(goCtx, err.Error())
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": fmt.Sprintf("object.UpdateLdapSyncTim: %s", err.Error()),
+			},
+			logger.OperationNameLdapSyncUsers,
+			logger.OperationResultFailure,
+		)
 		c.ResponseError(err.Error())
 		return
 	}
 	if len(syncResult.Failed) != 0 {
-		logger.Warn(goCtx, "SyncLdapUsers: sync finished", "ldap_id", command.LdapId, "synced_by_user_id", command.SyncedByUserID, "reason", command.Reason, "new_users", len(syncResult.Added), "updated", len(syncResult.Updated), "errors", len(syncResult.Failed))
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"info":      "users sync finished",
+				"reason":    command.Reason,
+				"new_users": len(syncResult.Added),
+				"updated":   len(syncResult.Updated),
+				"errors":    len(syncResult.Failed),
+			},
+			logger.OperationNameLdapSyncUsers,
+			logger.OperationResultFailure,
+		)
 	} else {
-		logger.Info(goCtx, "SyncLdapUsers: sync finished", "ldap_id", command.LdapId, "synced_by_user_id", command.SyncedByUserID, "reason", command.Reason, "new_users", len(syncResult.Added), "updated", len(syncResult.Updated))
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"info":      "users sync finished",
+				"reason":    command.Reason,
+				"new_users": len(syncResult.Added),
+				"updated":   len(syncResult.Updated),
+			},
+			logger.OperationNameLdapSyncUsers,
+			logger.OperationResultSuccess,
+		)
 	}
-	logger.Info(goCtx, "SyncLdapUsers: users sync finished", "ldap_id", command.LdapId, "synced_by_user_id", command.SyncedByUserID, "reason", command.Reason)
 
 	record.AddReason("SyncLdapUsers: users sync finished")
 
