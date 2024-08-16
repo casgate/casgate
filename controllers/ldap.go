@@ -412,18 +412,32 @@ func (c *ApiController) SyncLdapUsers() {
 
 	_, ldapId, err := util.GetOwnerAndNameFromId(id)
 	if err != nil {
-		err = errors.Wrap(err, "SyncLdapUsers error: Invalid id")
 		record.AddReason(err.Error())
-		logger.Error(goCtx, err.Error())
+		logger.Error(
+			goCtx,
+			"SyncLdapUsers error: Invalid id",
+			"error", err.Error(),
+			"id", id,
+			"ldap_id", ldapId,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
+		)
 		c.ResponseError(err.Error())
 		return
 	}
 	var users []ldap_sync.LdapUser
 	err = json.Unmarshal(c.Ctx.Input.RequestBody, &users)
 	if err != nil {
-		err = errors.Wrap(err, "SyncLdapUsers error: Failed to unmarshal ldap users")
 		record.AddReason(err.Error())
-		logger.Error(goCtx, err.Error())
+		logger.Error(
+			goCtx,
+			"SyncLdapUsers error: Failed to unmarshal ldap users",
+			"error", err.Error(),
+			"id", id,
+			"ldap_id", ldapId,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
+		)
 		c.ResponseError(err.Error())
 		return
 	}
@@ -438,26 +452,50 @@ func (c *ApiController) SyncLdapUsers() {
 
 	syncResult, err := object.SyncLdapUsers(goCtx, command)
 	if err != nil {
-		record.AddReason(fmt.Sprintf("SyncLdapUsers error: %s", err.Error()))
-		logger.Error(goCtx, err.Error())
-		c.ResponseError(err.Error())
-		return
-	}
-
-	err = object.UpdateLdapSyncTime(ldapId)
-	if err != nil {
-		record.AddReason(fmt.Sprintf("SyncLdapUsers error: %s", err.Error()))
-		logger.Error(goCtx, err.Error())
+		record.AddReason(err.Error())
+		logger.Error(
+			goCtx,
+			"SyncLdapUsers failed",
+			"error", err.Error(),
+			"id", id,
+			"ldap_id", ldapId,
+			"reason", ldap_sync.LdapSyncReasonManual,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
+		)
 		c.ResponseError(err.Error())
 		return
 	}
 	if len(syncResult.Failed) != 0 {
-		logger.Warn(goCtx, "SyncLdapUsers: sync finished", "ldap_id", command.LdapId, "synced_by_user_id", command.SyncedByUserID, "reason", command.Reason, "new_users", len(syncResult.Added), "updated", len(syncResult.Updated), "errors", len(syncResult.Failed))
+		logger.Warn(
+			goCtx,
+			"SyncLdapUsers: sync finished with errors",
+			"id", id,
+			"ldap_id", ldapId,
+			"reason", ldap_sync.LdapSyncReasonManual,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultSuccess,
+			"synced_by_user_id", command.SyncedByUserID,
+			"reason", command.Reason,
+			"new_users", len(syncResult.Added),
+			"updated", len(syncResult.Updated),
+			"errors", len(syncResult.Failed),
+		)
 	} else {
-		logger.Info(goCtx, "SyncLdapUsers: sync finished", "ldap_id", command.LdapId, "synced_by_user_id", command.SyncedByUserID, "reason", command.Reason, "new_users", len(syncResult.Added), "updated", len(syncResult.Updated))
+		logger.Info(
+			goCtx,
+			"SyncLdapUsers: sync finished",
+			"id", id,
+			"ldap_id", ldapId,
+			"reason", ldap_sync.LdapSyncReasonManual,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultSuccess,
+			"synced_by_user_id", command.SyncedByUserID,
+			"reason", command.Reason,
+			"new_users", len(syncResult.Added),
+			"updated", len(syncResult.Updated),
+		)
 	}
-	logger.Info(goCtx, "SyncLdapUsers: users sync finished", "ldap_id", command.LdapId, "synced_by_user_id", command.SyncedByUserID, "reason", command.Reason)
-
 	record.AddReason("SyncLdapUsers: users sync finished")
 
 	failed := make([]ldap_sync.LdapUser, 0, len(syncResult.Failed))
@@ -487,20 +525,32 @@ func (c *ApiController) SyncLdapUsersV2() {
 	record := object.GetRecord(goCtx)
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &syncRequest)
 	if err != nil {
-		err = errors.Wrap(err, "SyncLdapUsersV2 error: unmarshal users")
 		record.AddReason(err.Error())
-		logger.Error(goCtx, err.Error())
+		logger.Error(
+			goCtx,
+			"SyncLdapUsersV2 error: unmarshal request",
+			"error", err.Error(),
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
+		)
 		c.ResponseError(err.Error())
 		return
 	}
 
 	record.AddReason("SyncLdapUsersV2: start sync users")
 
-	var users []ldap_sync.LdapUser
 	ldap, err := object.GetLdap(syncRequest.Id)
 	if err != nil {
 		err = errors.Wrap(err, "SyncLdapUsersV2 error: failed to GetLdap")
-		record.AddReason(err.Error())
+		logger.Error(
+			goCtx,
+			"SyncLdapUsersV2 error: failed to GetLdap",
+			"error", err.Error(),
+			"ldap_id", syncRequest.Id,
+			"reason", ldap_sync.LdapSyncReasonManual,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
+		)
 		logger.Error(goCtx, err.Error())
 		c.ResponseError(err.Error())
 		return
@@ -523,9 +573,8 @@ func (c *ApiController) SyncLdapUsersV2() {
 		c.ResponseError(err.Error())
 		return
 	}
-	users = res
 	command := object.LdapSyncCommand{
-		LdapUsers: users,
+		LdapUsers: res,
 		LdapId:    syncRequest.Id,
 		Reason:    ldap_sync.LdapSyncReasonManual,
 	}
@@ -535,18 +584,47 @@ func (c *ApiController) SyncLdapUsersV2() {
 
 	syncResult, err := object.SyncLdapUsers(goCtx, command)
 	if err != nil {
-		err = errors.Wrap(err, "SyncLdapUsersV2 error")
-		record.AddReason(err.Error())
-		logger.Error(goCtx, err.Error(), "ldap_id", command.LdapId, "synced_by_user_id", command.SyncedByUserID, "reason", command.Reason)
+		record.AddReason(fmt.Sprintf("SyncLdapUsers error: %s", err.Error()))
+		logger.Error(
+			goCtx,
+			"SyncLdapUsersV2 failed",
+			"error", err.Error(),
+			"ldap_id", command.LdapId,
+			"reason", ldap_sync.LdapSyncReasonManual,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
+		)
 		c.ResponseError(err.Error())
 		return
 	}
 	if len(syncResult.Failed) != 0 {
-		logger.Warn(goCtx, "SyncLdapUsersV2: sync finished", "ldap_id", command.LdapId, "synced_by_user_id", command.SyncedByUserID, "reason", command.Reason, "new_users", len(syncResult.Added), "updated", len(syncResult.Updated), "errors", len(syncResult.Failed))
+		logger.Warn(
+			goCtx,
+			"SyncLdapUsersV2: sync finished with errors",
+			"ldap_id", command.LdapId,
+			"reason", ldap_sync.LdapSyncReasonManual,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultSuccess,
+			"synced_by_user_id", command.SyncedByUserID,
+			"reason", command.Reason,
+			"new_users", len(syncResult.Added),
+			"updated", len(syncResult.Updated),
+			"errors", len(syncResult.Failed),
+		)
 	} else {
-		logger.Info(goCtx, "SyncLdapUsersV2: sync finished", "ldap_id", command.LdapId, "synced_by_user_id", command.SyncedByUserID, "reason", command.Reason, "new_users", len(syncResult.Added), "updated", len(syncResult.Updated))
+		logger.Info(
+			goCtx,
+			"SyncLdapUsersV2: sync finished",
+			"ldap_id", command.LdapId,
+			"reason", ldap_sync.LdapSyncReasonManual,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultSuccess,
+			"synced_by_user_id", command.SyncedByUserID,
+			"reason", command.Reason,
+			"new_users", len(syncResult.Added),
+			"updated", len(syncResult.Updated),
+		)
 	}
-	record.AddReason("SyncLdapUsersV2: users sync finished")
 
 	failed := make([]ldap_sync.LdapUser, 0, len(syncResult.Failed))
 	for _, f := range syncResult.Failed {

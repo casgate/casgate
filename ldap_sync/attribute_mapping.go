@@ -8,6 +8,11 @@ import (
 	"github.com/casdoor/casdoor/util"
 )
 
+type AttributeMappingItem struct {
+	UserField string `json:"userField"`
+	Attribute string `json:"attribute"`
+}
+
 func buildAttributeMappingMap(
 	attributeMappingItems []*AttributeMappingItem,
 	enableCaseInsesitivity bool,
@@ -98,9 +103,4 @@ func MapAttributesToUser(
 	}
 
 	return unmappedAttributes
-}
-
-type AttributeMappingItem struct {
-	UserField string `json:"userField"`
-	Attribute string `json:"attribute"`
 }

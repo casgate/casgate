@@ -146,16 +146,15 @@ func SyncLdapUsers(
 			if command.Reason == ldap_sync.LdapSyncReasonManual {
 				logger.SetItem(ctx, "usr", command.SyncedByUserID)
 			}
-			logger.LogWithInfo(
+			logger.Error(
 				ctx,
-				logger.LogMsgDetailed{
-					"error":        errors.Wrap(userSyncError, "user sync error"),
-					"ldap_user_id": ldapUser.GetLdapUuid(),
-					"ldap_id":      ldap.Id,
-					"ldap_owner":   ldap.Owner,
-				},
-				logger.OperationNameLdapSyncUsers,
-				logger.OperationResultFailure,
+				"user sync error",
+				"error", userSyncError,
+				"ldap_user_id", ldapUser.GetLdapUuid(),
+				"ldap_id", ldap.Id,
+				"ldap_owner", ldap.Owner,
+				"act", logger.OperationNameLdapSyncUsers,
+				"r", logger.OperationResultFailure,
 			)
 		}
 	}

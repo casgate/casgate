@@ -23,6 +23,9 @@ import (
 	"github.com/casdoor/casdoor/orm"
 )
 
+const LdapSyncReasonManual = "manual"
+const LdapSyncReasonAuto = "auto"
+
 type LdapSync struct {
 	Id        int       `xorm:"int notnull pk" json:"id"`
 	LdapID    string    `xorm:"'ldap_id' varchar(100) notnull" json:"ldap_id"`
@@ -104,6 +107,3 @@ func (r *LdapSyncLocker) UnlockLDAPForSync(ldapId string) error {
 	}
 	return nil
 }
-
-const LdapSyncReasonManual = "manual"
-const LdapSyncReasonAuto = "auto"

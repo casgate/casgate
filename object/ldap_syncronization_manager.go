@@ -179,24 +179,29 @@ type LdapSyncronizer struct{}
 
 func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *ldap_sync.Ldap) error {
 	rb := NewRecordBuilder()
-
-	logs.Info(fmt.Sprintf("autoSync started for %s", ldap.Id))
+	logger.Info(
+		ctx,
+		"autoSync started",
+		"ldap_id", ldap.Id,
+		"ldap_owner", ldap.Owner,
+		"reason", ldap_sync.LdapSyncReasonAuto,
+		"act", logger.OperationNameLdapSyncUsers,
+		"r", logger.OperationResultSuccess,
+	)
 	rb.AddReason(fmt.Sprintf("autoSync started for %s", ldap.Id))
 
 	// fetch all users
 	conn, err := ldap_sync.GetLdapConn(ctx, ldap)
 	if err != nil {
-		err = errors.Wrap(err, "autoSync failed: failed to call GetLdapConn")
-		logger.LogWithInfo(
+		logger.Error(
 			ctx,
-			logger.LogMsgDetailed{
-				"error":      err.Error(),
-				"ldap_id":    ldap.Id,
-				"ldap_owner": ldap.Owner,
-				"reason":     ldap_sync.LdapSyncReasonAuto,
-			},
-			logger.OperationNameLdapSyncUsers,
-			logger.OperationResultFailure,
+			"autoSync failed: failed to call GetLdapConn",
+			"error", err.Error(),
+			"ldap_id", ldap.Id,
+			"ldap_owner", ldap.Owner,
+			"reason", ldap_sync.LdapSyncReasonAuto,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
 		)
 		rb.AddReason(err.Error())
 		util.SafeGoroutine(func() { AddRecord(rb.Build()) })
@@ -205,17 +210,15 @@ func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *ldap_sync.Ldap) 
 
 	users, err := conn.GetLdapUsers(ldap, nil, rb)
 	if err != nil {
-		err = errors.Wrap(err, "autoSync failed: failed to call GetLdapUsers")
-		logger.LogWithInfo(
+		logger.Error(
 			ctx,
-			logger.LogMsgDetailed{
-				"error":      err.Error(),
-				"ldap_id":    ldap.Id,
-				"ldap_owner": ldap.Owner,
-				"reason":     ldap_sync.LdapSyncReasonAuto,
-			},
-			logger.OperationNameLdapSyncUsers,
-			logger.OperationResultFailure,
+			"autoSync failed: failed to call GetLdapUsers",
+			"error", err.Error(),
+			"ldap_id", ldap.Id,
+			"ldap_owner", ldap.Owner,
+			"reason", ldap_sync.LdapSyncReasonAuto,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
 		)
 		rb.AddReason(err.Error())
 		util.SafeGoroutine(func() { AddRecord(rb.Build()) })
@@ -227,45 +230,39 @@ func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *ldap_sync.Ldap) 
 		LdapSyncCommand{LdapUsers: AutoAdjustLdapUser(users), LdapId: ldap.Id, Reason: ldap_sync.LdapSyncReasonAuto},
 	)
 	if err != nil {
-		err = errors.Wrap(err, "autosync error")
-		logger.LogWithInfo(
+		logger.Error(
 			ctx,
-			logger.LogMsgDetailed{
-				"error":      err.Error(),
-				"ldap_id":    ldap.Id,
-				"ldap_owner": ldap.Owner,
-				"reason":     ldap_sync.LdapSyncReasonAuto,
-			},
-			logger.OperationNameLdapSyncUsers,
-			logger.OperationResultFailure,
+			"autosync error",
+			"error", err.Error(),
+			"ldap_id", ldap.Id,
+			"ldap_owner", ldap.Owner,
+			"reason", ldap_sync.LdapSyncReasonAuto,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
 		)
 		rb.AddReason(err.Error())
 		util.SafeGoroutine(func() { AddRecord(rb.Build()) })
 	} else if len(syncResult.Failed) != 0 {
-		logger.LogWithInfo(
+		logger.Warn(
 			ctx,
-			logger.LogMsgDetailed{
-				"msg":        "autosync finished with errors",
-				"ldap_id":    ldap.Id,
-				"ldap_owner": ldap.Owner,
-				"reason":     ldap_sync.LdapSyncReasonAuto,
-			},
-			logger.OperationNameLdapSyncUsers,
-			logger.OperationResultSuccess,
+			"autosync finished with errors",
+			"ldap_id", ldap.Id,
+			"ldap_owner", ldap.Owner,
+			"reason", ldap_sync.LdapSyncReasonAuto,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultSuccess,
 		)
 		rb.AddReason("autosync finished with errors")
 		util.SafeGoroutine(func() { AddRecord(rb.Build()) })
 	} else {
-		logger.LogWithInfo(
+		logger.Info(
 			ctx,
-			logger.LogMsgDetailed{
-				"msg":        "autosync success",
-				"ldap_id":    ldap.Id,
-				"ldap_owner": ldap.Owner,
-				"reason":     ldap_sync.LdapSyncReasonAuto,
-			},
-			logger.OperationNameLdapSyncUsers,
-			logger.OperationResultSuccess,
+			"autosync success",
+			"ldap_id", ldap.Id,
+			"ldap_owner", ldap.Owner,
+			"reason", ldap_sync.LdapSyncReasonAuto,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultSuccess,
 		)
 		rb.AddReason("autosync success")
 		util.SafeGoroutine(func() { AddRecord(rb.Build()) })
