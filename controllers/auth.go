@@ -952,7 +952,16 @@ func (c *ApiController) Login() {
 					}
 
 					userRoles := mapper.GetRoles()
-					mappingRb.AddReason("sync roles for ldap signin")
+
+					switch provider.Category {
+					case "OAuth":
+						mappingRb.AddReason("sync roles for OAuth provider")
+					case "SAML":
+						mappingRb.AddReason("sync roles for SAML provider")
+					default:
+						mappingRb.AddReason("sync role for provider: " + provider.Category)
+					}
+
 					err = object.SyncRolesToUser(mappingCtx, user, userRoles)
 					if err != nil {
 						logLoginErr(goCtx, fmt.Sprintf("Role mapping error: %s", err.Error()), authForm.Provider, provider.Category)
