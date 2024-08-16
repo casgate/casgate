@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 )
@@ -36,37 +35,20 @@ func (c *ApiController) GetOrganizations() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	var paginator *pagination.Paginator
-	offset := -1
-
-	if request.Limit != -1 {
-		count, err := object.GetOrganizationCount(request.Owner, request.Organization, request.Field, request.Value)
-		if err != nil {
-			c.ResponseDBError(err)
-			return
-		}
-
-		paginator = pagination.SetPaginator(c.Ctx, request.Limit, count)
-
-		offset = paginator.Offset()
-	}
-
-	var maskedOrganizations []*object.Organization
-	var err error
-
-	maskedOrganizations, err = object.GetMaskedOrganizations(
-		object.GetPaginationOrganizations("admin", request.Organization, offset, request.Limit, request.Field, request.Value, request.SortField, request.SortOrder))
+	paginator, err := object.GetPaginator(c.Ctx, "admin", request.Field, request.Value, request.Limit, object.Organization{Name: request.Organization})
 	if err != nil {
 		c.ResponseDBError(err)
 		return
 	}
 
-	if paginator != nil {
-		c.ResponseOk(maskedOrganizations, paginator.Nums())
+	maskedOrganizations, err := object.GetMaskedOrganizations(
+		object.GetPaginationOrganizations("admin", request.Organization, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder))
+	if err != nil {
+		c.ResponseDBError(err)
 		return
 	}
 
-	c.ResponseOk(maskedOrganizations)
+	c.ResponseOk(maskedOrganizations, paginator.Nums())
 }
 
 // GetOrganization ...

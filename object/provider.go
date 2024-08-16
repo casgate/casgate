@@ -31,8 +31,8 @@ import (
 	"github.com/casdoor/casdoor/util"
 
 	"github.com/casdoor/casdoor/util/logger"
-
 )
+
 const (
 	NotToSign           = "No sign"
 	SignWithFile        = "Sign with default file"
@@ -144,11 +144,6 @@ func GetProviderCount(owner, field, value string) (int64, error) {
 	return session.Where("owner = ? or owner = ? ", "admin", owner).Count(&Provider{})
 }
 
-func GetGlobalProviderCount(field, value string) (int64, error) {
-	session := orm.GetSession("", -1, -1, field, value, "", "")
-	return session.Count(&Provider{})
-}
-
 func GetProvidersByCertName(certName string) ([]*Provider, error) {
 	providers := []*Provider{}
 
@@ -163,16 +158,6 @@ func GetProvidersByCertName(certName string) ([]*Provider, error) {
 func GetProviders(owner string) ([]*Provider, error) {
 	providers := []*Provider{}
 	err := orm.AppOrmer.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&providers, &Provider{})
-	if err != nil {
-		return providers, err
-	}
-
-	return providers, nil
-}
-
-func GetGlobalProviders() ([]*Provider, error) {
-	providers := []*Provider{}
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&providers)
 	if err != nil {
 		return providers, err
 	}

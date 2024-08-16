@@ -20,12 +20,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 	"github.com/casdoor/casdoor/util/logger"
+	"github.com/xorm-io/builder"
 )
 
 // GetProviders
@@ -39,9 +39,6 @@ func (c *ApiController) GetProviders() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-
 	if !c.IsGlobalAdmin() && request.Owner == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
@@ -52,32 +49,22 @@ func (c *ApiController) GetProviders() {
 		return
 	}
 
-	if limit == "" || page == "" {
-		providers, err := object.GetProviders(request.Owner)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(object.GetMaskedProviders(providers, isMaskEnabled))
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetProviderCount(request.Owner, request.Field, request.Value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		paginationProviders, err := object.GetPaginationProviders(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		providers := object.GetMaskedProviders(paginationProviders, isMaskEnabled)
-		c.ResponseOk(providers, paginator.Nums())
+	paginator, err := object.GetPaginator(c.Ctx, "", request.Field, request.Value, request.Limit,
+		object.Provider{}, builder.Eq{"owner": []string{"admin", request.Owner}})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	paginationProviders, err := object.GetPaginationProviders(request.Owner, paginator.Offset(), request.Limit,
+		request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	providers := object.GetMaskedProviders(paginationProviders, isMaskEnabled)
+	c.ResponseOk(providers, paginator.Nums())
 }
 
 // GetGlobalProviders
@@ -90,40 +77,25 @@ func (c *ApiController) GetGlobalProviders() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-
 	ok, isMaskEnabled := c.IsMaskedEnabled()
 	if !ok {
 		return
 	}
 
-	if limit == "" || page == "" {
-		globalProviders, err := object.GetGlobalProviders()
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(object.GetMaskedProviders(globalProviders, isMaskEnabled))
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetGlobalProviderCount(request.Field, request.Value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		paginationGlobalProviders, err := object.GetPaginationGlobalProviders(paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		providers := object.GetMaskedProviders(paginationGlobalProviders, isMaskEnabled)
-		c.ResponseOk(providers, paginator.Nums())
+	paginator, err := object.GetPaginator(c.Ctx, "", request.Field, request.Value, request.Limit, object.Provider{})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	paginationGlobalProviders, err := object.GetPaginationGlobalProviders(paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	providers := object.GetMaskedProviders(paginationGlobalProviders, isMaskEnabled)
+	c.ResponseOk(providers, paginator.Nums())
 }
 
 // GetProvider

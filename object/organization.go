@@ -21,7 +21,6 @@ import (
 
 	"github.com/casdoor/casdoor/orm"
 
-	"github.com/xorm-io/builder"
 	"github.com/xorm-io/core"
 
 	"github.com/casdoor/casdoor/conf"

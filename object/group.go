@@ -50,15 +50,6 @@ type Group struct {
 
 type GroupNode struct{}
 
-func GetGroupCount(owner, field, value string) (int64, error) {
-	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	count, err := session.Count(&Group{})
-	if err != nil {
-		return 0, err
-	}
-	return count, nil
-}
-
 func GetGroups(owner string) ([]*Group, error) {
 	groups := []*Group{}
 	err := orm.AppOrmer.Engine.Desc("created_time").Find(&groups, &Group{Owner: owner})

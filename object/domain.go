@@ -38,11 +38,6 @@ type Domain struct {
 	IsEnabled bool     `json:"isEnabled"`
 }
 
-func GetDomainCount(owner, field, value string) (int64, error) {
-	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	return session.Count(&Domain{})
-}
-
 func GetDomains(ctx context.Context, owner string) ([]*Domain, error) {
 	domains, err := repo.GetDomains(ctx, owner)
 	if err != nil {
