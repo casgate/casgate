@@ -30,7 +30,7 @@ func SafeGoroutine(fn func()) {
 				if !ok {
 					err = fmt.Errorf("%v", r)
 				}
-				logs.Error("goroutine panic: %v", err)
+				logs.Error("goroutine panic in SafeGoroutine: %v", err)
 			}
 		}()
 		fn()

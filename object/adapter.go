@@ -19,11 +19,12 @@ import (
 
 	"github.com/casdoor/casdoor/orm"
 
-	"github.com/casdoor/casdoor/conf"
-	"github.com/casdoor/casdoor/util"
 	xormadapter "github.com/casdoor/xorm-adapter/v3"
 	"github.com/xorm-io/core"
 	"github.com/xorm-io/xorm"
+
+	"github.com/casdoor/casdoor/conf"
+	"github.com/casdoor/casdoor/util"
 )
 
 type Adapter struct {
@@ -47,16 +48,6 @@ type Adapter struct {
 func GetAdapterCount(owner, field, value string) (int64, error) {
 	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Adapter{})
-}
-
-func GetAdapters(owner string) ([]*Adapter, error) {
-	adapters := []*Adapter{}
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&adapters, &Adapter{Owner: owner})
-	if err != nil {
-		return adapters, err
-	}
-
-	return adapters, nil
 }
 
 func GetPaginationAdapters(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Adapter, error) {
@@ -89,13 +80,19 @@ func getAdapter(owner, name string) (*Adapter, error) {
 }
 
 func GetAdapter(id string) (*Adapter, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getAdapter(owner, name)
 }
 
 func UpdateAdapter(id string, adapter *Adapter) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	if adapter, err := getAdapter(owner, name); adapter == nil {
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return false, err
+	}
+	if adapter, err = getAdapter(owner, name); adapter == nil {
 		return false, err
 	}
 
