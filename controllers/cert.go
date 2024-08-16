@@ -20,6 +20,8 @@ import (
 	"strings"
 
 	"github.com/beego/beego/utils/pagination"
+
+	cert2 "github.com/casdoor/casdoor/cert"
 	"github.com/casdoor/casdoor/object"
 )
 
@@ -64,7 +66,7 @@ func (c *ApiController) GetGlobleCerts() {
 	if !c.IsGlobalAdmin() {
 		user, _ := c.RequireSignedInUser()
 		owner = user.Owner
-	} 
+	}
 
 	count, err := object.GetGlobalCertsCount(request.Field, request.Value)
 	if err != nil {
@@ -124,7 +126,7 @@ func (c *ApiController) UpdateCert() {
 
 	id := c.Input().Get("id")
 
-	var cert object.Cert
+	var cert cert2.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -154,7 +156,7 @@ func (c *ApiController) AddCert() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	var cert object.Cert
+	var cert cert2.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -179,8 +181,8 @@ func (c *ApiController) AddCert() {
 func (c *ApiController) DeleteCert() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
-	var cert object.Cert
+
+	var cert cert2.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {
 		c.ResponseBadRequest(err.Error())

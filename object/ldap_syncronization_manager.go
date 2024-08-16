@@ -2,21 +2,26 @@ package object
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+
+	"github.com/casdoor/casdoor/ldap_sync"
+	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
+
 	"github.com/beego/beego/logs"
+
 	"github.com/casdoor/casdoor/util"
 )
 
 type ILdapSynchronizer interface {
-	SyncUsers(ctx context.Context, ldap *Ldap) error
+	SyncUsers(ctx context.Context, ldap *ldap_sync.Ldap) error
 }
 type ILdapRepository interface {
-	GetLdap(id string) (*Ldap, error)
+	GetLdap(id string) (*ldap_sync.Ldap, error)
 }
 
 type LdapSynchronizationManager struct {
@@ -100,7 +105,12 @@ func (l *LdapSynchronizationManager) StopAutoSync(ldapId string) {
 }
 
 // autosync goroutine
-func (l *LdapSynchronizationManager) syncRoutine(ctx context.Context, ldap *Ldap, stopChan chan struct{}, tickerPeriod time.Duration) error {
+func (l *LdapSynchronizationManager) syncRoutine(
+	ctx context.Context,
+	ldap *ldap_sync.Ldap,
+	stopChan chan struct{},
+	tickerPeriod time.Duration,
+) error {
 	err := l.syncronizer.SyncUsers(ctx, ldap)
 	if err != nil {
 		return err
@@ -120,17 +130,6 @@ func (l *LdapSynchronizationManager) syncRoutine(ctx context.Context, ldap *Ldap
 			}
 		}
 	}
-}
-
-func logAndAddRecord(message string, logLevel int, rb *RecordBuilder) {
-	if logLevel == logs.LevelWarning {
-		logs.Warning(message)
-	} else if logLevel == logs.LevelInformational {
-		logs.Info(message)
-	}
-
-	rb.AddReason(message)
-	util.SafeGoroutine(func() { AddRecord(rb.Build()) })
 }
 
 // LdapAutoSynchronizerStartUpAll
@@ -168,7 +167,7 @@ func (l *LdapSynchronizationManager) LdapAutoSynchronizerStartUpAll(ctx context.
 }
 
 func UpdateLdapSyncTime(ldapId string) error {
-	_, err := orm.AppOrmer.Engine.ID(ldapId).Update(&Ldap{LastSync: util.GetCurrentTime()})
+	_, err := orm.AppOrmer.Engine.ID(ldapId).Update(&ldap_sync.Ldap{LastSync: util.GetCurrentTime()})
 	if err != nil {
 		return err
 	}
@@ -178,32 +177,98 @@ func UpdateLdapSyncTime(ldapId string) error {
 
 type LdapSyncronizer struct{}
 
-func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *Ldap) error {
+func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *ldap_sync.Ldap) error {
 	rb := NewRecordBuilder()
 
 	logs.Info(fmt.Sprintf("autoSync started for %s", ldap.Id))
 	rb.AddReason(fmt.Sprintf("autoSync started for %s", ldap.Id))
 
 	// fetch all users
-	conn, err := ldap.GetLdapConn(ctx)
+	conn, err := ldap_sync.GetLdapConn(ctx, ldap)
 	if err != nil {
-		logAndAddRecord(fmt.Sprintf("autoSync failed for %s: failed to call GetLdapConn: error %s", ldap.Id, err), logs.LevelWarning, rb)
+		err = errors.Wrap(err, "autoSync failed: failed to call GetLdapConn")
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error":      err.Error(),
+				"ldap_id":    ldap.Id,
+				"ldap_owner": ldap.Owner,
+				"reason":     ldap_sync.LdapSyncReasonAuto,
+			},
+			logger.OperationNameLdapSyncUsers,
+			logger.OperationResultFailure,
+		)
+		rb.AddReason(err.Error())
+		util.SafeGoroutine(func() { AddRecord(rb.Build()) })
 		return nil
 	}
 
 	users, err := conn.GetLdapUsers(ldap, nil, rb)
 	if err != nil {
-		logAndAddRecord(fmt.Sprintf("autoSync failed for %s: failed to call GetLdapUsers: error %s", ldap.Id, err), logs.LevelWarning, rb)
+		err = errors.Wrap(err, "autoSync failed: failed to call GetLdapUsers")
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error":      err.Error(),
+				"ldap_id":    ldap.Id,
+				"ldap_owner": ldap.Owner,
+				"reason":     ldap_sync.LdapSyncReasonAuto,
+			},
+			logger.OperationNameLdapSyncUsers,
+			logger.OperationResultFailure,
+		)
+		rb.AddReason(err.Error())
+		util.SafeGoroutine(func() { AddRecord(rb.Build()) })
 		return nil
 	}
 
-	syncResult, err := SyncLdapUsers(ctx, LdapSyncCommand{LdapUsers: AutoAdjustLdapUser(users), LdapId: ldap.Id, Reason: "auto"})
+	syncResult, err := SyncLdapUsers(
+		ctx,
+		LdapSyncCommand{LdapUsers: AutoAdjustLdapUser(users), LdapId: ldap.Id, Reason: ldap_sync.LdapSyncReasonAuto},
+	)
 	if err != nil {
-		logAndAddRecord(fmt.Sprintf("ldap id: %s autosync error: %s", ldap.Id, err.Error()), logs.LevelWarning, rb)
+		err = errors.Wrap(err, "autosync error")
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error":      err.Error(),
+				"ldap_id":    ldap.Id,
+				"ldap_owner": ldap.Owner,
+				"reason":     ldap_sync.LdapSyncReasonAuto,
+			},
+			logger.OperationNameLdapSyncUsers,
+			logger.OperationResultFailure,
+		)
+		rb.AddReason(err.Error())
+		util.SafeGoroutine(func() { AddRecord(rb.Build()) })
 	} else if len(syncResult.Failed) != 0 {
-		logAndAddRecord(fmt.Sprintf("ldap id: %s autosync finished, %d new users, but %d user failed during :", ldap.Id, len(syncResult.Added), len(syncResult.Failed)), logs.LevelWarning, rb)
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"msg":        "autosync finished with errors",
+				"ldap_id":    ldap.Id,
+				"ldap_owner": ldap.Owner,
+				"reason":     ldap_sync.LdapSyncReasonAuto,
+			},
+			logger.OperationNameLdapSyncUsers,
+			logger.OperationResultSuccess,
+		)
+		rb.AddReason("autosync finished with errors")
+		util.SafeGoroutine(func() { AddRecord(rb.Build()) })
 	} else {
-		logAndAddRecord(fmt.Sprintf("ldap id: %s autosync success, %d new users, %d updated users", ldap.Id, len(syncResult.Added), len(syncResult.Updated)), logs.LevelInformational, rb)
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"msg":        "autosync success",
+				"ldap_id":    ldap.Id,
+				"ldap_owner": ldap.Owner,
+				"reason":     ldap_sync.LdapSyncReasonAuto,
+			},
+			logger.OperationNameLdapSyncUsers,
+			logger.OperationResultSuccess,
+		)
+		rb.AddReason("autosync success")
+		util.SafeGoroutine(func() { AddRecord(rb.Build()) })
 	}
 
 	return err

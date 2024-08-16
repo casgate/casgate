@@ -29,6 +29,9 @@ import (
 	"sync"
 
 	"github.com/beego/beego/logs"
+	"github.com/google/uuid"
+	"gopkg.in/square/go-jose.v2/jwt"
+
 	"github.com/casdoor/casdoor/captcha"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/form"
@@ -38,8 +41,6 @@ import (
 	"github.com/casdoor/casdoor/role_mapper"
 	"github.com/casdoor/casdoor/util"
 	"github.com/casdoor/casdoor/util/logger"
-	"github.com/google/uuid"
-	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 var (
@@ -485,7 +486,15 @@ func (c *ApiController) Login() {
 				}
 
 				if user == nil {
-					_, err = object.SyncUserFromLdap(goCtx, authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage(), record)
+					_, err = object.SyncLdapUserOnSignIn(
+						goCtx,
+						authForm.Organization,
+						authForm.LdapId,
+						authForm.Username,
+						authForm.Password,
+						c.GetAcceptLanguage(),
+						record,
+					)
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Ldap sync error: %s", err.Error()))
 					}

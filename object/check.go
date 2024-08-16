@@ -29,6 +29,7 @@ import (
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/i18n"
+	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -257,13 +258,13 @@ func CheckPasswordComplexity(user *User, password string, lang string) string {
 
 // check user pwd only in selected ldap
 func CheckLdapUserPassword(user *User, password string, lang string, ldapId string) (string, error) {
-	var ldaps []*Ldap
+	var ldaps []*ldap_sync.Ldap
 	var err error
 
 	if ldapId == "" {
 		ldaps, err = GetLdaps(user.Owner)
 	} else {
-		var ldap *Ldap
+		var ldap *ldap_sync.Ldap
 		ldap, err = GetLdap(ldapId)
 		ldaps = append(ldaps, ldap)
 	}
@@ -278,13 +279,14 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 	userDisabled := false
 
 	for _, ldapServer := range ldaps {
-		conn, err := ldapServer.GetLdapConn(context.Background())
+		conn, err := ldap_sync.GetLdapConn(context.Background(), ldapServer)
 		if err != nil {
 			continue
 		}
 
 		searchReq := goldap.NewSearchRequest(ldapServer.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases,
-			0, 0, false, ldapServer.buildAuthFilterString(user), []string{}, nil)
+			0, 0, false, ldapServer.BuildAuthFilterString(user), []string{}, nil,
+		)
 
 		searchResult, err := conn.Conn.Search(searchReq)
 		if err != nil {

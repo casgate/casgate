@@ -1,6 +1,7 @@
 {
   "account": {
     "Failed to add user": "사용자 추가 실패",
+    "Failed to update user": "Failed to update user",
     "Get init score failed, error: %w": "초기 점수 획득 실패, 오류: %w",
     "Please sign out first": "먼저 로그아웃해주세요",
     "The application does not allow to sign up new account": "이 응용 프로그램은 새로운 계정 가입을 허용하지 않습니다",

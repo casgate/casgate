@@ -35,8 +35,8 @@ import (
 
 type LdapResp struct {
 	// Groups []LdapRespGroup `json:"groups"`
-	Users      []object.LdapUser `json:"users"`
-	ExistUuids []string          `json:"existUuids"`
+	Users      []ldap_sync.LdapUser `json:"users"`
+	ExistUuids []string             `json:"existUuids"`
 }
 
 //type LdapRespGroup struct {
@@ -45,8 +45,8 @@ type LdapResp struct {
 //}
 
 type LdapSyncResp struct {
-	Exist  []object.LdapUser `json:"exist"`
-	Failed []object.LdapUser `json:"failed"`
+	Exist  []ldap_sync.LdapUser `json:"exist"`
+	Failed []ldap_sync.LdapUser `json:"failed"`
 }
 
 type LdapIdWithNameResp struct {
@@ -88,7 +88,7 @@ func (c *ApiController) GetLdapUsers() {
 		return
 	}
 
-	conn, err := ldapServer.GetLdapConn(context.Background())
+	conn, err := ldap_sync.GetLdapConn(context.Background(), ldapServer)
 	if err != nil {
 		err = errors.Wrap(err, "Get LDAP connection")
 		logger.Error(gCtx, err.Error())
@@ -216,7 +216,7 @@ func (c *ApiController) AddLdap() {
 	gCtx := c.getRequestCtx()
 	record := object.GetRecord(gCtx)
 
-	var ldap object.Ldap
+	var ldap ldap_sync.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 	if err != nil {
 		record.AddReason(fmt.Sprintf("Unmarshall: %v", err.Error()))
@@ -296,7 +296,7 @@ func (c *ApiController) UpdateLdap() {
 	gCtx := c.getRequestCtx()
 	record := object.GetRecord(gCtx)
 
-	var ldap object.Ldap
+	var ldap ldap_sync.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 
 	anyRequiredLdapFieldEmpty := util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.BaseDn)
@@ -373,7 +373,7 @@ func (c *ApiController) DeleteLdap() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	var ldap object.Ldap
+	var ldap ldap_sync.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -418,7 +418,7 @@ func (c *ApiController) SyncLdapUsers() {
 		c.ResponseError(err.Error())
 		return
 	}
-	var users []object.LdapUser
+	var users []ldap_sync.LdapUser
 	err = json.Unmarshal(c.Ctx.Input.RequestBody, &users)
 	if err != nil {
 		err = errors.Wrap(err, "SyncLdapUsers error: Failed to unmarshal ldap users")
@@ -430,7 +430,7 @@ func (c *ApiController) SyncLdapUsers() {
 	command := object.LdapSyncCommand{
 		LdapUsers: users,
 		LdapId:    ldapId,
-		Reason:    "manual",
+		Reason:    ldap_sync.LdapSyncReasonManual,
 	}
 	if request.User != nil {
 		command.SyncedByUserID = request.User.Id
@@ -460,9 +460,14 @@ func (c *ApiController) SyncLdapUsers() {
 
 	record.AddReason("SyncLdapUsers: users sync finished")
 
+	failed := make([]ldap_sync.LdapUser, 0, len(syncResult.Failed))
+	for _, f := range syncResult.Failed {
+		failed = append(failed, f)
+	}
+
 	c.ResponseOk(&LdapSyncResp{
 		Exist:  syncResult.Exist,
-		Failed: syncResult.Failed,
+		Failed: failed,
 	})
 }
 
@@ -491,7 +496,7 @@ func (c *ApiController) SyncLdapUsersV2() {
 
 	record.AddReason("SyncLdapUsersV2: start sync users")
 
-	var users []object.LdapUser
+	var users []ldap_sync.LdapUser
 	ldap, err := object.GetLdap(syncRequest.Id)
 	if err != nil {
 		err = errors.Wrap(err, "SyncLdapUsersV2 error: failed to GetLdap")
@@ -501,7 +506,7 @@ func (c *ApiController) SyncLdapUsersV2() {
 		return
 	}
 
-	conn, err := ldap.GetLdapConn(goCtx)
+	conn, err := ldap_sync.GetLdapConn(goCtx, ldap)
 	if err != nil {
 		err = errors.Wrap(err, "SyncLdapUsersV2 error: failed to GetLdapConn")
 		record.AddReason(err.Error())
@@ -522,7 +527,7 @@ func (c *ApiController) SyncLdapUsersV2() {
 	command := object.LdapSyncCommand{
 		LdapUsers: users,
 		LdapId:    syncRequest.Id,
-		Reason:    "manual",
+		Reason:    ldap_sync.LdapSyncReasonManual,
 	}
 	if request.User != nil {
 		command.SyncedByUserID = request.User.Id
@@ -543,9 +548,14 @@ func (c *ApiController) SyncLdapUsersV2() {
 	}
 	record.AddReason("SyncLdapUsersV2: users sync finished")
 
+	failed := make([]ldap_sync.LdapUser, 0, len(syncResult.Failed))
+	for _, f := range syncResult.Failed {
+		failed = append(failed, f)
+	}
+
 	c.ResponseOk(&LdapSyncResp{
 		Exist:  syncResult.Exist,
-		Failed: syncResult.Failed,
+		Failed: failed,
 	})
 }
 
@@ -560,7 +570,7 @@ func (c *ApiController) TestLdapConnection() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	var ldap object.Ldap
+	var ldap ldap_sync.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 	if err != nil || util.IsStringsEmpty(ldap.Owner, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
 		c.ResponseError(c.T("general:Missing parameter"))
@@ -583,8 +593,8 @@ func (c *ApiController) TestLdapConnection() {
 		}
 	}
 
-	var connection *object.LdapConn
-	connection, err = ldap.GetLdapConn(context.Background())
+	var connection *ldap_sync.LdapConn
+	connection, err = ldap_sync.GetLdapConn(context.Background(), &ldap)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

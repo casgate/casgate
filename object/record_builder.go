@@ -20,6 +20,7 @@ import (
 
 	beeCtx "github.com/beego/beego/context"
 	"github.com/beego/beego/logs"
+
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -81,7 +82,7 @@ func (rb *RecordBuilder) WithResponse(response string) *RecordBuilder {
 	return rb
 }
 
-func (rb *RecordBuilder) AddReason(detail string) *RecordBuilder {
+func (rb *RecordBuilder) AddReason(detail string) {
 	if rb.record == nil {
 		rb.record = &Record{
 			Name:        util.GenerateId(),
@@ -94,8 +95,6 @@ func (rb *RecordBuilder) AddReason(detail string) *RecordBuilder {
 	}
 
 	rb.record.Detail.Reasons = append(rb.record.Detail.Reasons, detail)
-
-	return rb
 }
 
 func (rb *RecordBuilder) AddOldObject(object interface{}) *RecordBuilder {

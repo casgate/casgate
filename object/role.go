@@ -20,6 +20,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/orm"
 
 	"github.com/beego/beego/logs"
@@ -442,7 +443,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 
 	}
 
-	var ldaps []*Ldap
+	var ldaps []*ldap_sync.Ldap
 	err = orm.AppOrmer.Engine.Find(&ldaps)
 	if err != nil {
 		return err
@@ -550,6 +551,9 @@ func subRolePermissions(role *Role) ([]*Permission, error) {
 
 // SyncRolesToUser sync user roles
 func SyncRolesToUser(user *User, roleIds []string) error {
+	if user == nil {
+		return errors.New("empty user when trying to sync roles")
+	}
 	userId := user.GetId()
 	roles, err := GetRolesByIds(roleIds)
 	if err != nil {

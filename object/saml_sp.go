@@ -28,11 +28,14 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/casdoor/casdoor/i18n"
-	"github.com/casdoor/casdoor/idp"
-	"github.com/casdoor/casdoor/util/logger"
 	saml2 "github.com/russellhaering/gosaml2"
 	dsig "github.com/russellhaering/goxmldsig"
+
+	"github.com/casdoor/casdoor/cert"
+	"github.com/casdoor/casdoor/i18n"
+	"github.com/casdoor/casdoor/idp"
+	"github.com/casdoor/casdoor/ldap_sync"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 const (
@@ -136,9 +139,10 @@ func getAuthData(assertionInfo *saml2.AssertionInfo, provider *Provider) map[str
 	}
 
 	for key := range assertionInfo.Values {
-		if !slices.ContainsFunc(provider.RoleMappingItems, func(item *RoleMappingItem) bool {
-			return item.Role == key
-		}) {
+		if !slices.ContainsFunc(
+			provider.RoleMappingItems, func(item *ldap_sync.RoleMappingItem) bool {
+				return item.Role == key
+			}) {
 			authData[key] = assertionInfo.Values.Get(key)
 		}
 	}
@@ -272,7 +276,7 @@ func BuildSp(ctx context.Context, provider *Provider, samlResponse string, host 
 
 func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 	var (
-		certificate *Cert
+		certificate *cert.Cert
 		keyPair     tls.Certificate
 		err         error
 	)
@@ -285,11 +289,11 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 			return nil, err
 		}
 		if certificate == nil {
-			return nil, ErrCertDoesNotExist
+			return nil, cert.ErrCertDoesNotExist
 		}
 
-		if certificate.Scope != scopeClientCert {
-			return nil, ErrCertInvalidScope
+		if certificate.Scope != cert.ScopeClientCert {
+			return nil, cert.ErrCertInvalidScope
 		}
 
 		keyPair, err = tls.X509KeyPair([]byte(certificate.Certificate), []byte(certificate.PrivateKey))

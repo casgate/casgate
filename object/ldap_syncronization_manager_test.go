@@ -3,10 +3,13 @@ package object
 import (
 	"context"
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/casdoor/casdoor/ldap_sync"
 )
 
 // Mock implementations of the interfaces
@@ -15,7 +18,7 @@ type MockLdapSynchronizer struct {
 	syncCalled int
 }
 
-func (m *MockLdapSynchronizer) SyncUsers(_ context.Context, _ *Ldap) error {
+func (m *MockLdapSynchronizer) SyncUsers(_ context.Context, _ *ldap_sync.Ldap) error {
 	m.Lock()
 	m.syncCalled++
 	m.Unlock()
@@ -23,10 +26,10 @@ func (m *MockLdapSynchronizer) SyncUsers(_ context.Context, _ *Ldap) error {
 }
 
 type MockLdapRepository struct {
-	ldapMap map[string]*Ldap
+	ldapMap map[string]*ldap_sync.Ldap
 }
 
-func (m *MockLdapRepository) GetLdap(id string) (*Ldap, error) {
+func (m *MockLdapRepository) GetLdap(id string) (*ldap_sync.Ldap, error) {
 	ldap, exists := m.ldapMap[id]
 	if !exists {
 		return nil, errors.New("LDAP not found")
@@ -39,7 +42,7 @@ func TestLdapSynchronizationManager_StartAutoSync(t *testing.T) {
 
 	mockSynchronizer := &MockLdapSynchronizer{}
 	mockRepo := &MockLdapRepository{
-		ldapMap: map[string]*Ldap{
+		ldapMap: map[string]*ldap_sync.Ldap{
 			"ldap1": {Id: "ldap1"},
 		},
 	}
@@ -68,7 +71,7 @@ func TestLdapSynchronizationManager_StopAutoSync(t *testing.T) {
 
 	mockSynchronizer := &MockLdapSynchronizer{}
 	mockRepo := &MockLdapRepository{
-		ldapMap: map[string]*Ldap{
+		ldapMap: map[string]*ldap_sync.Ldap{
 			"ldap1": {Id: "ldap1"},
 		},
 	}
@@ -110,7 +113,7 @@ func TestLdapSynchronizationManager_StartAutoSync_NonExistentLdap(t *testing.T) 
 
 	mockSynchronizer := &MockLdapSynchronizer{}
 	mockRepo := &MockLdapRepository{
-		ldapMap: map[string]*Ldap{},
+		ldapMap: map[string]*ldap_sync.Ldap{},
 	}
 
 	manager := NewLdapAutoSynchronizer(mockSynchronizer, mockRepo)
@@ -139,7 +142,7 @@ func TestLdapSynchronizationManager_WaitForNextSync(t *testing.T) {
 
 	mockSynchronizer := &MockLdapSynchronizer{}
 	mockRepo := &MockLdapRepository{
-		ldapMap: map[string]*Ldap{
+		ldapMap: map[string]*ldap_sync.Ldap{
 			"ldap1": {Id: "ldap1", AutoSync: 1},
 		},
 	}

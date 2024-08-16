@@ -236,6 +236,10 @@ type ManagedAccount struct {
 	SigninUrl   string `xorm:"varchar(200)" json:"signinUrl"`
 }
 
+func (user *User) GetName() string {
+	return user.Name
+}
+
 func (user *User) IsPasswordChangeRequired() bool {
 	return !user.PasswordChangeTime.IsZero() && user.PasswordChangeTime.Before(time.Now())
 }

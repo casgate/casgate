@@ -1,6 +1,7 @@
 {
   "account": {
     "Failed to add user": "Не удалось добавить пользователя",
+    "Failed to update user": "Failed to update user",
     "Get init score failed, error: %w": "Не удалось получить исходный балл, ошибка: %w",
     "Please sign out first": "Пожалуйста, сначала выйдите из системы",
     "The application does not allow to sign up new account": "Приложение не позволяет зарегистрироваться новому аккаунту",
