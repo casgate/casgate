@@ -15,6 +15,8 @@
 package object
 
 import (
+	"context"
+
 	"errors"
 
 	"github.com/casdoor/casdoor/ldap_sync"
@@ -39,7 +41,7 @@ func SyncLdapAttributes(syncUser ldap_sync.LdapUser, id, owner string) error {
 	)
 }
 
-func SyncLdapRoles(syncUser ldap_sync.LdapUser, id, owner string) error {
+func SyncLdapRoles(ctx context.Context, syncUser ldap_sync.LdapUser, id, owner string) error {
 	user, err := GetUserByUserID(owner, id)
 	if err != nil {
 		return err
@@ -48,5 +50,5 @@ func SyncLdapRoles(syncUser ldap_sync.LdapUser, id, owner string) error {
 		return errors.New("empty user when trying to sync ldap roles")
 	}
 
-	return SyncRolesToUser(user, syncUser.Roles)
+	return SyncRolesToUser(ctx, user, syncUser.Roles)
 }

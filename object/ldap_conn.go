@@ -266,7 +266,7 @@ func SyncSingle(
 	}
 
 	if ldap.EnableRoleMapping {
-		err = SyncLdapRoles(ldapUser, localUserID, ldap.Owner)
+		err = SyncLdapRoles(ctx, ldapUser, localUserID, ldap.Owner)
 		if err != nil {
 			return errors.Wrap(err, "SyncLdapRoles")
 		}

@@ -406,9 +406,13 @@ func (c *ApiController) SyncLdapUsers() {
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
 
+	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeLDAP)
+	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
+
 	record.AddReason("SyncLdapUsers: start sync users")
 
 	id := c.Input().Get("id")
+	logger.SetItem(goCtx, "obj", id)
 
 	_, ldapId, err := util.GetOwnerAndNameFromId(id)
 	if err != nil {
