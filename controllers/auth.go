@@ -341,6 +341,9 @@ func (c *ApiController) Login() {
 	resp := &Response{}
 
 	goCtx := c.getRequestCtx()
+	mappingRb := object.NewRecordBuilderFromCtx(c.Ctx)
+	mappingCtx := context.WithValue(goCtx, object.RoleMappingRecordDataKey, mappingRb)
+
 	var authForm form.AuthForm
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &authForm)
 	if err != nil {
@@ -485,7 +488,8 @@ func (c *ApiController) Login() {
 				}
 
 				if user == nil {
-					_, err = object.SyncUserFromLdap(goCtx, authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage(), record)
+					mappingRb.AddReason("sign in via ldap")
+					_, err = object.SyncUserFromLdap(mappingCtx, authForm.Organization, authForm.LdapId, authForm.Username, authForm.Password, c.GetAcceptLanguage(), record)
 					if err != nil {
 						record.AddReason(fmt.Sprintf("Ldap sync error: %s", err.Error()))
 					}
@@ -948,7 +952,8 @@ func (c *ApiController) Login() {
 					}
 
 					userRoles := mapper.GetRoles()
-					err = object.SyncRolesToUser(goCtx, user, userRoles)
+					mappingRb.AddReason("sync roles for ldap signin")
+					err = object.SyncRolesToUser(mappingCtx, user, userRoles)
 					if err != nil {
 						logLoginErr(goCtx, fmt.Sprintf("Role mapping error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")

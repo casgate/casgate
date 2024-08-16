@@ -16,6 +16,7 @@ package object
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -636,5 +637,44 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 			)
 		}
 	}
+
+	newUserRoles, err := getRolesByUserInternal(userId)
+	if err != nil {
+		return err
+	}
+
+	recordUserMappedRoles(ctx, user.GetId(), currentUserRoles, newUserRoles)
 	return nil
+}
+
+func recordUserMappedRoles(ctx context.Context, userID string, oldRoles, newRoles []*Role) {
+	oldRolesIds := []string{}
+	for _, role := range oldRoles {
+		oldRolesIds = append(oldRolesIds, role.GetId())
+	}
+
+	newRolesIds := []string{}
+	for _, role := range newRoles {
+		newRolesIds = append(oldRolesIds, role.GetId())
+	}
+
+	objectMessage := map[string]interface{}{
+		"userID":   userID,
+		"oldRoles": oldRolesIds,
+		"newRoles": newRolesIds,
+	}
+
+	objectMessageRaw, err := json.Marshal(objectMessage)
+	if err != nil {
+		return
+	}
+
+	rb := ctx.Value(RoleMappingRecordDataKey).(*RecordBuilder)
+	record := rb.Build()
+
+	record.Name = util.GenerateId()
+	record.Object = string(objectMessageRaw)
+	record.Id = 0
+
+	util.SafeGoroutine(func() { AddRecord(record) })
 }

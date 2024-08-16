@@ -184,6 +184,8 @@ func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *Ldap) error {
 	logs.Info(fmt.Sprintf("autoSync started for %s", ldap.Id))
 	rb.AddReason(fmt.Sprintf("autoSync started for %s", ldap.Id))
 
+	mappingCtx := context.WithValue(ctx, RoleMappingRecordDataKey, rb)
+
 	// fetch all users
 	conn, err := ldap.GetLdapConn(ctx)
 	if err != nil {
@@ -197,7 +199,7 @@ func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *Ldap) error {
 		return nil
 	}
 
-	syncResult, err := SyncLdapUsers(ctx, LdapSyncCommand{LdapUsers: AutoAdjustLdapUser(users), LdapId: ldap.Id, Reason: "auto"})
+	syncResult, err := SyncLdapUsers(mappingCtx, LdapSyncCommand{LdapUsers: AutoAdjustLdapUser(users), LdapId: ldap.Id, Reason: "auto"})
 	if err != nil {
 		logAndAddRecord(fmt.Sprintf("ldap id: %s autosync error: %s", ldap.Id, err.Error()), logs.LevelWarning, rb)
 	} else if len(syncResult.Failed) != 0 {
