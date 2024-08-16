@@ -20,10 +20,12 @@ import (
 	"net/http"
 
 	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
 
 	"github.com/beego/beego"
 	"github.com/beego/beego/logs"
 	_ "github.com/beego/beego/session/redis"
+
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/ldap"
 	"github.com/casdoor/casdoor/object"
@@ -32,10 +34,10 @@ import (
 	"github.com/casdoor/casdoor/repository"
 	"github.com/casdoor/casdoor/routers"
 	"github.com/casdoor/casdoor/txmanager"
-	"github.com/casdoor/casdoor/util/logger"
 )
 
 func main() {
+	logger.InitGlobal(&logger.Config{Level: conf.GetConfigString("logLevel")})
 	orm.InitFlag()
 	ormer := orm.InitAdapter()
 	trm := txmanager.NewTransactionManager(ormer.Engine)
@@ -83,7 +85,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	logger.InitGlobal(&logger.Config{Level: conf.GetConfigString("logLevel")})
 	port := beego.AppConfig.DefaultInt("httpport", 8000)
 	// logs.SetLevel(logs.LevelInformational)
 	logs.SetLogFuncCall(false)

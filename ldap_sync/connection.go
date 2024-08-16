@@ -158,7 +158,7 @@ type LdapRelatedUser interface {
 	GetName() string
 }
 
-func (l *LdapConn) GetLdapUsers(
+func (l *LdapConn) GetUsersFromLDAP(
 	ldapServer *Ldap,
 	selectedUser LdapRelatedUser,
 	rb RecordBuilder,
@@ -385,32 +385,29 @@ func (ldapUser *LdapUser) GetLdapUuid() string {
 	return ldapUser.Cn
 }
 
-func (ldapUser *LdapUser) LdapUserNameFromDatabase() (string, error) {
+// BuildNameForNewLdapUser builds unique name for new user
+func (ldapUser *LdapUser) BuildNameForNewLdapUser() (string, error) {
+	if ldapUser.Uid == "" {
+		return "", errors.New("can't build name for new ldap user")
+	}
+	return fmt.Sprintf("%s_%s_%s", ldapUser.Uid, ldapUser.UidNumber, randstr.Hex(6)), nil
+}
+
+// GetLocalIDForExistingLdapUser select identification for new user by ldap field value
+func (ldapUser *LdapUser) GetLocalIDForExistingLdapUser() (string, error) {
 	uidWithNumber := fmt.Sprintf("%s_%s", ldapUser.Uid, ldapUser.UidNumber)
 	result, err := orm.AppOrmer.Engine.QueryString(
-		`SELECT name, ldap FROM "user" WHERE name = ? OR name = ?`,
+		`SELECT id FROM "user" WHERE ldap = ? OR ldap = ?`,
 		ldapUser.Uid,
 		uidWithNumber,
 	)
 	if err != nil {
 		return "", err
 	}
-
-	if len(result) != 0 {
-		if result[0]["ldap"] == ldapUser.Uuid {
-			return result[0]["name"], nil
-		}
-		if result[0]["name"] == ldapUser.Uid {
-			return uidWithNumber, nil
-		}
-		return fmt.Sprintf("%s_%s", uidWithNumber, randstr.Hex(6)), nil
+	if len(result) == 0 {
+		return "", errors.New("previously imported user not found")
 	}
-
-	if ldapUser.Uid != "" {
-		return ldapUser.Uid, nil
-	}
-
-	return ldapUser.Cn, nil
+	return result[0]["id"], nil
 }
 
 func (ldapUser *LdapUser) BuildLdapDisplayName() string {

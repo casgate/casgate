@@ -97,7 +97,7 @@ func (c *ApiController) GetLdapUsers() {
 		return
 	}
 
-	users, err := conn.GetLdapUsers(ldapServer, nil, record)
+	users, err := conn.GetUsersFromLDAP(ldapServer, nil, record)
 	if err != nil {
 		err = errors.Wrap(err, "Get LDAP users")
 		logger.Error(gCtx, err.Error())
@@ -110,7 +110,7 @@ func (c *ApiController) GetLdapUsers() {
 	for i, user := range users {
 		uuids[i] = user.GetLdapUuid()
 	}
-	existUuids, err := object.GetExistUuids(ldapServer.Owner, uuids)
+	existUuids, err := object.GetExistingLdapUserIDs(ldapServer.Owner, uuids)
 	if err != nil {
 		err = errors.Wrap(err, "Find existed LDAP users")
 		logger.Error(gCtx, err.Error())
@@ -565,9 +565,9 @@ func (c *ApiController) SyncLdapUsersV2() {
 		return
 	}
 
-	res, err := conn.GetLdapUsers(ldap, nil, record)
+	res, err := conn.GetUsersFromLDAP(ldap, nil, record)
 	if err != nil {
-		err = errors.Wrap(err, "SyncLdapUsersV2 error: failed to GetLdapUsers")
+		err = errors.Wrap(err, "SyncLdapUsersV2 error: failed to GetUsersFromLDAP")
 		record.AddReason(err.Error())
 		logger.Error(goCtx, err.Error())
 		c.ResponseError(err.Error())

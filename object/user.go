@@ -442,7 +442,7 @@ func GetUserByPhone(owner string, phone string) (*User, error) {
 	}
 }
 
-func GetUserByUserId(owner string, userId string) (*User, error) {
+func GetUserForGetUserHandler(owner string, userId string) (*User, error) {
 	if owner == "" || userId == "" {
 		return nil, nil
 	}
@@ -459,6 +459,19 @@ func GetUserByUserId(owner string, userId string) (*User, error) {
 	} else {
 		return nil, nil
 	}
+}
+
+func GetUserByUserID(owner string, userId string) (*User, error) {
+	if owner == "" || userId == "" {
+		return nil, nil
+	}
+
+	user := User{Owner: owner, Id: userId}
+	_, err := orm.AppOrmer.Engine.Get(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func GetUser(id string) (*User, error) {

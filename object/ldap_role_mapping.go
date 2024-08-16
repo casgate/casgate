@@ -15,15 +15,18 @@
 package object
 
 import (
+	"errors"
+
 	"github.com/casdoor/casdoor/ldap_sync"
-	"github.com/casdoor/casdoor/util"
 )
 
-func SyncLdapAttributes(syncUser ldap_sync.LdapUser, name, owner string) error {
-	userId := util.GetId(owner, name)
-	user, err := GetUser(userId)
+func SyncLdapAttributes(syncUser ldap_sync.LdapUser, id, owner string) error {
+	user, err := GetUserByUserID(owner, id)
 	if err != nil {
 		return err
+	}
+	if user == nil {
+		return errors.New("empty user when trying to sync ldap attributes")
 	}
 
 	return SyncAttributesToUser(
@@ -36,11 +39,13 @@ func SyncLdapAttributes(syncUser ldap_sync.LdapUser, name, owner string) error {
 	)
 }
 
-func SyncLdapRoles(syncUser ldap_sync.LdapUser, name, owner string) error {
-	userId := util.GetId(owner, name)
-	user, err := GetUser(userId)
+func SyncLdapRoles(syncUser ldap_sync.LdapUser, id, owner string) error {
+	user, err := GetUserByUserID(owner, id)
 	if err != nil {
 		return err
+	}
+	if user == nil {
+		return errors.New("empty user when trying to sync ldap roles")
 	}
 
 	return SyncRolesToUser(user, syncUser.Roles)

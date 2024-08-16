@@ -99,9 +99,9 @@ func SyncLdapUsers(
 	for _, user := range command.LdapUsers {
 		uuids = append(uuids, user.GetLdapUuid())
 	}
-	existUuids, err := GetExistUuids(ldap.Owner, uuids)
+	existUuids, err := GetExistingLdapUserIDs(ldap.Owner, uuids)
 	if err != nil {
-		err = errors.Wrap(err, "LDAP sync error: failed to GetExistUuids for sync")
+		err = errors.Wrap(err, "LDAP sync error: failed to GetExistingLdapUserIDs for sync")
 		return syncDetails, err
 	}
 	existUuidsMap := make(map[string]bool)
@@ -143,6 +143,7 @@ func SyncLdapUsers(
 			tag,
 		)
 		if userSyncError != nil {
+			syncDetails.Failed[ldapUser.GetLdapUuid()] = ldapUser
 			if command.Reason == ldap_sync.LdapSyncReasonManual {
 				logger.SetItem(ctx, "usr", command.SyncedByUserID)
 			}
@@ -175,6 +176,7 @@ func SyncLdapUsers(
 	return syncDetails, err
 }
 
+// SyncSingle sync single user
 func SyncSingle(
 	ctx context.Context,
 	command LdapSyncCommand,
@@ -188,20 +190,16 @@ func SyncSingle(
 ) error {
 	userExists := false
 	userExists = existUuidsMap[ldapUser.Uuid]
-	if userExists {
-		syncDetails.Exist = append(syncDetails.Exist, ldapUser)
-	}
-
-	name, err := ldapUser.LdapUserNameFromDatabase()
-	if err != nil {
-		return errors.Wrap(err, "ldapUserNameFromDatabase")
-	}
 
 	if !userExists {
 		score, err := organization.GetInitScore()
 		if err != nil {
 			err = errors.Wrap(err, "LDAP sync error: failed to GetInitScore for sync")
 			return errors.Wrap(err, "GetInitScore")
+		}
+		name, err := ldapUser.BuildNameForNewLdapUser()
+		if err != nil {
+			return err
 		}
 
 		newUser := &User{
@@ -229,13 +227,11 @@ func SyncSingle(
 
 		affected, err := AddUser(ctx, newUser)
 		if err != nil {
-			syncDetails.Failed[ldapUser.Uuid] = ldapUser
 			err = errors.Wrap(err, "LDAP sync error: failed to AddUser")
 			return err
 		}
 
 		if !affected {
-			syncDetails.Failed[ldapUser.Uuid] = ldapUser
 			return errors.New("LDAP sync error: failed to AddUser")
 		}
 
@@ -248,15 +244,21 @@ func SyncSingle(
 		}
 		_, err = AddUserIdProvider(ctx, userIdProvider)
 		if err != nil {
-			syncDetails.Failed[ldapUser.Uuid] = ldapUser
 			err = errors.Wrap(err, "LDAP sync error: failed to AddUserIdProvider")
 			return err
 		}
 		syncDetails.Added = append(syncDetails.Added, ldapUser)
+	} else {
+		syncDetails.Exist = append(syncDetails.Exist, ldapUser)
+	}
+
+	localUserID, err := ldapUser.GetLocalIDForExistingLdapUser()
+	if err != nil {
+		return errors.Wrap(err, "ldapUserNameFromDatabase")
 	}
 
 	if userExists && ldap.EnableAttributeMapping {
-		err = SyncLdapAttributes(ldapUser, name, ldap.Owner)
+		err = SyncLdapAttributes(ldapUser, localUserID, ldap.Owner)
 		if err != nil {
 			return errors.Wrap(err, "SyncLdapAttributes")
 		}
@@ -264,7 +266,7 @@ func SyncSingle(
 	}
 
 	if ldap.EnableRoleMapping {
-		err = SyncLdapRoles(ldapUser, name, ldap.Owner)
+		err = SyncLdapRoles(ldapUser, localUserID, ldap.Owner)
 		if err != nil {
 			return errors.Wrap(err, "SyncLdapRoles")
 		}
@@ -273,6 +275,7 @@ func SyncSingle(
 	return nil
 }
 
+// SetSyncHistoryUsers format user sync data to store as history
 func SetSyncHistoryUsers(
 	historyEntry ldap_sync.LdapSyncHistory,
 	result *SyncLdapUsersResult,
@@ -290,7 +293,8 @@ func SetSyncHistoryUsers(
 	return historyEntry
 }
 
-func GetExistUuids(owner string, uuids []string) ([]string, error) {
+// GetExistingLdapUserIDs get a list of ldap ids for imported users
+func GetExistingLdapUserIDs(owner string, uuids []string) ([]string, error) {
 	var existUuids []string
 
 	err := orm.AppOrmer.Engine.Table("user").Where("owner = ?", owner).Cols("ldap").
@@ -347,7 +351,7 @@ func SyncLdapUserOnSignIn(
 			continue
 		}
 
-		res, _ := conn.GetLdapUsers(ldapServer, user, rb)
+		res, _ := conn.GetUsersFromLDAP(ldapServer, user, rb)
 		if len(res) == 0 {
 			conn.Close()
 			continue

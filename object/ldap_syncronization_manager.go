@@ -12,8 +12,6 @@ import (
 	"github.com/casdoor/casdoor/orm"
 	"github.com/casdoor/casdoor/util/logger"
 
-	"github.com/beego/beego/logs"
-
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -63,12 +61,13 @@ func (l *LdapSynchronizationManager) StartAutoSync(ctx context.Context, ldapId s
 
 	ldap, err := l.repo.GetLdap(ldapId)
 	if err != nil {
+		err = errors.Wrap(err, "StartAutoSync error: failed to GetLdap")
 		recordBuilder.AddReason(fmt.Sprintf("Get LDAP: %s", err.Error()))
 		return err
 	}
 
 	if ldap == nil {
-		msg := fmt.Sprintf("ldap %s doesn't exist", ldapId)
+		msg := fmt.Sprintf("StartAutoSync failed: ldap doesn't exist")
 		recordBuilder.AddReason(msg)
 		return errors.New(msg)
 	}
@@ -83,12 +82,28 @@ func (l *LdapSynchronizationManager) StartAutoSync(ctx context.Context, ldapId s
 	logMsg := fmt.Sprintf("autoSync process started for %s", ldap.Id)
 	recordBuilder.AddReason(logMsg)
 
-	logs.Info(logMsg)
+	logger.Info(
+		ctx,
+		"autoSync process started",
+		"ldap_id", ldapId,
+		"reason", ldap_sync.LdapSyncReasonAuto,
+		"act", logger.OperationNameLdapSyncUsers,
+		"r", logger.OperationResultSuccess,
+	)
 
 	util.SafeGoroutine(func() {
 		err := l.syncRoutine(ctx, ldap, stopChan, tickDuration)
 		if err != nil {
 			recordBuilder.AddReason(fmt.Sprintf("Sync process error: %s", err.Error()))
+			logger.Info(
+				ctx,
+				"syncRoutine failed",
+				"error", err.Error(),
+				"ldap_id", ldapId,
+				"reason", ldap_sync.LdapSyncReasonAuto,
+				"act", logger.OperationNameLdapSyncUsers,
+				"r", logger.OperationResultFailure,
+			)
 			panic(err)
 		}
 	})
@@ -121,7 +136,15 @@ func (l *LdapSynchronizationManager) syncRoutine(
 	for {
 		select {
 		case <-stopChan:
-			logs.Info(fmt.Sprintf("autoSync goroutine for %s stopped", ldap.Id))
+			logger.Info(
+				ctx,
+				"autoSync goroutine stopped",
+				"ldap_id", ldap.Id,
+				"ldap_owner", ldap.Owner,
+				"reason", ldap_sync.LdapSyncReasonAuto,
+				"act", logger.OperationNameLdapSyncUsers,
+				"r", logger.OperationResultSuccess,
+			)
 			return nil
 		case <-ticker.C:
 			err = l.syncronizer.SyncUsers(ctx, ldap)
@@ -138,7 +161,13 @@ func (l *LdapSynchronizationManager) LdapAutoSynchronizerStartUpAll(ctx context.
 	organizations := []*Organization{}
 	err := orm.AppOrmer.Engine.Desc("created_time").Find(&organizations)
 	if err != nil {
-		logs.Info("failed to startup LdapSynchronizationManager")
+		logger.Error(
+			ctx,
+			"failed to startup LdapSynchronizationManager: failed to get organizations",
+			"reason", ldap_sync.LdapSyncReasonAuto,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
+		)
 	}
 	for _, org := range organizations {
 		// Empty orgName doesn't filter anything through xorm Find() method.
@@ -208,11 +237,11 @@ func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *ldap_sync.Ldap) 
 		return nil
 	}
 
-	users, err := conn.GetLdapUsers(ldap, nil, rb)
+	users, err := conn.GetUsersFromLDAP(ldap, nil, rb)
 	if err != nil {
 		logger.Error(
 			ctx,
-			"autoSync failed: failed to call GetLdapUsers",
+			"autoSync failed: failed to call GetUsersFromLDAP",
 			"error", err.Error(),
 			"ldap_id", ldap.Id,
 			"ldap_owner", ldap.Owner,
