@@ -446,7 +446,7 @@
     "Failed to obtain Web3-Onboard authorization": "Failed to obtain Web3-Onboard authorization",
     "Forgot password?": "Passwort vergessen?",
     "LDAP": "LDAP",
-    "LDAP username, Email or phone": "LDAP username, Email or phone",
+    "LDAP login": "LDAP login",
     "Loading": "Laden",
     "Logging out...": "Ausloggen...",
     "MetaMask plugin not detected": "MetaMask plugin not detected",
