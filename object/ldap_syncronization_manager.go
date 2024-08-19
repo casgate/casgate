@@ -280,6 +280,7 @@ func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *ldap_sync.Ldap) 
 			"reason", ldap_sync.LdapSyncReasonAuto,
 			"act", logger.OperationNameLdapSyncUsers,
 			"r", logger.OperationResultSuccess,
+			"failed_count", len(syncResult.Failed),
 		)
 		rb.AddReason("autosync finished with errors")
 		util.SafeGoroutine(func() { AddRecord(rb.Build()) })

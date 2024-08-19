@@ -39,11 +39,6 @@ type LdapResp struct {
 	ExistUuids []string             `json:"existUuids"`
 }
 
-//type LdapRespGroup struct {
-//	GroupId   string
-//	GroupName string
-//}
-
 type LdapSyncResp struct {
 	Exist  []ldap_sync.LdapUser `json:"exist"`
 	Failed []ldap_sync.LdapUser `json:"failed"`
@@ -55,7 +50,7 @@ type LdapIdWithNameResp struct {
 }
 
 type SyncLdapUsersRequest struct {
-	Id string
+	Id string `json:"id"`
 }
 
 const ldapSyncMinIntervalMinutes = 15
@@ -397,7 +392,7 @@ func (c *ApiController) DeleteLdap() {
 // @Tag Account API
 // @Description sync ldap users
 // @Param	id	query	string		true	"id"
-// @Success 200 {object} LdapSyncResp The Response object
+// @Success 200 {object} controllers.LdapSyncResp The Response object
 // @router /sync-ldap-users [post]
 func (c *ApiController) SyncLdapUsers() {
 	request := c.ReadRequestFromQueryParams()
@@ -517,8 +512,8 @@ func (c *ApiController) SyncLdapUsers() {
 // @Title SyncLdapUsersV2
 // @Tag Account API
 // @Description sync ldap users by ldap uuid
-// @Param	body	body	SyncLdapUsersRequest	true
-// @Success 200 {object} LdapSyncResp The Response object
+// @Param	body	body	controllers.SyncLdapUsersRequest	true
+// @Success 200 {object} controllers.LdapSyncResp The Response object
 // @router /v2/sync-ldap-users [post]
 func (c *ApiController) SyncLdapUsersV2() {
 	request := c.ReadRequestFromQueryParams()
@@ -645,7 +640,7 @@ func (c *ApiController) SyncLdapUsersV2() {
 // @Title TestLdapConnection
 // @Tag Account API
 // @Description test ldap connection
-// @Param	body	body	object.Ldap		true	"The details of the ldap"
+// @Param	body	body	ldap_sync.Ldap		true	"The details of the ldap"
 // @Success 200 {object} controllers.Response The Response object
 // @router /test-ldap [post]
 func (c *ApiController) TestLdapConnection() {

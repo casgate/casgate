@@ -3,10 +3,9 @@ package cert
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"errors"
 	"fmt"
 
-	errors2 "github.com/pkg/errors"
+	"github.com/pkg/errors"
 
 	"github.com/casdoor/casdoor/orm"
 )
@@ -16,6 +15,26 @@ const (
 	ScopeCertCACert = "CA Certificate"
 	ScopeClientCert = "Client Certificate"
 )
+
+var ErrCertDoesNotExist = errors.New("certificate does not exist")
+var ErrCertInvalidScope = errors.New("invalid certificate scope")
+var ErrX509CertsPEMParse = errors.New("x509: malformed CA certificate")
+
+type Cert struct {
+	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
+	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
+	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
+
+	DisplayName     string `xorm:"varchar(100)" json:"displayName"`
+	Scope           string `xorm:"varchar(100)" json:"scope"`
+	Type            string `xorm:"varchar(100)" json:"type"`
+	CryptoAlgorithm string `xorm:"varchar(100)" json:"cryptoAlgorithm"`
+	BitSize         int    `json:"bitSize"`
+	ExpireInYears   int    `json:"expireInYears"`
+
+	Certificate string `xorm:"mediumtext" json:"certificate"`
+	PrivateKey  string `xorm:"mediumtext" json:"privateKey"`
+}
 
 func GetCertByName(name string) (*Cert, error) {
 	if name == "" {
@@ -50,27 +69,6 @@ func GetTlsConfigForCert(name string) (*tls.Config, error) {
 	}
 
 	return &tls.Config{RootCAs: ca}, nil
-}
-
-var ErrCertDoesNotExist = errors.New(fmt.Sprintf("certificate does not exist"))
-var ErrCertInvalidScope = errors.New(fmt.Sprintf("invalid certificate scope"))
-
-var ErrX509CertsPEMParse = errors2.New("x509: malformed CA certificate")
-
-type Cert struct {
-	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
-	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
-	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
-
-	DisplayName     string `xorm:"varchar(100)" json:"displayName"`
-	Scope           string `xorm:"varchar(100)" json:"scope"`
-	Type            string `xorm:"varchar(100)" json:"type"`
-	CryptoAlgorithm string `xorm:"varchar(100)" json:"cryptoAlgorithm"`
-	BitSize         int    `json:"bitSize"`
-	ExpireInYears   int    `json:"expireInYears"`
-
-	Certificate string `xorm:"mediumtext" json:"certificate"`
-	PrivateKey  string `xorm:"mediumtext" json:"privateKey"`
 }
 
 func (p *Cert) GetId() string {

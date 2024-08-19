@@ -21,7 +21,7 @@ import (
 
 	"github.com/beego/beego/utils/pagination"
 
-	cert2 "github.com/casdoor/casdoor/cert"
+	casdoorcert "github.com/casdoor/casdoor/cert"
 	"github.com/casdoor/casdoor/object"
 )
 
@@ -30,7 +30,7 @@ import (
 // @Tag Cert API
 // @Description get certs
 // @Param   owner     query    string  true        "The owner of certs"
-// @Success 200 {array} object.Cert The Response object
+// @Success 200 {array} cert.Cert The Response object
 // @router /get-certs [get]
 func (c *ApiController) GetCerts() {
 	request := c.ReadRequestFromQueryParams()
@@ -56,7 +56,7 @@ func (c *ApiController) GetCerts() {
 // @Title GetGlobleCerts
 // @Tag Cert API
 // @Description get globle certs
-// @Success 200 {array} object.Cert The Response object
+// @Success 200 {array} cert.Cert The Response object
 // @router /get-globle-certs [get]
 func (c *ApiController) GetGlobleCerts() {
 	request := c.ReadRequestFromQueryParams()
@@ -91,7 +91,7 @@ func (c *ApiController) GetGlobleCerts() {
 // @Tag Cert API
 // @Description get cert
 // @Param   id     query    string  true        "The id ( owner/name ) of the cert"
-// @Success 200 {object} object.Cert The Response object
+// @Success 200 {object} cert.Cert The Response object
 // @router /get-cert [get]
 func (c *ApiController) GetCert() {
 	request := c.ReadRequestFromQueryParams()
@@ -117,7 +117,7 @@ func (c *ApiController) GetCert() {
 // @Tag Cert API
 // @Description update cert
 // @Param   id     query    string  true        "The id ( owner/name ) of the cert"
-// @Param   body    body   object.Cert  true        "The details of the cert"
+// @Param   body    body   cert.Cert  true        "The details of the cert"
 // @Success 200 {object} controllers.Response The Response object
 // @router /update-cert [post]
 func (c *ApiController) UpdateCert() {
@@ -126,7 +126,7 @@ func (c *ApiController) UpdateCert() {
 
 	id := c.Input().Get("id")
 
-	var cert cert2.Cert
+	var cert casdoorcert.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -149,14 +149,14 @@ func (c *ApiController) UpdateCert() {
 // @Title AddCert
 // @Tag Cert API
 // @Description add cert
-// @Param   body    body   object.Cert  true        "The details of the cert"
+// @Param   body    body   cert.Cert  true        "The details of the cert"
 // @Success 200 {object} controllers.Response The Response object
 // @router /add-cert [post]
 func (c *ApiController) AddCert() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	var cert cert2.Cert
+	var cert casdoorcert.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -172,7 +172,7 @@ func (c *ApiController) AddCert() {
 // @Title DeleteCert
 // @Tag Cert API
 // @Description delete cert
-// @Param   body    body   object.Cert  true        "The details of the cert"
+// @Param   body    body   cert.Cert  true        "The details of the cert"
 // @Success 200 {object} controllers.Response The Response object
 // @Failure 400 Bad Request
 // @Failure 409 Conflict
@@ -182,7 +182,7 @@ func (c *ApiController) DeleteCert() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	var cert cert2.Cert
+	var cert casdoorcert.Cert
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &cert)
 	if err != nil {
 		c.ResponseBadRequest(err.Error())
