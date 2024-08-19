@@ -8,7 +8,7 @@ const (
 	ObjectTypeProvider     ObjectType = "provider"
 	ObjectTypeApplication  ObjectType = "application"
 	ObjectTypeUserApiToken ObjectType = "user-api-token"
-	ObjectTypeLDAP        ObjectType = "ldap"
+	ObjectTypeLDAP         ObjectType = "ldap"
 )
 
 type OperationResult string
@@ -29,12 +29,13 @@ const (
 	OperationNameRoleUpdate OperationName = "role-update"
 
 	OperationNameProviderUpdate OperationName = "provider-update"
+	OperatoinNameAddProvider    OperationName = "add-provider"
 
 	OperationNameApplicationUpdate OperationName = "application-update"
 
 	OperationNameAddUserApiToken    OperationName = "add-user-api-token"
 	OperationNameUserApiTokenDelete OperationName = "user-api-token-delete"
-	
+
 	OperationNameLdapSyncUsers OperationName = "ldap-sync-users"
 )
 

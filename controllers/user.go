@@ -872,7 +872,7 @@ func (c *ApiController) SetPassword() {
 			logger.LogMsgDetailed{
 				"error": "password contain blank space",
 			},
-			logger.OperationNameUserDelete,
+			logger.OperationNameSetPassword,
 			logger.OperationResultFailure,
 		)
 		c.ResponseUnprocessableEntity(c.T("user:New password cannot contain blank space."))
@@ -897,7 +897,7 @@ func (c *ApiController) SetPassword() {
 			logger.LogMsgDetailed{
 				"error": "unauthrorized",
 			},
-			logger.OperationNameUserDelete,
+			logger.OperationNameSetPassword,
 			logger.OperationResultFailure,
 		)
 		c.ResponseUnauthorized(c.T("general:Please login first"))
@@ -911,7 +911,7 @@ func (c *ApiController) SetPassword() {
 				logger.LogMsgDetailed{
 					"error": err.Error(),
 				},
-				logger.OperationNameUserDelete,
+				logger.OperationNameSetPassword,
 				logger.OperationResultFailure,
 			)
 			c.ResponseForbidden(err.Error())
@@ -924,7 +924,7 @@ func (c *ApiController) SetPassword() {
 				logger.LogMsgDetailed{
 					"error": "missing parameter",
 				},
-				logger.OperationNameUserDelete,
+				logger.OperationNameSetPassword,
 				logger.OperationResultFailure,
 			)
 			c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
@@ -941,7 +941,7 @@ func (c *ApiController) SetPassword() {
 			logger.LogMsgDetailed{
 				"error": "user not found",
 			},
-			logger.OperationNameUserDelete,
+			logger.OperationNameSetPassword,
 			logger.OperationResultFailure,
 		)
 		c.ResponseNotFound(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), userId))
@@ -953,7 +953,7 @@ func (c *ApiController) SetPassword() {
 			logger.LogMsgDetailed{
 				"error": err.Error(),
 			},
-			logger.OperationNameUserDelete,
+			logger.OperationNameSetPassword,
 			logger.OperationResultFailure,
 		)
 		c.ResponseInternalServerError(err.Error())
@@ -966,7 +966,7 @@ func (c *ApiController) SetPassword() {
 			logger.LogMsgDetailed{
 				"error": "unauthorized",
 			},
-			logger.OperationNameUserDelete,
+			logger.OperationNameSetPassword,
 			logger.OperationResultFailure,
 		)
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
@@ -983,7 +983,7 @@ func (c *ApiController) SetPassword() {
 					logger.LogMsgDetailed{
 						"error": err.Error(),
 					},
-					logger.OperationNameUserDelete,
+					logger.OperationNameSetPassword,
 					logger.OperationResultFailure,
 				)
 				c.ResponseUnauthorized(err.Error())
@@ -998,7 +998,7 @@ func (c *ApiController) SetPassword() {
 				logger.LogMsgDetailed{
 					"error": err.Error(),
 				},
-				logger.OperationNameUserDelete,
+				logger.OperationNameSetPassword,
 				logger.OperationResultFailure,
 			)
 			c.ResponseUnauthorized(err.Error())
@@ -1013,7 +1013,7 @@ func (c *ApiController) SetPassword() {
 			logger.LogMsgDetailed{
 				"error": msg,
 			},
-			logger.OperationNameUserDelete,
+			logger.OperationNameSetPassword,
 			logger.OperationResultFailure,
 		)
 		c.ResponseUnprocessableEntity(msg)
@@ -1027,7 +1027,7 @@ func (c *ApiController) SetPassword() {
 			logger.LogMsgDetailed{
 				"error": msg,
 			},
-			logger.OperationNameUserDelete,
+			logger.OperationNameSetPassword,
 			logger.OperationResultFailure,
 		)
 		c.ResponseUnprocessableEntity(msg)
@@ -1043,8 +1043,8 @@ func (c *ApiController) SetPassword() {
 
 	logger.LogWithInfo(
 		ctx,
-		"",
-		logger.OperationNameUserDelete,
+		"password has been changed",
+		logger.OperationNameSetPassword,
 		logger.OperationResultSuccess,
 	)
 

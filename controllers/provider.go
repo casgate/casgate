@@ -233,11 +233,19 @@ func (c *ApiController) UpdateProvider() {
 // @router /add-provider [post]
 func (c *ApiController) AddProvider() {
 	var provider object.Provider
+
+	ctx := c.getRequestCtx()
+
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeProvider)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
+
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &provider)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	logger.SetItem(ctx, "obj", provider.GetId())
 
 	c.ValidateOrganization(provider.Owner)
 
@@ -245,16 +253,62 @@ func (c *ApiController) AddProvider() {
 
 	count, err := object.GetProviderCount("", "", "")
 	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperatoinNameAddProvider,
+			logger.OperationResultFailure,
+		)
+
 		c.ResponseError(err.Error())
 		return
 	}
 
 	if err := checkQuotaForProvider(int(count)); err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperatoinNameAddProvider,
+			logger.OperationResultFailure,
+		)
+
 		c.ResponseError(err.Error())
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.AddProvider(c.getRequestCtx(), &provider))
+	affected, err := object.AddProvider(c.getRequestCtx(), &provider)
+	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperatoinNameAddProvider,
+			logger.OperationResultFailure,
+		)
+	} else if !affected {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "not affected",
+			},
+			logger.OperatoinNameAddProvider,
+			logger.OperationResultFailure,
+		)
+	} else {
+		logger.LogWithInfo(
+			ctx,
+			"successfuly added provider",
+			logger.OperatoinNameAddProvider,
+			logger.OperationResultSuccess,
+		)
+	}
+
+	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 }
 
