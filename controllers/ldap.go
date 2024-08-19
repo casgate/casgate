@@ -424,7 +424,7 @@ func (c *ApiController) SyncLdapUsers() {
 	}
 
 	mappingRb := object.NewRecordBuilderFromCtx(c.Ctx)
-	mappingCtx := context.WithValue(goCtx, object.RoleMappingRecordDataKey, mappingRb)
+	goCtx = context.WithValue(goCtx, object.RoleMappingRecordDataKey, mappingRb)
 
 	var users []object.LdapUser
 	err = json.Unmarshal(c.Ctx.Input.RequestBody, &users)
@@ -453,7 +453,7 @@ func (c *ApiController) SyncLdapUsers() {
 
 	record.AddReason("manual ldap sync")
 
-	syncResult, err := object.SyncLdapUsers(mappingCtx, command)
+	syncResult, err := object.SyncLdapUsers(goCtx, command)
 	if err != nil {
 		record.AddReason(fmt.Sprintf("SyncLdapUsers error: %s", err.Error()))
 		logger.LogWithInfo(

@@ -643,11 +643,15 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 		return err
 	}
 
-	recordUserMappedRoles(ctx, user.GetId(), currentUserRoles, newUserRoles)
+	record := buildUserMappedRolesRecord(ctx, user.GetId(), currentUserRoles, newUserRoles)
+	if record != nil {
+		util.SafeGoroutine(func() { AddRecord(record) })
+	}
+
 	return nil
 }
 
-func recordUserMappedRoles(ctx context.Context, userID string, oldRoles, newRoles []*Role) {
+func buildUserMappedRolesRecord(ctx context.Context, userID string, oldRoles, newRoles []*Role) *Record {
 	oldRolesIds := []string{}
 	for _, role := range oldRoles {
 		oldRolesIds = append(oldRolesIds, role.GetId())
@@ -655,7 +659,7 @@ func recordUserMappedRoles(ctx context.Context, userID string, oldRoles, newRole
 
 	newRolesIds := []string{}
 	for _, role := range newRoles {
-		newRolesIds = append(oldRolesIds, role.GetId())
+		newRolesIds = append(newRolesIds, role.GetId())
 	}
 
 	objectMessage := map[string]interface{}{
@@ -666,7 +670,7 @@ func recordUserMappedRoles(ctx context.Context, userID string, oldRoles, newRole
 
 	objectMessageRaw, err := json.Marshal(objectMessage)
 	if err != nil {
-		return
+		return nil
 	}
 
 	rb := ctx.Value(RoleMappingRecordDataKey).(*RecordBuilder)
@@ -676,5 +680,5 @@ func recordUserMappedRoles(ctx context.Context, userID string, oldRoles, newRole
 	record.Object = string(objectMessageRaw)
 	record.Id = 0
 
-	util.SafeGoroutine(func() { AddRecord(record) })
+	return record
 }
