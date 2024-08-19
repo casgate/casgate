@@ -123,7 +123,7 @@ func TestLdapSynchronizationManager_StartAutoSync_NonExistentLdap(t *testing.T) 
 	time.Sleep(500 * time.Microsecond)
 
 	assert.NotNil(t, err)
-	assert.Equal(t, "LDAP not found", err.Error())
+	assert.Equal(t, "StartAutoSync error: failed to GetLdap: LDAP not found", err.Error())
 
 	// Verify that the sync process was not started
 	mockSynchronizer.Lock()
