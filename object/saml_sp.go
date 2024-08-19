@@ -129,33 +129,30 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 
 func getAuthData(assertionInfo *saml2.AssertionInfo, provider *Provider) map[string]interface{} {
 	authData := map[string]interface{}{
-		"ID": assertionInfo.NameID,
+		"ID": []string{assertionInfo.NameID},
 	}
 
-	for key := range assertionInfo.Values {
-		if !slices.ContainsFunc(provider.RoleMappingItems, func(item *RoleMappingItem) bool {
-			return item.Role == key
-		}) {
-			authData[key] = assertionInfo.Values.Get(key)
-		}
-	}
+	tempRoleDict := make(map[string][]string)
 
-	for _, mappItem := range provider.RoleMappingItems {
-		for _, assertion := range assertionInfo.Assertions {
-			roles := make([]string, 0)
-
-			for _, attribute := range assertion.AttributeStatement.Attributes {
-				if attribute.Name == mappItem.Attribute {
-
-					for _, val := range attribute.Values {
-						roles = append(roles, val.Value)
-					}
-
+	for _, assertion := range assertionInfo.Assertions {
+		for _, attribute := range assertion.AttributeStatement.Attributes {
+			if !slices.ContainsFunc(provider.RoleMappingItems, func(item *RoleMappingItem) bool {
+				if _, ok := tempRoleDict[attribute.Name]; ok {
+					return true
 				}
+				return item.Role == attribute.Name
+			}) {
+				tempRoleDict[attribute.Name] = make([]string, 0)
 			}
 
-			authData[mappItem.Attribute] = roles
+			for _, val := range attribute.Values {
+				tempRoleDict[attribute.Name] = append(tempRoleDict[attribute.Name], val.Value)
+			}
 		}
+	}
+
+	for k, v := range tempRoleDict {
+		authData[k] = v
 	}
 
 	return authData
