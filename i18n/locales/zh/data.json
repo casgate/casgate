@@ -29,7 +29,8 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "未授权的操作",
     "Unknown authentication type (not password or provider), form = %s": "未知的认证类型（非密码或第三方提供商）：%s",
-    "User's tag: %s is not listed in the application's tags": "用户的标签: %s不在该应用的标签列表中"
+    "User's tag: %s is not listed in the application's tags": "用户的标签: %s不在该应用的标签列表中",
+    "Wrong URL": "Wrong URL"
   },
   "cas": {
     "Service %s and %s do not match": "服务%s与%s不匹配"
