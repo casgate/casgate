@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"slices"
 	"strings"
 
 	"github.com/casdoor/casdoor/i18n"
@@ -127,7 +126,7 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 	return &userInfo, authData, nil
 }
 
-func getAuthData(assertionInfo *saml2.AssertionInfo, provider *Provider) map[string]interface{} {
+func getAuthData(assertionInfo *saml2.AssertionInfo, _ *Provider) map[string]interface{} {
 	authData := map[string]interface{}{
 		"ID": []string{assertionInfo.NameID},
 	}
@@ -136,15 +135,6 @@ func getAuthData(assertionInfo *saml2.AssertionInfo, provider *Provider) map[str
 
 	for _, assertion := range assertionInfo.Assertions {
 		for _, attribute := range assertion.AttributeStatement.Attributes {
-			if !slices.ContainsFunc(provider.RoleMappingItems, func(item *RoleMappingItem) bool {
-				if _, ok := tempRoleDict[attribute.Name]; ok {
-					return true
-				}
-				return item.Role == attribute.Name
-			}) {
-				tempRoleDict[attribute.Name] = make([]string, 0)
-			}
-
 			for _, val := range attribute.Values {
 				tempRoleDict[attribute.Name] = append(tempRoleDict[attribute.Name], val.Value)
 			}
@@ -288,7 +278,7 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 	}, nil
 }
 
-func buildIdPCertificateStore(provider *Provider, samlResponse string) (certStore *dsig.MemoryX509CertificateStore, err error) {
+func buildIdPCertificateStore(_ *Provider, samlResponse string) (certStore *dsig.MemoryX509CertificateStore, err error) {
 	certEncodedData, err := getCertificateFromSamlResponse(samlResponse)
 	if err != nil {
 		return &dsig.MemoryX509CertificateStore{}, err
