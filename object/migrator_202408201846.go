@@ -15,8 +15,9 @@
 package object
 
 import (
-	"github.com/beego/beego/logs"
+	"context"
 	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
 	"github.com/xorm-io/xorm"
 	"github.com/xorm-io/xorm/migrate"
 	"github.com/xorm-io/xorm/schemas"
@@ -34,13 +35,14 @@ func (*Migrator_202408201846) IsMigrationNeeded() bool {
 }
 
 func (*Migrator_202408201846) DoMigration() *migrate.Migration {
+	ctx := context.Background()
 	migration := migrate.Migration{
 		ID: "20240820IncreaseFieldsLenForRole--Increase fields length for role: display_name(255), description(255)",
 		Migrate: func(engine *xorm.Engine) error {
 			dbType := engine.Dialect().URI().DBType
 
 			if dbType != schemas.POSTGRES && dbType != schemas.MYSQL {
-				logs.Warn("You must make migration: 20240820IncreaseFieldsLenForRole manually")
+				logger.Warn(ctx, "You must make migration: 20240820IncreaseFieldsLenForRole manually")
 				return nil
 			}
 
