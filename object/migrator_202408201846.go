@@ -16,11 +16,13 @@ package object
 
 import (
 	"context"
-	"github.com/casdoor/casdoor/orm"
-	"github.com/casdoor/casdoor/util/logger"
+
 	"github.com/xorm-io/xorm"
 	"github.com/xorm-io/xorm/migrate"
 	"github.com/xorm-io/xorm/schemas"
+
+	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 type Migrator_202408201846 struct{}
@@ -37,7 +39,7 @@ func (*Migrator_202408201846) IsMigrationNeeded() bool {
 func (*Migrator_202408201846) DoMigration() *migrate.Migration {
 	ctx := context.Background()
 	migration := migrate.Migration{
-		ID: "202408201846IncreaseFieldsLenForRole--Increase fields length for role: display_name(255), description(255)",
+		ID: "202408201846IncreaseFieldsLenForRole--Increase fields length for role",
 		Migrate: func(engine *xorm.Engine) error {
 			dbType := engine.Dialect().URI().DBType
 
