@@ -581,7 +581,7 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 					logger.LogMsgDetailed{
 						"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
 					},
-					logger.OperationNameLdapSyncUsers,
+					logger.OperationNameSyncRoleToUser,
 					logger.OperationResultFailure,
 				)
 				return err
@@ -593,7 +593,7 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 					"user": userId,
 					"role": role.GetId(),
 				},
-				logger.OperationNameLdapSyncUsers,
+				logger.OperationNameSyncRoleToUser,
 				logger.OperationResultSuccess,
 			)
 		}
@@ -619,7 +619,7 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 					logger.LogMsgDetailed{
 						"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
 					},
-					logger.OperationNameLdapSyncUsers,
+					logger.OperationNameSyncRoleToUser,
 					logger.OperationResultFailure,
 				)
 				return err
@@ -631,7 +631,7 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 					"user": userId,
 					"role": role.GetId(),
 				},
-				logger.OperationNameLdapSyncUsers,
+				logger.OperationNameSyncRoleToUser,
 				logger.OperationResultSuccess,
 			)
 		}
