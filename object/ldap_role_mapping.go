@@ -15,6 +15,7 @@
 package object
 
 import (
+	"context"
 	"strings"
 
 	"github.com/casdoor/casdoor/util"
@@ -64,14 +65,14 @@ func buildRoleMappingMap(roleMappingItems []*RoleMappingItem, enableCaseInsensit
 			if _, ok := roleMappingMap[roleMappingAttribute]; !ok {
 				roleMappingMap[roleMappingAttribute] = make(RoleMappingMapItem)
 			}
-			
+
 			var roleMappingValue RoleMappingItemValue
 			if enableCaseInsensitivity {
 				roleMappingValue = RoleMappingItemValue(strings.ToLower(roleMappingItemValue))
 			} else {
 				roleMappingValue = RoleMappingItemValue(roleMappingItemValue)
 			}
-			
+
 			if _, ok := roleMappingMap[roleMappingAttribute][roleMappingValue]; !ok {
 				roleMappingMap[roleMappingAttribute][roleMappingValue] = make([]RoleMappingItemRoleId, 0)
 			}
@@ -96,12 +97,12 @@ func SyncLdapAttributes(syncUser LdapUser, name, owner string) error {
 	return SyncAttributesToUser(user, syncUser.buildLdapDisplayName(), syncUser.Email, syncUser.Mobile, user.Avatar, []string{syncUser.Address})
 }
 
-func SyncLdapRoles(syncUser LdapUser, name, owner string) error {
+func SyncLdapRoles(ctx context.Context, syncUser LdapUser, name, owner string) error {
 	userId := util.GetId(owner, name)
 	user, err := GetUser(userId)
 	if err != nil {
 		return err
 	}
 
-	return SyncRolesToUser(user, syncUser.Roles)
+	return SyncRolesToUser(ctx, user, syncUser.Roles)
 }

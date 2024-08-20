@@ -20,13 +20,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 	"unicode"
 
 	"github.com/google/uuid"
@@ -43,15 +41,6 @@ func ParseInt(s string) int {
 	}
 
 	return i
-}
-
-func ParseFloat(s string) float64 {
-	f, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		panic(err)
-	}
-
-	return f
 }
 
 func ParseBool(s string) bool {
@@ -89,27 +78,16 @@ func CamelToSnakeCase(camel string) string {
 	return strings.ReplaceAll(buf.String(), " ", "")
 }
 
-func SnakeToCamel(snake string) string {
-	words := strings.Split(snake, "_")
-	for i := range words {
-		words[i] = strings.ToLower(words[i])
-		if i > 0 {
-			words[i] = strings.Title(words[i])
-		}
-	}
-	return strings.Join(words, "")
-}
-
-func GetOwnerAndNameFromId(id string) (string, string) {
+func GetOwnerAndNameFromIdWithPanic(id string) (string, string) {
 	tokens := strings.Split(id, "/")
 	if len(tokens) != 2 {
-		panic(errors.New("GetOwnerAndNameFromId() error, wrong token count for ID: " + id))
+		panic(errors.New("GetOwnerAndNameFromIdWithPanic() error, wrong token count for ID: " + id))
 	}
 
 	return tokens[0], tokens[1]
 }
 
-func GetOwnerAndNameFromIdWithError(id string) (string, string, error) {
+func GetOwnerAndNameFromId(id string) (string, string, error) {
 	tokens := strings.Split(id, "/")
 	if len(tokens) != 2 {
 		return "", "", errors.New("GetOwnerAndNameFromId() error, wrong token count for ID: " + id)
@@ -118,13 +96,13 @@ func GetOwnerAndNameFromIdWithError(id string) (string, string, error) {
 	return tokens[0], tokens[1], nil
 }
 
-func GetOwnerFromId(id string) string {
+func GetOwnerFromId(id string) (string, error) {
 	tokens := strings.Split(id, "/")
 	if len(tokens) != 2 {
-		panic(errors.New("GetOwnerAndNameFromId() error, wrong token count for ID: " + id))
+		return "", errors.New("GetOwnerFromId() error, wrong token count for ID: " + id)
 	}
 
-	return tokens[0]
+	return tokens[0], nil
 }
 
 func GetOwnerAndNameFromIdNoCheck(id string) (string, string) {
@@ -143,35 +121,6 @@ func GetOwnerAndNameAndOtherFromId(id string) (string, string, string) {
 
 func GenerateId() string {
 	return uuid.NewString()
-}
-
-func GenerateTimeId() string {
-	timestamp := time.Now().Unix()
-	tm := time.Unix(timestamp, 0)
-	t := tm.Format("20060102_150405")
-
-	random := uuid.NewString()[0:7]
-
-	res := fmt.Sprintf("%s_%s", t, random)
-	return res
-}
-
-func GenerateSimpleTimeId() string {
-	timestamp := time.Now().Unix()
-	tm := time.Unix(timestamp, 0)
-	t := tm.Format("20060102150405")
-
-	return t
-}
-
-func GetRandomName() string {
-	rand.Seed(time.Now().UnixNano())
-	const charset = "0123456789abcdefghijklmnopqrstuvwxyz"
-	result := make([]byte, 6)
-	for i := range result {
-		result[i] = charset[rand.Intn(len(charset))]
-	}
-	return string(result)
 }
 
 func GetId(owner, name string) string {
@@ -273,16 +222,6 @@ func GetEndPoint(endpoint string) string {
 		endpoint = strings.TrimPrefix(endpoint, prefix)
 	}
 	return endpoint
-}
-
-// HasString reports if slice has input string.
-func HasString(strs []string, str string) bool {
-	for _, i := range strs {
-		if i == str {
-			return true
-		}
-	}
-	return false
 }
 
 func ParseIdToString(input interface{}) (string, error) {

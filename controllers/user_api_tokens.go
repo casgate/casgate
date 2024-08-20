@@ -15,8 +15,11 @@
 package controllers
 
 import (
+	"fmt"
+
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 // AddApiToken
@@ -31,25 +34,47 @@ import (
 func (c *ApiController) AddApiToken() {
 	ctx := c.getRequestCtx()
 	owner := c.Input().Get("owner")
-	if owner == "" {
-		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
-		return
-	}
+
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeUserApiToken)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
 
 	if owner == "" {
-		c.ResponseUnprocessableEntity("owner not provided")
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "missing parameter: owner",
+			},
+			logger.OperationNameAddUserApiToken,
+			logger.OperationResultFailure,
+		)
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
 		return
 	}
 
 	isValid := object.ValidateUserID(owner)
 	if !isValid {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "owner is invalid",
+			},
+			logger.OperationNameAddUserApiToken,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity("owner is invalid")
 		return
 	}
 
 	user, err := object.GetUser(owner)
 	if err != nil {
-		logs.Error("get user: %s", err.Error())
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": fmt.Sprintf("object.GetUser: %s", err.Error()),
+			},
+			logger.OperationNameAddUserApiToken,
+			logger.OperationResultFailure,
+		)
 
 		c.ResponseInternalServerError("Internal server error")
 		return
@@ -59,25 +84,59 @@ func (c *ApiController) AddApiToken() {
 	currentUser := c.getCurrentUser()
 	isSelfOrAdmin := currentUser.Id == user.Id || currentUser.IsAdmin
 	if !isSelfOrAdmin {
-		logs.Error("add api token for user: %s. Only self or admin can release token", user.Name)
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "not self or admin",
+			},
+			logger.OperationNameAddUserApiToken,
+			logger.OperationResultFailure,
+		)
 		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 	}
 
 	tokenUser := object.MakeUserForToken(user)
 
+	logger.SetItem(ctx, "obj", tokenUser.GetId())
+
 	affected, err := object.AddUser(ctx, tokenUser)
 	if err != nil {
-		logs.Error("token creation: %s", err.Error())
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": fmt.Sprintf("object.AddUser: %s", err.Error()),
+			},
+			logger.OperationNameAddUserApiToken,
+			logger.OperationResultFailure,
+		)
 
 		c.ResponseInternalServerError("Token creation error")
 		return
 	}
 	if !affected {
-		logs.Error("token creation: record not affected")
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "not affected",
+			},
+			logger.OperationNameAddUserApiToken,
+			logger.OperationResultFailure,
+		)
 
 		c.ResponseInternalServerError("Token creation error")
 		return
 	}
+
+	isRootUser := currentUser.Owner == builtInOrg && currentUser.Name == adminUsername
+
+	logger.LogWithInfo(
+		ctx,
+		logger.LogMsgDetailed{
+			"isRootUser": isRootUser,
+		},
+		logger.OperationNameAddUserApiToken,
+		logger.OperationResultSuccess,
+	)
 
 	c.ResponseOk(object.MakeUserApiToken(tokenUser))
 }
@@ -94,38 +153,77 @@ func (c *ApiController) AddApiToken() {
 // @Failure 500 Internal Server Error
 // @router /delete-api-token [post]
 func (c *ApiController) DeleteApiToken() {
+	ctx := c.getRequestCtx()
 	owner := c.Input().Get("owner")
-	if owner == "" { 
-		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
-		return
-	}
+
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeUserApiToken)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
 
 	if owner == "" {
-		c.ResponseUnprocessableEntity("owner not provided")
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "missing parameter: owner",
+			},
+			logger.OperationNameUserApiTokenDelete,
+			logger.OperationResultFailure,
+		)
+		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
 		return
 	}
 
 	isValid := object.ValidateUserID(owner)
 	if !isValid {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "owner is invalid",
+			},
+			logger.OperationNameUserApiTokenDelete,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity("owner is invalid")
 		return
 	}
 
 	token := c.Input().Get("api_token")
 	if token == "" {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "missing parameter: token",
+			},
+			logger.OperationNameUserApiTokenDelete,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity("token not provided")
 		return
 	}
 
 	isValid = object.ValidateToken(token)
 	if !isValid {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "token is invalid",
+			},
+			logger.OperationNameUserApiTokenDelete,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity("token is invalid")
 		return
 	}
 
 	user, err := object.GetUser(owner)
 	if err != nil {
-		logs.Error("get user: %s", err.Error())
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": fmt.Sprintf("object.GetUser: %s", err.Error()),
+			},
+			logger.OperationNameUserApiTokenDelete,
+			logger.OperationResultFailure,
+		)
 
 		c.ResponseInternalServerError("Internal server error")
 		return
@@ -134,23 +232,55 @@ func (c *ApiController) DeleteApiToken() {
 	currentUser := c.getCurrentUser()
 	isSelfOrAdmin := currentUser.Id == user.Id || currentUser.IsAdmin
 	if !isSelfOrAdmin {
-		logs.Error("delete api token for user: %s. Only self or admin can delete token", user.Name)
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "not self or admin",
+			},
+			logger.OperationNameUserApiTokenDelete,
+			logger.OperationResultFailure,
+		)
 		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 	}
 
 	affected, err := object.DeleteApiToken(user, token)
 	if err != nil {
-		logs.Error("delete api token: %s", err.Error())
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": fmt.Sprintf("object.DeleteApiToken: %s", err.Error()),
+			},
+			logger.OperationNameUserApiTokenDelete,
+			logger.OperationResultFailure,
+		)
 
 		c.ResponseInternalServerError("delete token error")
 		return
 	}
 	if !affected {
-		logs.Error("delete api token: does not affected")
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "not affected",
+			},
+			logger.OperationNameUserApiTokenDelete,
+			logger.OperationResultFailure,
+		)
 
 		c.ResponseInternalServerError("token does not deleted")
 		return
 	}
+
+	isRootUser := currentUser.Owner == builtInOrg && currentUser.Name == adminUsername
+
+	logger.LogWithInfo(
+		ctx,
+		logger.LogMsgDetailed{
+			"isRootUser": isRootUser,
+		},
+		logger.OperationNameUserApiTokenDelete,
+		logger.OperationResultSuccess,
+	)
 
 	c.ResponseOk()
 }

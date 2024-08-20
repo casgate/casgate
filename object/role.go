@@ -15,17 +15,24 @@
 package object
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
+	"slices"
 	"strings"
 
+	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
+
 	"github.com/beego/beego/logs"
-	"github.com/casdoor/casdoor/conf"
 	"github.com/xorm-io/builder"
 
-	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/conf"
+
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Role struct {
@@ -108,7 +115,7 @@ func getRole(owner string, name string) (*Role, error) {
 }
 
 func GetRole(id string) (*Role, error) {
-	owner, name, err := util.GetOwnerAndNameFromIdWithError(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid role id: %s", id))
 	}
@@ -125,6 +132,29 @@ func UpdateRole(id string, role *Role) (bool, error) {
 
 	if oldRole == nil {
 		return false, nil
+	}
+
+	slices.Sort(oldRole.Roles)
+	slices.Sort(role.Roles)
+
+	needCheckCrossDeps := len(role.Roles) > 0 && !slices.Equal(oldRole.Roles, role.Roles)
+
+	if needCheckCrossDeps {
+		allMyParents, _ := GetAncestorRoles(id)
+		for _, r := range role.Roles {
+			if r == id {
+				return false, fmt.Errorf("role %s is in the child roles of %s", id, id)
+			}
+			for _, pr := range allMyParents {
+				if pr.GetId() == id {
+					continue // self
+				}
+
+				if r == pr.GetId() {
+					return false, fmt.Errorf("role %s is in the child roles of %s", id, pr.GetId())
+				}
+			}
+		}
 	}
 
 	if name != role.Name {
@@ -160,6 +190,11 @@ func UpdateRole(id string, role *Role) (bool, error) {
 }
 
 func AddRole(role *Role) (bool, error) {
+	id := role.GetId()
+	if slices.Contains(role.Roles, id) {
+		return false, fmt.Errorf("role %s is in the child roles of %s", id, id)
+	}
+
 	affected, err := orm.AppOrmer.Engine.Insert(role)
 	if err != nil {
 		return false, err
@@ -333,7 +368,10 @@ func roleChangeTrigger(oldName string, newName string) error {
 
 	for _, role := range roles {
 		for j, u := range role.Roles {
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.GetOwnerAndNameFromId(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				if newName != "" {
 					role.Roles[j] = util.GetId(owner, newName)
@@ -358,7 +396,10 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Roles {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.GetOwnerAndNameFromId(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				if newName != "" {
 					permission.Roles[j] = util.GetId(owner, newName)
@@ -384,7 +425,10 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, provider := range providers {
 		for j, u := range provider.RoleMappingItems {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u.Role)
+			owner, name, err := util.GetOwnerAndNameFromId(u.Role)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				if newName != "" {
 					provider.RoleMappingItems[j].Role = util.GetId(owner, newName)
@@ -410,7 +454,10 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, ldap := range ldaps {
 		for j, u := range ldap.RoleMappingItems {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u.Role)
+			owner, name, err := util.GetOwnerAndNameFromId(u.Role)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				if newName != "" {
 					ldap.RoleMappingItems[j].Role = util.GetId(owner, newName)
@@ -482,29 +529,6 @@ func makeAncestorRolesTreeMap(roles []*Role) map[string]*TreeNode[*Role] {
 	return roleMap
 }
 
-// containsRole is a helper function to check if a roles is related to any role in the given list roles
-func containsRole(role *Role, roleMap map[string]*Role, visited map[string]bool, roleIds ...string) bool {
-	roleId := role.GetId()
-	if isContain, ok := visited[roleId]; ok {
-		return isContain
-	}
-
-	visited[role.GetId()] = false
-
-	for _, subRole := range role.Roles {
-		if util.HasString(roleIds, subRole) {
-			return true
-		}
-
-		r, ok := roleMap[subRole]
-		if ok && containsRole(r, roleMap, visited, roleIds...) {
-			return true
-		}
-	}
-
-	return false
-}
-
 func subRolePermissions(role *Role) ([]*Permission, error) {
 	result := make([]*Permission, 0)
 
@@ -528,7 +552,7 @@ func subRolePermissions(role *Role) ([]*Permission, error) {
 }
 
 // SyncRolesToUser sync user roles
-func SyncRolesToUser(user *User, roleIds []string) error {
+func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 	userId := user.GetId()
 	roles, err := GetRolesByIds(roleIds)
 	if err != nil {
@@ -553,8 +577,26 @@ func SyncRolesToUser(user *User, roleIds []string) error {
 			role.Users = util.DeleteVal(role.Users, userId)
 			_, err = UpdateRole(role.GetId(), role)
 			if err != nil {
+				logger.LogWithInfo(
+					ctx,
+					logger.LogMsgDetailed{
+						"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
+					},
+					logger.OperationNameSyncRoleToUser,
+					logger.OperationResultFailure,
+				)
 				return err
 			}
+			logger.LogWithInfo(
+				ctx,
+				logger.LogMsgDetailed{
+					"info": "role removed from user",
+					"user": userId,
+					"role": role.GetId(),
+				},
+				logger.OperationNameSyncRoleToUser,
+				logger.OperationResultSuccess,
+			)
 		}
 	}
 
@@ -573,9 +615,70 @@ func SyncRolesToUser(user *User, roleIds []string) error {
 
 			_, err = UpdateRole(role.GetId(), role)
 			if err != nil {
+				logger.LogWithInfo(
+					ctx,
+					logger.LogMsgDetailed{
+						"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
+					},
+					logger.OperationNameSyncRoleToUser,
+					logger.OperationResultFailure,
+				)
 				return err
 			}
+			logger.LogWithInfo(
+				ctx,
+				logger.LogMsgDetailed{
+					"info": "role added to user",
+					"user": userId,
+					"role": role.GetId(),
+				},
+				logger.OperationNameSyncRoleToUser,
+				logger.OperationResultSuccess,
+			)
 		}
 	}
+
+	newUserRoles, err := getRolesByUserInternal(userId)
+	if err != nil {
+		return err
+	}
+
+	record := buildUserMappedRolesRecord(ctx, user.GetId(), currentUserRoles, newUserRoles)
+	if record != nil {
+		util.SafeGoroutine(func() { AddRecord(record) })
+	}
+
 	return nil
+}
+
+func buildUserMappedRolesRecord(ctx context.Context, userID string, oldRoles, newRoles []*Role) *Record {
+	oldRolesIds := []string{}
+	for _, role := range oldRoles {
+		oldRolesIds = append(oldRolesIds, role.GetId())
+	}
+
+	newRolesIds := []string{}
+	for _, role := range newRoles {
+		newRolesIds = append(newRolesIds, role.GetId())
+	}
+
+	objectMessage := map[string]interface{}{
+		"userID":   userID,
+		"oldRoles": oldRolesIds,
+		"newRoles": newRolesIds,
+	}
+
+	objectMessageRaw, err := json.Marshal(objectMessage)
+	if err != nil {
+		return nil
+	}
+
+	rb := ctx.Value(RoleMappingRecordDataKey).(*RecordBuilder)
+	record := rb.Build()
+
+	record.Name = util.GenerateId()
+	record.Object = string(objectMessageRaw)
+	record.Id = 0
+
+	return record
 }

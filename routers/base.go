@@ -15,14 +15,13 @@
 package routers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
-	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/beego/beego/context"
+
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/object"
@@ -96,43 +95,6 @@ func getUsernameByClientIdSecret(ctx *context.Context) string {
 	return fmt.Sprintf("app/%s", application.Name)
 }
 
-func getKeys(ctx *context.Context) (string, string) {
-	method := ctx.Request.Method
-
-	if method == http.MethodGet {
-		accessKey := ctx.Input.Query("accessKey")
-		accessSecret := ctx.Input.Query("accessSecret")
-		return accessKey, accessSecret
-	} else {
-		body := ctx.Input.RequestBody
-
-		if len(body) == 0 {
-			return ctx.Request.Form.Get("accessKey"), ctx.Request.Form.Get("accessSecret")
-		}
-
-		var obj Object
-		err := json.Unmarshal(body, &obj)
-		if err != nil {
-			return "", ""
-		}
-
-		return obj.AccessKey, obj.AccessSecret
-	}
-}
-
-func getUsernameByKeys(ctx *context.Context) string {
-	accessKey, accessSecret := getKeys(ctx)
-	user, err := object.GetUserByAccessKey(accessKey)
-	if err != nil {
-		panic(err)
-	}
-
-	if user != nil && accessSecret == user.AccessSecret {
-		return user.GetId()
-	}
-	return ""
-}
-
 func getSessionUser(ctx *context.Context) string {
 	user := ctx.Input.CruSession.Get("username")
 	if user == nil {
@@ -158,15 +120,6 @@ func setSessionUser(ctx *context.Context, user string) {
 	}
 
 	// https://github.com/beego/beego/issues/3445#issuecomment-455411915
-	ctx.Input.CruSession.SessionRelease(ctx.ResponseWriter)
-}
-
-func setSessionExpire(ctx *context.Context, ExpireTime int64) {
-	SessionData := struct{ ExpireTime int64 }{ExpireTime: ExpireTime}
-	err := ctx.Input.CruSession.Set("SessionData", util.StructToJson(SessionData))
-	if err != nil {
-		panic(err)
-	}
 	ctx.Input.CruSession.SessionRelease(ctx.ResponseWriter)
 }
 

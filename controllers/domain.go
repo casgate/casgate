@@ -39,7 +39,7 @@ func (c *ApiController) GetDomains() {
 	if limit == "" || page == "" {
 		domains, err := object.GetDomains(c.Ctx.Request.Context(), request.Owner)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 
@@ -48,14 +48,14 @@ func (c *ApiController) GetDomains() {
 		limit := util.ParseInt(limit)
 		count, err := object.GetDomainCount(request.Owner, request.Field, request.Value)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 
 		paginator := pagination.SetPaginator(c.Ctx, limit, count)
 		domains, err := object.GetPaginationDomains(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
 		if err != nil {
-			c.ResponseError(err.Error())
+			c.ResponseDBError(err)
 			return
 		}
 
@@ -151,7 +151,7 @@ func (c *ApiController) AddDomain() {
 func (c *ApiController) DeleteDomain() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	var domain object.Domain
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &domain)
 	if err != nil {
@@ -166,7 +166,7 @@ func (c *ApiController) DeleteDomain() {
 		return
 	}
 	c.ValidateOrganization(domainFromDb.Owner)
-	
+
 	c.Data["json"] = wrapActionResponse(object.DeleteDomain(&domain))
 	c.ServeJSON()
 }

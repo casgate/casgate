@@ -12,25 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package util
+package routers
 
 import (
-	"strconv"
-	"time"
+	"github.com/beego/beego/context"
+	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
-func GetCurrentTime() string {
-	timestamp := time.Now().Unix()
-	tm := time.Unix(timestamp, 0).UTC()
-	return tm.Format(time.RFC3339)
-}
-
-func GetCurrentUnixTime() string {
-	return strconv.FormatInt(time.Now().UnixNano(), 10)
-}
-
-func IsTokenExpired(createdTime string, expiresIn int) bool {
-	createdTimeObj, _ := time.Parse(time.RFC3339, createdTime)
-	expiresAtObj := createdTimeObj.Add(time.Duration(expiresIn) * time.Second)
-	return time.Now().After(expiresAtObj)
+func LoggerFilter(ctx *context.Context) {
+	loggerCtx := logger.InitLoggerCtx(ctx.Request.Context())
+	ctx.Request = ctx.Request.WithContext(loggerCtx)
+	logger.SetItem(loggerCtx, "ip", util.GetIPFromRequest(ctx.Request))
 }

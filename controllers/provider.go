@@ -25,6 +25,7 @@ import (
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 // GetProviders
@@ -166,26 +167,56 @@ func (c *ApiController) UpdateProvider() {
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
 
+	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeProvider)
+	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
+
 	var provider object.Provider
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &provider)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	logger.SetItem(goCtx, "obj", provider.GetId())
+
 	c.ValidateOrganization(provider.Owner)
+
+	c.validateProviderURLs(provider)
 
 	for _, roleMappingItem := range provider.RoleMappingItems {
 		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
+			logger.LogWithInfo(
+				goCtx,
+				logger.LogMsgDetailed{
+					"error": "missing parameter",
+				},
+				logger.OperationNameProviderUpdate,
+				logger.OperationResultFailure,
+			)
 			c.ResponseError(c.T("general:Missing parameter"))
 			return
 		}
 	}
 
-	affected, err := object.UpdateProvider(id, &provider)
+	affected, err := object.UpdateProvider(c.getRequestCtx(), id, &provider)
 	if err != nil {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": "missing parameter",
+			},
+			logger.OperationNameProviderUpdate,
+			logger.OperationResultFailure,
+		)
 		detail := fmt.Sprintf("Update provider error: Owner: %s, Name: %s, Type: %s", provider.Owner, provider.Name, provider.Type)
 		record.AddReason(detail)
 	} else {
+		logger.LogWithInfo(
+			goCtx,
+			"",
+			logger.OperationNameProviderUpdate,
+			logger.OperationResultSuccess,
+		)
 		record.AddReason("Update provider success")
 	}
 
@@ -210,6 +241,8 @@ func (c *ApiController) AddProvider() {
 
 	c.ValidateOrganization(provider.Owner)
 
+	c.validateProviderURLs(provider)
+
 	count, err := object.GetProviderCount("", "", "")
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -221,7 +254,7 @@ func (c *ApiController) AddProvider() {
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.AddProvider(&provider))
+	c.Data["json"] = wrapActionResponse(object.AddProvider(c.getRequestCtx(), &provider))
 	c.ServeJSON()
 }
 
@@ -330,4 +363,26 @@ func (c *ApiController) TestProviderConnection() {
 		return
 	}
 	c.ResponseOk()
+}
+
+func (c *ApiController) validateProviderURLs(provider object.Provider) {
+	fieldErrMap := map[string]string{
+		provider.Domain:                 fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:Domain")),
+		provider.CustomConfUrl:          fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomConfUrl")),
+		provider.CustomAuthUrl:          fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomAuthUrl")),
+		provider.CustomTokenUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomTokenUrl")),
+		provider.CustomUserInfoUrl:      fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomUserInfoUrl")),
+		provider.CustomLogo:             fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomLogo")),
+		provider.IssuerUrl:              fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:IssuerUrl")),
+		provider.BaseHostUrl:            fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:BaseHostUrl")),
+		provider.ProviderUrl:            fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:ProviderUrl")),
+		provider.SingleLogoutServiceUrl: fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:SingleLogoutServiceUrl")),
+	}
+
+	for field, err := range fieldErrMap {
+		if field != "" && !util.IsURLValid(field) {
+			c.ResponseError(err)
+			return
+		}
+	}
 }

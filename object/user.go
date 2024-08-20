@@ -17,17 +17,18 @@ package object
 import (
 	"context"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"slices"
 	"strings"
 	"time"
 
+	"github.com/casdoor/casdoor/orm"
+
 	"github.com/beego/beego/logs"
-	"github.com/casdoor/casdoor/conf"
-	"github.com/casdoor/casdoor/util"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/xorm-io/builder"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 const (
@@ -319,20 +320,6 @@ func GetUsers(owner string) ([]*User, error) {
 	return users, nil
 }
 
-func GetUsersByTag(owner string, tag string) ([]*User, error) {
-	users := []*User{}
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&users, &User{Owner: owner, Tag: tag})
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range users {
-		users[i].PasswordChangeRequired = users[i].IsPasswordChangeRequired()
-	}
-
-	return users, nil
-}
-
 func GetSortedUsers(owner string, sorter string, limit int) ([]*User, error) {
 	users := []*User{}
 
@@ -388,24 +375,6 @@ func getUser(owner string, name string) (*User, error) {
 
 	if existed {
 		user.PasswordChangeRequired = user.IsPasswordChangeRequired()
-		return &user, nil
-	} else {
-		return nil, nil
-	}
-}
-
-func getUserById(owner string, id string) (*User, error) {
-	if owner == "" || id == "" {
-		return nil, nil
-	}
-
-	user := User{Owner: owner, Id: id}
-	existed, err := orm.AppOrmer.Engine.Get(&user)
-	if err != nil {
-		return nil, err
-	}
-
-	if existed {
 		return &user, nil
 	} else {
 		return nil, nil
@@ -488,30 +457,11 @@ func GetUserByUserId(owner string, userId string) (*User, error) {
 	}
 }
 
-func GetUserByAccessKey(accessKey string) (*User, error) {
-	if accessKey == "" {
-		return nil, nil
-	}
-	user := User{AccessKey: accessKey}
-	existed, err := orm.AppOrmer.Engine.Get(&user)
+func GetUser(id string) (*User, error) {
+	owner, name, err := util.GetOwnerAndNameFromId(id)
 	if err != nil {
 		return nil, err
 	}
-
-	if existed {
-		return &user, nil
-	} else {
-		return nil, nil
-	}
-}
-
-func GetUser(id string) (*User, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	return getUser(owner, name)
-}
-
-func GetUserNoCheck(id string) (*User, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
 	return getUser(owner, name)
 }
 
@@ -563,20 +513,6 @@ func GetMaskedUsers(users []*User, errs ...error) ([]*User, error) {
 		}
 	}
 	return users, nil
-}
-
-func getLastUser(owner string) (*User, error) {
-	user := User{Owner: owner}
-	existed, err := orm.AppOrmer.Engine.Desc("created_time", "id").Get(&user)
-	if err != nil {
-		return nil, err
-	}
-
-	if existed {
-		return &user, nil
-	}
-
-	return nil, nil
 }
 
 func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, error) {
@@ -707,7 +643,10 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 
 func UpdateUserForAllFields(id string, user *User) (bool, error) {
 	var err error
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return false, err
+	}
 	oldUser, err := getUser(owner, name)
 	if err != nil {
 		return false, err
@@ -844,84 +783,6 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 	return affected != 0, nil
 }
 
-func AddUsers(users []*User) (bool, error) {
-	var err error
-	if len(users) == 0 {
-		return false, nil
-	}
-
-	// organization := GetOrganizationByUser(users[0])
-	for _, user := range users {
-		// this function is only used for syncer or batch upload, so no need to encrypt the password
-		// user.UpdateUserPassword(organization)
-
-		err = user.UpdateUserHash()
-		if err != nil {
-			return false, err
-		}
-
-		user.PreHash = user.Hash
-
-		user.Email = strings.ToLower(user.Email)
-
-		if user.MappingStrategy == "" {
-			user.MappingStrategy = "all"
-		}
-	}
-
-	affected, err := orm.AppOrmer.Engine.Insert(users)
-	if err != nil {
-		if !strings.Contains(err.Error(), "Duplicate entry") {
-			return false, err
-		}
-	}
-
-	if affected != 0 {
-		reachablePermissions := make([]*Permission, 0)
-		for _, user := range users {
-			reachablePermissionsByUser, err := reachablePermissionsByUser(user)
-			if err != nil {
-				return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
-			}
-			reachablePermissions = append(reachablePermissions, reachablePermissionsByUser...)
-		}
-
-		err = ProcessPolicyDifference(reachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
-	}
-
-	return affected != 0, nil
-}
-
-func AddUsersInBatch(users []*User) (bool, error) {
-	batchSize := conf.GetConfigBatchSize()
-
-	if len(users) == 0 {
-		return false, nil
-	}
-
-	affected := false
-	for i := 0; i < len(users); i += batchSize {
-		start := i
-		end := i + batchSize
-		if end > len(users) {
-			end = len(users)
-		}
-
-		tmp := users[start:end]
-		fmt.Printf("The syncer adds users: [%d - %d]\n", start, end)
-		if ok, err := AddUsers(tmp); err != nil {
-			return false, err
-		} else if ok {
-			affected = true
-		}
-	}
-
-	return affected, nil
-}
-
 func DeleteUser(ctx context.Context, user *User) (bool, error) {
 	// Forced offline the user first
 	_, err := DeleteSession(ctx, util.GetSessionId(user.Owner, user.Name, CasdoorApplication))
@@ -1027,7 +888,10 @@ func userChangeTrigger(oldName string, newName string) error {
 	for _, role := range roles {
 		for j, u := range role.Users {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.GetOwnerAndNameFromId(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				role.Users[j] = util.GetId(owner, newName)
 			}
@@ -1046,7 +910,10 @@ func userChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Users {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.GetOwnerAndNameFromId(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				permission.Users[j] = util.GetId(owner, newName)
 			}

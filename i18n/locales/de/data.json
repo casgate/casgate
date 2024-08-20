@@ -9,6 +9,16 @@
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
+  "application": {
+    "AffiliationUrl": "AffiliationUrl",
+    "ForgetUrl": "ForgetUrl",
+    "FormBackgroundUrl": "FormBackgroundUrl",
+    "HomepageUrl": "HomepageUrl",
+    "Logo": "Logo",
+    "SamlReplyUrl": "SamlReplyUrl",
+    "SigninUrl": "SigninUrl",
+    "SignupUrl": "SignupUrl"
+  },
   "auth": {
     "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "Die Challenge-Methode sollte S256 sein",
@@ -72,6 +82,7 @@
     "unsupported password type: %s": "Nicht unterstützter Passworttyp: %s"
   },
   "general": {
+    "%s field is not valid URL": "%s field is not valid URL",
     "Invalid username or password/code": "Ungültiger Benutzername oder Passwort/Code",
     "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
@@ -101,12 +112,25 @@
     "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
   },
   "organization": {
+    "DefaultAvatar": "DefaultAvatar",
+    "Favicon": "Favicon",
     "Only admin can modify the %s.": "Nur der Administrator kann das %s ändern.",
     "The %s is immutable.": "Das %s ist unveränderlich.",
-    "Unknown modify rule %s.": "Unbekannte Änderungsregel %s."
+    "Unknown modify rule %s.": "Unbekannte Änderungsregel %s.",
+    "WebsiteUrl": "WebsiteUrl"
   },
   "provider": {
+    "BaseHostUrl": "BaseHostUrl",
+    "CustomAuthUrl": "CustomAuthUrl",
+    "CustomConfUrl": "CustomConfUrl",
+    "CustomLogo": "CustomLogo",
+    "CustomTokenUrl": "CustomTokenUrl",
+    "CustomUserInfoUrl": "CustomUserInfoUrl",
+    "Domain": "Domain",
     "Invalid application id": "Ungültige Anwendungs-ID",
+    "IssuerUrl": "IssuerUrl",
+    "ProviderUrl": "ProviderUrl",
+    "SingleLogoutServiceUrl": "SingleLogoutServiceUrl",
     "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "Der Anbieter %s existiert nicht"
   },
@@ -137,9 +161,11 @@
     "Token not found, invalid accessToken": "Token nicht gefunden, ungültiger Zugriffs-Token"
   },
   "user": {
+    "Avatar": "Avatar",
     "Display name cannot be empty": "Anzeigename darf nicht leer sein",
     "Failed to add userIdProvider": "Failed to add userIdProvider",
-    "New password cannot contain blank space.": "Das neue Passwort darf keine Leerzeichen enthalten."
+    "New password cannot contain blank space.": "Das neue Passwort darf keine Leerzeichen enthalten.",
+    "PermanentAvatar": "PermanentAvatar"
   },
   "util": {
     "No application is found for userId: %s": "Es wurde keine Anwendung für die Benutzer-ID gefunden: %s",
@@ -164,5 +190,8 @@
   "webauthn": {
     "Found no credentials for this user": "Es wurden keine Anmeldeinformationen für diesen Benutzer gefunden",
     "Please call WebAuthnSigninBegin first": "Bitte rufen Sie zuerst WebAuthnSigninBegin auf"
+  },
+  "webhook": {
+    "Url": "Url"
   }
 }

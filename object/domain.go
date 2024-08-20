@@ -17,10 +17,13 @@ package object
 import (
 	"context"
 	"fmt"
+	"slices"
+
 	"github.com/casdoor/casdoor/orm"
 
-	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Domain struct {
@@ -94,14 +97,28 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 		return false, nil
 	}
 
-	// allParentDomains, _ := GetAncestorDomains(ctx, id)
-	// for _, d := range allParentDomains {
-	// 	for _, domainId := range d.Domains {
-	// 		if id == domainId {
-	// 			return false, fmt.Errorf("role %s is in the child domain of %s", id, d.GetId())
-	// 		}
-	// 	}
-	// }
+	slices.Sort(oldDomain.Domains)
+	slices.Sort(domain.Domains)
+
+	needCheckCrossDeps := len(domain.Domains) > 0 && !slices.Equal(oldDomain.Domains, domain.Domains)
+
+	if needCheckCrossDeps {
+		allMyParents, _ := GetAncestorDomains(ctx, id)
+		for _, d := range domain.Domains {
+			if d == id {
+				return false, fmt.Errorf("domain %s is in the child domain of %s", id, id)
+			}
+			for _, pd := range allMyParents {
+				if pd.GetId() == id {
+					continue // self
+				}
+
+				if d == pd.GetId() {
+					return false, fmt.Errorf("domain %s is in the child domain of %s", id, pd.GetId())
+				}
+			}
+		}
+	}
 
 	if name != domain.Name {
 		err := domainChangeTrigger(name, domain.Name)
@@ -136,6 +153,11 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 }
 
 func AddDomain(domain *Domain) (bool, error) {
+	id := domain.GetId()
+	if slices.Contains(domain.Domains, id) {
+		return false, fmt.Errorf("domain %s is in the child domain of %s", id, id)
+	}
+
 	affected, err := orm.AppOrmer.Engine.Insert(domain)
 	if err != nil {
 		return false, err
@@ -230,7 +252,10 @@ func domainChangeTrigger(oldName string, newName string) error {
 
 	for _, role := range roles {
 		for j, u := range role.Domains {
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.GetOwnerAndNameFromId(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				role.Domains[j] = util.GetId(owner, newName)
 			}
@@ -250,7 +275,10 @@ func domainChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Domains {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.GetOwnerAndNameFromId(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				permission.Domains[j] = util.GetId(owner, newName)
 			}

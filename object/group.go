@@ -17,11 +17,13 @@ package object
 import (
 	"errors"
 	"fmt"
+
 	"github.com/casdoor/casdoor/orm"
 
-	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/builder"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Group struct {
@@ -97,12 +99,18 @@ func getGroup(owner string, name string) (*Group, error) {
 }
 
 func GetGroup(id string) (*Group, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getGroup(owner, name)
 }
 
 func UpdateGroup(id string, group *Group) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err == nil {
+		return false, err
+	}
 	oldGroup, err := getGroup(owner, name)
 	if oldGroup == nil {
 		return false, err
@@ -168,17 +176,6 @@ func AddGroup(group *Group) (bool, error) {
 		}
 	}
 
-	return affected != 0, nil
-}
-
-func AddGroups(groups []*Group) (bool, error) {
-	if len(groups) == 0 {
-		return false, nil
-	}
-	affected, err := orm.AppOrmer.Engine.Insert(groups)
-	if err != nil {
-		return false, err
-	}
 	return affected != 0, nil
 }
 
@@ -309,7 +306,10 @@ func makeAncestorGroupsTreeMap(groups []*Group) map[string]*TreeNode[*Group] {
 }
 
 func GetGroupUserCount(groupId string, field, value string) (int64, error) {
-	owner, _ := util.GetOwnerAndNameFromId(groupId)
+	owner, _, err := util.GetOwnerAndNameFromId(groupId)
+	if err != nil {
+		return 0, err
+	}
 	names, err := userEnforcer.GetUserNamesByGroupName(groupId)
 	if err != nil {
 		return 0, err
@@ -327,7 +327,10 @@ func GetGroupUserCount(groupId string, field, value string) (int64, error) {
 
 func GetPaginationGroupUsers(groupId string, offset, limit int, field, value, sortField, sortOrder string) ([]*User, error) {
 	users := []*User{}
-	owner, _ := util.GetOwnerAndNameFromId(groupId)
+	owner, _, err := util.GetOwnerAndNameFromId(groupId)
+	if err != nil {
+		return nil, err
+	}
 	names, err := userEnforcer.GetUserNamesByGroupName(groupId)
 	if err != nil {
 		return nil, err
@@ -358,18 +361,6 @@ func GetPaginationGroupUsers(groupId string, offset, limit int, field, value, so
 		return nil, err
 	}
 
-	return users, nil
-}
-
-func GetGroupUsers(groupId string) ([]*User, error) {
-	users := []*User{}
-	owner, _ := util.GetOwnerAndNameFromId(groupId)
-	names, err := userEnforcer.GetUserNamesByGroupName(groupId)
-
-	err = orm.AppOrmer.Engine.Where("owner = ?", owner).In("name", names).Find(&users)
-	if err != nil {
-		return nil, err
-	}
 	return users, nil
 }
 
@@ -466,13 +457,16 @@ func getGroupsInGroup(groupId string) ([]*Group, error) {
 }
 
 func getGroupsByParentGroup(groupId string) ([]*Group, error) {
-	owner, parentName := util.GetOwnerAndNameFromId(groupId)
+	owner, parentName, err := util.GetOwnerAndNameFromId(groupId)
+	if err != nil {
+		return nil, err
+	}
 
 	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	groups := []*Group{}
-	err := session.Where("owner=? and parent_id = ?", owner, parentName).Find(&groups)
+	err = session.Where("owner=? and parent_id = ?", owner, parentName).Find(&groups)
 	if err != nil {
 		return nil, err
 	}
