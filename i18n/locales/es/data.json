@@ -39,7 +39,8 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Operación no autorizada",
     "Unknown authentication type (not password or provider), form = %s": "Tipo de autenticación desconocido (no es contraseña o proveedor), formulario = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
+    "Wrong URL": "Wrong URL"
   },
   "cas": {
     "Service %s and %s do not match": "Los servicios %s y %s no coinciden"

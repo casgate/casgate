@@ -802,7 +802,8 @@ func (c *ApiController) Login() {
 				}
 
 				if user == nil || user.IsDeleted {
-					if !application.EnableInternalSignUp && !application.EnableIdpSignUp {
+
+					if !application.EnableIdpSignUp {
 						logLoginErr(goCtx, fmt.Sprintf("Login error: provider: %s, username: %s, (%s) does not allowed to sign up as new account", provider.Type, userInfo.Username, userInfo.DisplayName), authForm.Provider, provider.Category)
 						c.ResponseError(fmt.Sprintf(c.T("auth:The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support"), provider.Type, userInfo.Username, userInfo.DisplayName))
 						return

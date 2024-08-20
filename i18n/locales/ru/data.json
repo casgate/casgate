@@ -39,7 +39,8 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Несанкционированная операция",
     "Unknown authentication type (not password or provider), form = %s": "Неизвестный тип аутентификации (не пароль и не провайдер), форма = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
+    "Wrong URL": "Wrong URL"
   },
   "cas": {
     "Service %s and %s do not match": "Сервисы %s и %s не совпадают"
