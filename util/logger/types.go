@@ -30,6 +30,7 @@ const (
 	OperationNameSyncRoleToUser OperationName = "sync-role-to-user"
 
 	OperationNameProviderUpdate OperationName = "provider-update"
+	OperatoinNameAddProvider    OperationName = "add-provider"
 
 	OperationNameApplicationUpdate OperationName = "application-update"
 
