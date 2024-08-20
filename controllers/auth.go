@@ -342,6 +342,9 @@ func (c *ApiController) Login() {
 	resp := &Response{}
 
 	goCtx := c.getRequestCtx()
+	mappingRb := object.NewRecordBuilderFromCtx(c.Ctx)
+	mappingCtx := context.WithValue(goCtx, object.RoleMappingRecordDataKey, mappingRb)
+
 	var authForm form.AuthForm
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &authForm)
 	if err != nil {
@@ -486,6 +489,7 @@ func (c *ApiController) Login() {
 				}
 
 				if user == nil {
+					mappingRb.AddReason("sign in via ldap")
 					_, err = object.SyncLdapUserOnSignIn(
 						goCtx,
 						authForm.Organization,
@@ -807,7 +811,8 @@ func (c *ApiController) Login() {
 				}
 
 				if user == nil || user.IsDeleted {
-					if !application.EnableInternalSignUp && !application.EnableIdpSignUp {
+
+					if !application.EnableIdpSignUp {
 						logLoginErr(goCtx, fmt.Sprintf("Login error: provider: %s, username: %s, (%s) does not allowed to sign up as new account", provider.Type, userInfo.Username, userInfo.DisplayName), authForm.Provider, provider.Category)
 						c.ResponseError(fmt.Sprintf(c.T("auth:The account for provider: %s and username: %s (%s) does not exist and is not allowed to sign up as new account, please contact your IT support"), provider.Type, userInfo.Username, userInfo.DisplayName))
 						return
@@ -957,7 +962,17 @@ func (c *ApiController) Login() {
 					}
 
 					userRoles := mapper.GetRoles()
-					err = object.SyncRolesToUser(goCtx, user, userRoles)
+
+					switch provider.Category {
+					case "OAuth":
+						mappingRb.AddReason("sync roles for OAuth provider")
+					case "SAML":
+						mappingRb.AddReason("sync roles for SAML provider")
+					default:
+						mappingRb.AddReason("sync role for provider: " + provider.Category)
+					}
+
+					err = object.SyncRolesToUser(mappingCtx, user, userRoles)
 					if err != nil {
 						logLoginErr(goCtx, fmt.Sprintf("Role mapping error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")

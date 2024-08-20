@@ -219,6 +219,8 @@ func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *ldap_sync.Ldap) 
 	)
 	rb.AddReason(fmt.Sprintf("autoSync started for %s", ldap.Id))
 
+	mappingCtx := context.WithValue(ctx, RoleMappingRecordDataKey, rb)
+
 	// fetch all users
 	conn, err := ldap_sync.GetLdapConn(ctx, ldap)
 	if err != nil {
@@ -255,7 +257,7 @@ func (ls *LdapSyncronizer) SyncUsers(ctx context.Context, ldap *ldap_sync.Ldap) 
 	}
 
 	syncResult, err := SyncLdapUsers(
-		ctx,
+		mappingCtx,
 		LdapSyncCommand{LdapUsers: AutoAdjustLdapUser(users), LdapId: ldap.Id, Reason: ldap_sync.LdapSyncReasonAuto},
 	)
 	if err != nil {

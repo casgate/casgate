@@ -16,6 +16,7 @@ package object
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -585,7 +586,7 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 					logger.LogMsgDetailed{
 						"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
 					},
-					logger.OperationNameLdapSyncUsers,
+					logger.OperationNameSyncRoleToUser,
 					logger.OperationResultFailure,
 				)
 				return err
@@ -597,7 +598,7 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 					"user": userId,
 					"role": role.GetId(),
 				},
-				logger.OperationNameLdapSyncUsers,
+				logger.OperationNameSyncRoleToUser,
 				logger.OperationResultSuccess,
 			)
 		}
@@ -623,7 +624,7 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 					logger.LogMsgDetailed{
 						"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
 					},
-					logger.OperationNameLdapSyncUsers,
+					logger.OperationNameSyncRoleToUser,
 					logger.OperationResultFailure,
 				)
 				return err
@@ -635,10 +636,53 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 					"user": userId,
 					"role": role.GetId(),
 				},
-				logger.OperationNameLdapSyncUsers,
+				logger.OperationNameSyncRoleToUser,
 				logger.OperationResultSuccess,
 			)
 		}
 	}
+
+	newUserRoles, err := getRolesByUserInternal(userId)
+	if err != nil {
+		return err
+	}
+
+	record := buildUserMappedRolesRecord(ctx, user.GetId(), currentUserRoles, newUserRoles)
+	if record != nil {
+		util.SafeGoroutine(func() { AddRecord(record) })
+	}
+
 	return nil
+}
+
+func buildUserMappedRolesRecord(ctx context.Context, userID string, oldRoles, newRoles []*Role) *Record {
+	oldRolesIds := []string{}
+	for _, role := range oldRoles {
+		oldRolesIds = append(oldRolesIds, role.GetId())
+	}
+
+	newRolesIds := []string{}
+	for _, role := range newRoles {
+		newRolesIds = append(newRolesIds, role.GetId())
+	}
+
+	objectMessage := map[string]interface{}{
+		"userID":   userID,
+		"oldRoles": oldRolesIds,
+		"newRoles": newRolesIds,
+	}
+
+	objectMessageRaw, err := json.Marshal(objectMessage)
+	if err != nil {
+		return nil
+	}
+
+	rb := ctx.Value(RoleMappingRecordDataKey).(*RecordBuilder)
+	record := rb.Build()
+
+	record.Name = util.GenerateId()
+	record.Object = string(objectMessageRaw)
+	record.Id = 0
+
+	return record
 }

@@ -40,7 +40,8 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "무단 조작",
     "Unknown authentication type (not password or provider), form = %s": "알 수 없는 인증 유형(암호 또는 공급자가 아님), 폼 = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
+    "Wrong URL": "Wrong URL"
   },
   "cas": {
     "Service %s and %s do not match": "서비스 %s와 %s는 일치하지 않습니다"

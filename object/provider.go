@@ -283,7 +283,7 @@ func UpdateProvider(ctx context.Context, id string, provider *Provider) (bool, e
 	return affected != 0, nil
 }
 
-func AddProvider(ctx context.Context, provider *Provider) (bool, error) {
+func AddProvider(_ context.Context, provider *Provider) (bool, error) {
 	if provider.Type == "Tencent Cloud COS" {
 		provider.Endpoint = util.GetEndPoint(provider.Endpoint)
 		provider.IntranetEndpoint = util.GetEndPoint(provider.IntranetEndpoint)
@@ -291,11 +291,8 @@ func AddProvider(ctx context.Context, provider *Provider) (bool, error) {
 
 	affected, err := orm.AppOrmer.Engine.Insert(provider)
 	if err != nil {
-		logger.Error(ctx, "failed to add provider", "provider", provider.GetId())
 		return false, err
 	}
-
-	logger.Info(ctx, "successfully added provider", "provider", provider.GetId())
 
 	return affected != 0, nil
 }

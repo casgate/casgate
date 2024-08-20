@@ -83,7 +83,7 @@ export function checkPasswordComplexity(password, options, specialChars) {
   }
 
   if (!options || options.length === 0) {
-    options = ["AtLeast6"];
+    options = ["AtLeast8"];
   }
 
   const checkers = {
