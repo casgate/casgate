@@ -110,7 +110,10 @@ func (rb *RecordBuilder) Build() *Record {
 
 type recordDataKey string
 
-const RecordDataKey recordDataKey = "recordDataStore"
+const (
+	RecordDataKey            recordDataKey = "recordDataStore"
+	RoleMappingRecordDataKey recordDataKey = "roleMappingRecordDataStore"
+)
 
 func ExtractRecord(bCtx *beeCtx.Context) (*RecordBuilder, error) {
 	reqCtx := bCtx.Request.Context()
