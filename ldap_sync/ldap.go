@@ -1,10 +1,7 @@
 package ldap_sync
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
-	"github.com/thanhpk/randstr"
 
 	"github.com/casdoor/casdoor/orm"
 )
@@ -80,19 +77,20 @@ func (ldapUser *LdapUser) GetLdapUuid() string {
 
 // BuildNameForNewLdapUser builds unique name for new user
 func (ldapUser *LdapUser) BuildNameForNewLdapUser() (string, error) {
-	if ldapUser.Uid == "" {
-		return "", errors.New("can't build name for new ldap user")
+	if ldapUser.Uid != "" {
+		return ldapUser.Uid, nil
 	}
-	return fmt.Sprintf("%s_%s_%s", ldapUser.Uid, ldapUser.UidNumber, randstr.Hex(6)), nil
+	if ldapUser.Email != "" {
+		return ldapUser.Email, nil
+	}
+	return "", errors.New("can't build name for new ldap user")
 }
 
 // GetLocalIDForExistingLdapUser select identification for new user by ldap field value
-func (ldapUser *LdapUser) GetLocalIDForExistingLdapUser() (string, error) {
-	uidWithNumber := fmt.Sprintf("%s_%s", ldapUser.Uid, ldapUser.UidNumber)
+func GetLocalIDForExistingLdapUser(ldapUserID string) (string, error) {
 	result, err := orm.AppOrmer.Engine.QueryString(
-		`SELECT id FROM "user" WHERE ldap = ? OR ldap = ?`,
-		ldapUser.Uid,
-		uidWithNumber,
+		`SELECT id FROM "user" WHERE ldap = ?`,
+		ldapUserID,
 	)
 	if err != nil {
 		return "", err

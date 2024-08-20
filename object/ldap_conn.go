@@ -99,14 +99,14 @@ func SyncLdapUsers(
 	for _, user := range command.LdapUsers {
 		uuids = append(uuids, user.GetLdapUuid())
 	}
-	existUuids, err := GetExistingLdapUserIDs(ldap.Owner, uuids)
+	ldapUserIDs, err := GetExistingLdapUserIDs(ldap.Owner, uuids)
 	if err != nil {
 		err = errors.Wrap(err, "LDAP sync error: failed to GetExistingLdapUserIDs for sync")
 		return syncDetails, err
 	}
-	existUuidsMap := make(map[string]bool)
-	for _, uuid := range existUuids {
-		existUuidsMap[uuid] = true
+	ldapUserIDsMap := make(map[string]bool)
+	for _, ID := range ldapUserIDs {
+		ldapUserIDsMap[ID] = true
 	}
 	organization, err := getOrganization("admin", ldap.Owner)
 	if err != nil {
@@ -131,10 +131,10 @@ func SyncLdapUsers(
 	tag := strings.Join(ou, ".")
 
 	for _, ldapUser := range command.LdapUsers {
-		userSyncError := SyncSingle(
+		userSyncError := SyncSingleUser(
 			ctx,
 			command,
-			existUuidsMap,
+			ldapUserIDsMap,
 			ldapUser,
 			syncDetails,
 			organization,
@@ -151,7 +151,7 @@ func SyncLdapUsers(
 				ctx,
 				"user sync error",
 				"error", userSyncError,
-				"ldap_user_id", ldapUser.GetLdapUuid(),
+				"ldap_user", ldapUser,
 				"ldap_id", ldap.Id,
 				"ldap_owner", ldap.Owner,
 				"act", logger.OperationNameLdapSyncUsers,
@@ -176,11 +176,11 @@ func SyncLdapUsers(
 	return syncDetails, err
 }
 
-// SyncSingle sync single user
-func SyncSingle(
+// SyncSingleUser sync single user
+func SyncSingleUser(
 	ctx context.Context,
 	command LdapSyncCommand,
-	existUuidsMap map[string]bool,
+	existingUserIDs map[string]bool,
 	ldapUser ldap_sync.LdapUser,
 	syncDetails *SyncLdapUsersResult,
 	organization *Organization,
@@ -189,7 +189,7 @@ func SyncSingle(
 	tag string,
 ) error {
 	userExists := false
-	userExists = existUuidsMap[ldapUser.Uuid]
+	userExists = existingUserIDs[ldapUser.GetLdapUuid()]
 
 	if !userExists {
 		score, err := organization.GetInitScore()
@@ -216,7 +216,7 @@ func SyncSingle(
 			Affiliation:       affiliation,
 			Tag:               tag,
 			Score:             score,
-			Ldap:              ldapUser.Uuid,
+			Ldap:              ldapUser.GetLdapUuid(),
 			Properties:        map[string]string{},
 			MappingStrategy:   ldap.UserMappingStrategy,
 		}
@@ -252,7 +252,7 @@ func SyncSingle(
 		syncDetails.Exist = append(syncDetails.Exist, ldapUser)
 	}
 
-	localUserID, err := ldapUser.GetLocalIDForExistingLdapUser()
+	localUserID, err := ldap_sync.GetLocalIDForExistingLdapUser(ldapUser.GetLdapUuid())
 	if err != nil {
 		return errors.Wrap(err, "ldapUserNameFromDatabase")
 	}
