@@ -16,8 +16,6 @@ import React from "react";
 import {Redirect, Route, Switch} from "react-router-dom";
 import {Spin} from "antd";
 import i18next from "i18next";
-import * as ApplicationBackend from "./backend/ApplicationBackend";
-import PricingPage from "./pricing/PricingPage";
 import * as Setting from "./Setting";
 import * as Conf from "./Conf";
 import SignupPage from "./auth/SignupPage";
@@ -29,9 +27,6 @@ import PromptPage from "./auth/PromptPage";
 import ResultPage from "./auth/ResultPage";
 import CasLogout from "./auth/CasLogout";
 import {authConfig} from "./auth/Auth";
-import ProductBuyPage from "./ProductBuyPage";
-import PaymentResultPage from "./PaymentResultPage";
-import QrCodePage from "./QrCodePage";
 
 class EntryPage extends React.Component {
   constructor(props) {
@@ -71,25 +66,6 @@ class EntryPage extends React.Component {
       this.props.updataThemeData(themeData);
       this.props.onUpdateApplication(application);
     };
-
-    const onUpdatePricing = (pricing) => {
-      this.setState({
-        pricing: pricing,
-      });
-
-      ApplicationBackend.getApplication("admin", pricing.application)
-        .then((res) => {
-          if (res.status === "error") {
-            Setting.showMessage("error", res.msg);
-            return;
-          }
-
-          const application = res.data;
-          const themeData = application !== null ? Setting.getThemeData(application.organizationObj, application) : Conf.ThemeDefault;
-          this.props.updataThemeData(themeData);
-        });
-    };
-
     return (
       <div className="loginBackground"
         style={{backgroundImage: Setting.inIframe() || Setting.isMobile() ? null : `url(${this.state.application?.formBackgroundUrl})`}}>
@@ -112,10 +88,6 @@ class EntryPage extends React.Component {
           <Route exact path="/result/:applicationName" render={(props) => this.renderHomeIfLoggedIn(<ResultPage {...this.props} application={this.state.application} onUpdateApplication={onUpdateApplication} {...props} />)} />
           <Route exact path="/cas/:owner/:casApplicationName/logout" render={(props) => this.renderHomeIfLoggedIn(<CasLogout {...this.props} application={this.state.application} onUpdateApplication={onUpdateApplication} {...props} />)} />
           <Route exact path="/cas/:owner/:casApplicationName/login" render={(props) => {return (<LoginPage {...this.props} application={this.state.application} type={"cas"} mode={"signin"} onUpdateApplication={onUpdateApplication} {...props} />);}} />
-          <Route exact path="/select-plan/:owner/:pricingName" render={(props) => <PricingPage {...this.props} pricing={this.state.pricing} onUpdatePricing={onUpdatePricing} {...props} />} />
-          <Route exact path="/buy-plan/:owner/:pricingName" render={(props) => <ProductBuyPage {...this.props} pricing={this.state.pricing} onUpdatePricing={onUpdatePricing} {...props} />} />
-          <Route exact path="/buy-plan/:owner/:pricingName/result" render={(props) => <PaymentResultPage {...this.props} pricing={this.state.pricing} onUpdatePricing={onUpdatePricing} {...props} />} />
-          <Route exact path="/qrcode/:owner/:paymentName" render={(props) => <QrCodePage {...this.props} onUpdateApplication={onUpdateApplication} {...props} />} />
         </Switch>
       </div>
     );

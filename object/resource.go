@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"strings"
 
 	"github.com/casdoor/casdoor/util"
@@ -41,7 +42,7 @@ type Resource struct {
 }
 
 func GetResourceCount(owner, user, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Resource{User: user})
 }
 
@@ -52,7 +53,7 @@ func GetResources(owner string, user string) ([]*Resource, error) {
 	}
 
 	resources := []*Resource{}
-	err := ormer.Engine.Desc("created_time").Find(&resources, &Resource{Owner: owner, User: user})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&resources, &Resource{Owner: owner, User: user})
 	if err != nil {
 		return resources, err
 	}
@@ -67,7 +68,7 @@ func GetPaginationResources(owner, user string, offset, limit int, field, value,
 	}
 
 	resources := []*Resource{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&resources, &Resource{User: user})
 	if err != nil {
 		return resources, err
@@ -82,7 +83,7 @@ func getResource(owner string, name string) (*Resource, error) {
 	}
 
 	resource := Resource{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&resource)
+	existed, err := orm.AppOrmer.Engine.Get(&resource)
 	if err != nil {
 		return &resource, err
 	}
@@ -107,7 +108,7 @@ func UpdateResource(id string, resource *Resource) (bool, error) {
 		return false, nil
 	}
 
-	_, err := ormer.Engine.ID(core.PK{owner, name}).AllCols().Update(resource)
+	_, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(resource)
 	if err != nil {
 		return false, err
 	}
@@ -117,7 +118,7 @@ func UpdateResource(id string, resource *Resource) (bool, error) {
 }
 
 func AddResource(resource *Resource) (bool, error) {
-	affected, err := ormer.Engine.Insert(resource)
+	affected, err := orm.AppOrmer.Engine.Insert(resource)
 	if err != nil {
 		return false, err
 	}
@@ -126,7 +127,7 @@ func AddResource(resource *Resource) (bool, error) {
 }
 
 func DeleteResource(resource *Resource) (bool, error) {
-	affected, err := ormer.Engine.ID(core.PK{resource.Owner, resource.Name}).Delete(&Resource{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{resource.Owner, resource.Name}).Delete(&Resource{})
 	if err != nil {
 		return false, err
 	}

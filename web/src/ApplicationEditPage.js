@@ -85,12 +85,9 @@ const sideTemplate = `<style>
   }
 </style>
 <div class="left-model">
-  <span class="side-logo"> <img src="${Setting.StaticBaseUrl}/img/casdoor-logo_1185x256.png" alt="Casdoor" style="width: 120px"> 
+  <span class="side-logo"> <img src="${Setting.StaticBaseUrl}/img/cg_logo.png" alt="Casgate" style="width: 120px"> 
     <span>SSO</span> 
   </span>
-  <div class="img">
-    <img src="${Setting.StaticBaseUrl}/img/casbin.svg" alt="Casdoor"/>
-  </div>
 </div>
 `;
 
@@ -492,6 +489,27 @@ class ApplicationEditPage extends React.Component {
             <Switch checked={this.state.application.enableLinkWithEmail} onChange={checked => {
               this.updateApplicationField("enableLinkWithEmail", checked);
             }} />
+          </Col>
+        </Row>
+        <Row style={{marginTop: "20px"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 19 : 2}>
+            {Setting.getLabel(i18next.t("application:User mapping strategy"), i18next.t("application:User mapping strategy - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} style={{width: "100%"}}
+              options={[
+                {label: "all", value: "all"},
+                {label: "attribute", value: "attribute"},
+                {label: "role", value: "role"},
+                {label: "nothing", value: "nothing"},
+              ].map((item) => {
+                return Setting.getOption(item.label, item.value);
+              })}
+              value={this.state.application.userMappingStrategy ?? "all"}
+              onChange={(value => {
+                this.updateApplicationField("userMappingStrategy", value);
+              })} >
+            </Select>
           </Col>
         </Row>
         <Row style={{marginTop: "20px"}} >

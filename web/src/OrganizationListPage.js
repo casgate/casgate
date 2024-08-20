@@ -36,7 +36,6 @@ class OrganizationListPage extends BaseListPage {
       PasswordSalt: "",
       passwordOptions: [],
       countryCodes: ["US"],
-      defaultAvatar: `${Setting.StaticBaseUrl}/img/casbin.svg`,
       defaultApplication: "",
       tags: [],
       languages: Setting.Countries.map(item => item.key),
@@ -48,7 +47,6 @@ class OrganizationListPage extends BaseListPage {
         {name: "ID", visible: true, viewRule: "Public", modifyRule: "Immutable"},
         {name: "Name", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "Display name", visible: true, viewRule: "Public", modifyRule: "Self"},
-        {name: "Avatar", visible: true, viewRule: "Public", modifyRule: "Self"},
         {name: "User type", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "Password", visible: true, viewRule: "Self", modifyRule: "Self"},
         {name: "Password change required", visible: true, viewRule: "Admin", modifyRule: "Admin"},
@@ -76,6 +74,7 @@ class OrganizationListPage extends BaseListPage {
         {name: "Signup application", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "API key", label: i18next.t("general:API key"), modifyRule: "Self"},
         {name: "Groups", visible: true, viewRule: "Public", modifyRule: "Admin"},
+        {name: "Mapping strategy", visible: true, viewRule: "Public", modifyRule: "Admin"},
         {name: "Roles", visible: true, viewRule: "Public", modifyRule: "Immutable"},
         {name: "Permissions", visible: true, viewRule: "Public", modifyRule: "Immutable"},
         {name: "3rd-party logins", visible: true, viewRule: "Self", modifyRule: "Self"},
@@ -213,19 +212,6 @@ class OrganizationListPage extends BaseListPage {
         width: "150px",
         sorter: true,
         ...this.getColumnSearchProps("passwordSalt"),
-      },
-      {
-        title: i18next.t("general:Default avatar"),
-        dataIndex: "defaultAvatar",
-        key: "defaultAvatar",
-        width: "120px",
-        render: (text, record, index) => {
-          return (
-            <a target="_blank" rel="noreferrer" href={text}>
-              <img src={text} alt={text} width={40} />
-            </a>
-          );
-        },
       },
       {
         title: i18next.t("organization:Soft deletion"),

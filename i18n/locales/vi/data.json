@@ -4,12 +4,13 @@
     "Get init score failed, error: %w": "Lấy điểm khởi đầu thất bại, lỗi: %w",
     "Please sign out first": "Vui lòng đăng xuất trước",
     "The application does not allow to sign up new account": "Ứng dụng không cho phép đăng ký tài khoản mới",
+    "User already registered": "User already registered",
     "Wrong email for invited user": "Wrong email for invited user",
-    "Wrong user type": "Wrong user type",
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
+    "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "Phương pháp thách thức nên là S256",
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Đăng nhập không thành công: %s",
@@ -24,12 +25,11 @@
     "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "Phương thức đăng nhập: đăng nhập bằng mật khẩu không được kích hoạt cho ứng dụng",
     "The provider: %s is not enabled for the application": "Nhà cung cấp: %s không được kích hoạt cho ứng dụng",
+    "Unable to get data from other organization without global administrator role": "Unable to get data from other organization without global administrator role",
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Hoạt động không được ủy quyền",
     "Unknown authentication type (not password or provider), form = %s": "Loại xác thực không xác định (không phải mật khẩu hoặc nhà cung cấp), biểu mẫu = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
-    "Wrong URL": "Wrong URL",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
   },
   "cas": {
     "Service %s and %s do not match": "Dịch sang tiếng Việt: Dịch vụ %s và %s không khớp"
@@ -43,6 +43,7 @@
     "Email is invalid": "Địa chỉ email không hợp lệ",
     "Empty username.": "Tên đăng nhập trống.",
     "FirstName cannot be blank": "Tên không được để trống",
+    "Go to the LDAP tab and select the specific connection you have configured": "Go to the LDAP tab and select the specific connection you have configured",
     "Invitation code cannot be blank": "Invitation code cannot be blank",
     "Invitation code is invalid": "Invitation code is invalid",
     "LDAP user name or password incorrect": "Tên người dùng hoặc mật khẩu Ldap không chính xác",
@@ -71,6 +72,7 @@
   },
   "general": {
     "Invalid username or password/code": "Invalid username or password/code",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -94,6 +96,9 @@
     "You are not the global admin, you can't unlink other users": "Bạn không phải là quản trị viên toàn cầu, bạn không thể hủy liên kết người dùng khác",
     "You can't unlink yourself, you are not a member of any application": "Bạn không thể hủy liên kết của mình, bởi vì bạn không phải là thành viên của bất kỳ ứng dụng nào"
   },
+  "mt.Sprintf(\"auth": {
+    "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
+  },
   "organization": {
     "Only admin can modify the %s.": "Chỉ những người quản trị mới có thể sửa đổi %s.",
     "The %s is immutable.": "%s không thể thay đổi được.",
@@ -101,11 +106,8 @@
   },
   "provider": {
     "Invalid application id": "Sai ID ứng dụng",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "Nhà cung cấp: %s không tồn tại"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "Người dùng không có giá trị cho thẻ: hình đại diện",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "Tên người dùng hoặc đường dẫn tệp đầy đủ trống: tên người dùng = %s, đường dẫn tệp đầy đủ = %s"
   },
   "saml": {
     "Application %s not found": "Ứng dụng %s không tìm thấy"
@@ -123,7 +125,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "Khóa đối tượng: %s không được phép",
     "The provider type: %s is not supported": "Loại nhà cung cấp: %s không được hỗ trợ"
   },
   "token": {
@@ -142,8 +143,8 @@
   "util": {
     "No application is found for userId: %s": "Không tìm thấy ứng dụng cho ID người dùng: %s",
     "No provider for category: %s is found for application: %s": "Không tìm thấy nhà cung cấp cho danh mục: %s cho ứng dụng: %s",
-    "The provider: %s is not found": "Nhà cung cấp: %s không được tìm thấy",
-    "The organization %s has dependencies and cannot be deleted": "Tổ chức %s có phụ thuộc và không thể bị xóa"
+    "The organization %s has dependencies and cannot be deleted": "Tổ chức %s có phụ thuộc và không thể bị xóa",
+    "The provider: %s is not found": "Nhà cung cấp: %s không được tìm thấy"
   },
   "verification": {
     "Code has not been sent yet!": "Mã chưa được gửi đến!",

@@ -4,12 +4,13 @@
     "Get init score failed, error: %w": "Get init score failed, error: %w",
     "Please sign out first": "Please sign out first",
     "The application does not allow to sign up new account": "The application does not allow to sign up new account",
+    "User already registered": "User already registered",
     "Wrong email for invited user": "Wrong email for invited user",
-    "Wrong user type": "Wrong user type",
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
   },
   "auth": {
+    "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
     "Challenge method should be S256": "Challenge method should be S256",
     "Failed to create user, user information is invalid": "Failed to create user, user information is invalid",
     "Failed to login in: %s": "Failed to login in: %s",
@@ -24,12 +25,11 @@
     "The login method: login with LDAP is not enabled for the application": "The login method: login with LDAP is not enabled for the application",
     "The login method: login with password is not enabled for the application": "The login method: login with password is not enabled for the application",
     "The provider: %s is not enabled for the application": "The provider: %s is not enabled for the application",
+    "Unable to get data from other organization without global administrator role": "Unable to get data from other organization without global administrator role",
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Unauthorized operation",
     "Unknown authentication type (not password or provider), form = %s": "Unknown authentication type (not password or provider), form = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
-    "Wrong URL": "Wrong URL",
-    "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing": "paid-user %s does not have active or pending subscription and the application: %s does not have default pricing"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
   },
   "cas": {
     "Service %s and %s do not match": "Service %s and %s do not match"
@@ -43,6 +43,7 @@
     "Email is invalid": "Email is invalid",
     "Empty username.": "Empty username.",
     "FirstName cannot be blank": "FirstName cannot be blank",
+    "Go to the LDAP tab and select the specific connection you have configured": "Go to the LDAP tab and select the specific connection you have configured",
     "Invitation code cannot be blank": "Invitation code cannot be blank",
     "Invitation code is invalid": "Invitation code is invalid",
     "LDAP user name or password incorrect": "LDAP user name or password incorrect",
@@ -71,6 +72,7 @@
   },
   "general": {
     "Invalid username or password/code": "Invalid username or password/code",
+    "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
     "Missing certificate": "Missing certificate",
     "Missing client certificate": "Missing client certificate",
@@ -94,6 +96,9 @@
     "You are not the global admin, you can't unlink other users": "You are not the global admin, you can't unlink other users",
     "You can't unlink yourself, you are not a member of any application": "You can't unlink yourself, you are not a member of any application"
   },
+  "mt.Sprintf(\"auth": {
+    "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
+  },
   "organization": {
     "Only admin can modify the %s.": "Only admin can modify the %s.",
     "The %s is immutable.": "The %s is immutable.",
@@ -101,11 +106,8 @@
   },
   "provider": {
     "Invalid application id": "Invalid application id",
+    "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "the provider: %s does not exist"
-  },
-  "resource": {
-    "User is nil for tag: avatar": "User is nil for tag: avatar",
-    "Username or fullFilePath is empty: username = %s, fullFilePath = %s": "Username or fullFilePath is empty: username = %s, fullFilePath = %s"
   },
   "saml": {
     "Application %s not found": "Application %s not found"
@@ -123,7 +125,6 @@
     "You must specify at least one Redirect URL": "You must specify at least one Redirect URL"
   },
   "storage": {
-    "The objectKey: %s is not allowed": "The objectKey: %s is not allowed",
     "The provider type: %s is not supported": "The provider type: %s is not supported"
   },
   "token": {
@@ -142,8 +143,8 @@
   "util": {
     "No application is found for userId: %s": "No application is found for userId: %s",
     "No provider for category: %s is found for application: %s": "No provider for category: %s is found for application: %s",
-    "The provider: %s is not found": "The provider: %s is not found",
-    "The organization %s has dependencies and cannot be deleted": "The organization %s has dependencies and cannot be deleted"
+    "The organization %s has dependencies and cannot be deleted": "The organization %s has dependencies and cannot be deleted",
+    "The provider: %s is not found": "The provider: %s is not found"
   },
   "verification": {
     "Code has not been sent yet!": "Code has not been sent yet!",

@@ -19,6 +19,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -32,6 +33,7 @@ type EmailForm struct {
 	Sender    string   `json:"sender"`
 	Receivers []string `json:"receivers"`
 	Provider  string   `json:"provider"`
+	Owner     string   `json:"owner"`
 }
 
 type SmsForm struct {
@@ -65,9 +67,14 @@ func (c *ApiController) SendEmail() {
 	var provider *object.Provider
 	if emailForm.Provider != "" {
 		// called by frontend's TestEmailWidget, provider name is set by frontend
-		provider, err = object.GetProvider(util.GetId("admin", emailForm.Provider))
+		providerID := util.GetId(emailForm.Owner, emailForm.Provider)
+		provider, err = object.GetProvider(providerID)
 		if err != nil {
 			c.ResponseError(err.Error())
+			return
+		}
+		if provider == nil {
+			c.ResponseError(fmt.Sprintf(c.T("util:The provider: %s is not found"), providerID))
 			return
 		}
 
@@ -84,6 +91,10 @@ func (c *ApiController) SendEmail() {
 	if len(emailForm.Receivers) == 1 && emailForm.Receivers[0] == "TestSmtpServer" {
 		err := object.DailSmtpServer(provider)
 		if err != nil {
+			if errors.Is(err, object.ErrUnencryptedConnection) {
+				c.ResponseError(c.T("provider:The provider's email server does not support insecure connections to the specified port"))
+				return
+			}
 			c.ResponseError(err.Error())
 			return
 		}
@@ -113,6 +124,10 @@ func (c *ApiController) SendEmail() {
 	for _, receiver := range emailForm.Receivers {
 		err = object.SendEmail(provider, emailForm.Title, content, receiver, emailForm.Sender)
 		if err != nil {
+			if errors.Is(err, object.ErrUnencryptedConnection) {
+				c.ResponseError(c.T("provider:The provider's email server does not support insecure connections to the specified port"))
+				return
+			}
 			c.ResponseError(err.Error())
 			return
 		}

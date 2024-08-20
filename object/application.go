@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"regexp"
 
 	"github.com/beego/beego/logs"
@@ -108,21 +109,27 @@ type Application struct {
 
 	FailedSigninLimit      int `json:"failedSigninLimit"`
 	FailedSigninFrozenTime int `json:"failedSigninFrozenTime"`
+
+	UserMappingStrategy string `xorm:"varchar(50)" json:"userMappingStrategy"`
+}
+
+type GetApplicationOptions struct {
+	InitOpenIDProvider bool
 }
 
 func GetApplicationCount(owner, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Application{})
 }
 
 func GetOrganizationApplicationCount(owner, Organization, field, value string) (int64, error) {
-	session := GetSession(owner, -1, -1, field, value, "", "")
+	session := orm.GetSession(owner, -1, -1, field, value, "", "")
 	return session.Count(&Application{Organization: Organization})
 }
 
 func GetApplications(owner string) ([]*Application, error) {
 	applications := []*Application{}
-	err := ormer.Engine.Desc("created_time").Find(&applications, &Application{Owner: owner})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&applications, &Application{Owner: owner})
 	if err != nil {
 		return applications, err
 	}
@@ -132,7 +139,7 @@ func GetApplications(owner string) ([]*Application, error) {
 
 func CountApplicatoinsByProvider(providerName string) ([]*Application, error) {
 	applications := []*Application{}
-	err := ormer.Engine.Where("providers like ?", "%\"name\":\""+providerName+"\"%").Find(&applications, &Application{})
+	err := orm.AppOrmer.Engine.Where("providers like ?", "%\"name\":\""+providerName+"\"%").Find(&applications, &Application{})
 	if err != nil {
 		return applications, err
 	}
@@ -142,7 +149,7 @@ func CountApplicatoinsByProvider(providerName string) ([]*Application, error) {
 
 func GetOrganizationApplications(owner string, organization string) ([]*Application, error) {
 	applications := []*Application{}
-	err := ormer.Engine.Desc("created_time").Find(&applications, &Application{Organization: organization})
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&applications, &Application{Organization: organization})
 	if err != nil {
 		return applications, err
 	}
@@ -152,7 +159,7 @@ func GetOrganizationApplications(owner string, organization string) ([]*Applicat
 
 func GetPaginationApplications(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Application, error) {
 	var applications []*Application
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&applications)
 	if err != nil {
 		return applications, err
@@ -163,7 +170,7 @@ func GetPaginationApplications(owner string, offset, limit int, field, value, so
 
 func GetPaginationOrganizationApplications(owner, organization string, offset, limit int, field, value, sortField, sortOrder string) ([]*Application, error) {
 	applications := []*Application{}
-	session := GetSession(owner, offset, limit, field, value, sortField, sortOrder)
+	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&applications, &Application{Organization: organization})
 	if err != nil {
 		return applications, err
@@ -195,7 +202,7 @@ func getProviderMap(owner string) (m map[string]*Provider, err error) {
 	return m, err
 }
 
-func extendApplicationWithProviders(ctx context.Context, application *Application) (err error) {
+func extendApplicationWithProviders(ctx context.Context, application *Application, initOpenIDProvider bool) (err error) {
 	m, err := getProviderMap(application.Organization)
 	if err != nil {
 		return err
@@ -205,7 +212,7 @@ func extendApplicationWithProviders(ctx context.Context, application *Applicatio
 
 	for _, providerItem := range application.Providers {
 		if provider, ok := m[providerItem.Name]; ok {
-			if provider.Type == "OpenID" {
+			if provider.Type == "OpenID" && initOpenIDProvider {
 				err := updateOpenIDWithUrls(provider)
 				if err != nil {
 					record.AddReason(fmt.Sprintf("failed updateOpenIDWithUrls for provider %s: %s", provider.Name, err.Error()))
@@ -241,6 +248,16 @@ func updateOpenIDWithUrls(provider *Provider) error {
 	return nil
 }
 
+func SetHttpClientToOIDCProvider(idpInfo *idp.ProviderInfo, provider idp.IdProvider) error {
+	client, err := GetProviderHttpClient(*idpInfo)
+	if err != nil {
+		return fmt.Errorf("failed to GetProviderHttpClient")
+	}
+	provider.SetHttpClient(client)
+
+	return nil
+}
+
 func extendApplicationWithOrg(application *Application) (err error) {
 	organization, err := getOrganization(application.Owner, application.Organization)
 	application.OrganizationObj = organization
@@ -271,19 +288,24 @@ func extendApplicationWithSigninMethods(application *Application) (err error) {
 	return
 }
 
-func getApplication(ctx context.Context, owner string, name string) (*Application, error) {
+func getApplication(ctx context.Context, owner string, name string, opts *GetApplicationOptions) (*Application, error) {
 	if owner == "" || name == "" {
 		return nil, nil
 	}
 
 	application := Application{Owner: owner, Name: name}
-	existed, err := ormer.Engine.Get(&application)
+	existed, err := orm.AppOrmer.Engine.Get(&application)
 	if err != nil {
 		return nil, err
 	}
 
+	var initOpenIDProvider bool
+	if opts != nil {
+		initOpenIDProvider = opts.InitOpenIDProvider
+	}
+
 	if existed {
-		err = extendApplicationWithProviders(ctx, &application)
+		err = extendApplicationWithProviders(ctx, &application, initOpenIDProvider)
 		if err != nil {
 			return nil, err
 		}
@@ -306,13 +328,13 @@ func getApplication(ctx context.Context, owner string, name string) (*Applicatio
 
 func GetApplicationByOrganizationName(ctx context.Context, organization string) (*Application, error) {
 	application := Application{}
-	existed, err := ormer.Engine.Where("organization=?", organization).Get(&application)
+	existed, err := orm.AppOrmer.Engine.Where("organization=?", organization).Get(&application)
 	if err != nil {
 		return nil, nil
 	}
 
 	if existed {
-		err = extendApplicationWithProviders(ctx, &application)
+		err = extendApplicationWithProviders(ctx, &application, false)
 		if err != nil {
 			return nil, err
 		}
@@ -335,7 +357,7 @@ func GetApplicationByOrganizationName(ctx context.Context, organization string) 
 
 func GetApplicationByUser(ctx context.Context, user *User) (*Application, error) {
 	if user.SignupApplication != "" {
-		return getApplication(ctx, "admin", user.SignupApplication)
+		return getApplication(ctx, "admin", user.SignupApplication, nil)
 	} else {
 		return GetApplicationByOrganizationName(ctx, user.Owner)
 	}
@@ -344,7 +366,7 @@ func GetApplicationByUser(ctx context.Context, user *User) (*Application, error)
 func GetApplicationByUserId(ctx context.Context, userId string) (application *Application, err error) {
 	owner, name := util.GetOwnerAndNameFromId(userId)
 	if owner == "app" {
-		application, err = getApplication(ctx, "admin", name)
+		application, err = getApplication(ctx, "admin", name, nil)
 		return
 	}
 
@@ -358,13 +380,13 @@ func GetApplicationByUserId(ctx context.Context, userId string) (application *Ap
 
 func GetApplicationByClientId(ctx context.Context, clientId string) (*Application, error) {
 	application := Application{}
-	existed, err := ormer.Engine.Where("client_id=?", clientId).Get(&application)
+	existed, err := orm.AppOrmer.Engine.Where("client_id=?", clientId).Get(&application)
 	if err != nil {
 		return nil, err
 	}
 
 	if existed {
-		err = extendApplicationWithProviders(ctx, &application)
+		err = extendApplicationWithProviders(ctx, &application, false)
 		if err != nil {
 			return nil, err
 		}
@@ -387,7 +409,12 @@ func GetApplicationByClientId(ctx context.Context, clientId string) (*Applicatio
 
 func GetApplication(ctx context.Context, id string) (*Application, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	return getApplication(ctx, owner, name)
+	return getApplication(ctx, owner, name, nil)
+}
+
+func GetApplicationWithOpts(ctx context.Context, id string, opts *GetApplicationOptions) (*Application, error) {
+	owner, name := util.GetOwnerAndNameFromId(id)
+	return getApplication(ctx, owner, name, opts)
 }
 
 func GetMaskedApplication(application *Application, userId string) *Application {
@@ -453,7 +480,7 @@ func GetMaskedApplications(applications []*Application, userId string) []*Applic
 
 func UpdateApplication(ctx context.Context, id string, application *Application) (bool, error) {
 	owner, name := util.GetOwnerAndNameFromId(id)
-	oldApplication, err := getApplication(ctx, owner, name)
+	oldApplication, err := getApplication(ctx, owner, name, nil)
 	if oldApplication == nil {
 		return false, err
 	}
@@ -485,7 +512,7 @@ func UpdateApplication(ctx context.Context, id string, application *Application)
 
 	recordProvidersDiff(record, oldApplication.Providers, application.Providers)
 
-	session := ormer.Engine.ID(core.PK{owner, name}).AllCols()
+	session := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols()
 	if application.ClientSecret == "***" {
 		session.Omit("client_secret")
 	}
@@ -541,7 +568,7 @@ func AddApplication(ctx context.Context, application *Application) (bool, error)
 		providerItem.Provider = nil
 	}
 
-	affected, err := ormer.Engine.Insert(application)
+	affected, err := orm.AppOrmer.Engine.Insert(application)
 	if err != nil {
 		return false, nil
 	}
@@ -554,7 +581,7 @@ func DeleteApplication(application *Application) (bool, error) {
 		return false, nil
 	}
 
-	affected, err := ormer.Engine.ID(core.PK{application.Owner, application.Name}).Delete(&Application{})
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{application.Owner, application.Name}).Delete(&Application{})
 	if err != nil {
 		return false, err
 	}
@@ -692,7 +719,7 @@ func ExtendManagedAccountsWithUser(user *User) (*User, error) {
 }
 
 func applicationChangeTrigger(oldName string, newName string) error {
-	session := ormer.Engine.NewSession()
+	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	err := session.Begin()
@@ -722,7 +749,7 @@ func applicationChangeTrigger(oldName string, newName string) error {
 	}
 
 	var permissions []*Permission
-	err = ormer.Engine.Find(&permissions)
+	err = orm.AppOrmer.Engine.Find(&permissions)
 	if err != nil {
 		return err
 	}

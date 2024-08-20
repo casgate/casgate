@@ -14,7 +14,7 @@
 
 import React from "react";
 import {Tooltip} from "antd";
-import * as Util from "./Util";
+import * as AuthBackend from "./AuthBackend";
 import * as Setting from "../Setting";
 
 const authInfo = {
@@ -376,105 +376,22 @@ export function getProviderLogoWidget(provider) {
   }
 }
 
-export function getAuthUrl(application, provider, method) {
+export async function getAuthUrl(application, provider, method) {
   if (application === null || provider === null) {
     return "";
   }
-
-  let endpoint = authInfo[provider.type].endpoint;
-  let redirectUri = `${window.location.origin}/callback`;
-  const scope = authInfo[provider.type].scope;
-
-  const isShortState = provider.type === "WeChat" && navigator.userAgent.includes("MicroMessenger");
-  const state = Util.getStateFromQueryParams(application.name, provider.name, method, isShortState);
-  const codeChallenge = "P3S-a7dr8bgM4bF6vOyiKkKETDl16rcAzao9F8UIL1Y"; // SHA256(Base64-URL-encode("casdoor-verifier"))
-
-  if (provider.type === "AzureAD") {
-    if (provider.domain !== "") {
-      endpoint = endpoint.replace("common", provider.domain);
+  const applicationID = application.owner + "/" + application.name;
+  const providerID = provider.owner + "/" + provider.name;
+  const response = await AuthBackend.getAuthURL(providerID, applicationID, method);
+  if (response.status === "ok") {
+    const {isShortState, authQuery, url} = response.data;
+    if (isShortState) {
+      const urlParams = new URLSearchParams(url.split("?")[1]);
+      const state = urlParams.get("state");
+      sessionStorage.setItem(state, authQuery);
     }
-  } else if (provider.type === "Apple") {
-    redirectUri = `${window.location.origin}/api/callback`;
-  }
-
-  if (provider.type === "Google" || provider.type === "GitHub" || provider.type === "QQ" || provider.type === "Facebook"
-    || provider.type === "Weibo" || provider.type === "Gitee" || provider.type === "LinkedIn" || provider.type === "GitLab" || provider.type === "AzureAD"
-    || provider.type === "Slack" || provider.type === "Line" || provider.type === "Amazon" || provider.type === "Auth0" || provider.type === "BattleNet"
-    || provider.type === "Bitbucket" || provider.type === "Box" || provider.type === "CloudFoundry" || provider.type === "Dailymotion"
-    || provider.type === "DigitalOcean" || provider.type === "Discord" || provider.type === "Dropbox" || provider.type === "EveOnline" || provider.type === "Gitea"
-    || provider.type === "Heroku" || provider.type === "InfluxCloud" || provider.type === "Instagram" || provider.type === "Intercom" || provider.type === "Kakao"
-    || provider.type === "MailRu" || provider.type === "Meetup" || provider.type === "MicrosoftOnline" || provider.type === "Naver" || provider.type === "Nextcloud"
-    || provider.type === "OneDrive" || provider.type === "Oura" || provider.type === "Patreon" || provider.type === "PayPal" || provider.type === "SalesForce"
-    || provider.type === "SoundCloud" || provider.type === "Spotify" || provider.type === "Strava" || provider.type === "Stripe" || provider.type === "Tumblr"
-    || provider.type === "Twitch" || provider.type === "Typetalk" || provider.type === "Uber" || provider.type === "VK" || provider.type === "Wepay"
-    || provider.type === "Xero" || provider.type === "Yahoo" || provider.type === "Yammer" || provider.type === "Yandex" || provider.type === "Zoom") {
-    return `${endpoint}?client_id=${provider.clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&state=${state}`;
-  } else if (provider.type === "DingTalk") {
-    return `${endpoint}?client_id=${provider.clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&prompt=consent&state=${state}`;
-  } else if (provider.type === "WeChat") {
-    if (navigator.userAgent.includes("MicroMessenger")) {
-      return `${authInfo[provider.type].mpEndpoint}?appid=${provider.clientId2}&redirect_uri=${redirectUri}&state=${state}&scope=${authInfo[provider.type].mpScope}&response_type=code#wechat_redirect`;
-    } else {
-      return `${endpoint}?appid=${provider.clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&state=${state}#wechat_redirect`;
-    }
-  } else if (provider.type === "WeCom") {
-    if (provider.subType === "Internal") {
-      if (provider.method === "Silent") {
-        endpoint = authInfo[provider.type].silentEndpoint;
-        return `${endpoint}?appid=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}&scope=${scope}&response_type=code#wechat_redirect`;
-      } else if (provider.method === "Normal") {
-        endpoint = authInfo[provider.type].internalEndpoint;
-        return `${endpoint}?appid=${provider.clientId}&agentid=${provider.appId}&redirect_uri=${redirectUri}&state=${state}&usertype=member`;
-      } else {
-        return `https://error:not-supported-provider-method:${provider.method}`;
-      }
-    } else if (provider.subType === "Third-party") {
-      if (provider.method === "Silent") {
-        endpoint = authInfo[provider.type].silentEndpoint;
-        return `${endpoint}?appid=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}&scope=${scope}&response_type=code#wechat_redirect`;
-      } else if (provider.method === "Normal") {
-        return `${endpoint}?appid=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}&usertype=member`;
-      } else {
-        return `https://error:not-supported-provider-method:${provider.method}`;
-      }
-    } else {
-      return `https://error:not-supported-provider-sub-type:${provider.subType}`;
-    }
-  } else if (provider.type === "Lark") {
-    return `${endpoint}?app_id=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}`;
-  } else if (provider.type === "ADFS") {
-    return `${provider.domain}/adfs/oauth2/authorize?client_id=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}&response_type=code&nonce=casdoor&scope=openid`;
-  } else if (provider.type === "Baidu") {
-    return `${endpoint}?client_id=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}&response_type=code&scope=${scope}&display=popup`;
-  } else if (provider.type === "Alipay") {
-    return `${endpoint}?app_id=${provider.clientId}&scope=auth_user&redirect_uri=${redirectUri}&state=${state}&response_type=code&scope=${scope}&display=popup`;
-  } else if (provider.type === "Casdoor") {
-    return `${provider.domain}/login/oauth/authorize?client_id=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}&response_type=code&scope=${scope}`;
-  } else if (provider.type === "Infoflow") {
-    return `${endpoint}?appid=${provider.clientId}&redirect_uri=${redirectUri}?state=${state}`;
-  } else if (provider.type === "Apple") {
-    return `${endpoint}?client_id=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}&response_type=code%20id_token&scope=${scope}&response_mode=form_post`;
-  } else if (provider.type === "Steam") {
-    return `${endpoint}?openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select&openid.identity=http://specs.openid.net/auth/2.0/identifier_select&openid.mode=checkid_setup&openid.ns=http://specs.openid.net/auth/2.0&openid.realm=${window.location.origin}&openid.return_to=${redirectUri}?state=${state}`;
-  } else if (provider.type === "Okta") {
-    return `${provider.domain}/v1/authorize?client_id=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}&response_type=code&scope=${scope}`;
-  } else if (provider.type === "Douyin" || provider.type === "TikTok") {
-    return `${endpoint}?client_key=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}&response_type=code&scope=${scope}`;
-  } else if (provider.type === "Custom" || provider.type === "OpenID") {
-    return `${provider.customAuthUrl}?client_id=${provider.clientId}&redirect_uri=${redirectUri}&scope=${provider.scopes}&response_type=code&state=${state}`;
-  } else if (provider.type === "Bilibili") {
-    return `${endpoint}#/?client_id=${provider.clientId}&return_url=${redirectUri}&state=${state}&response_type=code`;
-  } else if (provider.type === "Deezer") {
-    return `${endpoint}?app_id=${provider.clientId}&redirect_uri=${redirectUri}&perms=${scope}`;
-  } else if (provider.type === "Lastfm") {
-    return `${endpoint}?api_key=${provider.clientId}&cb=${redirectUri}`;
-  } else if (provider.type === "Shopify") {
-    return `${endpoint}?client_id=${provider.clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}&grant_options[]=per-user`;
-  } else if (provider.type === "Twitter" || provider.type === "Fitbit") {
-    return `${endpoint}?client_id=${provider.clientId}&redirect_uri=${redirectUri}&state=${state}&response_type=code&scope=${scope}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
-  } else if (provider.type === "MetaMask") {
-    return `${redirectUri}?state=${state}`;
-  } else if (provider.type === "Web3Onboard") {
-    return `${redirectUri}?state=${state}`;
+    return url;
+  } else {
+    throw new Error(response.msg || "Failed to get auth URL");
   }
 }

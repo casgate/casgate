@@ -17,10 +17,14 @@ package object
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"net"
 	"strings"
+	"time"
+
+	"github.com/casdoor/casdoor/ldap_sync"
+	"github.com/casdoor/casdoor/orm"
+	"github.com/pkg/errors"
 
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/thanhpk/randstr"
@@ -71,15 +75,8 @@ func (ldap *Ldap) GetLdapConn(ctx context.Context) (*LdapConn, error) {
 		err  error
 	)
 
-	stopCh := make(chan struct{})
-	util.SafeGoroutine(func() {
-        <-ctx.Done()
-        close(stopCh)
-    })
-
 	dialer := &net.Dialer{
 		Timeout: goldap.DefaultTimeout,
-		Cancel: stopCh,
 	}
 
 	if ldap.EnableSsl {
@@ -88,7 +85,7 @@ func (ldap *Ldap) GetLdapConn(ctx context.Context) (*LdapConn, error) {
 		if ldap.Cert != "" {
 			tlsConf, err = GetTlsConfigForCert(ldap.Cert)
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "get tls config")
 			}
 		}
 
@@ -97,7 +94,7 @@ func (ldap *Ldap) GetLdapConn(ctx context.Context) (*LdapConn, error) {
 			if ldap.ClientCert != "" {
 				cert, err := getCertByName(ldap.ClientCert)
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "get cert by name failed")
 				}
 				if cert == nil {
 					return nil, ErrCertDoesNotExist
@@ -107,7 +104,7 @@ func (ldap *Ldap) GetLdapConn(ctx context.Context) (*LdapConn, error) {
 				}
 				clientCert, err := tls.X509KeyPair([]byte(cert.Certificate), []byte(cert.PrivateKey))
 				if err != nil {
-					return nil, err
+					return nil, errors.Wrap(err, "load client certificate failed")
 				}
 
 				clientCerts = []tls.Certificate{clientCert}
@@ -123,7 +120,7 @@ func (ldap *Ldap) GetLdapConn(ctx context.Context) (*LdapConn, error) {
 		conn, err = goldap.DialURL(fmt.Sprintf("ldap://%s:%d", ldap.Host, ldap.Port), goldap.DialWithDialer(dialer))
 	}
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "goldap connect failed")
 	}
 
 	if ldap.EnableSsl && ldap.EnableCryptographicAuth {
@@ -132,7 +129,7 @@ func (ldap *Ldap) GetLdapConn(ctx context.Context) (*LdapConn, error) {
 		err = conn.Bind(ldap.Username, ldap.Password)
 	}
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "bind failed")
 	}
 
 	isAD, err := isMicrosoftAD(conn)
@@ -216,7 +213,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 
 	var attributeMappingMap AttributeMappingMap
 	if ldapServer.EnableAttributeMapping {
-		attributeMappingMap = buildAttributeMappingMap(ldapServer.AttributeMappingItems)
+		attributeMappingMap = buildAttributeMappingMap(ldapServer.AttributeMappingItems, ldapServer.EnableCaseInsensitivity)
 		SearchAttributes = append(SearchAttributes, attributeMappingMap.Keys()...)
 	}
 
@@ -239,7 +236,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 
 	var roleMappingMap RoleMappingMap
 	if ldapServer.EnableRoleMapping {
-		roleMappingMap = buildRoleMappingMap(ldapServer.RoleMappingItems)
+		roleMappingMap = buildRoleMappingMap(ldapServer.RoleMappingItems, ldapServer.EnableCaseInsensitivity)
 	}
 
 	var ldapUsers []LdapUser
@@ -247,7 +244,7 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 		var user LdapUser
 
 		if ldapServer.EnableAttributeMapping {
-			unmappedAttributes := MapAttributesToUser(entry, &user, attributeMappingMap)
+			unmappedAttributes := MapAttributesToUser(entry, &user, attributeMappingMap, ldapServer.EnableCaseInsensitivity)
 			if len(unmappedAttributes) > 0 {
 				rb.AddReason(fmt.Sprintf("User (%s) has unmapped attributes: %s", entry.DN, strings.Join(unmappedAttributes, ", ")))
 			}
@@ -256,8 +253,16 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 		for _, attribute := range entry.Attributes {
 			// check attribute value with role mapping rules
 			if ldapServer.EnableRoleMapping {
-				if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attribute.Name)]; ok {
+				attributeName := attribute.Name
+				if ldapServer.EnableCaseInsensitivity {
+					attributeName = strings.ToLower(attributeName)
+				}
+
+				if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attributeName)]; ok {
 					for _, value := range attribute.Values {
+						if ldapServer.EnableCaseInsensitivity {
+							value = strings.ToLower(value)
+						}
 						if roleMappingMapRoles, ok := roleMappingMapItem[RoleMappingItemValue(value)]; ok {
 							user.Roles = append(user.Roles, roleMappingMapRoles.StrRoles()...)
 						}
@@ -315,43 +320,6 @@ func (l *LdapConn) GetLdapUsers(ldapServer *Ldap, selectedUser *User, rb *Record
 	return ldapUsers, nil
 }
 
-// FIXME: The Base DN does not necessarily contain the Group
-//
-//	func (l *ldapConn) GetLdapGroups(baseDn string) (map[string]ldapGroup, error) {
-//		SearchFilter := "(objectClass=posixGroup)"
-//		SearchAttributes := []string{"cn", "gidNumber"}
-//		groupMap := make(map[string]ldapGroup)
-//
-//		searchReq := goldap.NewSearchRequest(baseDn,
-//			goldap.ScopeWholeSubtree, goldap.NeverDerefAliases, 0, 0, false,
-//			SearchFilter, SearchAttributes, nil)
-//		searchResult, err := l.Conn.Search(searchReq)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		if len(searchResult.Entries) == 0 {
-//			return nil, errors.New("no result")
-//		}
-//
-//		for _, entry := range searchResult.Entries {
-//			var ldapGroupItem ldapGroup
-//			for _, attribute := range entry.Attributes {
-//				switch attribute.Name {
-//				case "gidNumber":
-//					ldapGroupItem.GidNumber = attribute.Values[0]
-//					break
-//				case "cn":
-//					ldapGroupItem.Cn = attribute.Values[0]
-//					break
-//				}
-//			}
-//			groupMap[ldapGroupItem.GidNumber] = ldapGroupItem
-//		}
-//
-//		return groupMap, nil
-//	}
-
 func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 	res := make([]LdapUser, len(users))
 	for i, user := range users {
@@ -373,128 +341,218 @@ func AutoAdjustLdapUser(users []LdapUser) []LdapUser {
 	return res
 }
 
-func SyncLdapUsers(ctx context.Context, owner string, syncUsers []LdapUser, ldapId string) (existUsers []LdapUser, failedUsers []LdapUser, err error) {
-	var uuids []string
-	for _, user := range syncUsers {
-		uuids = append(uuids, user.Uuid)
-	}
+type SyncLdapUsersResult struct {
+	Added   []LdapUser
+	Failed  []LdapUser
+	Updated []LdapUser
+	Exist   []LdapUser
+}
 
-	organization, err := getOrganization("admin", owner)
+type LdapSyncCommand struct {
+	LdapUsers      []LdapUser
+	LdapId         string
+	Reason         string
+	SyncedByUserID string
+}
+
+// SyncLdapUsers
+// Read users from LDAP server and sync them to database, applying role mapping and attribute mapping if set.
+func SyncLdapUsers(
+	ctx context.Context,
+	command LdapSyncCommand,
+) (SyncLdapUsersResult, error) {
+	historyEntry := ldap_sync.LdapSyncHistory{
+		LdapID:         command.LdapId,
+		StartedAt:      time.Now().UTC(),
+		Reason:         command.Reason,
+		SyncedByUserID: command.SyncedByUserID,
+	}
+	var err error
+	syncDetails := SyncLdapUsersResult{
+		Added:   make([]LdapUser, 0),
+		Failed:  make([]LdapUser, 0),
+		Updated: make([]LdapUser, 0),
+		Exist:   make([]LdapUser, 0),
+	}
+	repository := ldap_sync.LdapSyncRepository{}
+	ldapSyncID, err := repository.LockLDAPForSync(command.LdapId)
 	if err != nil {
-		panic(err)
+		err = errors.Wrap(err, "LDAP sync error: failed to lock LDAP for sync")
+
+		return syncDetails, err
 	}
-
-	ldap, err := GetLdap(ldapId)
-
-	var dc []string
-	for _, basedn := range strings.Split(ldap.BaseDn, ",") {
-		if strings.Contains(basedn, "dc=") {
-			dc = append(dc, basedn[3:])
-		}
-	}
-	affiliation := strings.Join(dc, ".")
-
-	var ou []string
-	for _, admin := range strings.Split(ldap.Username, ",") {
-		if strings.Contains(admin, "ou=") {
-			ou = append(ou, admin[3:])
-		}
-	}
-	tag := strings.Join(ou, ".")
-
-	for _, syncUser := range syncUsers {
-		existUuids, err := GetExistUuids(owner, uuids)
+	historyEntry.LdapSyncID = ldapSyncID
+	updatedUsers := make(map[string]LdapUser)
+	err = trm.WithTx(ctx, func(ctx context.Context) error {
+		ldap, err := GetLdap(command.LdapId)
 		if err != nil {
-			return nil, nil, err
+			err = errors.Wrap(err, "LDAP sync error: failed to GetLdap for sync")
+			return err
+		}
+		var uuids []string
+		for _, user := range command.LdapUsers {
+			uuids = append(uuids, user.GetLdapUuid())
+		}
+		existUuids, err := GetExistUuids(ldap.Owner, uuids)
+		if err != nil {
+			err = errors.Wrap(err, "LDAP sync error: failed to GetExistUuids for sync")
+			return err
+		}
+		existUuidsMap := make(map[string]bool)
+		for _, uuid := range existUuids {
+			existUuidsMap[uuid] = true
+		}
+		organization, err := getOrganization("admin", ldap.Owner)
+		if err != nil {
+			err = errors.Wrap(err, "LDAP sync error: failed to getOrganization for sync")
+			return err
 		}
 
-		found := false
-		if len(existUuids) > 0 {
-			for _, existUuid := range existUuids {
-				if syncUser.Uuid == existUuid {
-					existUsers = append(existUsers, syncUser)
-					found = true
+		var dc []string
+		for _, basedn := range strings.Split(ldap.BaseDn, ",") {
+			if strings.Contains(basedn, "dc=") {
+				dc = append(dc, basedn[3:])
+			}
+		}
+		affiliation := strings.Join(dc, ".")
+
+		var ou []string
+		for _, admin := range strings.Split(ldap.Username, ",") {
+			if strings.Contains(admin, "ou=") {
+				ou = append(ou, admin[3:])
+			}
+		}
+		tag := strings.Join(ou, ".")
+
+		for _, ldapUser := range command.LdapUsers {
+			userExists := false
+			if len(existUuids) > 0 {
+				userExists = existUuidsMap[ldapUser.Uuid]
+				if userExists {
+					syncDetails.Exist = append(syncDetails.Exist, ldapUser)
 				}
 			}
+
+			name, err := ldapUser.ldapUserNameFromDatabase()
+			if err != nil {
+				return errors.Wrap(err, "ldapUserNameFromDatabase")
+			}
+
+			if !userExists {
+				score, err := organization.GetInitScore()
+				if err != nil {
+					err = errors.Wrap(err, "LDAP sync error: failed to GetInitScore for sync")
+					return errors.Wrap(err, "GetInitScore")
+				}
+
+				newUser := &User{
+					Owner:             ldap.Owner,
+					Name:              name,
+					CreatedTime:       util.GetCurrentTime(),
+					DisplayName:       ldapUser.buildLdapDisplayName(),
+					SignupApplication: organization.DefaultApplication,
+					Type:              "normal-user",
+					Avatar:            organization.DefaultAvatar,
+					Email:             ldapUser.Email,
+					Phone:             ldapUser.Mobile,
+					Address:           []string{ldapUser.Address},
+					Affiliation:       affiliation,
+					Tag:               tag,
+					Score:             score,
+					Ldap:              ldapUser.Uuid,
+					Properties:        map[string]string{},
+					MappingStrategy:   ldap.UserMappingStrategy,
+				}
+
+				if organization.DefaultApplication != "" {
+					newUser.SignupApplication = organization.DefaultApplication
+				}
+
+				affected, err := AddUser(ctx, newUser)
+				if err != nil {
+					err = errors.Wrap(err, "LDAP sync error: failed to AddUser")
+					return err
+				}
+
+				if !affected {
+					syncDetails.Failed = append(syncDetails.Failed, ldapUser)
+					continue
+				}
+
+				userIdProvider := &UserIdProvider{
+					Owner:           organization.Name,
+					LdapId:          command.LdapId,
+					UsernameFromIdp: ldapUser.Uuid,
+					CreatedTime:     util.GetCurrentTime(),
+					UserId:          newUser.Id,
+				}
+				_, err = AddUserIdProvider(context.Background(), userIdProvider)
+				if err != nil {
+					err = errors.Wrap(err, "LDAP sync error: failed to AddUserIdProvider")
+					return err
+				}
+				syncDetails.Added = append(syncDetails.Added, ldapUser)
+			}
+
+			if userExists && ldap.EnableAttributeMapping {
+				err = SyncLdapAttributes(ldapUser, name, ldap.Owner)
+				if err != nil {
+					return errors.Wrap(err, "SyncLdapAttributes")
+				}
+				updatedUsers[ldapUser.Uuid] = ldapUser
+			}
+
+			if ldap.EnableRoleMapping {
+				err = SyncLdapRoles(ldapUser, name, ldap.Owner)
+				if err != nil {
+					return errors.Wrap(err, "SyncLdapRoles")
+				}
+				updatedUsers[ldapUser.Uuid] = ldapUser
+			}
 		}
 
-		name, err := syncUser.buildLdapUserName()
+		err = UpdateLdapSyncTime(command.LdapId)
 		if err != nil {
-			return nil, nil, err
+			err = errors.Wrap(err, "UpdateLdapSyncTime")
+			return err
 		}
 
-		if !found {
-			score, err := organization.GetInitScore()
-			if err != nil {
-				return nil, nil, err
-			}
-
-			newUser := &User{
-				Owner:             owner,
-				Name:              name,
-				CreatedTime:       util.GetCurrentTime(),
-				DisplayName:       syncUser.buildLdapDisplayName(),
-				SignupApplication: organization.DefaultApplication,
-				Type:              "normal-user",
-				Avatar:            organization.DefaultAvatar,
-				Email:             syncUser.Email,
-				Phone:             syncUser.Mobile,
-				Address:           []string{syncUser.Address},
-				Affiliation:       affiliation,
-				Tag:               tag,
-				Score:             score,
-				Ldap:              syncUser.Uuid,
-				Properties:        map[string]string{},
-			}
-
-			if organization.DefaultApplication != "" {
-				newUser.SignupApplication = organization.DefaultApplication
-			}
-
-			affected, err := AddUser(ctx, newUser)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			if !affected {
-				failedUsers = append(failedUsers, syncUser)
-				continue
-			}
-
-			userIdProvider := &UserIdProvider{
-				Owner:           organization.Name,
-				LdapId:          ldapId,
-				UsernameFromIdp: syncUser.Uuid,
-				CreatedTime:     util.GetCurrentTime(),
-				UserId:          newUser.Id,
-			}
-			_, err = AddUserIdProvider(context.Background(), userIdProvider)
-			if err != nil {
-				return nil, nil, err
-			}
-		}
-
-		ldap, err := GetLdap(ldapId)
-		if err != nil {
-			return existUsers, failedUsers, err
-		}
-
-		if ldap.EnableRoleMapping {
-			err = SyncRoles(syncUser, name, owner)
-			if err != nil {
-				return existUsers, failedUsers, err
-			}
-		}
-
+		return nil
+	})
+	if err != nil {
+		return syncDetails, errors.Wrap(err, "ldap user sync transaction failed")
+	}
+	for _, updatedUser := range updatedUsers {
+		syncDetails.Updated = append(syncDetails.Updated, updatedUser)
+	}
+	err = repository.UnlockLDAPForSync(command.LdapId)
+	historyEntry.EndedAt = time.Now().UTC()
+	_, err = orm.AppOrmer.Engine.Insert(SetSyncHistoryUsers(historyEntry, syncDetails))
+	if err != nil {
+		return syncDetails, errors.Wrap(err, "failed to save LDAP sync history result")
 	}
 
-	return existUsers, failedUsers, err
+	return syncDetails, err
+}
+
+func SetSyncHistoryUsers(historyEntry ldap_sync.LdapSyncHistory, result SyncLdapUsersResult) ldap_sync.LdapSyncHistory {
+	for _, user := range result.Added {
+		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "added", UUID: user.GetLdapUuid()})
+	}
+	for _, user := range result.Updated {
+		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "updated", UUID: user.GetLdapUuid()})
+	}
+	for _, user := range result.Failed {
+		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "failed", UUID: user.GetLdapUuid()})
+	}
+
+	return historyEntry
 }
 
 func GetExistUuids(owner string, uuids []string) ([]string, error) {
 	var existUuids []string
 
-	err := ormer.Engine.Table("user").Where("owner = ?", owner).Cols("ldap").
+	err := orm.AppOrmer.Engine.Table("user").Where("owner = ?", owner).Cols("ldap").
 		In("ldap", uuids).Select("DISTINCT ldap").Find(&existUuids)
 	if err != nil {
 		return existUuids, err
@@ -503,10 +561,10 @@ func GetExistUuids(owner string, uuids []string) ([]string, error) {
 	return existUuids, nil
 }
 
-func (ldapUser *LdapUser) buildLdapUserName() (string, error) {
+func (ldapUser *LdapUser) ldapUserNameFromDatabase() (string, error) {
 	user := User{}
 	uidWithNumber := fmt.Sprintf("%s_%s", ldapUser.Uid, ldapUser.UidNumber)
-	has, err := ormer.Engine.Where("name = ? or name = ?", ldapUser.Uid, uidWithNumber).Get(&user)
+	has, err := orm.AppOrmer.Engine.Where("name = ? or name = ?", ldapUser.Uid, uidWithNumber).Get(&user)
 	if err != nil {
 		return "", err
 	}
@@ -604,13 +662,13 @@ func SyncUserFromLdap(ctx context.Context, organization string, ldapId string, u
 			continue
 		}
 
-		_, err = CheckLdapUserPassword(user, password, lang)
+		_, err = CheckLdapUserPassword(user, password, lang, ldapId)
 		if err != nil {
 			conn.Close()
 			return nil, err
 		}
 
-		_, _, err = SyncLdapUsers(ctx, organization, AutoAdjustLdapUser(res), ldapServer.Id)
+		_, err = SyncLdapUsers(ctx, LdapSyncCommand{LdapUsers: AutoAdjustLdapUser(res), SyncedByUserID: userName, LdapId: ldapServer.Id, Reason: "manual"})
 		return &res[0], err
 	}
 

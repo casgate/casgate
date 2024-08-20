@@ -392,20 +392,6 @@ class UserEditPage extends React.Component {
           </Col>
         </Row>
       );
-    } else if (accountItem.name === "Avatar") {
-      return (
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("general:Avatar"), i18next.t("general:Avatar - Tooltip"))} :
-          </Col>
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {i18next.t("general:Preview")}:
-          </Col>
-          <Col>
-            {this.renderImage(this.state.user.avatar, i18next.t("user:Upload a photo"), i18next.t("user:Set new profile picture"), "avatar", false)}
-          </Col>
-        </Row>
-      );
     } else if (accountItem.name === "User type") {
       return (
         <Row style={{marginTop: "20px"}} >
@@ -414,7 +400,7 @@ class UserEditPage extends React.Component {
           </Col>
           <Col span={22} >
             <Select virtual={false} style={{width: "100%"}} value={this.state.user.type} onChange={(value => {this.updateUserField("type", value);})}
-              options={["normal-user", "paid-user", "invited-user"].map(item => Setting.getOption(item, item))}
+              options={["normal-user", "invited-user"].map(item => Setting.getOption(item, item))}
             />
           </Col>
         </Row>
@@ -782,6 +768,19 @@ class UserEditPage extends React.Component {
                 <Button onClick={() => this.addUserKeys()}>{i18next.t(isKeysGenerated ? "general:update" : "general:generate")}</Button>
               </Col>
             </Row>
+          </Col>
+        </Row>
+      );
+    } else if (accountItem.name === "Mapping strategy") {
+      return (
+        <Row style={{marginTop: "20px", alignItems: "center"}} >
+          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            {Setting.getLabel(i18next.t("user:Mapping strategy"), i18next.t("user:Mapping strategy - Tooltip"))} :
+          </Col>
+          <Col span={22} >
+            <Select virtual={false} style={{width: "100%"}} value={this.state.user.mappingStrategy} onChange={(value => {this.updateUserField("mappingStrategy", value);})}
+              options={["all", "attribute", "role", "nothing"].map(item => Setting.getOption(item, item))}
+            />
           </Col>
         </Row>
       );

@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"github.com/casdoor/casdoor/orm"
 	"strings"
 
 	"github.com/casbin/casbin/v2"
@@ -79,7 +80,7 @@ func (p *Permission) setEnforcerAdapter(enforcer *casbin.Enforcer) error {
 		}
 	}
 	tableNamePrefix := conf.GetConfigString("tableNamePrefix")
-	adapter, err := xormadapter.NewAdapterByEngineWithTableName(ormer.Engine, tableName, tableNamePrefix)
+	adapter, err := xormadapter.NewAdapterByEngineWithTableName(orm.AppOrmer.Engine, tableName, tableNamePrefix)
 	if err != nil {
 		return err
 	}

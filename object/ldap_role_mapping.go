@@ -15,6 +15,8 @@
 package object
 
 import (
+	"strings"
+
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -44,7 +46,7 @@ func (r RoleMappingItemRoles) StrRoles() []string {
 	return result
 }
 
-func buildRoleMappingMap(roleMappingItems []*RoleMappingItem) RoleMappingMap {
+func buildRoleMappingMap(roleMappingItems []*RoleMappingItem, enableCaseInsensitivity bool) RoleMappingMap {
 	roleMappingMap := make(RoleMappingMap)
 	for _, roleMappingItem := range roleMappingItems {
 		for _, roleMappingItemValue := range roleMappingItem.Values {
@@ -52,12 +54,24 @@ func buildRoleMappingMap(roleMappingItems []*RoleMappingItem) RoleMappingMap {
 				continue
 			}
 
-			roleMappingAttribute := RoleMappingAttribute(roleMappingItem.Attribute)
+			var roleMappingAttribute RoleMappingAttribute
+			if enableCaseInsensitivity {
+				roleMappingAttribute = RoleMappingAttribute(strings.ToLower(roleMappingItem.Attribute))
+			} else {
+				roleMappingAttribute = RoleMappingAttribute(roleMappingItem.Attribute)
+			}
+
 			if _, ok := roleMappingMap[roleMappingAttribute]; !ok {
 				roleMappingMap[roleMappingAttribute] = make(RoleMappingMapItem)
 			}
-
-			roleMappingValue := RoleMappingItemValue(roleMappingItemValue)
+			
+			var roleMappingValue RoleMappingItemValue
+			if enableCaseInsensitivity {
+				roleMappingValue = RoleMappingItemValue(strings.ToLower(roleMappingItemValue))
+			} else {
+				roleMappingValue = RoleMappingItemValue(roleMappingItemValue)
+			}
+			
 			if _, ok := roleMappingMap[roleMappingAttribute][roleMappingValue]; !ok {
 				roleMappingMap[roleMappingAttribute][roleMappingValue] = make([]RoleMappingItemRoleId, 0)
 			}
@@ -72,48 +86,22 @@ func buildRoleMappingMap(roleMappingItems []*RoleMappingItem) RoleMappingMap {
 	return roleMappingMap
 }
 
-func SyncRoles(syncUser LdapUser, name, owner string) error {
+func SyncLdapAttributes(syncUser LdapUser, name, owner string) error {
 	userId := util.GetId(owner, name)
-
-	currentUserRoles, err := GetRoles(userId)
+	user, err := GetUser(userId)
 	if err != nil {
 		return err
 	}
 
-	for _, role := range currentUserRoles {
-		if !util.InSlice(syncUser.Roles, role.GetId()) {
-			role.Roles = util.DeleteVal(role.Roles, userId)
-			_, err = UpdateRole(role.GetId(), role)
-			if err != nil {
-				return err
-			}
-		}
+	return SyncAttributesToUser(user, syncUser.buildLdapDisplayName(), syncUser.Email, syncUser.Mobile, user.Avatar, []string{syncUser.Address})
+}
+
+func SyncLdapRoles(syncUser LdapUser, name, owner string) error {
+	userId := util.GetId(owner, name)
+	user, err := GetUser(userId)
+	if err != nil {
+		return err
 	}
 
-	for _, roleId := range syncUser.Roles {
-		role, err := GetRole(roleId)
-		if err != nil {
-			return err
-		}
-
-		if role == nil {
-			// we can't add role that doesn't exist
-			continue
-		}
-
-		if role.Owner != owner {
-			// we shouldn't add role from another organization (if it happened by any reason) to user, so skip
-			continue
-		}
-
-		if !util.InSlice(role.Users, userId) {
-			role.Users = append(role.Users, userId)
-
-			_, err = UpdateRole(role.GetId(), role)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	return SyncRolesToUser(user, syncUser.Roles)
 }

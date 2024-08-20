@@ -36,7 +36,7 @@ class CertListPage extends BaseListPage {
 
   newCert() {
     const randomName = Setting.getRandomName();
-    const owner = Setting.isDefaultOrganizationSelected(this.props.account) ? this.state.owner : Setting.getRequestOrganization(this.props.account);
+    const owner = Setting.getRequestOrganization(this.props.account);
     return {
       owner: owner,
       name: `cert_${randomName}`,
