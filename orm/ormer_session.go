@@ -26,11 +26,13 @@ import (
 
 func GetSession(owner string, offset, limit int, field, value, sortField, sortOrder string) *xorm.Session {
 	session := AppOrmer.Engine.Prepare()
+
 	if offset != -1 && limit != -1 {
 		session.Limit(limit, offset)
 	}
+
 	if owner != "" {
-		session = session.And("owner=?", owner)
+		session = session.And("LOWER(owner) = LOWER(?)", owner)
 	}
 
 	match, mErr := regexp.MatchString("^[a-z_]+$", util.SnakeString(field))
@@ -44,9 +46,10 @@ func GetSession(owner string, offset, limit int, field, value, sortField, sortOr
 			filterValue = fmt.Sprintf("%%%s%%", value)
 		}
 		if util.FilterField(field) {
-			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), filterValue)
+			session = session.And(fmt.Sprintf("LOWER(%s) LIKE LOWER(?)", util.SnakeString(field)), filterValue)
 		}
 	}
+
 	if sortField == "" || sortOrder == "" {
 		sortField = "created_time"
 	}
@@ -61,19 +64,22 @@ func GetSession(owner string, offset, limit int, field, value, sortField, sortOr
 	} else {
 		session = session.Desc(util.SnakeString(sortField))
 	}
+
 	return session
 }
 
 func GetSessionForUser(owner string, offset, limit int, field, value, sortField, sortOrder string) *xorm.Session {
 	session := AppOrmer.Engine.Prepare()
+
 	if offset != -1 && limit != -1 {
 		session.Limit(limit, offset)
 	}
+
 	if owner != "" {
 		if offset == -1 {
-			session = session.And("owner=?", owner)
+			session = session.And("LOWER(owner) = LOWER(?)", owner)
 		} else {
-			session = session.And("a.owner=?", owner)
+			session = session.And("LOWER(a.owner) = LOWER(?)", owner)
 		}
 	}
 
@@ -87,9 +93,10 @@ func GetSessionForUser(owner string, offset, limit int, field, value, sortField,
 			if offset != -1 {
 				field = fmt.Sprintf("a.%s", field)
 			}
-			session = session.And(fmt.Sprintf("%s like ?", util.SnakeString(field)), fmt.Sprintf("%%%s%%", value))
+			session = session.And(fmt.Sprintf("LOWER(%s) LIKE LOWER(?)", util.SnakeString(field)), fmt.Sprintf("%%%s%%", value))
 		}
 	}
+
 	if sortField == "" || sortOrder == "" {
 		sortField = "created_time"
 	}
@@ -101,6 +108,7 @@ func GetSessionForUser(owner string, offset, limit int, field, value, sortField,
 
 	tableNamePrefix := conf.GetConfigString("tableNamePrefix")
 	tableName := tableNamePrefix + "user"
+
 	if offset == -1 {
 		if sortOrder == "ascend" {
 			session = session.Asc(util.SnakeString(sortField))
@@ -110,12 +118,12 @@ func GetSessionForUser(owner string, offset, limit int, field, value, sortField,
 	} else {
 		if sortOrder == "ascend" {
 			session = session.Alias("a").
-				Join("INNER", []string{tableName, "b"}, "a.owner = b.owner and a.name = b.name").
+				Join("INNER", []string{tableName, "b"}, "LOWER(a.owner) = LOWER(b.owner) and LOWER(a.name) = LOWER(b.name)").
 				Select("b.*").
 				Asc("a." + util.SnakeString(sortField))
 		} else {
 			session = session.Alias("a").
-				Join("INNER", []string{tableName, "b"}, "a.owner = b.owner and a.name = b.name").
+				Join("INNER", []string{tableName, "b"}, "LOWER(a.owner) = LOWER(b.owner) and LOWER(a.name) = LOWER(b.name)").
 				Select("b.*").
 				Desc("a." + util.SnakeString(sortField))
 		}
