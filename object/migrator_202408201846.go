@@ -37,12 +37,12 @@ func (*Migrator_202408201846) IsMigrationNeeded() bool {
 func (*Migrator_202408201846) DoMigration() *migrate.Migration {
 	ctx := context.Background()
 	migration := migrate.Migration{
-		ID: "20240820IncreaseFieldsLenForRole--Increase fields length for role: display_name(255), description(255)",
+		ID: "202408201846IncreaseFieldsLenForRole--Increase fields length for role: display_name(255), description(255)",
 		Migrate: func(engine *xorm.Engine) error {
 			dbType := engine.Dialect().URI().DBType
 
 			if dbType != schemas.POSTGRES && dbType != schemas.MYSQL {
-				logger.Warn(ctx, "You must make migration: 20240820IncreaseFieldsLenForRole manually")
+				logger.Warn(ctx, "You must make migration: Migrator_202408201846 manually")
 				return nil
 			}
 
