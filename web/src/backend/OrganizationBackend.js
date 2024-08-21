@@ -15,7 +15,7 @@
 import * as Setting from "../Setting";
 
 export function getOrganizations(owner, organizationName = "", page = "", pageSize = "", field = "", value = "", sortField = "", sortOrder = "") {
-  return fetch(`${Setting.ServerUrl}/api/get-organizations?owner=${owner}&organizationName=${organizationName}&p=${page}&pageSize=${pageSize}&field=${field}&value=${value}&sortField=${sortField}&sortOrder=${sortOrder}`, {
+  return fetch(`${Setting.ServerUrl}/api/get-organizations?owner=${owner}&organization=${organizationName}&p=${page}&pageSize=${pageSize}&field=${field}&value=${value}&sortField=${sortField}&sortOrder=${sortOrder}`, {
     method: "GET",
     credentials: "include",
     headers: {

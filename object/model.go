@@ -41,21 +41,6 @@ type Model struct {
 	model.Model `xorm:"-" json:"-"`
 }
 
-func GetModelCount(owner, field, value string) (int64, error) {
-	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	return session.Count(&Model{})
-}
-
-func GetModels(owner string) ([]*Model, error) {
-	models := []*Model{}
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&models, &Model{Owner: owner})
-	if err != nil {
-		return models, err
-	}
-
-	return models, nil
-}
-
 func GetPaginationModels(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Model, error) {
 	models := []*Model{}
 	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)

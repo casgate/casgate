@@ -45,21 +45,6 @@ type Webhook struct {
 	IsEnabled      bool      `json:"isEnabled"`
 }
 
-func GetWebhookCount(owner, organization, field, value string) (int64, error) {
-	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	return session.Count(&Webhook{Organization: organization})
-}
-
-func GetWebhooks(owner string, organization string) ([]*Webhook, error) {
-	webhooks := []*Webhook{}
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&webhooks, &Webhook{Owner: owner, Organization: organization})
-	if err != nil {
-		return webhooks, err
-	}
-
-	return webhooks, nil
-}
-
 func GetPaginationWebhooks(owner, organization string, offset, limit int, field, value, sortField, sortOrder string) ([]*Webhook, error) {
 	webhooks := []*Webhook{}
 	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)

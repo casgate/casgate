@@ -17,9 +17,7 @@ package controllers
 import (
 	"encoding/json"
 
-	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // GetModels
@@ -33,34 +31,19 @@ func (c *ApiController) GetModels() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-
-	if limit == "" || page == "" {
-		models, err := object.GetModels(request.Owner)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(models)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetModelCount(request.Owner, request.Field, request.Value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		models, err := object.GetPaginationModels(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(models, paginator.Nums())
+	paginator, err := object.GetPaginator(c.Ctx, request.Owner, request.Field, request.Value, request.Limit, object.Model{})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	models, err := object.GetPaginationModels(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk(models, paginator.Nums())
 }
 
 // GetModel
