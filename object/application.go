@@ -125,11 +125,6 @@ func GetApplicationCount(owner, field, value string) (int64, error) {
 	return session.Count(&Application{})
 }
 
-func GetOrganizationApplicationCount(owner, Organization, field, value string) (int64, error) {
-	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	return session.Count(&Application{Organization: Organization})
-}
-
 func GetApplications(owner string) ([]*Application, error) {
 	applications := []*Application{}
 	err := orm.AppOrmer.Engine.Desc("created_time").Find(&applications, &Application{Owner: owner})
@@ -153,17 +148,6 @@ func CountApplicatoinsByProvider(providerName string) ([]*Application, error) {
 func GetOrganizationApplications(owner string, organization string) ([]*Application, error) {
 	applications := []*Application{}
 	err := orm.AppOrmer.Engine.Desc("created_time").Find(&applications, &Application{Organization: organization})
-	if err != nil {
-		return applications, err
-	}
-
-	return applications, nil
-}
-
-func GetPaginationApplications(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Application, error) {
-	var applications []*Application
-	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
-	err := session.Find(&applications)
 	if err != nil {
 		return applications, err
 	}

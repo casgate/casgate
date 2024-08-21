@@ -17,9 +17,7 @@ package controllers
 import (
 	"encoding/json"
 
-	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // GetDomains
@@ -33,34 +31,20 @@ func (c *ApiController) GetDomains() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-
-	if limit == "" || page == "" {
-		domains, err := object.GetDomains(c.Ctx.Request.Context(), request.Owner)
-		if err != nil {
-			c.ResponseDBError(err)
-			return
-		}
-
-		c.ResponseOk(domains)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetDomainCount(request.Owner, request.Field, request.Value)
-		if err != nil {
-			c.ResponseDBError(err)
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		domains, err := object.GetPaginationDomains(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
-		if err != nil {
-			c.ResponseDBError(err)
-			return
-		}
-
-		c.ResponseOk(domains, paginator.Nums())
+	paginator, err := object.GetPaginator(c.Ctx, request.Owner, request.Field, request.Value, request.Limit, object.Domain{})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	domains, err := object.GetPaginationDomains(request.Owner, paginator.Offset(), request.Limit, request.Field,
+		request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseDBError(err)
+		return
+	}
+
+	c.ResponseOk(domains, paginator.Nums())
 }
 
 // GetDomain

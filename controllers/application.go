@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 	"github.com/casdoor/casdoor/util/logger"
@@ -35,46 +34,28 @@ func (c *ApiController) GetApplications() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	userId := c.GetSessionUsername()
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-
 	if !c.IsGlobalAdmin() && request.Organization == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
 
-	var err error
-	if limit == "" || page == "" {
-		var applications []*object.Application
-		if request.Organization == "" {
-			applications, err = object.GetApplications(request.Owner)
-		} else {
-			applications, err = object.GetOrganizationApplications(request.Owner, request.Organization)
-		}
-		if err != nil {
-			c.ResponseDBError(err)
-			return
-		}
-		c.ResponseOk(object.GetMaskedApplications(applications, userId))
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetOrganizationApplicationCount("admin", request.Organization, request.Field, request.Value)
-		if err != nil {
-			c.ResponseDBError(err)
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		application, err := object.GetPaginationOrganizationApplications("admin", request.Organization, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
-		if err != nil {
-			c.ResponseDBError(err)
-			return
-		}
-
-		applications := object.GetMaskedApplications(application, userId)
-		c.ResponseOk(applications, paginator.Nums())
+	paginator, err := object.GetPaginator(c.Ctx, "admin", request.Field, request.Value, request.Limit, object.Application{Organization: request.Organization})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	applications, err := object.GetPaginationOrganizationApplications("admin",
+		request.Organization, paginator.Offset(),
+		request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseDBError(err)
+		return
+	}
+	applications = object.GetMaskedApplications(applications, request.User.GetId())
+
+	c.ResponseOk(applications, paginator.Nums())
+	return
 }
 
 // GetApplication
