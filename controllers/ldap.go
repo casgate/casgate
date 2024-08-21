@@ -425,6 +425,7 @@ func (c *ApiController) SyncLdapUsers() {
 
 	mappingRb := object.NewRecordBuilderFromCtx(c.Ctx)
 	goCtx = context.WithValue(goCtx, object.RoleMappingRecordDataKey, mappingRb)
+	mappingRb.AddReason("manual user synchronization")
 
 	var users []object.LdapUser
 	err = json.Unmarshal(c.Ctx.Input.RequestBody, &users)

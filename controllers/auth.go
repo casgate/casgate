@@ -956,11 +956,11 @@ func (c *ApiController) Login() {
 
 					switch provider.Category {
 					case "OAuth":
-						mappingRb.AddReason("sync roles for OAuth provider")
+						mappingRb.AddReason(fmt.Sprintf("sync roles for OAuth provider: %s", providerID))
 					case "SAML":
-						mappingRb.AddReason("sync roles for SAML provider")
+						mappingRb.AddReason(fmt.Sprintf("sync roles for SAML provider: %s", providerID))
 					default:
-						mappingRb.AddReason("sync role for provider: " + provider.Category)
+						mappingRb.AddReason(fmt.Sprintf("sync roles for provider: %s", providerID))
 					}
 
 					err = object.SyncRolesToUser(mappingCtx, user, userRoles)
