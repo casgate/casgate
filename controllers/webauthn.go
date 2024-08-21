@@ -27,11 +27,11 @@ import (
 )
 
 // WebAuthnSignupBegin
-// @Title WebAuthnSignupBegin
-// @Tag User API
-// @Description WebAuthn Registration Flow 1st stage
-// @Success 200 {object} protocol.CredentialCreation The CredentialCreationOptions object
-// @router /webauthn/signup/begin [get]
+//	@Title			WebAuthnSignupBegin
+//	@Tag			User API
+//	@Description	WebAuthn Registration Flow 1st stage
+//	@Success		200	{object}	protocol.CredentialCreation	The	CredentialCreationOptions	object
+//	@router			/webauthn/signup/begin [get]
 func (c *ApiController) WebAuthnSignupBegin() {
 	webauthnObj, err := object.GetWebAuthnObject(c.Ctx.Request.Host)
 	if err != nil {
@@ -62,12 +62,12 @@ func (c *ApiController) WebAuthnSignupBegin() {
 }
 
 // WebAuthnSignupFinish
-// @Title WebAuthnSignupFinish
-// @Tag User API
-// @Description WebAuthn Registration Flow 2nd stage
-// @Param   body    body   protocol.CredentialCreationResponse  true        "authenticator attestation Response"
-// @Success 200 {object} controllers.Response "The Response object"
-// @router /webauthn/signup/finish [post]
+//	@Title			WebAuthnSignupFinish
+//	@Tag			User API
+//	@Description	WebAuthn Registration Flow 2nd stage
+//	@Param			body	body		protocol.CredentialCreationResponse	true	"authenticator attestation Response"
+//	@Success		200		{object}	controllers.Response				"The Response object"
+//	@router			/webauthn/signup/finish [post]
 func (c *ApiController) WebAuthnSignupFinish() {
 	webauthnObj, err := object.GetWebAuthnObject(c.Ctx.Request.Host)
 	if err != nil {
@@ -104,13 +104,13 @@ func (c *ApiController) WebAuthnSignupFinish() {
 }
 
 // WebAuthnSigninBegin
-// @Title WebAuthnSigninBegin
-// @Tag Login API
-// @Description WebAuthn Login Flow 1st stage
-// @Param   owner     query    string  true        "owner"
-// @Param   name     query    string  true        "name"
-// @Success 200 {object} protocol.CredentialAssertion The CredentialAssertion object
-// @router /webauthn/signin/begin [get]
+//	@Title			WebAuthnSigninBegin
+//	@Tag			Login API
+//	@Description	WebAuthn Login Flow 1st stage
+//	@Param			owner	query		string							true	"owner"
+//	@Param			name	query		string							true	"name"
+//	@Success		200		{object}	protocol.CredentialAssertion	The		CredentialAssertion	object
+//	@router			/webauthn/signin/begin [get]
 func (c *ApiController) WebAuthnSigninBegin() {
 	webauthnObj, err := object.GetWebAuthnObject(c.Ctx.Request.Host)
 	if err != nil {
@@ -146,12 +146,12 @@ func (c *ApiController) WebAuthnSigninBegin() {
 }
 
 // WebAuthnSigninFinish
-// @Title WebAuthnSigninBegin
-// @Tag Login API
-// @Description WebAuthn Login Flow 2nd stage
-// @Param   body    body   protocol.CredentialAssertionResponse  true        "authenticator assertion Response"
-// @Success 200 {object} controllers.Response "The Response object"
-// @router /webauthn/signin/finish [post]
+//	@Title			WebAuthnSigninFinish
+//	@Tag			Login API
+//	@Description	WebAuthn Login Flow 2nd stage
+//	@Param			body	body		protocol.CredentialAssertionResponse	true	"authenticator assertion Response"
+//	@Success		200		{object}	controllers.Response					"The Response object"
+//	@router			/webauthn/signin/finish [post]
 func (c *ApiController) WebAuthnSigninFinish() {
 	ctx := c.getRequestCtx()
 	responseType := c.Input().Get("responseType")

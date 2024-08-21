@@ -2235,8 +2235,8 @@ paths:
     get:
       tags:
       - Login API
-      description: logout the current user
-      operationId: ApiController.Logout
+      description: Logout the current user using GET method
+      operationId: ApiController.Logout (GET)
       parameters:
       - in: query
         name: id_token_hint
@@ -2258,8 +2258,8 @@ paths:
     post:
       tags:
       - Login API
-      description: logout the current user
-      operationId: ApiController.Logout
+      description: Logout the current user using POST method
+      operationId: ApiController.Logout (POST)
       parameters:
       - in: query
         name: id_token_hint
@@ -3052,7 +3052,7 @@ paths:
       tags:
       - Login API
       description: WebAuthn Login Flow 2nd stage
-      operationId: ApiController.WebAuthnSigninBegin
+      operationId: ApiController.WebAuthnSigninFinish
       parameters:
       - in: body
         name: body

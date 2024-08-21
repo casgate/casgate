@@ -281,21 +281,41 @@ func (c *ApiController) Signup() {
 	c.ResponseOk(userId)
 }
 
-// Logout
-// @Title Logout
-// @Tag Login API
-// @Description logout the current user
-// @Param   id_token_hint   query        string  false        "id_token_hint"
-// @Param   post_logout_redirect_uri    query    string  false     "post_logout_redirect_uri"
-// @Param   state     query    string  false     "state"
-// @Success 200 {object} controllers.Response The Response object
-// @router /logout [get,post]
-func (c *ApiController) Logout() {
-	// https://openid.net/specs/openid-connect-rpinitiated-1_0-final.html
+// LogoutGet
+//
+//	@Title			Logout (GET)
+//	@Tag			Login API
+//	@Description	Logout the current user using GET method
+//	@Param			id_token_hint				query		string					false	"id_token_hint"
+//	@Param			post_logout_redirect_uri	query		string					false	"post_logout_redirect_uri"
+//	@Param			state						query		string					false	"state"
+//	@Success		200							{object}	controllers.Response	The		Response	object
+//	@router			/logout [get]
+func (c *ApiController) LogoutGet() {
 	accessToken := c.Input().Get("id_token_hint")
 	redirectUri := c.Input().Get("post_logout_redirect_uri")
 	state := c.Input().Get("state")
+	c.handleLogout(accessToken, redirectUri, state)
+}
 
+// LogoutPost
+//
+//	@Title			Logout (POST)
+//	@Tag			Login API
+//	@Description	Logout the current user using POST method
+//	@Param			id_token_hint				query		string					false	"id_token_hint"
+//	@Param			post_logout_redirect_uri	query		string					false	"post_logout_redirect_uri"
+//	@Param			state						query		string					false	"state"
+//	@Success		200							{object}	controllers.Response	The		Response	object
+//	@router			/logout [post]
+func (c *ApiController) LogoutPost() {
+	accessToken := c.Input().Get("id_token_hint")
+	redirectUri := c.Input().Get("post_logout_redirect_uri")
+	state := c.Input().Get("state")
+	c.handleLogout(accessToken, redirectUri, state)
+}
+
+func (c *ApiController) handleLogout(accessToken, redirectUri, state string) {
 	user := c.GetSessionUsername()
 	c.Ctx.Input.SetData("user", user)
 
@@ -400,11 +420,12 @@ func (c *ApiController) Logout() {
 }
 
 // GetAccount
-// @Title GetAccount
-// @Tag Account API
-// @Description get the details of the current account
-// @Success 200 {object} controllers.Response The Response object
-// @router /get-account [get]
+//
+//	@Title			GetAccount
+//	@Tag			Account API
+//	@Description	get the details of the current account
+//	@Success		200	{object}	controllers.Response	The	Response	object
+//	@router			/get-account [get]
 func (c *ApiController) GetAccount() {
 	var err error
 	user, ok := c.RequireSignedInUser()
@@ -459,11 +480,12 @@ func (c *ApiController) GetAccount() {
 
 // GetUserinfo
 // UserInfo
-// @Title UserInfo
-// @Tag Account API
-// @Description return user information according to OIDC standards
-// @Success 200 {object} object.Userinfo The Response object
-// @router /userinfo [get]
+//
+//	@Title			UserInfo
+//	@Tag			Account API
+//	@Description	return user information according to OIDC standards
+//	@Success		200	{object}	object.Userinfo	The	Response	object
+//	@router			/userinfo [get]
 func (c *ApiController) GetUserinfo() {
 	user, ok := c.RequireSignedInUser()
 	if !ok {
@@ -480,11 +502,12 @@ func (c *ApiController) GetUserinfo() {
 
 // GetUserinfo2
 // LaravelResponse
-// @Title UserInfo2
-// @Tag Account API
-// @Description return Laravel compatible user information according to OAuth 2.0
-// @Success 200 {object} LaravelResponse The Response object
-// @router /user [get]
+//
+//	@Title			UserInfo2
+//	@Tag			Account API
+//	@Description	return Laravel compatible user information according to OAuth 2.0
+//	@Success		200	{object}	LaravelResponse	The	Response	object
+//	@router			/user [get]
 func (c *ApiController) GetUserinfo2() {
 	user, ok := c.RequireSignedInUser()
 	if !ok {
@@ -516,10 +539,11 @@ func (c *ApiController) GetUserinfo2() {
 }
 
 // GetCaptcha ...
-// @Tag Login API
-// @Title GetCaptcha
-// @Success 200 {object} controllers.Response "The Response object"
-// @router /get-captcha [get]
+//
+//	@Tag		Login API
+//	@Title		GetCaptcha
+//	@Success	200	{object}	controllers.Response	"The Response object"
+//	@router		/get-captcha [get]
 func (c *ApiController) GetCaptcha() {
 	applicationId := c.Input().Get("applicationId")
 	isCurrentProvider := c.Input().Get("isCurrentProvider")
