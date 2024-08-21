@@ -37,7 +37,7 @@ func (*Migrator_202408201846) IsMigrationNeeded() bool {
 func (*Migrator_202408201846) DoMigration() *migrate.Migration {
 	ctx := context.Background()
 	migration := migrate.Migration{
-		ID: "202408201846IncreaseFieldsLenForRole--Increase fields length for role: display_name(255), description(255)",
+		ID: "202408201846IncreaseFieldsLenForRole--Increase fields length for role",
 		Migrate: func(engine *xorm.Engine) error {
 			dbType := engine.Dialect().URI().DBType
 
@@ -47,7 +47,7 @@ func (*Migrator_202408201846) DoMigration() *migrate.Migration {
 			}
 
 			if dbType == schemas.POSTGRES {
-				return migratePG(engine)
+				return migrateRolePG(engine)
 			}
 
 			return nil
@@ -57,7 +57,7 @@ func (*Migrator_202408201846) DoMigration() *migrate.Migration {
 	return &migration
 }
 
-func (*Migrator_202408201846) migratePG(engine *xorm.Engine) error {
+func migrateRolePG(engine *xorm.Engine) error {
 	tx := engine.NewSession()
 	defer tx.Close()
 
