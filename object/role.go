@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -660,6 +661,10 @@ func buildUserMappedRolesRecord(ctx context.Context, userID string, oldRoles, ne
 	newRolesIds := []string{}
 	for _, role := range newRoles {
 		newRolesIds = append(newRolesIds, role.GetId())
+	}
+
+	if reflect.DeepEqual(oldRolesIds, newRolesIds) {
+		return nil
 	}
 
 	objectMessage := map[string]interface{}{
