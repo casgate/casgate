@@ -83,7 +83,7 @@ func (ldapUser *LdapUser) BuildNameForNewLdapUser() (string, error) {
 	if ldapUser.Email != "" {
 		return ldapUser.Email, nil
 	}
-	return "", errors.New("can't build name for new ldap user")
+	return "", errors.New("failed to identify ldap user. User has empty uid and email")
 }
 
 // GetLocalIDForExistingLdapUser select identification for new user by ldap field value
