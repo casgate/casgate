@@ -1,6 +1,7 @@
 {
   "account": {
     "Failed to add user": "添加用户失败",
+    "Failed to update user": "Failed to update user",
     "Get init score failed, error: %w": "初始化分数失败: %w",
     "Please sign out first": "请先退出登录",
     "The application does not allow to sign up new account": "该应用不允许注册新用户",

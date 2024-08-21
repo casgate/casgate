@@ -17,10 +17,14 @@ package ldap_sync
 import (
 	"errors"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"strconv"
 	"time"
+
+	"github.com/casdoor/casdoor/orm"
 )
+
+const LdapSyncReasonManual = "manual"
+const LdapSyncReasonAuto = "auto"
 
 type LdapSync struct {
 	Id        int       `xorm:"int notnull pk" json:"id"`
@@ -43,9 +47,9 @@ var (
 	LDAPSyncInProgress = errors.New("failed to lock ldap for sync: sync already in progress")
 )
 
-type LdapSyncRepository struct{}
+type LdapSyncLocker struct{}
 
-func (r *LdapSyncRepository) LockLDAPForSync(ldapId string) (int, error) {
+func (r *LdapSyncLocker) LockLDAPForSync(ldapId string) (int, error) {
 	ldapSync := &LdapSync{LdapID: ldapId}
 	exists, err := orm.AppOrmer.Engine.Get(ldapSync)
 	if err != nil {
@@ -58,7 +62,8 @@ func (r *LdapSyncRepository) LockLDAPForSync(ldapId string) (int, error) {
 			LdapSyncStatusOn,
 			time.Now().UTC(),
 			ldapId,
-			time.Now().UTC().Add(-LdapSyncTimeout))
+			time.Now().UTC().Add(-LdapSyncTimeout),
+		)
 		if err != nil {
 			return 0, err
 		}
@@ -78,7 +83,8 @@ func (r *LdapSyncRepository) LockLDAPForSync(ldapId string) (int, error) {
 		ldapId,
 		LdapSyncStatusOn,
 		time.Now().UTC(),
-		time.Now().UTC())
+		time.Now().UTC(),
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -89,12 +95,13 @@ func (r *LdapSyncRepository) LockLDAPForSync(ldapId string) (int, error) {
 	return ldapSync.Id, nil
 }
 
-func (r *LdapSyncRepository) UnlockLDAPForSync(ldapId string) error {
+func (r *LdapSyncLocker) UnlockLDAPForSync(ldapId string) error {
 	_, err := orm.AppOrmer.Engine.Exec(
 		`UPDATE ldap_sync SET status = ?, updated_at = ? WHERE ldap_id = ?`,
 		LdapSyncStatusOff,
 		time.Now().UTC(),
-		ldapId)
+		ldapId,
+	)
 	if err != nil {
 		return err
 	}

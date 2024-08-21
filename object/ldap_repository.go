@@ -16,50 +16,14 @@ package object
 
 import (
 	"fmt"
+
+	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/util"
 )
 
-type AttributeMappingItem struct {
-	UserField string `json:"userField"`
-	Attribute string `json:"attribute"`
-}
-
-type Ldap struct {
-	Id          string `xorm:"varchar(100) notnull pk" json:"id"`
-	Owner       string `xorm:"varchar(100)" json:"owner"`
-	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
-
-	ServerName              string   `xorm:"varchar(100)" json:"serverName"`
-	Host                    string   `xorm:"varchar(100)" json:"host"`
-	Port                    int      `xorm:"int" json:"port"`
-	EnableSsl               bool     `xorm:"bool" json:"enableSsl"`
-	EnableCryptographicAuth bool     `xorm:"bool" json:"enableCryptographicAuth"`
-	Username                string   `xorm:"varchar(100)" json:"username"`
-	Password                string   `xorm:"varchar(100)" json:"password"`
-	BaseDn                  string   `xorm:"varchar(100)" json:"baseDn"`
-	Filter                  string   `xorm:"varchar(200)" json:"filter"`
-	FilterFields            []string `xorm:"varchar(100)" json:"filterFields"`
-
-	EnableRoleMapping bool               `xorm:"bool" json:"enableRoleMapping"`
-	RoleMappingItems  []*RoleMappingItem `xorm:"text" json:"roleMappingItems"`
-
-	EnableCaseInsensitivity bool `xorm:"bool" json:"enableCaseInsensitivity"`
-
-	AutoSync int    `json:"autoSync"`
-	LastSync string `xorm:"varchar(100)" json:"lastSync"`
-
-	Cert       string `xorm:"varchar(100)" json:"cert"`
-	ClientCert string `xorm:"varchar(100)" json:"clientCert"`
-
-	EnableAttributeMapping bool                    `xorm:"bool" json:"enableAttributeMapping"`
-	AttributeMappingItems  []*AttributeMappingItem `xorm:"text" json:"attributeMappingItems"`
-
-	UserMappingStrategy string `xorm:"varchar(50)" json:"userMappingStrategy"`
-}
-
-func AddLdap(ldap *Ldap) (bool, error) {
+func AddLdap(ldap *ldap_sync.Ldap) (bool, error) {
 	if len(ldap.Id) == 0 {
 		ldap.Id = util.GenerateId()
 	}
@@ -76,11 +40,12 @@ func AddLdap(ldap *Ldap) (bool, error) {
 	return affected != 0, nil
 }
 
-func CheckLdapExist(ldap *Ldap) (bool, error) {
-	var result []*Ldap
-	err := orm.AppOrmer.Engine.Find(&result, &Ldap{
-		Id: ldap.Id,
-	})
+func CheckLdapExist(ldap *ldap_sync.Ldap) (bool, error) {
+	var result []*ldap_sync.Ldap
+	err := orm.AppOrmer.Engine.Find(
+		&result, &ldap_sync.Ldap{
+			Id: ldap.Id,
+		})
 	if err != nil {
 		return false, err
 	}
@@ -92,9 +57,9 @@ func CheckLdapExist(ldap *Ldap) (bool, error) {
 	return false, nil
 }
 
-func GetLdaps(owner string) ([]*Ldap, error) {
-	var ldaps []*Ldap
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&ldaps, &Ldap{Owner: owner})
+func GetLdaps(owner string) ([]*ldap_sync.Ldap, error) {
+	var ldaps []*ldap_sync.Ldap
+	err := orm.AppOrmer.Engine.Desc("created_time").Find(&ldaps, &ldap_sync.Ldap{Owner: owner})
 	if err != nil {
 		return ldaps, err
 	}
@@ -102,16 +67,16 @@ func GetLdaps(owner string) ([]*Ldap, error) {
 	return ldaps, nil
 }
 
-func GetLdap(id string) (*Ldap, error) {
+func GetLdap(id string) (*ldap_sync.Ldap, error) {
 	return getLdap(id)
 }
 
-func getLdap(id string) (*Ldap, error) {
+func getLdap(id string) (*ldap_sync.Ldap, error) {
 	if util.IsStringsEmpty(id) {
 		return nil, nil
 	}
 
-	ldap := Ldap{Id: id}
+	ldap := ldap_sync.Ldap{Id: id}
 	existed, err := orm.AppOrmer.Engine.Get(&ldap)
 	if err != nil {
 		return &ldap, nil
@@ -124,7 +89,7 @@ func getLdap(id string) (*Ldap, error) {
 	}
 }
 
-func GetMaskedLdap(ldap *Ldap, errs ...error) (*Ldap, error) {
+func GetMaskedLdap(ldap *ldap_sync.Ldap, errs ...error) (*ldap_sync.Ldap, error) {
 	if len(errs) > 0 && errs[0] != nil {
 		return nil, errs[0]
 	}
@@ -140,7 +105,7 @@ func GetMaskedLdap(ldap *Ldap, errs ...error) (*Ldap, error) {
 	return ldap, nil
 }
 
-func GetMaskedLdaps(ldaps []*Ldap, errs ...error) ([]*Ldap, error) {
+func GetMaskedLdaps(ldaps []*ldap_sync.Ldap, errs ...error) ([]*ldap_sync.Ldap, error) {
 	if len(errs) > 0 && errs[0] != nil {
 		return nil, errs[0]
 	}
@@ -155,8 +120,8 @@ func GetMaskedLdaps(ldaps []*Ldap, errs ...error) ([]*Ldap, error) {
 	return ldaps, nil
 }
 
-func UpdateLdap(ldap *Ldap) (bool, error) {
-	var l *Ldap
+func UpdateLdap(ldap *ldap_sync.Ldap) (bool, error) {
+	var l *ldap_sync.Ldap
 	var err error
 	if l, err = GetLdap(ldap.Id); err != nil {
 		return false, nil
@@ -179,8 +144,8 @@ func UpdateLdap(ldap *Ldap) (bool, error) {
 	return affected != 0, nil
 }
 
-func DeleteLdap(ldap *Ldap) (bool, error) {
-	affected, err := orm.AppOrmer.Engine.ID(ldap.Id).Delete(&Ldap{})
+func DeleteLdap(ldap *ldap_sync.Ldap) (bool, error) {
+	affected, err := orm.AppOrmer.Engine.ID(ldap.Id).Delete(&ldap_sync.Ldap{})
 	if err != nil {
 		return false, err
 	}
@@ -188,8 +153,8 @@ func DeleteLdap(ldap *Ldap) (bool, error) {
 	return affected != 0, nil
 }
 
-func GetLdapPassword(ldap Ldap) (string, error) {
-	ldapFromDB := Ldap{
+func GetLdapPassword(ldap ldap_sync.Ldap) (string, error) {
+	ldapFromDB := ldap_sync.Ldap{
 		Owner:    ldap.Owner,
 		Host:     ldap.Host,
 		Port:     ldap.Port,
@@ -211,6 +176,6 @@ func GetLdapPassword(ldap Ldap) (string, error) {
 type LdapRepository struct {
 }
 
-func (r *LdapRepository) GetLdap(id string) (*Ldap, error) {
+func (r *LdapRepository) GetLdap(id string) (*ldap_sync.Ldap, error) {
 	return getLdap(id)
 }

@@ -1,5 +1,7 @@
 package object
 
+import "github.com/casdoor/casdoor/ldap_sync"
+
 func mapProvidersToNames(providers []*ProviderItem) []string {
 	providerNames := make([]string, 0, len(providers))
 	for _, provider := range providers {
@@ -12,7 +14,7 @@ func mapProvidersToNames(providers []*ProviderItem) []string {
 // IsRoleMappingsEqual compares two slices of RoleMappingItem for equality.
 // Returns true if both slices have the same length and their corresponding elements are equal.
 // The elements are compared based on their Attribute, Role, and Values fields.
-func IsRoleMappingsEqual(slice1, slice2 []*RoleMappingItem) bool {
+func IsRoleMappingsEqual(slice1, slice2 []*ldap_sync.RoleMappingItem) bool {
 	if len(slice1) != len(slice2) {
 		return false
 	}

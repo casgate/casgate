@@ -16,11 +16,13 @@ package object
 
 import (
 	"context"
-	"github.com/casdoor/casdoor/orm"
-	"github.com/casdoor/casdoor/util/logger"
+
 	"github.com/xorm-io/xorm"
 	"github.com/xorm-io/xorm/migrate"
 	"github.com/xorm-io/xorm/schemas"
+
+	"github.com/casdoor/casdoor/orm"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 type Migrator_202408201846 struct{}

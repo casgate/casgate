@@ -21,6 +21,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/casdoor/casdoor/cert"
+	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/orm"
 
 	bCtx "github.com/beego/beego/context"
@@ -44,25 +46,25 @@ type Provider struct {
 	Name        string `xorm:"varchar(100) notnull pk unique" json:"name"`
 	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
 
-	DisplayName       string              `xorm:"varchar(100)" json:"displayName"`
-	Category          string              `xorm:"varchar(100)" json:"category"`
-	Type              string              `xorm:"varchar(100)" json:"type"`
-	SubType           string              `xorm:"varchar(100)" json:"subType"`
-	Method            string              `xorm:"varchar(100)" json:"method"`
-	ClientId          string              `xorm:"varchar(200)" json:"clientId"`
-	ClientSecret      string              `xorm:"varchar(2000)" json:"clientSecret"`
-	ClientId2         string              `xorm:"varchar(100)" json:"clientId2"`
-	ClientSecret2     string              `xorm:"varchar(100)" json:"clientSecret2"`
-	Cert              string              `xorm:"varchar(100)" json:"cert"`
-	CustomConfUrl     string              `xorm:"varchar(200)" json:"customConfUrl"`
-	CustomAuthUrl     string              `xorm:"varchar(200)" json:"customAuthUrl"`
-	CustomTokenUrl    string              `xorm:"varchar(200)" json:"customTokenUrl"`
-	CustomUserInfoUrl string              `xorm:"varchar(200)" json:"customUserInfoUrl"`
-	CustomLogo        string              `xorm:"varchar(200)" json:"customLogo"`
-	Scopes            string              `xorm:"varchar(100)" json:"scopes"`
-	UserMapping       map[string][]string `xorm:"varchar(500)" json:"userMapping"`
-	EnableRoleMapping bool                `xorm:"bool" json:"enableRoleMapping"`
-	RoleMappingItems  []*RoleMappingItem  `xorm:"text" json:"roleMappingItems"`
+	DisplayName       string                       `xorm:"varchar(100)" json:"displayName"`
+	Category          string                       `xorm:"varchar(100)" json:"category"`
+	Type              string                       `xorm:"varchar(100)" json:"type"`
+	SubType           string                       `xorm:"varchar(100)" json:"subType"`
+	Method            string                       `xorm:"varchar(100)" json:"method"`
+	ClientId          string                       `xorm:"varchar(200)" json:"clientId"`
+	ClientSecret      string                       `xorm:"varchar(2000)" json:"clientSecret"`
+	ClientId2         string                       `xorm:"varchar(100)" json:"clientId2"`
+	ClientSecret2     string                       `xorm:"varchar(100)" json:"clientSecret2"`
+	Cert              string                       `xorm:"varchar(100)" json:"cert"`
+	CustomConfUrl     string                       `xorm:"varchar(200)" json:"customConfUrl"`
+	CustomAuthUrl     string                       `xorm:"varchar(200)" json:"customAuthUrl"`
+	CustomTokenUrl    string                       `xorm:"varchar(200)" json:"customTokenUrl"`
+	CustomUserInfoUrl string                       `xorm:"varchar(200)" json:"customUserInfoUrl"`
+	CustomLogo        string                       `xorm:"varchar(200)" json:"customLogo"`
+	Scopes            string                       `xorm:"varchar(100)" json:"scopes"`
+	UserMapping       map[string][]string          `xorm:"varchar(500)" json:"userMapping"`
+	EnableRoleMapping bool                         `xorm:"bool" json:"enableRoleMapping"`
+	RoleMappingItems  []*ldap_sync.RoleMappingItem `xorm:"text" json:"roleMappingItems"`
 
 	Host          string `xorm:"varchar(100)" json:"host"`
 	Port          int    `json:"port"`
@@ -98,12 +100,6 @@ type Provider struct {
 	SingleLogoutServiceUrl string `xorm:"varchar(255)" json:"singleLogoutServiceUrl"`
 
 	RemoveFromApps bool `xorm:"-" json:"removeFromApps"`
-}
-
-type RoleMappingItem struct {
-	Attribute string   `json:"attribute"`
-	Values    []string `json:"values"`
-	Role      string   `json:"role"`
 }
 
 func GetMaskedProvider(provider *Provider, isMaskEnabled bool) *Provider {
@@ -412,7 +408,7 @@ func GetProviderHttpClient(providerInfo idp.ProviderInfo) (*http.Client, error) 
 	if (strings.HasPrefix(providerInfo.ConfURL, "https://") ||
 		strings.HasPrefix(providerInfo.TokenURL, "https://")) &&
 		providerInfo.Cert != "" {
-		tlsConf, err := GetTlsConfigForCert(providerInfo.Cert)
+		tlsConf, err := cert.GetTlsConfigForCert(providerInfo.Cert)
 		if err != nil {
 			return nil, err
 		}

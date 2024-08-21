@@ -15,43 +15,14 @@
 package object
 
 import (
-	"crypto/tls"
-	"crypto/x509"
-	"errors"
-	"fmt"
-
 	"github.com/xorm-io/core"
 
+	casdoorcert "github.com/casdoor/casdoor/cert"
 	"github.com/casdoor/casdoor/orm"
 	"github.com/casdoor/casdoor/util"
 )
 
-const (
-	scopeCertJWT    = "JWT"
-	scopeCertCACert = "CA Certificate"
-	scopeClientCert = "Client Certificate"
-)
-
-type Cert struct {
-	Owner       string `xorm:"varchar(100) notnull pk" json:"owner"`
-	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
-	CreatedTime string `xorm:"varchar(100)" json:"createdTime"`
-
-	DisplayName     string `xorm:"varchar(100)" json:"displayName"`
-	Scope           string `xorm:"varchar(100)" json:"scope"`
-	Type            string `xorm:"varchar(100)" json:"type"`
-	CryptoAlgorithm string `xorm:"varchar(100)" json:"cryptoAlgorithm"`
-	BitSize         int    `json:"bitSize"`
-	ExpireInYears   int    `json:"expireInYears"`
-
-	Certificate string `xorm:"mediumtext" json:"certificate"`
-	PrivateKey  string `xorm:"mediumtext" json:"privateKey"`
-}
-
-var ErrCertDoesNotExist = errors.New(fmt.Sprintf("certificate does not exist"))
-var ErrCertInvalidScope = errors.New(fmt.Sprintf("invalid certificate scope"))
-
-func GetMaskedCert(cert *Cert) *Cert {
+func GetMaskedCert(cert *casdoorcert.Cert) *casdoorcert.Cert {
 	if cert == nil {
 		return nil
 	}
@@ -63,7 +34,7 @@ func GetMaskedCert(cert *Cert) *Cert {
 	return cert
 }
 
-func GetMaskedCerts(certs []*Cert, err error) ([]*Cert, error) {
+func GetMaskedCerts(certs []*casdoorcert.Cert, err error) ([]*casdoorcert.Cert, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -76,12 +47,15 @@ func GetMaskedCerts(certs []*Cert, err error) ([]*Cert, error) {
 
 func GetCertCount(owner, field, value string) (int64, error) {
 	session := orm.GetSession("", -1, -1, field, value, "", "")
-	return session.Where("owner = ? or owner = ? ", "admin", owner).Count(&Cert{})
+	return session.Where("owner = ? or owner = ? ", "admin", owner).Count(&casdoorcert.Cert{})
 }
 
-func GetCerts(owner string) ([]*Cert, error) {
-	certs := []*Cert{}
-	err := orm.AppOrmer.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(&certs, &Cert{})
+func GetCerts(owner string) ([]*casdoorcert.Cert, error) {
+	certs := []*casdoorcert.Cert{}
+	err := orm.AppOrmer.Engine.Where("owner = ? or owner = ? ", "admin", owner).Desc("created_time").Find(
+		&certs,
+		&casdoorcert.Cert{},
+	)
 	if err != nil {
 		return certs, err
 	}
@@ -89,8 +63,12 @@ func GetCerts(owner string) ([]*Cert, error) {
 	return certs, nil
 }
 
-func GetPaginationCerts(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Cert, error) {
-	certs := []*Cert{}
+func GetPaginationCerts(
+	owner string,
+	offset, limit int,
+	field, value, sortField, sortOrder string,
+) ([]*casdoorcert.Cert, error) {
+	certs := []*casdoorcert.Cert{}
 	session := orm.GetSession("", offset, limit, field, value, sortField, sortOrder)
 	err := session.Where("owner = ? or owner = ? ", "admin", owner).Find(&certs)
 	if err != nil {
@@ -102,11 +80,15 @@ func GetPaginationCerts(owner string, offset, limit int, field, value, sortField
 
 func GetGlobalCertsCount(field, value string) (int64, error) {
 	session := orm.GetSession("", -1, -1, field, value, "", "")
-	return session.Count(&Cert{})
+	return session.Count(&casdoorcert.Cert{})
 }
 
-func GetPaginationGlobalCerts(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Cert, error) {
-	certs := []*Cert{}
+func GetPaginationGlobalCerts(
+	owner string,
+	offset, limit int,
+	field, value, sortField, sortOrder string,
+) ([]*casdoorcert.Cert, error) {
+	certs := []*casdoorcert.Cert{}
 	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&certs)
 	if err != nil {
@@ -116,12 +98,12 @@ func GetPaginationGlobalCerts(owner string, offset, limit int, field, value, sor
 	return certs, nil
 }
 
-func getCert(owner string, name string) (*Cert, error) {
+func getCert(owner string, name string) (*casdoorcert.Cert, error) {
 	if owner == "" || name == "" {
 		return nil, nil
 	}
 
-	cert := Cert{Owner: owner, Name: name}
+	cert := casdoorcert.Cert{Owner: owner, Name: name}
 	existed, err := orm.AppOrmer.Engine.Get(&cert)
 	if err != nil {
 		return &cert, err
@@ -134,42 +116,7 @@ func getCert(owner string, name string) (*Cert, error) {
 	}
 }
 
-func getCertByName(name string) (*Cert, error) {
-	if name == "" {
-		return nil, nil
-	}
-
-	cert := Cert{Name: name}
-	existed, err := orm.AppOrmer.Engine.Get(&cert)
-	if err != nil {
-		return &cert, nil
-	}
-
-	if existed {
-		return &cert, nil
-	} else {
-		return nil, nil
-	}
-}
-
-func GetTlsConfigForCert(name string) (*tls.Config, error) {
-	cert, err := getCertByName(name)
-	if err != nil {
-		return nil, err
-	}
-	if cert == nil {
-		return nil, ErrCertDoesNotExist
-	}
-
-	ca := x509.NewCertPool()
-	if ok := ca.AppendCertsFromPEM([]byte(cert.Certificate)); !ok {
-		return nil, ErrX509CertsPEMParse
-	}
-
-	return &tls.Config{RootCAs: ca}, nil
-}
-
-func GetCert(id string) (*Cert, error) {
+func GetCert(id string) (*casdoorcert.Cert, error) {
 	owner, name, err := util.GetOwnerAndNameFromId(id)
 	if err != nil {
 		return nil, err
@@ -177,7 +124,7 @@ func GetCert(id string) (*Cert, error) {
 	return getCert(owner, name)
 }
 
-func UpdateCert(id string, cert *Cert) (bool, error) {
+func UpdateCert(id string, cert *casdoorcert.Cert) (bool, error) {
 	owner, name, err := util.GetOwnerAndNameFromId(id)
 	if err != nil {
 		return false, err
@@ -206,8 +153,8 @@ func UpdateCert(id string, cert *Cert) (bool, error) {
 	return affected != 0, nil
 }
 
-func AddCert(cert *Cert) (bool, error) {
-	if cert.Scope == scopeCertJWT && (cert.Certificate == "" || cert.PrivateKey == "") {
+func AddCert(cert *casdoorcert.Cert) (bool, error) {
+	if cert.Scope == casdoorcert.ScopeCertJWT && (cert.Certificate == "" || cert.PrivateKey == "") {
 		certificate, privateKey := generateRsaKeys(cert.BitSize, cert.ExpireInYears, cert.Name, cert.Owner)
 		cert.Certificate = certificate
 		cert.PrivateKey = privateKey
@@ -221,8 +168,8 @@ func AddCert(cert *Cert) (bool, error) {
 	return affected != 0, nil
 }
 
-func DeleteCert(cert *Cert) (bool, error) {
-	affected, err := orm.AppOrmer.Engine.ID(core.PK{cert.Owner, cert.Name}).Delete(&Cert{})
+func DeleteCert(cert *casdoorcert.Cert) (bool, error) {
+	affected, err := orm.AppOrmer.Engine.ID(core.PK{cert.Owner, cert.Name}).Delete(&casdoorcert.Cert{})
 	if err != nil {
 		return false, err
 	}
@@ -230,19 +177,15 @@ func DeleteCert(cert *Cert) (bool, error) {
 	return affected != 0, nil
 }
 
-func (p *Cert) GetId() string {
-	return fmt.Sprintf("%s/%s", p.Owner, p.Name)
-}
-
-func getCertByApplication(application *Application) (*Cert, error) {
+func getCertByApplication(application *Application) (*casdoorcert.Cert, error) {
 	if application.Cert != "" {
-		return getCertByName(application.Cert)
+		return casdoorcert.GetCertByName(application.Cert)
 	} else {
 		return GetDefaultCert()
 	}
 }
 
-func GetDefaultCert() (*Cert, error) {
+func GetDefaultCert() (*casdoorcert.Cert, error) {
 	return getCert("admin", "cert-built-in")
 }
 

@@ -1,6 +1,7 @@
 {
   "account": {
     "Failed to add user": "Échec d'ajout d'utilisateur",
+    "Failed to update user": "Failed to update user",
     "Get init score failed, error: %w": "Obtention du score initiale échouée, erreur : %w",
     "Please sign out first": "Veuillez vous déconnecter en premier",
     "The application does not allow to sign up new account": "L'application ne permet pas de créer un nouveau compte",

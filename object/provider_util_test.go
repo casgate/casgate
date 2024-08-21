@@ -1,6 +1,10 @@
 package object
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/casdoor/casdoor/ldap_sync"
+)
 
 func TestCompareStringSlices(t *testing.T) {
 	tests := []struct {
@@ -28,49 +32,49 @@ func TestCompareStringSlices(t *testing.T) {
 func TestIsRoleMappingsEqual(t *testing.T) {
 	tests := []struct {
 		name   string
-		slice1 []*RoleMappingItem
-		slice2 []*RoleMappingItem
+		slice1 []*ldap_sync.RoleMappingItem
+		slice2 []*ldap_sync.RoleMappingItem
 		want   bool
 	}{
 		{
-			"both slices are empty", 
-			[]*RoleMappingItem{}, 
-			[]*RoleMappingItem{}, 
+			"both slices are empty",
+			[]*ldap_sync.RoleMappingItem{},
+			[]*ldap_sync.RoleMappingItem{},
 			true,
 		},
 		{
-			"one slice is empty", 
-			[]*RoleMappingItem{}, 
-			[]*RoleMappingItem{{"attr1", []string{"val1"}, "role1"}}, 
+			"one slice is empty",
+			[]*ldap_sync.RoleMappingItem{},
+			[]*ldap_sync.RoleMappingItem{{"attr1", []string{"val1"}, "role1"}},
 			false,
 		},
 		{
-			"slices have different lengths", 
-			[]*RoleMappingItem{{"attr1", []string{"val1"}, "role1"}}, 
-			[]*RoleMappingItem{}, false,
+			"slices have different lengths",
+			[]*ldap_sync.RoleMappingItem{{"attr1", []string{"val1"}, "role1"}},
+			[]*ldap_sync.RoleMappingItem{}, false,
 		},
 		{
-			"slices are equal", 
-			[]*RoleMappingItem{{"attr1", []string{"val1"}, "role1"}}, 
-			[]*RoleMappingItem{{"attr1", []string{"val1"}, "role1"}}, 
+			"slices are equal",
+			[]*ldap_sync.RoleMappingItem{{"attr1", []string{"val1"}, "role1"}},
+			[]*ldap_sync.RoleMappingItem{{"attr1", []string{"val1"}, "role1"}},
 			true,
 		},
 		{
-			"slices are not equal by attribute", 
-			[]*RoleMappingItem{{"attr1", []string{"val1"}, "role1"}}, 
-			[]*RoleMappingItem{{"attr2", []string{"val1"}, "role1"}}, 
+			"slices are not equal by attribute",
+			[]*ldap_sync.RoleMappingItem{{"attr1", []string{"val1"}, "role1"}},
+			[]*ldap_sync.RoleMappingItem{{"attr2", []string{"val1"}, "role1"}},
 			false,
 		},
 		{
-			"slices are not equal by values", 
-			[]*RoleMappingItem{{"attr1", []string{"val1"}, "role1"}}, 
-			[]*RoleMappingItem{{"attr1", []string{"val2"}, "role1"}}, 
+			"slices are not equal by values",
+			[]*ldap_sync.RoleMappingItem{{"attr1", []string{"val1"}, "role1"}},
+			[]*ldap_sync.RoleMappingItem{{"attr1", []string{"val2"}, "role1"}},
 			false,
 		},
 		{
-			"slices are not equal by role", 
-			[]*RoleMappingItem{{"attr1", []string{"val1"}, "role1"}}, 
-			[]*RoleMappingItem{{"attr1", []string{"val1"}, "role2"}}, 
+			"slices are not equal by role",
+			[]*ldap_sync.RoleMappingItem{{"attr1", []string{"val1"}, "role1"}},
+			[]*ldap_sync.RoleMappingItem{{"attr1", []string{"val1"}, "role2"}},
 			false,
 		},
 	}

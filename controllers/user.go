@@ -177,7 +177,7 @@ func (c *ApiController) GetUser() {
 	case phone != "":
 		user, err = object.GetUserByPhone(request.Owner, phone)
 	case userId != "":
-		user, err = object.GetUserByUserId(request.Owner, userId)
+		user, err = object.GetUserForGetUserHandler(request.Owner, userId)
 	default:
 		user, err = object.GetUser(request.Id)
 	}

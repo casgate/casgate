@@ -18,8 +18,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/casdoor/casdoor/util"
 	"github.com/golang-jwt/jwt/v4"
+
+	"github.com/casdoor/casdoor/cert"
+	"github.com/casdoor/casdoor/util"
 )
 
 type Claims struct {
@@ -397,7 +399,7 @@ func generateJwtToken(application *Application, user *User, nonce string, scope 
 	return tokenString, refreshTokenString, name, err
 }
 
-func ParseJwtToken(token string, cert *Cert) (*Claims, error) {
+func ParseJwtToken(token string, cert *cert.Cert) (*Claims, error) {
 	t, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

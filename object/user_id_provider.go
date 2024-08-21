@@ -2,6 +2,8 @@ package object
 
 import (
 	"context"
+
+	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/orm"
 )
 
@@ -21,7 +23,7 @@ type UserIdProvider struct {
 func GetGlobalUserIdProviders() ([]*UserIdProvider, error) {
 	var userIdProviders []*UserIdProvider
 	var providers []*Provider
-	var ldaps []*Ldap
+	var ldaps []*ldap_sync.Ldap
 
 	err := orm.AppOrmer.Engine.Asc("last_sign_in_time").Find(&userIdProviders, &UserIdProvider{})
 	if err != nil {
@@ -33,7 +35,7 @@ func GetGlobalUserIdProviders() ([]*UserIdProvider, error) {
 		return userIdProviders, err
 	}
 
-	err = orm.AppOrmer.Engine.Find(&ldaps, &Ldap{})
+	err = orm.AppOrmer.Engine.Find(&ldaps, &ldap_sync.Ldap{})
 	if err != nil {
 		return userIdProviders, err
 	}
@@ -57,7 +59,7 @@ func GetGlobalUserIdProviders() ([]*UserIdProvider, error) {
 func GetUserIdProviders(owner string) ([]*UserIdProvider, error) {
 	var userIdProviders []*UserIdProvider
 	var providers []*Provider
-	var ldaps []*Ldap
+	var ldaps []*ldap_sync.Ldap
 
 	err := orm.AppOrmer.Engine.Where("owner = ? or owner = ?", "admin", owner).Asc("last_sign_in_time").Find(&userIdProviders, &UserIdProvider{})
 	if err != nil {
@@ -69,7 +71,7 @@ func GetUserIdProviders(owner string) ([]*UserIdProvider, error) {
 		return userIdProviders, err
 	}
 
-	err = orm.AppOrmer.Engine.Find(&ldaps, &Ldap{})
+	err = orm.AppOrmer.Engine.Find(&ldaps, &ldap_sync.Ldap{})
 	if err != nil {
 		return userIdProviders, err
 	}
