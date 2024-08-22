@@ -25,6 +25,7 @@ export function getOrganizations(owner, organizationName = "", page = "", pageSi
 }
 
 export function getOrganization(owner, name) {
+  name = name.replace("%23", "#");
   return fetch(`${Setting.ServerUrl}/api/get-organization?id=${owner}/${encodeURIComponent(name)}`, {
     method: "GET",
     credentials: "include",
