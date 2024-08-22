@@ -489,7 +489,7 @@ func (c *ApiController) Login() {
 				}
 
 				if user == nil {
-					mappingRb.AddReason("sign in via ldap")
+					mappingRb.AddReason("sign in via ldap, ldapID: " + authForm.LdapId)
 					_, err = object.SyncLdapUserOnSignIn(
 						goCtx,
 						authForm.Organization,
