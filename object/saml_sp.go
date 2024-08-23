@@ -33,7 +33,6 @@ import (
 	"github.com/casdoor/casdoor/cert"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
-	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/util/logger"
 )
 
