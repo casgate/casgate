@@ -16,9 +16,7 @@ package controllers
 import (
 	"encoding/json"
 
-	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util"
 )
 
 // GetGroups
@@ -32,44 +30,26 @@ func (c *ApiController) GetGroups() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
 	withTree := c.Input().Get("withTree")
 
-	if limit == "" || page == "" {
-		groups, err := object.GetGroups(owner)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		} else {
-			if withTree == "true" {
-				c.ResponseOk(object.ConvertToTreeData(groups, owner))
-				return
-			}
-			c.ResponseOk(groups)
-		}
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetGroupCount(owner, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		groups, err := object.GetPaginationGroups(owner, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		} else {
-			c.ResponseOk(groups, paginator.Nums())
-		}
+	paginator, err := object.GetPaginator(c.Ctx, request.Owner, request.Field, request.Value, request.Limit, object.Group{})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	groups, err := object.GetPaginationGroups(request.Owner, paginator.Offset(), request.Limit,
+		request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseDBError(err)
+		return
+	}
+
+	if withTree == "true" {
+		groups = object.ConvertToTreeData(groups, request.Owner)
+	}
+
+	c.ResponseOk(groups, paginator.Nums())
 }
 
 // GetGroup
@@ -145,7 +125,7 @@ func (c *ApiController) AddGroup() {
 		return
 	}
 	c.ValidateOrganization(group.Owner)
-	
+
 	c.Data["json"] = wrapActionResponse(object.AddGroup(&group))
 	c.ServeJSON()
 }

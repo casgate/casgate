@@ -20,11 +20,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
+	"github.com/xorm-io/builder"
 )
 
 // GetProviders
@@ -38,9 +39,6 @@ func (c *ApiController) GetProviders() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-
 	if !c.IsGlobalAdmin() && request.Owner == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
@@ -51,32 +49,22 @@ func (c *ApiController) GetProviders() {
 		return
 	}
 
-	if limit == "" || page == "" {
-		providers, err := object.GetProviders(request.Owner)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(object.GetMaskedProviders(providers, isMaskEnabled))
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetProviderCount(request.Owner, request.Field, request.Value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		paginationProviders, err := object.GetPaginationProviders(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		providers := object.GetMaskedProviders(paginationProviders, isMaskEnabled)
-		c.ResponseOk(providers, paginator.Nums())
+	paginator, err := object.GetPaginator(c.Ctx, "", request.Field, request.Value, request.Limit,
+		object.Provider{}, builder.Eq{"owner": []string{"admin", request.Owner}})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	paginationProviders, err := object.GetPaginationProviders(request.Owner, paginator.Offset(), request.Limit,
+		request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	providers := object.GetMaskedProviders(paginationProviders, isMaskEnabled)
+	c.ResponseOk(providers, paginator.Nums())
 }
 
 // GetGlobalProviders
@@ -89,40 +77,25 @@ func (c *ApiController) GetGlobalProviders() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-
 	ok, isMaskEnabled := c.IsMaskedEnabled()
 	if !ok {
 		return
 	}
 
-	if limit == "" || page == "" {
-		globalProviders, err := object.GetGlobalProviders()
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(object.GetMaskedProviders(globalProviders, isMaskEnabled))
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetGlobalProviderCount(request.Field, request.Value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		paginationGlobalProviders, err := object.GetPaginationGlobalProviders(paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		providers := object.GetMaskedProviders(paginationGlobalProviders, isMaskEnabled)
-		c.ResponseOk(providers, paginator.Nums())
+	paginator, err := object.GetPaginator(c.Ctx, "", request.Field, request.Value, request.Limit, object.Provider{})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	paginationGlobalProviders, err := object.GetPaginationGlobalProviders(paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	providers := object.GetMaskedProviders(paginationGlobalProviders, isMaskEnabled)
+	c.ResponseOk(providers, paginator.Nums())
 }
 
 // GetProvider
@@ -166,26 +139,56 @@ func (c *ApiController) UpdateProvider() {
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
 
+	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeProvider)
+	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
+
 	var provider object.Provider
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &provider)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
+
+	logger.SetItem(goCtx, "obj", provider.GetId())
+
 	c.ValidateOrganization(provider.Owner)
+
+	c.validateProviderURLs(provider)
 
 	for _, roleMappingItem := range provider.RoleMappingItems {
 		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
+			logger.LogWithInfo(
+				goCtx,
+				logger.LogMsgDetailed{
+					"error": "missing parameter",
+				},
+				logger.OperationNameProviderUpdate,
+				logger.OperationResultFailure,
+			)
 			c.ResponseError(c.T("general:Missing parameter"))
 			return
 		}
 	}
 
-	affected, err := object.UpdateProvider(id, &provider)
+	affected, err := object.UpdateProvider(c.getRequestCtx(), id, &provider)
 	if err != nil {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": "missing parameter",
+			},
+			logger.OperationNameProviderUpdate,
+			logger.OperationResultFailure,
+		)
 		detail := fmt.Sprintf("Update provider error: Owner: %s, Name: %s, Type: %s", provider.Owner, provider.Name, provider.Type)
 		record.AddReason(detail)
 	} else {
+		logger.LogWithInfo(
+			goCtx,
+			"",
+			logger.OperationNameProviderUpdate,
+			logger.OperationResultSuccess,
+		)
 		record.AddReason("Update provider success")
 	}
 
@@ -202,26 +205,82 @@ func (c *ApiController) UpdateProvider() {
 // @router /add-provider [post]
 func (c *ApiController) AddProvider() {
 	var provider object.Provider
+
+	ctx := c.getRequestCtx()
+
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeProvider)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
+
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &provider)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
 
+	logger.SetItem(ctx, "obj", provider.GetId())
+
 	c.ValidateOrganization(provider.Owner)
+
+	c.validateProviderURLs(provider)
 
 	count, err := object.GetProviderCount("", "", "")
 	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperatoinNameAddProvider,
+			logger.OperationResultFailure,
+		)
+
 		c.ResponseError(err.Error())
 		return
 	}
 
 	if err := checkQuotaForProvider(int(count)); err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperatoinNameAddProvider,
+			logger.OperationResultFailure,
+		)
+
 		c.ResponseError(err.Error())
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.AddProvider(&provider))
+	affected, err := object.AddProvider(c.getRequestCtx(), &provider)
+	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperatoinNameAddProvider,
+			logger.OperationResultFailure,
+		)
+	} else if !affected {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "not affected",
+			},
+			logger.OperatoinNameAddProvider,
+			logger.OperationResultFailure,
+		)
+	} else {
+		logger.LogWithInfo(
+			ctx,
+			"successfuly added provider",
+			logger.OperatoinNameAddProvider,
+			logger.OperationResultSuccess,
+		)
+	}
+
+	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 }
 
@@ -330,4 +389,26 @@ func (c *ApiController) TestProviderConnection() {
 		return
 	}
 	c.ResponseOk()
+}
+
+func (c *ApiController) validateProviderURLs(provider object.Provider) {
+	fieldErrMap := map[string]string{
+		provider.Domain:                 fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:Domain")),
+		provider.CustomConfUrl:          fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomConfUrl")),
+		provider.CustomAuthUrl:          fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomAuthUrl")),
+		provider.CustomTokenUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomTokenUrl")),
+		provider.CustomUserInfoUrl:      fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomUserInfoUrl")),
+		provider.CustomLogo:             fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:CustomLogo")),
+		provider.IssuerUrl:              fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:IssuerUrl")),
+		provider.BaseHostUrl:            fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:BaseHostUrl")),
+		provider.ProviderUrl:            fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:ProviderUrl")),
+		provider.SingleLogoutServiceUrl: fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("provider:SingleLogoutServiceUrl")),
+	}
+
+	for field, err := range fieldErrMap {
+		if field != "" && !util.IsURLValid(field) {
+			c.ResponseError(err)
+			return
+		}
+	}
 }

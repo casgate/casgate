@@ -3,14 +3,14 @@ package role_mapper
 import (
 	"fmt"
 
-	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/ldap_sync"
 )
 
 type RoleMapper interface {
 	GetRoles() []string
 }
 
-func NewRoleMapper(category string, rules []*object.RoleMappingItem, data map[string]interface{}) (RoleMapper, error) {
+func NewRoleMapper(category string, rules []*ldap_sync.RoleMappingItem, data map[string]interface{}) (RoleMapper, error) {
 	switch category {
 	case "OAuth":
 		return NewOAuthMapper(rules, data)

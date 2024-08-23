@@ -16,9 +16,9 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
-	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 )
@@ -35,58 +35,20 @@ func (c *ApiController) GetOrganizations() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-	organizationName := c.Input().Get("organizationName")
-
-	isGlobalAdmin := c.IsGlobalAdmin()
-	if limit == "" || page == "" {
-		var maskedOrganizations []*object.Organization
-		var err error
-
-		if isGlobalAdmin {
-			maskedOrganizations, err = object.GetMaskedOrganizations(object.GetOrganizations(owner))
-		} else {
-			maskedOrganizations, err = object.GetMaskedOrganizations(object.GetOrganizations(owner, c.getCurrentUser().Owner))
-		}
-
-		if err != nil {
-			c.ResponseInternalServerError(err.Error())
-			return
-		}
-
-		c.ResponseOk(maskedOrganizations)
-	} else {
-		if !isGlobalAdmin {
-			maskedOrganizations, err := object.GetMaskedOrganizations(object.GetOrganizations(owner, c.getCurrentUser().Owner))
-			if err != nil {
-				c.ResponseInternalServerError(err.Error())
-				return
-			}
-			c.ResponseOk(maskedOrganizations)
-		} else {
-			limit := util.ParseInt(limit)
-			count, err := object.GetOrganizationCount(owner, field, value)
-			if err != nil {
-				c.ResponseInternalServerError(err.Error())
-				return
-			}
-
-			paginator := pagination.SetPaginator(c.Ctx, limit, count)
-			organizations, err := object.GetMaskedOrganizations(object.GetPaginationOrganizations(owner, organizationName, paginator.Offset(), limit, field, value, sortField, sortOrder))
-			if err != nil {
-				c.ResponseInternalServerError(err.Error())
-				return
-			}
-
-			c.ResponseOk(organizations, paginator.Nums())
-		}
+	paginator, err := object.GetPaginator(c.Ctx, "admin", request.Field, request.Value, request.Limit, object.Organization{Name: request.Organization})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	maskedOrganizations, err := object.GetMaskedOrganizations(
+		object.GetPaginationOrganizations("admin", request.Organization, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder))
+	if err != nil {
+		c.ResponseDBError(err)
+		return
+	}
+
+	c.ResponseOk(maskedOrganizations, paginator.Nums())
 }
 
 // GetOrganization ...
@@ -127,7 +89,7 @@ func (c *ApiController) GetOrganization() {
 func (c *ApiController) UpdateOrganization() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
 	if err != nil {
@@ -140,6 +102,8 @@ func (c *ApiController) UpdateOrganization() {
 		c.ResponseForbidden(c.T("auth:Forbidden operation"))
 		return
 	}
+
+	c.validateOrganizationURLs(organization)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateOrganization(c.Ctx.Request.Context(), request.Id, &organization, c.GetAcceptLanguage()))
 	c.ServeJSON()
@@ -172,7 +136,9 @@ func (c *ApiController) AddOrganization() {
 		return
 	}
 
-	count, err := object.GetOrganizationCount("", "", "")
+	c.validateOrganizationURLs(organization)
+
+	count, err := object.GetOrganizationCount("", "", "", "")
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
@@ -269,4 +235,21 @@ func (c *ApiController) GetOrganizationNames() {
 	}
 
 	c.ResponseOk(organizationNames)
+}
+
+func (c *ApiController) validateOrganizationURLs(organization object.Organization) {
+	if organization.Favicon != "" && !util.IsURLValid(organization.Favicon) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:Favicon")))
+		return
+	}
+
+	if organization.WebsiteUrl != "" && !util.IsURLValid(organization.WebsiteUrl) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:WebsiteUrl")))
+		return
+	}
+
+	if organization.DefaultAvatar != "" && !util.IsURLValid(organization.DefaultAvatar) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("organization:DefaultAvatar")))
+		return
+	}
 }

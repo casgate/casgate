@@ -15,9 +15,10 @@
 package util
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/beego/beego/logs"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 func SafeGoroutine(fn func()) {
@@ -30,7 +31,13 @@ func SafeGoroutine(fn func()) {
 				if !ok {
 					err = fmt.Errorf("%v", r)
 				}
-				logs.Error("goroutine panic: %v", err)
+
+				logger.Error(
+					context.Background(),
+					"goroutine panic in SafeGoroutine",
+					"error", err.Error(),
+					"r", logger.OperationResultFailure,
+				)
 			}
 		}()
 		fn()

@@ -17,11 +17,13 @@ package object
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casbin/casbin/v2/model"
-	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Model struct {
@@ -37,21 +39,6 @@ type Model struct {
 	CustomPolicyMappingRules [][]string `xorm:"mediumtext" json:"customPolicyMappingRules"`
 
 	model.Model `xorm:"-" json:"-"`
-}
-
-func GetModelCount(owner, field, value string) (int64, error) {
-	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	return session.Count(&Model{})
-}
-
-func GetModels(owner string) ([]*Model, error) {
-	models := []*Model{}
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&models, &Model{Owner: owner})
-	if err != nil {
-		return models, err
-	}
-
-	return models, nil
 }
 
 func GetPaginationModels(owner string, offset, limit int, field, value, sortField, sortOrder string) ([]*Model, error) {
@@ -84,7 +71,10 @@ func getModel(owner string, name string) (*Model, error) {
 }
 
 func GetModel(id string) (*Model, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getModel(owner, name)
 }
 
@@ -103,7 +93,10 @@ func UpdateModelWithCheck(id string, modelObj *Model) error {
 }
 
 func UpdateModel(id string, modelObj *Model) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return false, err
+	}
 	m, err := getModel(owner, name)
 	if err != nil {
 		return false, err

@@ -18,9 +18,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 // GetApplications
@@ -34,46 +34,28 @@ func (c *ApiController) GetApplications() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	userId := c.GetSessionUsername()
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-
 	if !c.IsGlobalAdmin() && request.Organization == "" {
 		c.ResponseError(c.T("auth:Unauthorized operation"))
 		return
 	}
 
-	var err error
-	if limit == "" || page == "" {
-		var applications []*object.Application
-		if request.Organization == "" {
-			applications, err = object.GetApplications(request.Owner)
-		} else {
-			applications, err = object.GetOrganizationApplications(request.Owner, request.Organization)
-		}
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-		c.ResponseOk(object.GetMaskedApplications(applications, userId))
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetApplicationCount(request.Owner, request.Field, request.Value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		application, err := object.GetPaginationApplications(request.Owner, paginator.Offset(), limit, request.Field, request.Value, request.SortField, request.SortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		applications := object.GetMaskedApplications(application, userId)
-		c.ResponseOk(applications, paginator.Nums())
+	paginator, err := object.GetPaginator(c.Ctx, "admin", request.Field, request.Value, request.Limit, object.Application{Organization: request.Organization})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	applications, err := object.GetPaginationOrganizationApplications("admin",
+		request.Organization, paginator.Offset(),
+		request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseDBError(err)
+		return
+	}
+	applications = object.GetMaskedApplications(applications, request.User.GetId())
+
+	c.ResponseOk(applications, paginator.Nums())
+	return
 }
 
 // GetApplication
@@ -148,58 +130,6 @@ func (c *ApiController) GetUserApplication() {
 	c.ResponseOk(object.GetMaskedApplication(application, userId))
 }
 
-// GetOrganizationApplications
-// @Title GetOrganizationApplications
-// @Tag Application API
-// @Description get the detail of the organization's application
-// @Param   organization     query    string  true        "The organization name"
-// @Success 200 {array} object.Application The Response object
-// @router /get-organization-applications [get]
-func (c *ApiController) GetOrganizationApplications() {
-	userId := c.GetSessionUsername()
-	organization := c.Input().Get("organization")
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-
-	if organization == "" {
-		c.ResponseBadRequest(c.T("general:Missing parameter") + ": organization")
-		return
-	}
-
-	if limit == "" || page == "" {
-		applications, err := object.GetOrganizationApplications(owner, organization)
-		if err != nil {
-			c.ResponseBadRequest(err.Error())
-			return
-		}
-
-		c.ResponseOk(object.GetMaskedApplications(applications, userId))
-	} else {
-		limit := util.ParseInt(limit)
-
-		count, err := object.GetOrganizationApplicationCount(owner, organization, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-		application, err := object.GetPaginationOrganizationApplications(owner, organization, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		applications := object.GetMaskedApplications(application, userId)
-		c.ResponseOk(applications, paginator.Nums())
-	}
-}
-
 // UpdateApplication
 // @Title UpdateApplication
 // @Tag Application API
@@ -215,17 +145,63 @@ func (c *ApiController) UpdateApplication() {
 	id := c.Input().Get("id")
 	goCtx := c.getRequestCtx()
 
+	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeApplication)
+	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
+
 	var application object.Application
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &application)
 	if err != nil {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameApplicationUpdate,
+			logger.OperationResultFailure,
+		)
 		c.ResponseError(err.Error())
 		return
 	}
-	
+
+	logger.SetItem(goCtx, "obj", application.GetId())
+
 	application.Owner = "admin"
 	c.ValidateOrganization(application.Organization)
 
-	c.Data["json"] = wrapActionResponse(object.UpdateApplication(goCtx, id, &application))
+	c.validateApplicationURLs(application)
+
+	affected, err := object.UpdateApplication(goCtx, id, &application)
+
+	if err != nil {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameApplicationUpdate,
+			logger.OperationResultFailure,
+		)
+	} else {
+		if !affected {
+			logger.LogWithInfo(
+				goCtx,
+				logger.LogMsgDetailed{
+					"error": "not affected",
+				},
+				logger.OperationNameApplicationUpdate,
+				logger.OperationResultFailure,
+			)
+		} else {
+			logger.LogWithInfo(
+				goCtx,
+				"application has been successfully updated",
+				logger.OperationNameApplicationUpdate,
+				logger.OperationResultSuccess,
+			)
+		}
+	}
+
+	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 }
 
@@ -252,6 +228,8 @@ func (c *ApiController) AddApplication() {
 	application.Owner = "admin"
 	c.ValidateOrganization(application.Organization)
 
+	c.validateApplicationURLs(application)
+
 	count, err := object.GetApplicationCount("", "", "")
 	if err != nil {
 		c.ResponseError(err.Error())
@@ -262,8 +240,6 @@ func (c *ApiController) AddApplication() {
 		c.ResponseError(err.Error())
 		return
 	}
-
-
 
 	c.Data["json"] = wrapActionResponse(object.AddApplication(goCtx, &application))
 	c.ServeJSON()
@@ -279,7 +255,7 @@ func (c *ApiController) AddApplication() {
 func (c *ApiController) DeleteApplication() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
-	
+
 	var application object.Application
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &application)
 	if err != nil {
@@ -297,4 +273,24 @@ func (c *ApiController) DeleteApplication() {
 
 	c.Data["json"] = wrapActionResponse(object.DeleteApplication(&application))
 	c.ServeJSON()
+}
+
+func (c *ApiController) validateApplicationURLs(application object.Application) {
+	fieldErrMap := map[string]string{
+		application.Logo:              fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:Logo")),
+		application.HomepageUrl:       fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:HomepageUrl")),
+		application.SamlReplyUrl:      fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:SamlReplyUrl")),
+		application.SignupUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:SignupUrl")),
+		application.SigninUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:SigninUrl")),
+		application.ForgetUrl:         fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:ForgetUrl")),
+		application.AffiliationUrl:    fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:AffiliationUrl")),
+		application.FormBackgroundUrl: fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("application:FormBackgroundUrl")),
+	}
+
+	for field, err := range fieldErrMap {
+		if field != "" && !util.IsURLValid(field) {
+			c.ResponseError(err)
+			return
+		}
+	}
 }

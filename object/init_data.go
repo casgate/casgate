@@ -17,24 +17,26 @@ package object
 import (
 	"context"
 
+	"github.com/casdoor/casdoor/cert"
 	"github.com/casdoor/casdoor/conf"
+	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/util"
 )
 
 type InitData struct {
-	Organizations []*Organization `json:"organizations"`
-	Applications  []*Application  `json:"applications"`
-	Users         []*User         `json:"users"`
-	Certs         []*Cert         `json:"certs"`
-	Providers     []*Provider     `json:"providers"`
-	Ldaps         []*Ldap         `json:"ldaps"`
-	Models        []*Model        `json:"models"`
-	Permissions   []*Permission   `json:"permissions"`
-	Resources     []*Resource     `json:"resources"`
-	Roles         []*Role         `json:"roles"`
-	Domains       []*Domain       `json:"domains"`
-	Tokens        []*Token        `json:"tokens"`
-	Webhooks      []*Webhook      `json:"webhooks"`
+	Organizations []*Organization   `json:"organizations"`
+	Applications  []*Application    `json:"applications"`
+	Users         []*User           `json:"users"`
+	Certs         []*cert.Cert      `json:"certs"`
+	Providers     []*Provider       `json:"providers"`
+	Ldaps         []*ldap_sync.Ldap `json:"ldaps"`
+	Models        []*Model          `json:"models"`
+	Permissions   []*Permission     `json:"permissions"`
+	Resources     []*Resource       `json:"resources"`
+	Roles         []*Role           `json:"roles"`
+	Domains       []*Domain         `json:"domains"`
+	Tokens        []*Token          `json:"tokens"`
+	Webhooks      []*Webhook        `json:"webhooks"`
 }
 
 func InitFromFile(ctx context.Context) {
@@ -102,9 +104,9 @@ func readInitDataFromFile(filePath string) (*InitData, error) {
 		Organizations: []*Organization{},
 		Applications:  []*Application{},
 		Users:         []*User{},
-		Certs:         []*Cert{},
+		Certs:         []*cert.Cert{},
 		Providers:     []*Provider{},
-		Ldaps:         []*Ldap{},
+		Ldaps:         []*ldap_sync.Ldap{},
 		Models:        []*Model{},
 		Permissions:   []*Permission{},
 		Resources:     []*Resource{},
@@ -234,7 +236,7 @@ func initDefinedUser(ctx context.Context, user *User) {
 	}
 }
 
-func initDefinedCert(cert *Cert) {
+func initDefinedCert(cert *cert.Cert) {
 	existed, err := getCert(cert.Owner, cert.Name)
 	if err != nil {
 		panic(err)
@@ -250,7 +252,7 @@ func initDefinedCert(cert *Cert) {
 	}
 }
 
-func initDefinedLdap(ldap *Ldap) {
+func initDefinedLdap(ldap *ldap_sync.Ldap) {
 	existed, err := GetLdap(ldap.Id)
 	if err != nil {
 		panic(err)
@@ -266,6 +268,8 @@ func initDefinedLdap(ldap *Ldap) {
 }
 
 func initDefinedProvider(provider *Provider) {
+	ctx := context.TODO()
+
 	existed, err := GetProvider(util.GetId("admin", provider.Name))
 	if err != nil {
 		panic(err)
@@ -274,7 +278,7 @@ func initDefinedProvider(provider *Provider) {
 	if existed != nil {
 		return
 	}
-	_, err = AddProvider(provider)
+	_, err = AddProvider(ctx, provider)
 	if err != nil {
 		panic(err)
 	}

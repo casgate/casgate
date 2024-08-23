@@ -3,15 +3,15 @@ package role_mapper
 import (
 	"slices"
 
-	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/ldap_sync"
 )
 
 type SamlMapper struct {
-	rules []*object.RoleMappingItem
+	rules []*ldap_sync.RoleMappingItem
 	data  map[string]interface{}
 }
 
-func NewSamlMapper(rules []*object.RoleMappingItem, data map[string]interface{}) (*SamlMapper, error) {
+func NewSamlMapper(rules []*ldap_sync.RoleMappingItem, data map[string]interface{}) (*SamlMapper, error) {
 	strData := make(map[string]interface{}, len(data))
 	for k, v := range data {
 		strData[k] = v

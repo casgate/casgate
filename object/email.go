@@ -20,13 +20,15 @@ import (
 	"crypto/tls"
 	"errors"
 
-	"github.com/casdoor/casdoor/email"
 	"github.com/casdoor/gomail/v2"
+
+	"github.com/casdoor/casdoor/cert"
+	"github.com/casdoor/casdoor/email"
 )
 
 // We do not use the error from the net/smtp package because
 // the error from net/smtp is not exported (it is declared within the function)
-//https://github.com/golang/go/blob/master/src/net/smtp/auth.go#L68
+// https://github.com/golang/go/blob/master/src/net/smtp/auth.go#L68
 var ErrUnencryptedConnection = errors.New("unencrypted connection")
 
 func getDialer(provider *Provider) (*gomail.Dialer, error) {
@@ -34,12 +36,12 @@ func getDialer(provider *Provider) (*gomail.Dialer, error) {
 	dialer = gomail.NewDialer(provider.Host, provider.Port, provider.ClientId, provider.ClientSecret)
 
 	if provider.Cert != "" {
-		conf, err := GetTlsConfigForCert(provider.Cert)
+		conf, err := cert.GetTlsConfigForCert(provider.Cert)
 		if err != nil {
 			return nil, err
 		}
 		conf.ServerName = provider.Host
-		dialer.TLSConfig = conf	
+		dialer.TLSConfig = conf
 	}
 
 	if provider.Type == "SUBMAIL" {
@@ -55,10 +57,10 @@ func SendEmail(provider *Provider, title string, content string, dest string, se
 	var conf *tls.Config
 	var err error
 	if provider.Cert != "" {
-		conf, err = GetTlsConfigForCert(provider.Cert)
+		conf, err = cert.GetTlsConfigForCert(provider.Cert)
 		if err != nil {
 			return err
-		}	
+		}
 		conf.ServerName = provider.Host
 	}
 	emailProvider := email.GetEmailProvider(provider.Type, provider.ClientId, provider.ClientSecret, provider.Host, provider.Port, provider.DisableSsl, conf)

@@ -16,10 +16,12 @@ package object
 
 import (
 	"fmt"
+
 	"github.com/casdoor/casdoor/orm"
 
-	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Header struct {
@@ -41,21 +43,6 @@ type Webhook struct {
 	Events         []string  `xorm:"varchar(1000)" json:"events"`
 	IsUserExtended bool      `json:"isUserExtended"`
 	IsEnabled      bool      `json:"isEnabled"`
-}
-
-func GetWebhookCount(owner, organization, field, value string) (int64, error) {
-	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	return session.Count(&Webhook{Organization: organization})
-}
-
-func GetWebhooks(owner string, organization string) ([]*Webhook, error) {
-	webhooks := []*Webhook{}
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&webhooks, &Webhook{Owner: owner, Organization: organization})
-	if err != nil {
-		return webhooks, err
-	}
-
-	return webhooks, nil
 }
 
 func GetPaginationWebhooks(owner, organization string, offset, limit int, field, value, sortField, sortOrder string) ([]*Webhook, error) {
@@ -98,12 +85,18 @@ func getWebhook(owner string, name string) (*Webhook, error) {
 }
 
 func GetWebhook(id string) (*Webhook, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return nil, err
+	}
 	return getWebhook(owner, name)
 }
 
 func UpdateWebhook(id string, webhook *Webhook) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromId(id)
+	if err != nil {
+		return false, err
+	}
 	if w, err := getWebhook(owner, name); err != nil {
 		return false, err
 	} else if w == nil {

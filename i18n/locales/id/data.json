@@ -1,6 +1,7 @@
 {
   "account": {
     "Failed to add user": "Gagal menambahkan pengguna",
+    "Failed to update user": "Failed to update user",
     "Get init score failed, error: %w": "Gagal mendapatkan nilai init, kesalahan: %w",
     "Please sign out first": "Silakan keluar terlebih dahulu",
     "The application does not allow to sign up new account": "Aplikasi tidak memperbolehkan untuk mendaftar akun baru",
@@ -8,6 +9,16 @@
     "Wrong email for invited user": "Wrong email for invited user",
     "Wrong username for invited user": "Wrong username for invited user",
     "organization in request differs from application organization": "organization in request differs from application organization"
+  },
+  "application": {
+    "AffiliationUrl": "AffiliationUrl",
+    "ForgetUrl": "ForgetUrl",
+    "FormBackgroundUrl": "FormBackgroundUrl",
+    "HomepageUrl": "HomepageUrl",
+    "Logo": "Logo",
+    "SamlReplyUrl": "SamlReplyUrl",
+    "SigninUrl": "SigninUrl",
+    "SignupUrl": "SignupUrl"
   },
   "auth": {
     "Admin should turn on OrgChoiceMode to select for built-in app": "Admin should turn on OrgChoiceMode to select for built-in app",
@@ -29,7 +40,8 @@
     "Unable to get records from other organization without global administrator role": "Unable to get records from other organization without global administrator role",
     "Unauthorized operation": "Operasi tidak sah",
     "Unknown authentication type (not password or provider), form = %s": "Jenis otentikasi tidak diketahui (bukan kata sandi atau pemberi), formulir = %s",
-    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags"
+    "User's tag: %s is not listed in the application's tags": "User's tag: %s is not listed in the application's tags",
+    "Wrong URL": "Wrong URL"
   },
   "cas": {
     "Service %s and %s do not match": "Layanan %s dan %s tidak cocok"
@@ -71,6 +83,7 @@
     "unsupported password type: %s": "jenis sandi tidak didukung: %s"
   },
   "general": {
+    "%s field is not valid URL": "%s field is not valid URL",
     "Invalid username or password/code": "Invalid username or password/code",
     "Ldap sync interval can't be less than 15 minutes": "Ldap sync interval can't be less than 15 minutes",
     "Missing administrator credentials": "Missing administrator credentials",
@@ -100,12 +113,25 @@
     "Failed to login in: %s\", \"Failed to get Ldap": "Failed to login in: %s\", \"Failed to get Ldap"
   },
   "organization": {
+    "DefaultAvatar": "DefaultAvatar",
+    "Favicon": "Favicon",
     "Only admin can modify the %s.": "Hanya admin yang dapat memodifikasi %s.",
     "The %s is immutable.": "%s tidak dapat diubah.",
-    "Unknown modify rule %s.": "Aturan modifikasi tidak diketahui %s."
+    "Unknown modify rule %s.": "Aturan modifikasi tidak diketahui %s.",
+    "WebsiteUrl": "WebsiteUrl"
   },
   "provider": {
+    "BaseHostUrl": "BaseHostUrl",
+    "CustomAuthUrl": "CustomAuthUrl",
+    "CustomConfUrl": "CustomConfUrl",
+    "CustomLogo": "CustomLogo",
+    "CustomTokenUrl": "CustomTokenUrl",
+    "CustomUserInfoUrl": "CustomUserInfoUrl",
+    "Domain": "Domain",
     "Invalid application id": "ID aplikasi tidak valid",
+    "IssuerUrl": "IssuerUrl",
+    "ProviderUrl": "ProviderUrl",
+    "SingleLogoutServiceUrl": "SingleLogoutServiceUrl",
     "The provider's email server does not support insecure connections to the specified port": "The provider's email server does not support insecure connections to the specified port",
     "the provider: %s does not exist": "provider: %s tidak ada"
   },
@@ -136,9 +162,11 @@
     "Token not found, invalid accessToken": "Token tidak ditemukan, accessToken tidak valid"
   },
   "user": {
+    "Avatar": "Avatar",
     "Display name cannot be empty": "Nama tampilan tidak boleh kosong",
     "Failed to add userIdProvider": "Failed to add userIdProvider",
-    "New password cannot contain blank space.": "Kata sandi baru tidak boleh mengandung spasi kosong."
+    "New password cannot contain blank space.": "Kata sandi baru tidak boleh mengandung spasi kosong.",
+    "PermanentAvatar": "PermanentAvatar"
   },
   "util": {
     "No application is found for userId: %s": "Tidak ditemukan aplikasi untuk userId: %s",
@@ -163,5 +191,8 @@
   "webauthn": {
     "Found no credentials for this user": "Tidak ditemukan kredensial untuk pengguna ini",
     "Please call WebAuthnSigninBegin first": "Harap panggil WebAuthnSigninBegin terlebih dahulu"
+  },
+  "webhook": {
+    "Url": "Url"
   }
 }
