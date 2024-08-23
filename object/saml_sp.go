@@ -25,7 +25,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"slices"
 	"strings"
 
 	saml2 "github.com/russellhaering/gosaml2"
@@ -34,7 +33,6 @@ import (
 	"github.com/casdoor/casdoor/cert"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/idp"
-	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/util/logger"
 )
 
@@ -133,36 +131,23 @@ func ParseSamlResponse(ctx context.Context, samlResponse string, provider *Provi
 	return &userInfo, authData, nil
 }
 
-func getAuthData(assertionInfo *saml2.AssertionInfo, provider *Provider) map[string]interface{} {
+func getAuthData(assertionInfo *saml2.AssertionInfo, _ *Provider) map[string]interface{} {
 	authData := map[string]interface{}{
-		"ID": assertionInfo.NameID,
+		"ID": []string{assertionInfo.NameID},
 	}
 
-	for key := range assertionInfo.Values {
-		if !slices.ContainsFunc(
-			provider.RoleMappingItems, func(item *ldap_sync.RoleMappingItem) bool {
-				return item.Role == key
-			}) {
-			authData[key] = assertionInfo.Values.Get(key)
-		}
-	}
+	tempRoleDict := make(map[string][]string)
 
-	for _, mappItem := range provider.RoleMappingItems {
-		for _, assertion := range assertionInfo.Assertions {
-			roles := make([]string, 0)
-
-			for _, attribute := range assertion.AttributeStatement.Attributes {
-				if attribute.Name == mappItem.Attribute {
-
-					for _, val := range attribute.Values {
-						roles = append(roles, val.Value)
-					}
-
-				}
+	for _, assertion := range assertionInfo.Assertions {
+		for _, attribute := range assertion.AttributeStatement.Attributes {
+			for _, val := range attribute.Values {
+				tempRoleDict[attribute.Name] = append(tempRoleDict[attribute.Name], val.Value)
 			}
-
-			authData[mappItem.Attribute] = roles
 		}
+	}
+
+	for k, v := range tempRoleDict {
+		authData[k] = v
 	}
 
 	return authData
@@ -315,7 +300,7 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 	}, nil
 }
 
-func buildIdPCertificateStore(provider *Provider, samlResponse string) (certStore *dsig.MemoryX509CertificateStore, err error) {
+func buildIdPCertificateStore(_ *Provider, samlResponse string) (certStore *dsig.MemoryX509CertificateStore, err error) {
 	certEncodedData, err := getCertificateFromSamlResponse(samlResponse)
 	if err != nil {
 		return &dsig.MemoryX509CertificateStore{}, err
