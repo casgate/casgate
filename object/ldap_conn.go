@@ -191,6 +191,11 @@ func SyncSingleUser(
 	userExists := false
 	userExists = existingUserIDs[ldapUser.GetLdapUuid()]
 
+	localUserID, err := ldap_sync.GetLocalIDForExistingLdapUser(ldapUser.GetLdapUuid())
+	if err != nil {
+		return errors.Wrap(err, "ldapUserNameFromDatabase")
+	}
+
 	if !userExists {
 		score, err := organization.GetInitScore()
 		if err != nil {
@@ -235,6 +240,8 @@ func SyncSingleUser(
 			return errors.New("LDAP sync error: failed to AddUser")
 		}
 
+		localUserID = newUser.Id
+
 		userIdProvider := &UserIdProvider{
 			Owner:           organization.Name,
 			LdapId:          command.LdapId,
@@ -250,11 +257,6 @@ func SyncSingleUser(
 		syncDetails.Added = append(syncDetails.Added, ldapUser)
 	} else {
 		syncDetails.Exist = append(syncDetails.Exist, ldapUser)
-	}
-
-	localUserID, err := ldap_sync.GetLocalIDForExistingLdapUser(ldapUser.GetLdapUuid())
-	if err != nil {
-		return errors.Wrap(err, "ldapUserNameFromDatabase")
 	}
 
 	if userExists && ldap.EnableAttributeMapping {
