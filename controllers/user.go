@@ -736,36 +736,6 @@ func (c *ApiController) DeleteUser() {
 		return
 	}
 
-	err = object.ExtendUserWithRolesAndPermissions(userFromDb)
-	if err != nil {
-		logger.LogWithInfo(
-			ctx,
-			logger.LogMsgDetailed{
-				"error": err.Error(),
-			},
-			logger.OperationNameUserDelete,
-			logger.OperationResultFailure,
-		)
-		c.Data["json"] = wrapActionResponse(false)
-		c.ServeJSON()
-		return
-	}
-
-	for _, role := range userFromDb.Roles {
-		role.Users = removeElementFromSlice(role.Users, userFromDb.GetId())
-		_, err = object.UpdateRole(role.GetId(), role)
-		if err != nil {
-			logger.LogWithInfo(
-				ctx,
-				logger.LogMsgDetailed{
-					"error": err.Error(),
-				},
-				logger.OperationNameRoleUpdate,
-				logger.OperationResultFailure,
-			)
-		}
-	}
-
 	affected, err := object.DeleteUser(ctx, &user)
 	if err != nil {
 		logger.LogWithInfo(

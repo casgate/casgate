@@ -801,8 +801,26 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 }
 
 func DeleteUser(ctx context.Context, user *User) (bool, error) {
+	err := ExtendUserWithRolesAndPermissions(user)
+	if err != nil {
+		return false, fmt.Errorf("ExtendUserWithRolesAndPermissions: %w", err)
+	}
+
+	for _, userRole := range user.Roles {
+		role, err := getRole(userRole.Owner, userRole.Name)
+		if err != nil {
+			return false, fmt.Errorf("getRole: %w", err)
+		}
+
+		role.Users = util.DeleteVal(role.Users, user.GetId())
+		_, err = UpdateRole(role.GetId(), role)
+		if err != nil {
+			return false, fmt.Errorf("UpdateRole: %w", err)
+		}
+	}
+
 	// Forced offline the user first
-	_, err := DeleteSession(ctx, util.GetSessionId(user.Owner, user.Name, CasdoorApplication))
+	_, err = DeleteSession(ctx, util.GetSessionId(user.Owner, user.Name, CasdoorApplication))
 	if err != nil {
 		return false, err
 	}

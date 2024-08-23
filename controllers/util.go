@@ -334,12 +334,3 @@ func getInvalidSmsReceivers(smsForm SmsForm) []string {
 	}
 	return invalidReceivers
 }
-
-func removeElementFromSlice[T comparable](slice []T, element T) []T {
-	for i, v := range slice {
-		if v == element {
-			return append(slice[:i], slice[i+1:]...)
-		}
-	}
-	return slice
-}
