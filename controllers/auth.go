@@ -343,7 +343,7 @@ func (c *ApiController) Login() {
 
 	goCtx := c.getRequestCtx()
 	mappingRb := object.NewRecordBuilderFromCtx(c.Ctx)
-	mappingCtx := context.WithValue(goCtx, object.RoleMappingRecordDataKey, mappingRb)
+	goCtx = context.WithValue(goCtx, object.RoleMappingRecordDataKey, mappingRb)
 
 	var authForm form.AuthForm
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &authForm)
@@ -972,7 +972,7 @@ func (c *ApiController) Login() {
 						mappingRb.AddReason(fmt.Sprintf("sync roles for provider: %s", providerID))
 					}
 
-					err = object.SyncRolesToUser(mappingCtx, user, userRoles)
+					err = object.SyncRolesToUser(goCtx, user, userRoles)
 					if err != nil {
 						logLoginErr(goCtx, fmt.Sprintf("Role mapping error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")

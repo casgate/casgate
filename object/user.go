@@ -800,6 +800,17 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 	return affected != 0, nil
 }
 
+func AddUserWithID(ctx context.Context, user *User) (string, bool, error) {
+	affected, err := AddUser(ctx, user)
+	if err != nil {
+		return "", false, fmt.Errorf("AddUser: %w", err)
+	}
+	if !affected {
+		return "", false, fmt.Errorf("not affected")
+	}
+	return user.Id, affected, err
+}
+
 func DeleteUser(ctx context.Context, user *User) (bool, error) {
 	err := ExtendUserWithRolesAndPermissions(user)
 	if err != nil {
