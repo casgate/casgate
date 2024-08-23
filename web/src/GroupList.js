@@ -125,7 +125,7 @@ class GroupListPage extends BaseListPage {
         ...this.getColumnSearchProps("owner"),
         render: (text, record, index) => {
           return (
-            <Link to={`/organizations/${text}`}>
+            <Link to={`/organizations/${text.replace("#", "%23")}`}>
               {text}
             </Link>
           );
@@ -183,7 +183,7 @@ class GroupListPage extends BaseListPage {
         ...this.getColumnSearchProps("parentId"),
         render: (text, record, index) => {
           if (record.isTopGroup) {
-            return <Link to={`/organizations/${record.parentId}`}>
+            return <Link to={`/organizations/${record.parentId.replace("#", "%23")}`}>
               {record.parentId}
             </Link>;
           }
