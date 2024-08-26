@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/casdoor/casdoor/orm"
+	"github.com/google/uuid"
 
 	"github.com/beego/beego/logs"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -738,7 +739,15 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 }
 
 func AddUser(ctx context.Context, user *User) (bool, error) {
-	user.Id = util.GenerateId()
+	if user.Id != "" {
+		parsedUUID, err := uuid.Parse(user.Id)
+		if err != nil {
+			return false, fmt.Errorf("invalid user id: %w", err)
+		}
+		user.Id = parsedUUID.String()
+	} else {
+		user.Id = util.GenerateId()
+	}
 
 	if user.MappingStrategy == "" {
 		user.MappingStrategy = "all"
