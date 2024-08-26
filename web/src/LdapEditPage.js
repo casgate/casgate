@@ -410,7 +410,7 @@ class LdapEditPage extends React.Component {
           });
 
           if (willExist) {
-            this.props.history.push(`/organizations/${this.state.organizationName.replace("#", "%23")}`);
+            this.props.history.push(`/organizations/${this.state.organizationName.replaceAll("#", "%23")}`);
           }
         } else {
           Setting.showMessage("error", res.msg);

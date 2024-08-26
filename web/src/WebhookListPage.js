@@ -101,7 +101,7 @@ class WebhookListPage extends BaseListPage {
         ...this.getColumnSearchProps("organization"),
         render: (text, record, index) => {
           return (
-            <Link to={`/organizations/${text.replace("#", "%23")}`}>
+            <Link to={`/organizations/${text.replaceAll("#", "%23")}`}>
               {text}
             </Link>
           );
