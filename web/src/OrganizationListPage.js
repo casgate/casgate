@@ -95,7 +95,7 @@ class OrganizationListPage extends BaseListPage {
     OrganizationBackend.addOrganization(newOrganization)
       .then((res) => {
         if (res.status === "ok") {
-          this.props.history.push({pathname: `/organizations/${newOrganization.name.replace("#", "%23")}`, mode: "add"});
+          this.props.history.push({pathname: `/organizations/${newOrganization.name.replaceAll("#", "%23")}`, mode: "add"});
           Setting.showMessage("success", i18next.t("general:Successfully added"));
           window.dispatchEvent(new Event("storageOrganizationsChanged"));
         } else {
@@ -140,7 +140,7 @@ class OrganizationListPage extends BaseListPage {
         ...this.getColumnSearchProps("name"),
         render: (text, record, index) => {
           return (
-            <Link to={`/organizations/${text.replace("#", "%23")}`}>
+            <Link to={`/organizations/${text.replaceAll("#", "%23")}`}>
               {text}
             </Link>
           );
@@ -235,8 +235,8 @@ class OrganizationListPage extends BaseListPage {
           return (
             <div>
               <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/trees/${record.name}`)}>{i18next.t("general:Groups")}</Button>
-              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/organizations/${record.name.replace("#", "%23")}/users`)}>{i18next.t("general:Users")}</Button>
-              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} onClick={() => this.props.history.push(`/organizations/${record.name.replace("#", "%23")}`)}>{i18next.t("general:Edit")}</Button>
+              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} type="primary" onClick={() => this.props.history.push(`/organizations/${record.name.replaceAll("#", "%23")}/users`)}>{i18next.t("general:Users")}</Button>
+              <Button style={{marginTop: "10px", marginBottom: "10px", marginRight: "10px"}} onClick={() => this.props.history.push(`/organizations/${record.name.replaceAll("#", "%23")}`)}>{i18next.t("general:Edit")}</Button>
               <PopconfirmModal
                 title={i18next.t("general:Sure to delete") + `: ${record.name} ?`}
                 onConfirm={() => this.deleteOrganization(index)}

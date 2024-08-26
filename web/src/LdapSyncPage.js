@@ -52,7 +52,7 @@ class LdapSyncPage extends React.Component {
           const failedUser = [];
 
           if ((!exist || exist.length === 0) && (!failed || failed.length === 0)) {
-            Setting.goToLink(`/organizations/${this.state.ldap.owner.replace("#", "%23")}/users`);
+            Setting.goToLink(`/organizations/${this.state.ldap.owner.replaceAll("#", "%23")}/users`);
           } else {
             if (exist && exist.length > 0) {
               exist.forEach(elem => {
@@ -260,7 +260,7 @@ class LdapSyncPage extends React.Component {
         }
         <div style={{marginTop: "20px", marginLeft: "40px"}}>
           <Button style={{marginLeft: "20px"}} type="primary" size="large" onClick={() => {
-            this.props.history.push(`/organizations/${this.state.organizationName.replace("#", "%23")}`);
+            this.props.history.push(`/organizations/${this.state.organizationName.replaceAll("#", "%23")}`);
           }}>
             {i18next.t("general:Save & Exit")}
           </Button>

@@ -451,7 +451,7 @@ class OrganizationEditPage extends React.Component {
           if (willExist) {
             this.props.history.push("/organizations");
           } else {
-            this.props.history.push(`/organizations/${this.state.organization.name.replace("#", "%23")}`);
+            this.props.history.push(`/organizations/${this.state.organization.name.replaceAll("#", "%23")}`);
           }
         } else {
           Setting.showMessage("error", `${i18next.t("general:Failed to save")}: ${res.msg}`);
