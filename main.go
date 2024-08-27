@@ -68,6 +68,7 @@ func main() {
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PathFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PrometheusFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.LoggerFilter)
+	beego.InsertFilter("*", beego.BeforeExec, routers.UTF8Filter)
 	beego.InsertFilter("*", beego.AfterExec, routers.LogRecordMessage, false)
 
 	beego.BConfig.WebConfig.Session.SessionOn = true
