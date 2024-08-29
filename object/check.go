@@ -287,12 +287,13 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 		var filter string
 
 		if conn.IsAD {
+			userName := user.GetName()
 			filter = fmt.Sprintf(
 				"(|(&%s(sAMAccountName=%s))(&%s(userPrincipalName=%s)))",
 				ldapServer.Filter,
-				user.GetName(),
+				userName,
 				ldapServer.Filter,
-				user.GetName())
+				userName)
 		} else {
 			filter = fmt.Sprintf(
 				"(&%s(uid=%s))",
