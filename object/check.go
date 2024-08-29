@@ -284,8 +284,33 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 			continue
 		}
 
-		searchReq := goldap.NewSearchRequest(ldapServer.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases,
-			0, 0, false, ldapServer.BuildAuthFilterString(user), []string{}, nil,
+		var filter string
+
+		if conn.IsAD {
+			userName := user.GetName()
+			filter = fmt.Sprintf(
+				"(|(&%s(sAMAccountName=%s))(&%s(userPrincipalName=%s)))",
+				ldapServer.Filter,
+				userName,
+				ldapServer.Filter,
+				userName)
+		} else {
+			filter = fmt.Sprintf(
+				"(&%s(uid=%s))",
+				ldapServer.Filter,
+				user.GetName())
+		}
+
+		searchReq := goldap.NewSearchRequest(
+			ldapServer.BaseDn,
+			goldap.ScopeWholeSubtree,
+			goldap.NeverDerefAliases,
+			0,
+			0,
+			false,
+			filter,
+			[]string{},
+			nil,
 		)
 
 		searchResult, err := conn.Conn.Search(searchReq)
