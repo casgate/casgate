@@ -302,7 +302,16 @@ func (l *LdapConn) GetUsersFromLDAP(
 
 func (ldap *Ldap) BuildAuthFilterString(user LdapRelatedUser) string {
 	if len(ldap.FilterFields) == 0 {
-		return fmt.Sprintf("(&%s(uid=%s))", ldap.Filter, user.GetName())
+		uidFieldName := "uid"
+		if len(ldap.AttributeMappingItems) > 0 {
+			for _, item := range ldap.AttributeMappingItems {
+				if item.UserField == "uid" {
+					uidFieldName = item.Attribute
+					break
+				}
+			}
+		}
+		return fmt.Sprintf("(&%s(%s=%s))", ldap.Filter, uidFieldName, user.GetName())
 	}
 
 	filter := fmt.Sprintf("(&%s(|", ldap.Filter)
