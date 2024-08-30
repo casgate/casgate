@@ -284,26 +284,8 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 			continue
 		}
 
-		uidFieldName := "uid"
-		if len(ldapServer.AttributeMappingItems) > 0 {
-			for _, item := range ldapServer.AttributeMappingItems {
-				if item.UserField == "uid" {
-					uidFieldName = item.Attribute
-					break
-				}
-			}
-		}
-
-		searchReq := goldap.NewSearchRequest(
-			ldapServer.BaseDn,
-			goldap.ScopeWholeSubtree,
-			goldap.NeverDerefAliases,
-			0,
-			0,
-			false,
-			fmt.Sprintf("(&%s(%s=%s))", ldapServer.Filter, uidFieldName, user.GetName()),
-			[]string{},
-			nil,
+		searchReq := goldap.NewSearchRequest(ldapServer.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases,
+			0, 0, false, ldapServer.BuildAuthFilterString(user), []string{}, nil,
 		)
 
 		searchResult, err := conn.Conn.Search(searchReq)
