@@ -99,7 +99,7 @@ func GetGroup(id string) (*Group, error) {
 
 func UpdateGroup(id string, group *Group) (bool, error) {
 	owner, name, err := util.GetOwnerAndNameFromId(id)
-	if err == nil {
+	if err != nil {
 		return false, err
 	}
 	oldGroup, err := getGroup(owner, name)
@@ -371,7 +371,7 @@ func GroupChangeTrigger(oldName, newName string) error {
 
 	for _, user := range users {
 		user.Groups = util.ReplaceVal(user.Groups, oldName, newName)
-		_, err := updateUser(user.GetId(), user, []string{"groups"})
+		_, err := session.ID(core.PK{user.Owner, user.Name}).Cols("groups").Update(user)
 		if err != nil {
 			return err
 		}
