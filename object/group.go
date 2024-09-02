@@ -99,7 +99,7 @@ func GetGroup(id string) (*Group, error) {
 
 func UpdateGroup(id string, group *Group) (bool, error) {
 	owner, name, err := util.SplitIdIntoOrgAndName(id)
-	if err == nil {
+	if err != nil {
 		return false, err
 	}
 	oldGroup, err := getGroup(owner, name)
