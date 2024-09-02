@@ -202,7 +202,7 @@ func getProvider(owner string, name string) (*Provider, error) {
 }
 
 func GetProvider(id string) (*Provider, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func GetWechatMiniProgramProvider(application *Application) *Provider {
 }
 
 func UpdateProvider(ctx context.Context, id string, provider *Provider) (bool, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
 	if err != nil {
 		return false, err
 	}
@@ -296,7 +296,7 @@ func (p *Provider) GetId() string {
 }
 
 func GetCaptchaProviderByOwnerName(applicationId, lang string) (*Provider, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(applicationId)
+	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(applicationId)
 	if err != nil {
 		return nil, err
 	}

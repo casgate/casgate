@@ -385,12 +385,12 @@ func (p *Permission) GetId() string {
 }
 
 func (p *Permission) isUserHit(name string) (bool, error) {
-	targetOrg, _, err := util.GetOwnerAndNameFromId(name)
+	targetOrg, _, err := util.GetOwnerAndNameFromUsernameWithOrg(name)
 	if err != nil {
 		return false, err
 	}
 	for _, user := range p.Users {
-		userOrg, userName, err := util.GetOwnerAndNameFromId(user)
+		userOrg, userName, err := util.GetOwnerAndNameFromUsernameWithOrg(user)
 		if err != nil {
 			return false, err
 		}

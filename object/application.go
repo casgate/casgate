@@ -353,7 +353,7 @@ func GetApplicationByUser(ctx context.Context, user *User) (*Application, error)
 }
 
 func GetApplicationByUserId(ctx context.Context, userId string) (application *Application, err error) {
-	owner, name, err := util.GetOwnerAndNameFromId(userId)
+	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(userId)
 	if err != nil {
 		return nil, err
 	}
@@ -400,7 +400,7 @@ func GetApplicationByClientId(ctx context.Context, clientId string) (*Applicatio
 }
 
 func GetApplication(ctx context.Context, id string) (*Application, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +408,7 @@ func GetApplication(ctx context.Context, id string) (*Application, error) {
 }
 
 func GetApplicationWithOpts(ctx context.Context, id string, opts *GetApplicationOptions) (*Application, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
 	if err != nil {
 		return nil, err
 	}
@@ -477,7 +477,7 @@ func GetMaskedApplications(applications []*Application, userId string) []*Applic
 }
 
 func UpdateApplication(ctx context.Context, id string, application *Application) (bool, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
 	if err != nil {
 		return false, err
 	}
@@ -486,7 +486,7 @@ func UpdateApplication(ctx context.Context, id string, application *Application)
 		return false, err
 	}
 
-	if name == "app-built-in" {
+	if name == CasdoorApplication {
 		application.Name = name
 	}
 
@@ -617,7 +617,7 @@ func AddApplication(ctx context.Context, application *Application) (bool, error)
 }
 
 func DeleteApplication(application *Application) (bool, error) {
-	if application.Name == "app-built-in" {
+	if application.Name == CasdoorApplication {
 		return false, nil
 	}
 

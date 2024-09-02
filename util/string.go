@@ -87,7 +87,7 @@ func GetOwnerAndNameFromIdWithPanic(id string) (string, string) {
 	return tokens[0], tokens[1]
 }
 
-func GetOwnerAndNameFromId(id string) (string, string, error) {
+func GetOwnerAndNameFromUsernameWithOrg(id string) (string, string, error) {
 	tokens := strings.Split(id, "/")
 	if len(tokens) != 2 {
 		return "", "", errors.New("GetOwnerAndNameFromId() error, wrong token count for ID: " + id)

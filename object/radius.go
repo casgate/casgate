@@ -73,7 +73,7 @@ func AddRadiusAccounting(ra *RadiusAccounting) error {
 }
 
 func UpdateRadiusAccounting(id string, ra *RadiusAccounting) error {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
 	if err != nil {
 		return err
 	}

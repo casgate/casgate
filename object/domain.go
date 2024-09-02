@@ -247,7 +247,7 @@ func domainChangeTrigger(oldName string, newName string) error {
 
 	for _, role := range roles {
 		for j, u := range role.Domains {
-			owner, name, err := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u)
 			if err != nil {
 				return err
 			}
@@ -270,7 +270,7 @@ func domainChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Domains {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u)
 			if err != nil {
 				return err
 			}

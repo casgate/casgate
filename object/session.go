@@ -24,7 +24,7 @@ import (
 	"github.com/xorm-io/core"
 )
 
-var (
+const (
 	CasdoorApplication  = "app-built-in"
 	CasdoorOrganization = "built-in"
 )
