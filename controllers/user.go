@@ -196,7 +196,7 @@ func (c *ApiController) GetUser() {
 	id := util.GetId(user.Owner, user.Name)
 
 	if request.Owner == "" {
-		request.Owner, err = util.GetOwnerFromId(id)
+		request.Owner, _, err = util.SplitIdIntoOrgAndName(id)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return
@@ -242,7 +242,7 @@ func (c *ApiController) GetUser() {
 	}
 
 	if fillUserIdProvider {
-		owner, err := util.GetOwnerFromId(id)
+		owner, _, err := util.SplitIdIntoOrgAndName(id)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return

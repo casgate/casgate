@@ -262,7 +262,7 @@ func GetAncestorGroups(groupIds ...string) ([]*Group, error) {
 		return nil, nil
 	}
 
-	owner, _ := util.GetOwnerAndNameFromIdNoCheck(groupIds[0])
+	owner, _ := util.SplitIdIntoOrgAndNameNoError(groupIds[0])
 
 	allGroups, err := GetGroups(owner)
 	if err != nil {

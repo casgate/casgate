@@ -99,7 +99,7 @@ func defaultRecordLog(ctx *beeCtx.Context) *object.Record {
 	}
 
 	if userId != "" {
-		record.Organization, record.User = util.GetOwnerAndNameFromIdWithPanic(userId)
+		record.Organization, record.User = util.SplitIdIntoOrgAndNameWithPanic(userId)
 	}
 
 	return record

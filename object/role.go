@@ -65,7 +65,7 @@ func GetRolesByIds(roleIds []string) ([]*Role, error) {
 
 	condBuilder := builder.NewCond()
 	for _, roleId := range roleIds {
-		owner, name := util.GetOwnerAndNameFromIdNoCheck(roleId)
+		owner, name := util.SplitIdIntoOrgAndNameNoError(roleId)
 		condBuilder = condBuilder.Or(builder.Eq{"owner": owner, "name": name})
 	}
 	roles := []*Role{}
@@ -126,7 +126,7 @@ func GetRole(id string) (*Role, error) {
 }
 
 func UpdateRole(id string, role *Role) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	oldRole, err := getRole(owner, name)
 	if err != nil {
 		return false, err
@@ -493,7 +493,7 @@ func GetAncestorRoles(roleIds ...string) ([]*Role, error) {
 		return nil, nil
 	}
 
-	owner, _ := util.GetOwnerAndNameFromIdNoCheck(roleIds[0])
+	owner, _ := util.SplitIdIntoOrgAndNameNoError(roleIds[0])
 
 	allRoles, err := GetRoles(owner)
 	if err != nil {

@@ -86,7 +86,7 @@ func fastAutoSignin(ctx *context.Context) (string, error) {
 		return "", nil
 	}
 
-	owner, err := util.GetOwnerFromId(userId)
+	owner, _,  err := util.SplitIdIntoOrgAndName(userId)
 	if err != nil {
 		return "", err
 	}

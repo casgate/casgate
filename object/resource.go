@@ -16,8 +16,9 @@ package object
 
 import (
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"strings"
+
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
@@ -96,12 +97,12 @@ func getResource(owner string, name string) (*Resource, error) {
 }
 
 func GetResource(id string) (*Resource, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	return getResource(owner, name)
 }
 
 func UpdateResource(id string, resource *Resource) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	if r, err := getResource(owner, name); err != nil {
 		return false, err
 	} else if r == nil {

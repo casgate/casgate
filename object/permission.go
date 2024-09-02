@@ -109,12 +109,12 @@ func getPermission(owner string, name string) (*Permission, error) {
 }
 
 func GetPermission(id string) (*Permission, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	return getPermission(owner, name)
 }
 
 func UpdatePermission(id string, permission *Permission) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	oldPermission, err := getPermission(owner, name)
 	if oldPermission == nil {
 		return false, nil
