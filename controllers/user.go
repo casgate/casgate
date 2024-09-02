@@ -51,7 +51,7 @@ func (c *ApiController) GetGlobalUsers() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	fillUserIdProvider := util.ParseBool(c.Input().Get("fillUserIdProvider"))
+	addIdpDataToUsersResponse := util.ParseBool(c.Input().Get("fillUserIdProvider"))
 
 	count, err := object.GetGlobalUserCount(request.Field, request.Value)
 	if err != nil {
@@ -72,14 +72,14 @@ func (c *ApiController) GetGlobalUsers() {
 		return
 	}
 
-	if fillUserIdProvider {
-		userIdProviders, err := object.GetGlobalUserIdProviders()
+	if addIdpDataToUsersResponse {
+		externalUsers, err := object.GetAllExternalUsersData()
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
 		}
 
-		fillUserIdProviders(users, userIdProviders)
+		updateUsersWithIDPData(users, externalUsers)
 	}
 
 	c.ResponseOk(users, paginator.Nums())
@@ -98,7 +98,7 @@ func (c *ApiController) GetUsers() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 	groupName := c.Input().Get("groupName")
-	fillUserIdProvider := util.ParseBool(c.Input().Get("fillUserIdProvider"))
+	addIdpDataToUsersResponse := util.ParseBool(c.Input().Get("fillUserIdProvider"))
 
 	count, err := object.GetUserCount(request.Owner, request.Field, request.Value, groupName)
 	if err != nil {
@@ -119,14 +119,14 @@ func (c *ApiController) GetUsers() {
 		return
 	}
 
-	if fillUserIdProvider {
-		userIdProviders, err := object.GetUserIdProviders(request.Owner)
+	if addIdpDataToUsersResponse {
+		externalUserData, err := object.GetExternalUsersByOwnerOrAdmin(request.Owner)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
-		fillUserIdProviders(users, userIdProviders)
+		updateUsersWithIDPData(users, externalUserData)
 	}
 
 	c.ResponseOk(users, paginator.Nums())
@@ -167,7 +167,7 @@ func (c *ApiController) GetUser() {
 	email := c.Input().Get("email")
 	phone := c.Input().Get("phone")
 	userId := c.Input().Get("userId")
-	fillUserIdProvider := util.ParseBool(c.Input().Get("fillUserIdProvider"))
+	addIdpDataToUsersResponse := util.ParseBool(c.Input().Get("fillUserIdProvider"))
 
 	var err error
 	var user *object.User
@@ -241,19 +241,19 @@ func (c *ApiController) GetUser() {
 		return
 	}
 
-	if fillUserIdProvider {
+	if addIdpDataToUsersResponse {
 		owner, err := util.GetOwnerFromId(id)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return
 		}
-		userIdProviders, err := object.GetUserIdProviders(owner)
+		externalUsers, err := object.GetExternalUsersByOwnerOrAdmin(owner)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return
 		}
 
-		fillUserIdProviders([]*object.User{maskedUser}, userIdProviders)
+		updateUsersWithIDPData([]*object.User{maskedUser}, externalUsers)
 	}
 
 	c.ResponseOk(maskedUser)
@@ -273,25 +273,25 @@ func (c *ApiController) AddUserIdProvider() {
 	goCtx := c.getRequestCtx()
 	record := object.GetRecord(goCtx)
 
-	var userIdProvider object.UserIdProvider
-	err := json.Unmarshal(c.Ctx.Input.RequestBody, &userIdProvider)
+	var externalUser object.ExternalUser
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &externalUser)
 	if err != nil {
 		c.ResponseBadRequest(err.Error())
 		return
 	}
 
-	if userIdProvider.Owner == "" || !object.CheckUserIdProviderOrigin(userIdProvider) || userIdProvider.UsernameFromIdp == "" {
-		record.AddReason("Add UserIdProvider: Failed to add userIdProvider. Missing parameter")
+	if externalUser.Owner == "" || !object.CheckUserIdProviderOrigin(externalUser) || externalUser.UsernameFromIdp == "" {
+		record.AddReason("AddUserIdProvider: Failed to add externalUser. Missing parameter")
 		c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
 		return
 	}
 
-	userIdProvider.CreatedTime = util.GetCurrentTime()
+	externalUser.CreatedTime = util.GetCurrentTime()
 
-	affected, err := object.AddUserIdProvider(c.Ctx.Request.Context(), &userIdProvider)
+	affected, err := object.AddExternalUser(c.Ctx.Request.Context(), &externalUser)
 	if err != nil || !affected {
-		record.AddReason("Add UserIdProvider: Failed to add userIdProvider")
-		c.ResponseInternalServerError(c.T("user:Failed to add userIdProvider"))
+		record.AddReason("AddUserIdProvider: Failed to add externalUser")
+		c.ResponseInternalServerError(c.T("user:Failed to add externalUser"))
 		return
 	}
 
@@ -1307,15 +1307,15 @@ func (c *ApiController) SendInvite() {
 	c.ResponseOk()
 }
 
-func fillUserIdProviders(users []*object.User, userIdProviders []*object.UserIdProvider) {
-	userIdProviderMap := make(map[string]*object.UserIdProvider)
-	for i := range userIdProviders {
-		userIdProviderMap[userIdProviders[i].UserId] = userIdProviders[i]
+func updateUsersWithIDPData(users []*object.User, externalUsers []*object.ExternalUser) {
+	externalUsersMap := make(map[string]*object.ExternalUser)
+	for i := range externalUsers {
+		externalUsersMap[externalUsers[i].UserId] = externalUsers[i]
 	}
 
 	for i := range users {
-		if userIdProvider, ok := userIdProviderMap[users[i].Id]; ok {
-			users[i].UserIdProvider = userIdProvider
+		if externalUser, ok := externalUsersMap[users[i].Id]; ok {
+			users[i].UserIdProvider = externalUser
 		}
 	}
 }

@@ -593,14 +593,14 @@ func (c *ApiController) Login() {
 			resp = c.HandleLoggedIn(application, user, &authForm)
 
 			if user.Ldap != "" {
-				userIdProvider := &object.UserIdProvider{
+				externalUser := &object.ExternalUser{
 					Owner:           organization.Name,
 					LdapId:          authForm.LdapId,
 					UsernameFromIdp: user.Name,
 					LastSignInTime:  util.GetCurrentTime(),
 				}
 
-				err = object.UpdateUserIdProvider(c.Ctx.Request.Context(), userIdProvider, "ldap_id")
+				err = object.UpdateExternalUser(c.Ctx.Request.Context(), externalUser, "ldap_id")
 
 				if err != nil {
 					logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
@@ -775,7 +775,7 @@ func (c *ApiController) Login() {
 					record.AddReason(fmt.Sprintf("provider: %s", jsonProvider))
 				}
 
-				err = object.UpdateUserIdProvider(c.Ctx.Request.Context(), &object.UserIdProvider{
+				err = object.UpdateExternalUser(c.Ctx.Request.Context(), &object.ExternalUser{
 					Owner:           organization.Name,
 					ProviderName:    provider.Name,
 					UsernameFromIdp: userInfo.Username,
@@ -921,7 +921,7 @@ func (c *ApiController) Login() {
 					return
 				}
 
-				_, err = object.AddUserIdProvider(c.Ctx.Request.Context(), &object.UserIdProvider{
+				_, err = object.AddExternalUser(c.Ctx.Request.Context(), &object.ExternalUser{
 					ProviderName:    provider.Name,
 					UserId:          user.Id,
 					UsernameFromIdp: userInfo.Username,

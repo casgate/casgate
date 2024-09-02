@@ -256,7 +256,7 @@ func CheckPasswordComplexity(user *User, password string, lang string) string {
 	return CheckPasswordComplexityByOrg(organization, password, lang)
 }
 
-// check user pwd only in selected ldap
+// CheckLdapUserPassword check user pwd only in selected ldap
 func CheckLdapUserPassword(user *User, password string, lang string, ldapId string) (string, error) {
 	var ldaps []*ldap_sync.Ldap
 	var err error
@@ -274,7 +274,7 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 	}
 
 	ldapLoginSuccess := false
-	hit := false
+	userFoundInAnyLDAP := false
 	var ldapServerId string
 	userDisabled := false
 
@@ -319,7 +319,7 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 			break
 		}
 
-		hit = true
+		userFoundInAnyLDAP = true
 		dn := searchResult.Entries[0].DN
 		if err = conn.Conn.Bind(dn, password); err == nil {
 			ldapLoginSuccess = true
@@ -336,7 +336,7 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 	}
 
 	if !ldapLoginSuccess {
-		if !hit {
+		if !userFoundInAnyLDAP {
 			return "", fmt.Errorf("user not exist")
 		}
 		return "", fmt.Errorf(i18n.Translate(lang, "check:LDAP user name or password incorrect"))
@@ -668,9 +668,9 @@ func CheckToEnableCaptcha(application *Application, organization, username strin
 	return false, nil
 }
 
-func CheckUserIdProviderOrigin(userIdProvider UserIdProvider) bool {
-	isProviderNameEmpty := userIdProvider.ProviderName == ""
-	isLdapIdEmpty := userIdProvider.LdapId == ""
+func CheckUserIdProviderOrigin(externalUser ExternalUser) bool {
+	isProviderNameEmpty := externalUser.ProviderName == ""
+	isLdapIdEmpty := externalUser.LdapId == ""
 
 	return isProviderNameEmpty != isLdapIdEmpty
 }

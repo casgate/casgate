@@ -7,7 +7,8 @@ import (
 	"github.com/casdoor/casdoor/orm"
 )
 
-type UserIdProvider struct {
+// ExternalUser contains integration original data from external identity provider(LDAP)
+type ExternalUser struct {
 	ProviderDisplayName string `xorm:"-" json:"providerDisplayName"`
 	LdapServerName      string `xorm:"-" json:"ldapServerName"`
 
@@ -20,87 +21,87 @@ type UserIdProvider struct {
 	Owner           string `xorm:"varchar(100)" json:"owner"`
 }
 
-func GetGlobalUserIdProviders() ([]*UserIdProvider, error) {
-	var userIdProviders []*UserIdProvider
+func GetAllExternalUsersData() ([]*ExternalUser, error) {
+	var externalUsers []*ExternalUser
 	var providers []*Provider
 	var ldaps []*ldap_sync.Ldap
 
-	err := orm.AppOrmer.Engine.Asc("last_sign_in_time").Find(&userIdProviders, &UserIdProvider{})
+	err := orm.AppOrmer.Engine.Asc("last_sign_in_time").Find(&externalUsers, &ExternalUser{})
 	if err != nil {
-		return userIdProviders, err
+		return externalUsers, err
 	}
 
 	err = orm.AppOrmer.Engine.Find(&providers, &Provider{})
 	if err != nil {
-		return userIdProviders, err
+		return externalUsers, err
 	}
 
 	err = orm.AppOrmer.Engine.Find(&ldaps, &ldap_sync.Ldap{})
 	if err != nil {
-		return userIdProviders, err
+		return externalUsers, err
 	}
 
-	for i := range userIdProviders {
+	for i := range externalUsers {
 		for _, provider := range providers {
-			if userIdProviders[i].ProviderName == provider.Name {
-				userIdProviders[i].ProviderDisplayName = provider.DisplayName
+			if externalUsers[i].ProviderName == provider.Name {
+				externalUsers[i].ProviderDisplayName = provider.DisplayName
 			}
 		}
 		for _, ldap := range ldaps {
-			if userIdProviders[i].LdapId == ldap.Id {
-				userIdProviders[i].LdapServerName = ldap.ServerName
+			if externalUsers[i].LdapId == ldap.Id {
+				externalUsers[i].LdapServerName = ldap.ServerName
 			}
 		}
 	}
 
-	return userIdProviders, err
+	return externalUsers, err
 }
 
-func GetUserIdProviders(owner string) ([]*UserIdProvider, error) {
-	var userIdProviders []*UserIdProvider
+func GetExternalUsersByOwnerOrAdmin(owner string) ([]*ExternalUser, error) {
+	var externalUsers []*ExternalUser
 	var providers []*Provider
 	var ldaps []*ldap_sync.Ldap
 
-	err := orm.AppOrmer.Engine.Where("owner = ? or owner = ?", "admin", owner).Asc("last_sign_in_time").Find(&userIdProviders, &UserIdProvider{})
+	err := orm.AppOrmer.Engine.Where("owner = ? or owner = ?", "admin", owner).Asc("last_sign_in_time").Find(&externalUsers, &ExternalUser{})
 	if err != nil {
-		return userIdProviders, err
+		return externalUsers, err
 	}
 
 	err = orm.AppOrmer.Engine.Find(&providers, &Provider{})
 	if err != nil {
-		return userIdProviders, err
+		return externalUsers, err
 	}
 
 	err = orm.AppOrmer.Engine.Find(&ldaps, &ldap_sync.Ldap{})
 	if err != nil {
-		return userIdProviders, err
+		return externalUsers, err
 	}
 
-	for i := range userIdProviders {
+	for i := range externalUsers {
 		for _, provider := range providers {
-			if userIdProviders[i].ProviderName == provider.Name {
-				userIdProviders[i].ProviderDisplayName = provider.DisplayName
+			if externalUsers[i].ProviderName == provider.Name {
+				externalUsers[i].ProviderDisplayName = provider.DisplayName
 			}
 		}
 		for _, ldap := range ldaps {
-			if userIdProviders[i].LdapId == ldap.Id {
-				userIdProviders[i].LdapServerName = ldap.ServerName
+			if externalUsers[i].LdapId == ldap.Id {
+				externalUsers[i].LdapServerName = ldap.ServerName
 			}
 		}
 	}
 
-	return userIdProviders, err
+	return externalUsers, err
 }
 
-func AddUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) (bool, error) {
+func AddExternalUser(ctx context.Context, externalUser *ExternalUser) (bool, error) {
 	var affected int64
 	err := trm.WithTx(ctx, func(ctx context.Context) error {
-		existedUserIdProvider, err := repo.GetUserIdProvider(ctx, userIdProvider)
+		existingExternalUser, err := repo.GetExternalUser(ctx, externalUser)
 		if err != nil {
 			return err
 		}
-		if existedUserIdProvider == nil {
-			affected, err = repo.InsertUserIdProvider(ctx, userIdProvider)
+		if existingExternalUser == nil {
+			affected, err = repo.InsertExternalUser(ctx, externalUser)
 			if err != nil {
 				return err
 			}
@@ -111,17 +112,17 @@ func AddUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider) (boo
 	return affected != 0, err
 }
 
-func UpdateUserIdProvider(ctx context.Context, userIdProvider *UserIdProvider, updateKey string) error {
-	updateValue := userIdProvider.ProviderName
+func UpdateExternalUser(ctx context.Context, externalUser *ExternalUser, updateKey string) error {
+	updateValue := externalUser.ProviderName
 	if updateKey == "ldap_id" {
-		updateValue = userIdProvider.LdapId
+		updateValue = externalUser.LdapId
 	}
 	findConditions := map[string]interface{}{
-		"owner":             userIdProvider.Owner,
+		"owner":             externalUser.Owner,
 		updateKey:           updateValue,
-		"username_from_idp": userIdProvider.UsernameFromIdp,
+		"username_from_idp": externalUser.UsernameFromIdp,
 	}
 	return trm.WithTx(ctx, func(ctx context.Context) error {
-		return repo.UpdateUserIdProvider(ctx, userIdProvider, findConditions)
+		return repo.UpdateExternalUser(ctx, externalUser, findConditions)
 	})
 }

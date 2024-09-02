@@ -6,29 +6,29 @@ import (
 	"github.com/casdoor/casdoor/object"
 )
 
-func (r *Repo) GetUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider) (*object.UserIdProvider, error) {
-	if userIdProvider.Owner == "" || !object.CheckUserIdProviderOrigin(*userIdProvider) || userIdProvider.UsernameFromIdp == "" {
+func (r *Repo) GetExternalUser(ctx context.Context, externalUser *object.ExternalUser) (*object.ExternalUser, error) {
+	if externalUser.Owner == "" || !object.CheckUserIdProviderOrigin(*externalUser) || externalUser.UsernameFromIdp == "" {
 		return nil, nil
 	}
 
 	query := r.trm.GetEngine(ctx)
 
-	existed, err := query.Get(userIdProvider)
+	existed, err := query.Get(externalUser)
 	if err != nil {
 		return nil, err
 	}
 
 	if existed {
-		return userIdProvider, nil
+		return externalUser, nil
 	}
 
 	return nil, nil
 }
 
-func (r *Repo) InsertUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider) (int64, error) {
-	return r.insertEntity(ctx, userIdProvider)
+func (r *Repo) InsertExternalUser(ctx context.Context, externalUser *object.ExternalUser) (int64, error) {
+	return r.insertEntity(ctx, externalUser)
 }
 
-func (r *Repo) UpdateUserIdProvider(ctx context.Context, userIdProvider *object.UserIdProvider, findConditions map[string]interface{}) error {
-	return r.UpdateEntitiesFieldValue(ctx, "user_id_provider", "last_sign_in_time", userIdProvider.LastSignInTime, findConditions)
+func (r *Repo) UpdateExternalUser(ctx context.Context, externalUser *object.ExternalUser, findConditions map[string]interface{}) error {
+	return r.UpdateEntitiesFieldValue(ctx, "user_id_provider", "last_sign_in_time", externalUser.LastSignInTime, findConditions)
 }

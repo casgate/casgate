@@ -188,12 +188,20 @@ func SyncSingleUser(
 	affiliation string,
 	tag string,
 ) error {
+	var err error
 	userExists := false
 	userExists = existingUserIDs[ldapUser.GetLdapUuid()]
 
 	var localUserID string
 
-	if !userExists {
+	if userExists {
+		localUserID, err = ldap_sync.GetLocalIDForExistingLdapUser(ldapUser.GetLdapUuid())
+		if err != nil {
+			return errors.Wrap(err, "GetLocalIDForExistingLdapUser")
+		}
+
+		syncDetails.Exist = append(syncDetails.Exist, ldapUser)
+	} else {
 		score, err := organization.GetInitScore()
 		if err != nil {
 			err = errors.Wrap(err, "LDAP sync error: failed to GetInitScore for sync")
@@ -239,27 +247,19 @@ func SyncSingleUser(
 
 		localUserID = userID
 
-		userIdProvider := &UserIdProvider{
+		externalUser := &ExternalUser{
 			Owner:           organization.Name,
 			LdapId:          command.LdapId,
 			UsernameFromIdp: ldapUser.Uuid,
 			CreatedTime:     util.GetCurrentTime(),
 			UserId:          newUser.Id,
 		}
-		_, err = AddUserIdProvider(ctx, userIdProvider)
+		_, err = AddExternalUser(ctx, externalUser)
 		if err != nil {
-			err = errors.Wrap(err, "LDAP sync error: failed to AddUserIdProvider")
+			err = errors.Wrap(err, "LDAP sync error: failed to AddExternalUser")
 			return err
 		}
 		syncDetails.Added = append(syncDetails.Added, ldapUser)
-	} else {
-		userID, err := ldap_sync.GetLocalIDForExistingLdapUser(ldapUser.GetLdapUuid())
-		if err != nil {
-			return errors.Wrap(err, "ldapUserNameFromDatabase")
-		}
-		localUserID = userID
-
-		syncDetails.Exist = append(syncDetails.Exist, ldapUser)
 	}
 
 	if userExists && ldap.EnableAttributeMapping {

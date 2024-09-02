@@ -20,11 +20,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/casdoor/xorm-adapter/v3"
-
 	casdoorcert "github.com/casdoor/casdoor/cert"
 	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/orm"
+	xormadapter "github.com/casdoor/xorm-adapter/v3"
 
 	"github.com/go-webauthn/webauthn/webauthn"
 
@@ -653,7 +652,7 @@ func CreateTable(a *orm.Ormer) {
 		panic(err)
 	}
 
-	err = a.Engine.Sync2(new(UserIdProvider))
+	err = a.Engine.Sync2(new(ExternalUser))
 	if err != nil {
 		panic(err)
 	}
