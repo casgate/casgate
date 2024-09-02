@@ -15,7 +15,6 @@ func HasOrganizationDependencies(orgName string) (bool, error) {
 		"permission":  "owner",
 		"provider":    "owner",
 		"role":        "owner",
-		"syncer":      "organization",
 		"token":       "organization",
 		"user":        "owner",
 		"webhook":     "organization",
