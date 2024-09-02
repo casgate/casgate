@@ -77,7 +77,7 @@ func getEnforcer(owner string, name string) (*Enforcer, error) {
 }
 
 func GetEnforcer(id string) (*Enforcer, error) {
-	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func GetEnforcer(id string) (*Enforcer, error) {
 }
 
 func UpdateEnforcer(id string, enforcer *Enforcer) (bool, error) {
-	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return false, err
 	}

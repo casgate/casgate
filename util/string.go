@@ -86,11 +86,11 @@ func GetOwnerAndNameFromIdWithPanic(id string) (string, string) {
 
 	return tokens[0], tokens[1]
 }
-
-func GetOwnerAndNameFromUsernameWithOrg(id string) (string, string, error) {
+// SplitIdIntoOrgAndName this func is used not only for users id but for other entity ids too, (roleOwner/roleName = roleId etc .. )
+func SplitIdIntoOrgAndName(id string) (string, string, error) {
 	tokens := strings.Split(id, "/")
 	if len(tokens) != 2 {
-		return "", "", errors.New("GetOwnerAndNameFromId() error, wrong token count for ID: " + id)
+		return "", "", errors.New("SplitIdIntoOrgAndName() error, wrong token count for ID: " + id)
 	}
 
 	return tokens[0], tokens[1], nil

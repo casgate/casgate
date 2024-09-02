@@ -409,7 +409,7 @@ func (c *ApiController) SyncLdapUsers() {
 	id := c.Input().Get("id")
 	logger.SetItem(goCtx, "obj", id)
 
-	_, ldapId, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
+	_, ldapId, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		record.AddReason(err.Error())
 		logger.Error(

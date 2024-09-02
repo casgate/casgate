@@ -314,7 +314,7 @@ func (c *ApiController) Logout() {
 			c.ResponseOk()
 			return
 		}
-		owner, username, err := util.GetOwnerAndNameFromUsernameWithOrg(userNameWithOrg)
+		owner, username, err := util.SplitIdIntoOrgAndName(userNameWithOrg)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
 
@@ -395,7 +395,7 @@ func (c *ApiController) Logout() {
 
 		c.ClearUserSession()
 		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
-		owner, username, err := util.GetOwnerAndNameFromUsernameWithOrg(userNameWithOrg)
+		owner, username, err := util.SplitIdIntoOrgAndName(userNameWithOrg)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
 

@@ -126,7 +126,7 @@ func getOrganization(owner string, name string) (*Organization, error) {
 }
 
 func GetOrganization(id string) (*Organization, error) {
-	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func GetMaskedOrganizations(organizations []*Organization, errs ...error) ([]*Or
 func UpdateOrganization(ctx context.Context, id string, organization *Organization, lang string) (bool, error) {
 	var affected int64
 	err := trm.WithTx(ctx, func(ctx context.Context) error {
-		owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
+		owner, name, err := util.SplitIdIntoOrgAndName(id)
 		if err != nil {
 			return err
 		}
@@ -390,7 +390,7 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 	for _, role := range roles {
 		for i, u := range role.Users {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -400,7 +400,7 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 		}
 		for i, u := range role.Roles {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -410,7 +410,7 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 		}
 		for i, g := range role.Groups {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(g)
+			owner, name, err := util.SplitIdIntoOrgAndName(g)
 			if err != nil {
 				return err
 			}
@@ -420,7 +420,7 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 		}
 		for i, d := range role.Domains {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(d)
+			owner, name, err := util.SplitIdIntoOrgAndName(d)
 			if err != nil {
 				return err
 			}
@@ -444,7 +444,7 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 	for _, permission := range permissions {
 		for i, u := range permission.Users {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -454,7 +454,7 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 		}
 		for i, u := range permission.Roles {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -464,7 +464,7 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 		}
 		for i, g := range permission.Groups {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(g)
+			owner, name, err := util.SplitIdIntoOrgAndName(g)
 			if err != nil {
 				return err
 			}
@@ -474,7 +474,7 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 		}
 		for i, d := range permission.Domains {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(d)
+			owner, name, err := util.SplitIdIntoOrgAndName(d)
 			if err != nil {
 				return err
 			}
@@ -497,7 +497,7 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 	for _, domain := range domains {
 		for i, u := range domain.Domains {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}

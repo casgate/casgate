@@ -80,7 +80,7 @@ func getAdapter(owner, name string) (*Adapter, error) {
 }
 
 func GetAdapter(id string) (*Adapter, error) {
-	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func GetAdapter(id string) (*Adapter, error) {
 }
 
 func UpdateAdapter(id string, adapter *Adapter) (bool, error) {
-	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return false, err
 	}

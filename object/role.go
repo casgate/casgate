@@ -117,7 +117,7 @@ func getRole(owner string, name string) (*Role, error) {
 }
 
 func GetRole(id string) (*Role, error) {
-	owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid role id: %s", id))
 	}
@@ -370,7 +370,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 
 	for _, role := range roles {
 		for j, u := range role.Roles {
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -398,7 +398,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Roles {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -427,7 +427,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, provider := range providers {
 		for j, u := range provider.RoleMappingItems {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u.Role)
+			owner, name, err := util.SplitIdIntoOrgAndName(u.Role)
 			if err != nil {
 				return err
 			}
@@ -456,7 +456,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, ldap := range ldaps {
 		for j, u := range ldap.RoleMappingItems {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromUsernameWithOrg(u.Role)
+			owner, name, err := util.SplitIdIntoOrgAndName(u.Role)
 			if err != nil {
 				return err
 			}
