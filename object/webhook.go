@@ -85,7 +85,7 @@ func getWebhook(owner string, name string) (*Webhook, error) {
 }
 
 func GetWebhook(id string) (*Webhook, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func GetWebhook(id string) (*Webhook, error) {
 }
 
 func UpdateWebhook(id string, webhook *Webhook) (bool, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return false, err
 	}

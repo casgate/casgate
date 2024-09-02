@@ -75,7 +75,7 @@ func (*Migrator_1_240_0_PR_1539) DoMigration() *migrate.Migration {
 			for _, oldSession := range oldSessions {
 				newApplication := "null"
 				if oldSession.Owner == "built-in" {
-					newApplication = "app-built-in"
+					newApplication = CasdoorApplication
 				}
 				newSessions = append(newSessions, &Session{
 					Owner:       oldSession.Owner,

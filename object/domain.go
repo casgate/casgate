@@ -77,12 +77,12 @@ func getDomain(owner string, name string) (*Domain, error) {
 }
 
 func GetDomain(id string) (*Domain, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	return getDomain(owner, name)
 }
 
 func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	oldDomain, err := getDomain(owner, name)
 	if err != nil {
 		return false, err
@@ -247,7 +247,7 @@ func domainChangeTrigger(oldName string, newName string) error {
 
 	for _, role := range roles {
 		for j, u := range role.Domains {
-			owner, name, err := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -270,7 +270,7 @@ func domainChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Domains {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -326,7 +326,7 @@ func subDomainPermissions(domain *Domain) ([]*Permission, error) {
 
 // GetAncestorDomains returns a list of domains that contain the given domainIds
 func GetAncestorDomains(ctx context.Context, domainIds ...string) ([]*Domain, error) {
-	owner, _ := util.GetOwnerAndNameFromIdNoCheck(domainIds[0])
+	owner, _ := util.SplitIdIntoOrgAndNameNoError(domainIds[0])
 
 	allDomains, err := GetDomains(ctx, owner)
 	if err != nil {

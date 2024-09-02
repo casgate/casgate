@@ -65,7 +65,7 @@ func GetRolesByIds(roleIds []string) ([]*Role, error) {
 
 	condBuilder := builder.NewCond()
 	for _, roleId := range roleIds {
-		owner, name := util.GetOwnerAndNameFromIdNoCheck(roleId)
+		owner, name := util.SplitIdIntoOrgAndNameNoError(roleId)
 		condBuilder = condBuilder.Or(builder.Eq{"owner": owner, "name": name})
 	}
 	roles := []*Role{}
@@ -117,7 +117,7 @@ func getRole(owner string, name string) (*Role, error) {
 }
 
 func GetRole(id string) (*Role, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid role id: %s", id))
 	}
@@ -126,7 +126,7 @@ func GetRole(id string) (*Role, error) {
 }
 
 func UpdateRole(id string, role *Role) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	oldRole, err := getRole(owner, name)
 	if err != nil {
 		return false, err
@@ -370,7 +370,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 
 	for _, role := range roles {
 		for j, u := range role.Roles {
-			owner, name, err := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -398,7 +398,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Roles {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -427,7 +427,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, provider := range providers {
 		for j, u := range provider.RoleMappingItems {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromId(u.Role)
+			owner, name, err := util.SplitIdIntoOrgAndName(u.Role)
 			if err != nil {
 				return err
 			}
@@ -456,7 +456,7 @@ func roleChangeTrigger(oldName string, newName string) error {
 	for _, ldap := range ldaps {
 		for j, u := range ldap.RoleMappingItems {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromId(u.Role)
+			owner, name, err := util.SplitIdIntoOrgAndName(u.Role)
 			if err != nil {
 				return err
 			}
@@ -493,7 +493,7 @@ func GetAncestorRoles(roleIds ...string) ([]*Role, error) {
 		return nil, nil
 	}
 
-	owner, _ := util.GetOwnerAndNameFromIdNoCheck(roleIds[0])
+	owner, _ := util.SplitIdIntoOrgAndNameNoError(roleIds[0])
 
 	allRoles, err := GetRoles(owner)
 	if err != nil {

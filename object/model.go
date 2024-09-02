@@ -71,7 +71,7 @@ func getModel(owner string, name string) (*Model, error) {
 }
 
 func GetModel(id string) (*Model, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func UpdateModelWithCheck(id string, modelObj *Model) error {
 }
 
 func UpdateModel(id string, modelObj *Model) (bool, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return false, err
 	}

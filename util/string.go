@@ -78,42 +78,34 @@ func CamelToSnakeCase(camel string) string {
 	return strings.ReplaceAll(buf.String(), " ", "")
 }
 
-func GetOwnerAndNameFromIdWithPanic(id string) (string, string) {
+func SplitIdIntoOrgAndNameWithPanic(id string) (string, string) {
 	tokens := strings.Split(id, "/")
 	if len(tokens) != 2 {
-		panic(errors.New("GetOwnerAndNameFromIdWithPanic() error, wrong token count for ID: " + id))
+		panic(errors.New("SplitIdIntoOrgAndNameWithPanic() error, wrong token count for ID: " + id))
 	}
 
 	return tokens[0], tokens[1]
 }
 
-func GetOwnerAndNameFromId(id string) (string, string, error) {
+// SplitIdIntoOrgAndName this func is used not only for users id but for other entity ids too, (roleOwner/roleName = roleId etc .. )
+func SplitIdIntoOrgAndName(id string) (string, string, error) {
 	tokens := strings.Split(id, "/")
 	if len(tokens) != 2 {
-		return "", "", errors.New("GetOwnerAndNameFromId() error, wrong token count for ID: " + id)
+		return "", "", errors.New("SplitIdIntoOrgAndName() error, wrong token count for ID: " + id)
 	}
 
 	return tokens[0], tokens[1], nil
 }
 
-func GetOwnerFromId(id string) (string, error) {
-	tokens := strings.Split(id, "/")
-	if len(tokens) != 2 {
-		return "", errors.New("GetOwnerFromId() error, wrong token count for ID: " + id)
-	}
-
-	return tokens[0], nil
-}
-
-func GetOwnerAndNameFromIdNoCheck(id string) (string, string) {
+func SplitIdIntoOrgAndNameNoError(id string) (string, string) {
 	tokens := strings.SplitN(id, "/", 2)
 	return tokens[0], tokens[1]
 }
 
-func GetOwnerAndNameAndOtherFromId(id string) (string, string, string) {
+func SplitSessionIdIntoOrgNameAndApp(id string) (string, string, string) {
 	tokens := strings.Split(id, "/")
 	if len(tokens) != 3 {
-		panic(errors.New("GetOwnerAndNameAndOtherFromId() error, wrong token count for ID: " + id))
+		panic(errors.New("SplitIdIntoOrgNameAndApp() error, wrong token count for ID: " + id))
 	}
 
 	return tokens[0], tokens[1], tokens[2]

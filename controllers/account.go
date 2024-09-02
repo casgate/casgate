@@ -25,6 +25,7 @@ import (
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 	"github.com/casdoor/casdoor/util/logger"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -298,32 +299,41 @@ func (c *ApiController) Logout() {
 	redirectUri := c.Input().Get("post_logout_redirect_uri")
 	state := c.Input().Get("state")
 
-	user := c.GetSessionUsername()
-	c.Ctx.Input.SetData("user", user)
+	userNameWithOrg := c.GetSessionUsername()
+	c.Ctx.Input.SetData("user", userNameWithOrg)
 
 	goCtx := c.getRequestCtx()
-	record := object.GetRecord(goCtx).WithUsername(user)
+	record := object.GetRecord(goCtx).WithUsername(userNameWithOrg)
 
 	logger.SetItem(goCtx, "obj-type", "application")
-	logger.SetItem(goCtx, "usr", user)
+	logger.SetItem(goCtx, "usr", userNameWithOrg)
 
 	if accessToken == "" && redirectUri == "" {
 		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
-		if user == "" {
+		if userNameWithOrg == "" {
 			c.ResponseOk()
 			return
 		}
-
-		logger.SetItem(goCtx, "obj", object.CasdoorApplication)
-
-		c.ClearUserSession()
-		owner, username, err := util.GetOwnerAndNameFromId(user)
+		owner, username, err := util.SplitIdIntoOrgAndName(userNameWithOrg)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
 
 			c.ResponseError(err.Error())
 			return
 		}
+		application, err := object.GetApplicationByUserId(goCtx, userNameWithOrg)
+		if err != nil {
+			err = errors.Wrap(err, "Logout error: failed to get application for user")
+			logLogoutErr(goCtx, err.Error())
+			c.ResponseError(err.Error())
+			return
+		}
+		logger.SetItem(goCtx, "obj", object.CasdoorApplication)
+		if application != nil {
+			logger.SetItem(goCtx, "obj", application.GetId())
+		}
+
+		c.ClearUserSession()
 		_, err = object.DeleteSessionId(
 			goCtx,
 			util.GetSessionId(owner, username, object.CasdoorApplication),
@@ -335,31 +345,21 @@ func (c *ApiController) Logout() {
 			return
 		}
 
-		application := c.GetSessionApplication()
-
-		if application != nil {
-			logger.SetItem(goCtx, "obj", application.GetId())
-		}
 		logger.Info(goCtx,
 			"",
 			"act", "logout",
 			"r", "success",
 		)
 
-		if application == nil || application.Name == "app-built-in" || application.HomepageUrl == "" {
+		if application == nil || application.Name == object.CasdoorApplication || application.HomepageUrl == "" {
 			record.AddReason("Logout error: application mismatch")
 
-			c.ResponseOk(user)
+			c.ResponseOk(userNameWithOrg)
 			return
 		}
-		c.ResponseOk(user, application.HomepageUrl)
+		c.ResponseOk(userNameWithOrg, application.HomepageUrl)
 		return
 	} else {
-		// "post_logout_redirect_uri" has been made optional, see: https://github.com/casdoor/casdoor/issues/2151
-		// if redirectUri == "" {
-		// 	c.ResponseError(c.T("general:Missing parameter") + ": post_logout_redirect_uri")
-		// 	return
-		// }
 		if accessToken == "" {
 			logLogoutErr(goCtx, "Logout error: missing id_token_hint")
 			c.ResponseError(c.T("general:Missing parameter") + ": id_token_hint")
@@ -388,14 +388,14 @@ func (c *ApiController) Logout() {
 
 		logger.SetItem(goCtx, "obj", application.GetId())
 
-		if user == "" {
-			user = util.GetId(token.Organization, token.User)
-			logger.SetItem(goCtx, "usr", user)
+		if userNameWithOrg == "" {
+			userNameWithOrg = util.GetId(token.Organization, token.User)
+			logger.SetItem(goCtx, "usr", userNameWithOrg)
 		}
 
 		c.ClearUserSession()
 		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
-		owner, username, err := util.GetOwnerAndNameFromId(user)
+		owner, username, err := util.SplitIdIntoOrgAndName(userNameWithOrg)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
 
@@ -411,13 +411,13 @@ func (c *ApiController) Logout() {
 			return
 		}
 
-		util.LogInfo(c.Ctx, "API: [%s] logged out", user)
+		util.LogInfo(c.Ctx, "API: [%s] logged out", userNameWithOrg)
 
 		if redirectUri == "" {
 			logger.Info(goCtx,
 				"",
 				"obj-type", "application",
-				"usr", user,
+				"usr", userNameWithOrg,
 				"obj", application.GetId(),
 				"act", "logout",
 				"r", "success",
@@ -429,7 +429,7 @@ func (c *ApiController) Logout() {
 				logger.Info(goCtx,
 					"",
 					"obj-type", "application",
-					"usr", user,
+					"usr", userNameWithOrg,
 					"obj", application.GetId(),
 					"act", "logout",
 					"r", "success",

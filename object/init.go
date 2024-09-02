@@ -161,7 +161,7 @@ func initBuiltInUser(ctx context.Context) {
 		IsAdmin:           true,
 		IsForbidden:       false,
 		IsDeleted:         false,
-		SignupApplication: "app-built-in",
+		SignupApplication: CasdoorApplication,
 		CreatedIp:         "127.0.0.1",
 		Properties:        make(map[string]string),
 		MappingStrategy:   "all",
@@ -173,7 +173,7 @@ func initBuiltInUser(ctx context.Context) {
 }
 
 func initBuiltInApplication(ctx context.Context) {
-	application, err := getApplication(ctx, "admin", "app-built-in", nil)
+	application, err := getApplication(ctx, "admin", CasdoorApplication, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -184,7 +184,7 @@ func initBuiltInApplication(ctx context.Context) {
 
 	application = &Application{
 		Owner:                "admin",
-		Name:                 "app-built-in",
+		Name:                 CasdoorApplication,
 		CreatedTime:          util.GetCurrentTime(),
 		DisplayName:          "Casdoor",
 		Logo:                 fmt.Sprintf("%s/img/cg_logo.png", conf.GetConfigString("staticBaseUrl")),
@@ -421,7 +421,7 @@ func initBuiltInPermission() {
 		Domains:      []string{},
 		Model:        "model-built-in",
 		ResourceType: "Application",
-		Resources:    []string{"app-built-in"},
+		Resources:    []string{CasdoorApplication},
 		Actions:      []string{"Read", "Write", "Admin"},
 		Effect:       "Allow",
 		IsEnabled:    true,

@@ -476,7 +476,7 @@ func GetUserByUserID(owner string, userId string) (*User, error) {
 }
 
 func GetUser(id string) (*User, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, err
 	}
@@ -535,7 +535,7 @@ func GetMaskedUsers(users []*User, errs ...error) ([]*User, error) {
 
 func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, error) {
 	var err error
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	oldUser, err := getUser(owner, name)
 	if err != nil {
 		return false, err
@@ -611,7 +611,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 }
 
 func updateUser(id string, user *User, columns []string) (int64, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	err := user.UpdateUserHash()
 	if err != nil {
 		return 0, err
@@ -661,7 +661,7 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 
 func UpdateUserForAllFields(id string, user *User) (bool, error) {
 	var err error
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return false, err
 	}
@@ -943,7 +943,7 @@ func userChangeTrigger(oldName string, newName string) error {
 	for _, role := range roles {
 		for j, u := range role.Users {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}
@@ -965,7 +965,7 @@ func userChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Users {
 			// u = organization/username
-			owner, name, err := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
 			if err != nil {
 				return err
 			}

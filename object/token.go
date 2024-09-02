@@ -149,7 +149,7 @@ func updateUsedByCode(token *Token) bool {
 }
 
 func GetToken(id string) (*Token, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (token *Token) GetId() string {
 }
 
 func UpdateToken(id string, token *Token) (bool, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return false, err
 	}

@@ -196,7 +196,7 @@ func (c *ApiController) GetUser() {
 	id := util.GetId(user.Owner, user.Name)
 
 	if request.Owner == "" {
-		request.Owner, err = util.GetOwnerFromId(id)
+		request.Owner, _, err = util.SplitIdIntoOrgAndName(id)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return
@@ -242,7 +242,7 @@ func (c *ApiController) GetUser() {
 	}
 
 	if fillUserIdProvider {
-		owner, err := util.GetOwnerFromId(id)
+		owner, _, err := util.SplitIdIntoOrgAndName(id)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return
@@ -1273,7 +1273,7 @@ func (c *ApiController) SendInvite() {
 		link = fmt.Sprintf("%s/signup/%s?id=%s&u=%s&e=%s", origin, application.Name, user.Id, user.Name, user.Email)
 	default:
 		switch {
-		case application.Name == "app-built-in":
+		case application.Name == object.CasdoorApplication:
 			link = fmt.Sprintf("%s/login?u=%s", origin, user.Name)
 		case application.SigninUrl != "":
 			link = application.SigninUrl

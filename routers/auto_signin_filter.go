@@ -80,7 +80,7 @@ func AutoSigninFilter(ctx *context.Context) {
 	userId = ctx.Input.Query("username")
 	password := ctx.Input.Query("password")
 	if userId != "" && password != "" && ctx.Input.Query("grant_type") == "" {
-		owner, name, err := util.GetOwnerAndNameFromId(userId)
+		owner, name, err := util.SplitIdIntoOrgAndName(userId)
 		if err != nil {
 			msg := object.CheckPassErrorToMessage(err, "en")
 			responseError(ctx, msg, http.StatusForbidden)

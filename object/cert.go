@@ -117,7 +117,7 @@ func getCert(owner string, name string) (*casdoorcert.Cert, error) {
 }
 
 func GetCert(id string) (*casdoorcert.Cert, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func GetCert(id string) (*casdoorcert.Cert, error) {
 }
 
 func UpdateCert(id string, cert *casdoorcert.Cert) (bool, error) {
-	owner, name, err := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return false, err
 	}

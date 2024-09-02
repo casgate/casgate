@@ -490,7 +490,7 @@ func CheckUserPermission(ctx context.Context, requestUserId, userId string, stri
 		return false, fmt.Errorf(i18n.Translate(lang, "general:Please login first"))
 	}
 
-	userOwner, err := util.GetOwnerFromId(userId)
+	userOwner, _, err := util.SplitIdIntoOrgAndName(userId)
 	if err != nil {
 		return false, err
 	}
