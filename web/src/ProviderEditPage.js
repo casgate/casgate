@@ -503,7 +503,7 @@ class ProviderEditPage extends React.Component {
                 this.updateProviderField("disableSsl", false);
                 this.updateProviderField("title", "Casgate Verification Code");
                 this.updateProviderField("content", "You have requested a verification code at Casgate. Here is your code: %s, please enter in 5 minutes.");
-                this.updateProviderField("inviteTitle", "Casgate Invitation Link");
+                this.updateProviderField("inviteTitle", "%productName Invitation Link");
                 this.updateProviderField("inviteContent", "Your invitation link: %s.");
                 this.updateProviderField("receiver", this.props.account.email);
               } else if (value === "SMS") {
