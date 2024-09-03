@@ -21,6 +21,7 @@ import (
 
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 // GetOrganizations ...
@@ -89,6 +90,7 @@ func (c *ApiController) GetOrganization() {
 func (c *ApiController) UpdateOrganization() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
+	ctx := c.getRequestCtx()
 
 	var organization object.Organization
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &organization)
@@ -105,7 +107,22 @@ func (c *ApiController) UpdateOrganization() {
 
 	c.validateOrganizationURLs(organization)
 
-	c.Data["json"] = wrapActionResponse(object.UpdateOrganization(c.Ctx.Request.Context(), request.Id, &organization, c.GetAcceptLanguage()))
+	msg := object.CheckOrgName(organization.Name, c.GetAcceptLanguage())
+	if msg != "" {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error":   "organization name check failed",
+				"details": msg,
+			},
+			logger.OperationNameUpdateOrganization,
+			logger.OperationResultFailure,
+		)
+		c.ResponseUnprocessableEntity(msg)
+		return
+	}
+
+	c.Data["json"] = wrapActionResponse(object.UpdateOrganization(ctx, request.Id, &organization, c.GetAcceptLanguage()))
 	c.ServeJSON()
 }
 
@@ -122,6 +139,7 @@ func (c *ApiController) UpdateOrganization() {
 func (c *ApiController) AddOrganization() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
+	ctx := c.getRequestCtx()
 
 	currentUser := c.getCurrentUser()
 	if !currentUser.IsGlobalAdmin() {
@@ -146,6 +164,21 @@ func (c *ApiController) AddOrganization() {
 
 	if err = checkQuotaForOrganization(int(count)); err != nil {
 		c.ResponseUnprocessableEntity(err.Error())
+		return
+	}
+
+	msg := object.CheckOrgName(organization.Name, c.GetAcceptLanguage())
+	if msg != "" {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error":   "organization name check failed",
+				"details": msg,
+			},
+			logger.OperationNameAddOrganization,
+			logger.OperationResultFailure,
+		)
+		c.ResponseUnprocessableEntity(msg)
 		return
 	}
 

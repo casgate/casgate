@@ -21,6 +21,9 @@ const (
 type OperationName string
 
 const (
+	OperationNameAddOrganization    OperationName = "add-organization"
+	OperationNameUpdateOrganization OperationName = "update-organization"
+
 	OperationNameUserUpdate  OperationName = "user-update"
 	OperationNameAddUser     OperationName = "add-user"
 	OperationNameSetPassword OperationName = "set-password"
