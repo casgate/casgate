@@ -644,6 +644,16 @@ func CheckUpdateUser(oldUser, user *User, lang string) string {
 	return ""
 }
 
+func CheckOrgName(orgName string, lang string) string {
+	if orgName == "" {
+		return i18n.Translate(lang, "check:Empty organization name")
+	} else if len(orgName) > 255 {
+		return i18n.Translate(lang, "check:Organization name is too long (maximum is 255 characters)")
+	}
+
+	return ""
+}
+
 func CheckToEnableCaptcha(application *Application, organization, username string) (bool, error) {
 	if len(application.Providers) == 0 {
 		return false, nil

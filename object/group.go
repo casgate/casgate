@@ -188,13 +188,13 @@ func DeleteGroup(group *Group) (bool, error) {
 		return false, errors.New("group has users")
 	}
 
-	if count, err := GetRoleCount(group.Owner, "`groups`", group.GetId()); err != nil {
+	if count, err := GetRoleCount(group.Owner, "groups", group.GetId()); err != nil {
 		return false, err
 	} else if count > 0 {
 		return false, errors.New("group has linked roles")
 	}
 
-	if count, err := GetPermissionCount(group.Owner, "`groups`", group.GetId()); err != nil {
+	if count, err := GetPermissionCount(group.Owner, "groups", group.GetId()); err != nil {
 		return false, err
 	} else if count > 0 {
 		return false, errors.New("group has linked permissions")
