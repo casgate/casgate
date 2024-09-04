@@ -125,6 +125,24 @@ func GetRole(id string) (*Role, error) {
 	return getRole(owner, name)
 }
 
+func GetRoleByDisplayName(owner, displayName string) (*Role, error) {
+	role := Role{
+		Owner:       owner,
+		DisplayName: displayName,
+	}
+
+	existed, err := orm.AppOrmer.Engine.Get(&role)
+	if err != nil {
+		return &role, fmt.Errorf("orm.AppOrmer.Engine.Get: %w", err)
+	}
+
+	if existed {
+		return &role, nil
+	}
+	
+	return nil, nil
+}
+
 func UpdateRole(id string, role *Role) (bool, error) {
 	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
 	oldRole, err := getRole(owner, name)

@@ -29,7 +29,9 @@ type TokenRequest struct {
 }
 
 const (
-	builtInOrg    = "built-in"
-	adminUsername = "admin"
+	builtInOrg        = "built-in"
+	adminUsername     = "admin"
 	productNameTarget = "%productName"
+
+	displayNameField = "displayName"
 )

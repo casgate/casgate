@@ -62,11 +62,20 @@ func (c *ApiController) GetRole() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	role, err := object.GetRole(request.Id)
+	var err error
+	var role *object.Role
+
+	if request.Field == displayNameField {
+		role, err = object.GetRoleByDisplayName(request.Owner, request.Value)
+	} else {
+		role, err = object.GetRole(request.Id)
+	}
+
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
+	
 	if role == nil {
 		c.ResponseOk()
 		return
