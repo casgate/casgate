@@ -7,6 +7,7 @@ import (
 	"net"
 	"strings"
 
+	"github.com/casdoor/casdoor/util"
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/pkg/errors"
 
@@ -154,6 +155,7 @@ type RecordBuilder interface {
 type LdapRelatedUser interface {
 	GetFieldByLdapAttribute(string) string
 	GetName() string
+	GetUserField(userField string) string
 }
 
 func (l *LdapConn) GetUsersFromLDAP(
@@ -315,6 +317,26 @@ func (ldap *Ldap) BuildAuthFilterString(user LdapRelatedUser) string {
 	}
 
 	filter := fmt.Sprintf("(&%s(|", ldap.Filter)
+	if len(ldap.AttributeMappingItems) > 0 {
+		attributeMappingMap := buildAttributeMappingMap(
+			ldap.AttributeMappingItems,
+			ldap.EnableCaseInsensitivity,
+		)
+		filterFields := ldap.FilterFields
+		if ldap.EnableCaseInsensitivity {
+			filterFields = util.MapStrings(filterFields, strings.ToLower)
+		}
+		for mappingAttr, userFields := range attributeMappingMap {
+			if util.ContainsString(filterFields, string(mappingAttr)) {
+				for _, userField := range userFields {
+					value := user.GetUserField(string(userField))
+					filter = fmt.Sprintf("%s(%s=%s)", filter, mappingAttr, value)
+				}
+			}
+		}
+		return fmt.Sprintf("%s))", filter)
+	}
+
 	for _, field := range ldap.FilterFields {
 		filter = fmt.Sprintf("%s(%s=%s)", filter, field, user.GetFieldByLdapAttribute(field))
 	}

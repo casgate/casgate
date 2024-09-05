@@ -328,6 +328,23 @@ func (user *User) GetFieldByLdapAttribute(attribute string) string {
 	}
 }
 
+func (user *User) GetUserField(userField string) string {
+	switch userField {
+	case "uid":
+		return user.Name
+	case "email":
+		return user.Email
+	case "displayName":
+		return user.DisplayName
+	case "Phone":
+		return user.Phone
+	case "Address":
+		return user.Address[0]
+	default:
+		return ""
+	}
+}
+
 func SyncLdapUserOnSignIn(
 	ctx context.Context,
 	organization string,
@@ -356,7 +373,11 @@ func SyncLdapUserOnSignIn(
 			continue
 		}
 
-		res, _ := conn.GetUsersFromLDAP(ldapServer, user, rb)
+		res, err := conn.GetUsersFromLDAP(ldapServer, user, rb)
+		if err != nil {
+			conn.Close()
+			return nil, err
+		}
 		if len(res) == 0 {
 			conn.Close()
 			continue
