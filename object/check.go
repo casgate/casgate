@@ -276,7 +276,6 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 	ldapLoginSuccess := false
 	hit := false
 	var ldapServerId string
-	userDisabled := false
 
 	for _, ldapServer := range ldaps {
 		conn, err := ldap_sync.GetLdapConn(context.Background(), ldapServer)
@@ -303,20 +302,15 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 			return ldapServer.Id, fmt.Errorf(i18n.Translate(lang, "check:Multiple accounts with same uid, please check your ldap server"))
 		}
 
-		userDisabled, err = CheckIsUserDisabled(searchResult.Entries[0].Attributes)
+		userDisabled, err := CheckIsUserDisabled(searchResult.Entries[0].Attributes)
 		if err != nil {
 			conn.Close()
 			return "", err
 		}
 
 		if userDisabled {
-			user.IsForbidden = true
-			_, err = UpdateUser(user.GetId(), user, []string{"is_forbidden"}, false)
-			if err != nil {
-				return "", err
-			}
 			conn.Close()
-			break
+			return "", fmt.Errorf("user is disabled")
 		}
 
 		hit = true
@@ -329,10 +323,6 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 		}
 
 		conn.Close()
-	}
-
-	if userDisabled {
-		return "", fmt.Errorf("user is disabled")
 	}
 
 	if !ldapLoginSuccess {
