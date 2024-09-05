@@ -65,3 +65,14 @@ func ReturnAnyNotEmpty(strs ...string) string {
 	}
 	return ""
 }
+
+func MapStrings(data []string, f func(string) string) []string {
+
+	mapped := make([]string, len(data))
+
+	for i, e := range data {
+		mapped[i] = f(e)
+	}
+
+	return mapped
+}
