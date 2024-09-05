@@ -111,3 +111,16 @@ dry-run: ## Dry run for helm install
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	helm delete ${APP} -n ${NAMESPACE}
+
+.PHONY: mock-install
+mock-install:  ## Install mockery
+	@# The following installs a specific version of mockery to generate mocks
+	go install github.com/vektra/mockery/v2@v2.41.0
+
+.PHONY:
+mockery:
+	mockery --name $(name) --dir $(dir) --output $(dir)/mocks
+
+.PHONY:
+mock:
+	make mockery name=LdapRelatedUser dir=./ldap_sync
