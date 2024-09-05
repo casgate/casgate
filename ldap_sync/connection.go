@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/pkg/errors"
 
@@ -148,10 +149,6 @@ func isMicrosoftAD(Conn *goldap.Conn) (bool, error) {
 	return isMicrosoft, err
 }
 
-type RecordBuilder interface {
-	AddReason(string)
-}
-
 type LdapRelatedUser interface {
 	GetFieldByLdapAttribute(string) string
 	GetName() string
@@ -159,9 +156,9 @@ type LdapRelatedUser interface {
 }
 
 func (l *LdapConn) GetUsersFromLDAP(
+	ctx context.Context,
 	ldapServer *Ldap,
 	selectedUser LdapRelatedUser,
-	rb RecordBuilder,
 ) ([]LdapUser, error) {
 	SearchAttributes := []string{
 		"uidNumber", "cn", "sn", "gidNumber", "entryUUID", "displayName", "mail", "email",
@@ -222,13 +219,7 @@ func (l *LdapConn) GetUsersFromLDAP(
 				ldapServer.EnableCaseInsensitivity,
 			)
 			if len(unmappedAttributes) > 0 {
-				rb.AddReason(
-					fmt.Sprintf(
-						"User (%s) has unmapped attributes: %s",
-						entry.DN,
-						strings.Join(unmappedAttributes, ", "),
-					),
-				)
+				logger.Error(ctx, "User has unmapped attributes", "user_id", entry.DN, "unmapped_attributes", unmappedAttributes)
 			}
 		}
 

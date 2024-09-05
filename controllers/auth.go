@@ -357,7 +357,7 @@ func (c *ApiController) Login() {
 	logger.SetItem(goCtx, "obj", fmt.Sprintf("admin/%s", authForm.Application))
 	logger.SetItem(goCtx, "usr", util.GetId(authForm.Organization, authForm.Username))
 
-	record := object.GetRecord(goCtx)
+	record := object.GetRecordBuilderFromContext(goCtx)
 
 	if authForm.Username != "" {
 		if authForm.Type == ResponseTypeLogin {
@@ -492,15 +492,33 @@ func (c *ApiController) Login() {
 					mappingRb.AddReason("sign in via ldap, ldapID: " + authForm.LdapId)
 					_, err = object.SyncLdapUserOnSignIn(
 						goCtx,
+						c.Ctx,
 						authForm.Organization,
 						authForm.LdapId,
 						authForm.Username,
 						authForm.Password,
 						c.GetAcceptLanguage(),
-						record,
 					)
 					if err != nil {
+						logger.Error(
+							goCtx,
+							"SyncLdapUserOnSignIn failed",
+							"error", err.Error(),
+							"username", authForm.Username,
+							"ldap_id", authForm.LdapId,
+							"act", logger.OperationNameLdapSyncUsers,
+							"r", logger.OperationResultFailure,
+						)
 						record.AddReason(fmt.Sprintf("Ldap sync error: %s", err.Error()))
+					} else {
+						logger.Info(
+							goCtx,
+							"SyncLdapUserOnSignIn success",
+							"username", authForm.Username,
+							"ldap_id", authForm.LdapId,
+							"act", logger.OperationNameLdapSyncUsers,
+							"r", logger.OperationResultSuccess,
+						)
 					}
 				}
 			}
@@ -1161,7 +1179,7 @@ func (c *ApiController) Login() {
 }
 
 func logLoginErr(ctx context.Context, errText string, provider string, providerCat string) {
-	record := object.GetRecord(ctx)
+	record := object.GetRecordBuilderFromContext(ctx)
 	record.AddReason(errText)
 
 	logMsg := map[string]string{

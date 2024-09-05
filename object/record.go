@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/beego/beego/context"
+	beegoCtx "github.com/beego/beego/context"
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
@@ -63,6 +63,18 @@ type RecordDetail struct {
 	OldObject interface{} `json:"oldObject,omitempty"`
 }
 
+// AuditRecordResponse This is used to store request status for handlers that require precise audit logging 
+// and should not have huge response stored.
+type AuditRecordResponse struct {
+	Status AuditRecordStatus `json:"status"`
+	Msg string `json:"msg"`
+}
+
+type AuditRecordStatus string
+
+const AuditStatusOK AuditRecordStatus = AuditRecordStatus("ok")
+const AuditStatusError AuditRecordStatus = AuditRecordStatus("error")
+
 func (rd *RecordDetail) FromDB(bytes []byte) error {
 	return json.Unmarshal(bytes, rd)
 }
@@ -71,7 +83,7 @@ func (rd *RecordDetail) ToDB() ([]byte, error) {
 	return json.Marshal(rd)
 }
 
-func NewRecord(ctx *context.Context) *Record {
+func NewRecord(ctx *beegoCtx.Context) *Record {
 	ip := strings.Replace(util.GetIPFromRequest(ctx.Request), ": ", "", -1)
 	action := strings.Replace(ctx.Request.URL.Path, "/api/", "", -1)
 	requestUri := util.FilterQuery(ctx.Request.RequestURI, []string{"accessToken"})

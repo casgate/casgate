@@ -271,7 +271,7 @@ func (c *ApiController) AddUserIdProvider() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	goCtx := c.getRequestCtx()
-	record := object.GetRecord(goCtx)
+	record := object.GetRecordBuilderFromContext(goCtx)
 
 	var userIdProvider object.UserIdProvider
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &userIdProvider)
@@ -320,7 +320,7 @@ func (c *ApiController) UpdateUser() {
 	columnsStr := c.Input().Get("columns")
 
 	goCtx := c.getRequestCtx()
-	record := object.GetRecord(goCtx)
+	record := object.GetRecordBuilderFromContext(goCtx)
 
 	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeUser)
 	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
