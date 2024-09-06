@@ -14,6 +14,7 @@
 
 import {authConfig} from "./Auth";
 import * as Setting from "../Setting";
+import {getStateFromQueryParams} from "./Util";
 
 export function getAccount(query = "") {
   return fetch(`${authConfig.serverUrl}/api/get-account${query}`, {
@@ -135,14 +136,19 @@ export function loginWithSaml(values, param) {
   }).then(res => res.json());
 }
 
-export function getAuthURL(providerID, applicationID, method) {
+export function getAuthURL(provider, application, method) {
+  const applicationID = application.owner + "/" + application.name;
+  const providerID = provider.owner + "/" + provider.name;
   const params = new URLSearchParams({
     providerID,
     applicationID,
     method,
   });
-
-  return fetch(`${authConfig.serverUrl}/api/get-auth-url?${params.toString()}`, {
+  const isShortState = provider.type === "WeChat" && navigator.userAgent.includes("MicroMessenger");
+  const state = getStateFromQueryParams(application.name, provider.name, method, isShortState);
+  // eslint-disable-next-line no-console
+  console.log(state);
+  return fetch(`${authConfig.serverUrl}/api/get-auth-url?${params.toString()}&state=${state}`, {
     method: "GET",
     credentials: "include",
     headers: {
