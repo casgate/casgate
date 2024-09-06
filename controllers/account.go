@@ -321,6 +321,7 @@ func (c *ApiController) Logout() {
 			c.ResponseError(err.Error())
 			return
 		}
+		record.WithUsername(username).WithOrganization(owner)
 		application, err := object.GetApplicationByUserId(goCtx, userNameWithOrg)
 		if err != nil {
 			err = errors.Wrap(err, "Logout error: failed to get application for user")
@@ -402,6 +403,7 @@ func (c *ApiController) Logout() {
 			c.ResponseError(err.Error())
 			return
 		}
+		record.WithUsername(username).WithOrganization(owner)
 
 		_, err = object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
 		if err != nil {
