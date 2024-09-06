@@ -120,7 +120,7 @@ func ExtractRecord(bCtx *beeCtx.Context) (*RecordBuilder, error) {
 	return extractRecordFromCtx(reqCtx)
 }
 
-func GetRecord(ctx goCtx.Context) *RecordBuilder {
+func GetRecordBuilderFromContext(ctx goCtx.Context) *RecordBuilder {
 	rb, err := extractRecordFromCtx(ctx)
 	if err == nil {
 		return rb

@@ -16,11 +16,13 @@ package object
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 
+	beegoCtx "github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/orm"
 	"github.com/casdoor/casdoor/util/logger"
@@ -63,9 +65,9 @@ type LdapSyncCommand struct {
 	SyncedByUserID string
 }
 
-// SyncLdapUsers
-// Read users from LDAP server and sync them to database, applying role mapping and attribute mapping if set.
-func SyncLdapUsers(
+// SyncUsersSynchronously
+// Read given users from LDAP server and sync them to database, applying role mapping and attribute mapping if set.
+func SyncUsersSynchronously(
 	ctx context.Context,
 	command LdapSyncCommand,
 ) (*SyncLdapUsersResult, error) {
@@ -167,6 +169,9 @@ func SyncLdapUsers(
 	}
 
 	err = locker.UnlockLDAPForSync(command.LdapId)
+	if err != nil {
+		return syncDetails, errors.Wrap(err, "failed to unlock LDAP after sync")
+	}
 	historyEntry.EndedAt = time.Now().UTC()
 	_, err = orm.AppOrmer.Engine.Insert(SetSyncHistoryUsers(historyEntry, syncDetails))
 	if err != nil {
@@ -176,7 +181,7 @@ func SyncLdapUsers(
 	return syncDetails, err
 }
 
-// SyncSingleUser sync single user
+// SyncSingleUser pick existing user or add new user and update his properties with data from ldap
 func SyncSingleUser(
 	ctx context.Context,
 	command LdapSyncCommand,
@@ -347,12 +352,12 @@ func (user *User) GetUserField(userField string) string {
 
 func SyncLdapUserOnSignIn(
 	ctx context.Context,
+	beegoCtx *beegoCtx.Context,
 	organization string,
 	ldapId string,
 	userName string,
 	password string,
 	lang string,
-	rb *RecordBuilder,
 ) (*ldap_sync.LdapUser, error) {
 	ldaps, err := GetLdaps(organization)
 	if err != nil {
@@ -368,12 +373,12 @@ func SyncLdapUserOnSignIn(
 			continue
 		}
 
-		conn, err := ldap_sync.GetLdapConn(context.Background(), ldapServer)
+		conn, err := ldap_sync.GetLdapConn(ctx, ldapServer)
 		if err != nil {
 			continue
 		}
 
-		res, err := conn.GetUsersFromLDAP(ldapServer, user, rb)
+		res, err := conn.GetUsersFromLDAP(ctx, ldapServer, user)
 		if err != nil {
 			conn.Close()
 			return nil, err
@@ -389,7 +394,9 @@ func SyncLdapUserOnSignIn(
 			return nil, err
 		}
 
-		_, err = SyncLdapUsers(
+		record := NewRecord(beegoCtx)
+		record.Action = "LDAP sync on sign in"
+		_, err = SyncUsersSynchronously(
 			ctx,
 			LdapSyncCommand{
 				LdapUsers:      AutoAdjustLdapUser(res),
@@ -398,6 +405,21 @@ func SyncLdapUserOnSignIn(
 				Reason:         ldap_sync.LdapSyncReasonManual,
 			},
 		)
+
+		auditResponse := AuditRecordResponse{
+			Status: AuditStatusOK,
+		}
+		if err != nil {
+			auditResponse = AuditRecordResponse{
+				Msg:    "LDAP sync on sign in failed",
+				Status: AuditStatusError,
+			}
+		}
+
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { AddRecord(record) })
 		return &res[0], err
 	}
 

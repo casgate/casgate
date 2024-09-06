@@ -197,7 +197,7 @@ func extendApplicationWithProviders(ctx context.Context, application *Applicatio
 		return err
 	}
 
-	record := GetRecord(ctx)
+	record := GetRecordBuilderFromContext(ctx)
 
 	for _, providerItem := range application.Providers {
 		if provider, ok := m[providerItem.Name]; ok {
@@ -506,7 +506,7 @@ func UpdateApplication(ctx context.Context, id string, application *Application)
 		return false, err
 	}
 
-	record := GetRecord(ctx)
+	record := GetRecordBuilderFromContext(ctx)
 	for _, providerItem := range application.Providers {
 		providerItem.Provider = nil
 	}

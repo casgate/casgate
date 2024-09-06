@@ -74,7 +74,7 @@ func (c *ApiController) Signup() {
 	}
 
 	gCtx := c.getRequestCtx()
-	record := object.GetRecord(gCtx)
+	record := object.GetRecordBuilderFromContext(gCtx)
 
 	var authForm form.AuthForm
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &authForm)
@@ -303,7 +303,7 @@ func (c *ApiController) Logout() {
 	c.Ctx.Input.SetData("user", userNameWithOrg)
 
 	goCtx := c.getRequestCtx()
-	record := object.GetRecord(goCtx).WithUsername(userNameWithOrg)
+	record := object.GetRecordBuilderFromContext(goCtx).WithUsername(userNameWithOrg)
 
 	logger.SetItem(goCtx, "obj-type", "application")
 	logger.SetItem(goCtx, "usr", userNameWithOrg)
@@ -447,7 +447,7 @@ func (c *ApiController) Logout() {
 }
 
 func logLogoutErr(ctx context.Context, errText string) {
-	record := object.GetRecord(ctx)
+	record := object.GetRecordBuilderFromContext(ctx)
 	record.AddReason(errText)
 
 	logMsg := map[string]string{

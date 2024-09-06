@@ -67,7 +67,7 @@ func (c *ApiController) GetLdapUsers() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	gCtx := c.getRequestCtx()
-	record := object.GetRecord(gCtx)
+	record := object.GetRecordBuilderFromContext(gCtx)
 	ldapId := c.Input().Get("ldapId")
 
 	if ldapId == "" {
@@ -83,7 +83,7 @@ func (c *ApiController) GetLdapUsers() {
 		return
 	}
 
-	conn, err := ldap_sync.GetLdapConn(context.Background(), ldapServer)
+	conn, err := ldap_sync.GetLdapConn(gCtx, ldapServer)
 	if err != nil {
 		err = errors.Wrap(err, "Get LDAP connection")
 		logger.Error(gCtx, err.Error())
@@ -92,7 +92,7 @@ func (c *ApiController) GetLdapUsers() {
 		return
 	}
 
-	users, err := conn.GetUsersFromLDAP(ldapServer, nil, record)
+	users, err := conn.GetUsersFromLDAP(gCtx, ldapServer, nil)
 	if err != nil {
 		err = errors.Wrap(err, "Get LDAP users")
 		logger.Error(gCtx, err.Error())
@@ -209,12 +209,12 @@ func (c *ApiController) AddLdap() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	gCtx := c.getRequestCtx()
-	record := object.GetRecord(gCtx)
+	tracingRecord := object.GetRecordBuilderFromContext(gCtx)
 
 	var ldap ldap_sync.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
 	if err != nil {
-		record.AddReason(fmt.Sprintf("Unmarshall: %v", err.Error()))
+		tracingRecord.AddReason(fmt.Sprintf("Unmarshal: %v", err.Error()))
 
 		c.ResponseError(err.Error())
 		return
@@ -236,7 +236,7 @@ func (c *ApiController) AddLdap() {
 	}
 
 	if msg != "" {
-		record.AddReason(msg)
+		tracingRecord.AddReason(msg)
 		c.ResponseError(msg)
 		return
 	}
@@ -246,13 +246,13 @@ func (c *ApiController) AddLdap() {
 	}
 
 	if ok, err := object.CheckLdapExist(&ldap); err != nil {
-		record.AddReason(fmt.Sprintf("Check LDAP exists: %v", err.Error()))
+		tracingRecord.AddReason(fmt.Sprintf("Check LDAP exists: %v", err.Error()))
 
 		c.ResponseError(err.Error())
 		return
 	} else if ok {
 		msg := c.T("ldap:Ldap server exist")
-		record.AddReason(msg)
+		tracingRecord.AddReason(msg)
 
 		c.ResponseError(msg)
 		return
@@ -264,10 +264,17 @@ func (c *ApiController) AddLdap() {
 	if ldap.AutoSync != 0 {
 		// Create new context to use in background operation,
 		// because request context may timeout or be cancelled by framework code.
-		err = object.GetLdapSynchronizationManager().StartAutoSync(context.Background(), ldap.Id, time.Duration(ldap.AutoSync)*time.Minute, record)
+		err := object.GetLdapSyncManager().StartSyncProcess(context.WithoutCancel(gCtx), ldap.Id, time.Duration(ldap.AutoSync)*time.Minute)
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Get LDAP syncronizer error: %v", err.Error()))
-
+			tracingRecord.AddReason(fmt.Sprintf("Update LDAP: StartSyncProcess: %v", err.Error()))
+			logger.Error(
+				gCtx,
+				"Add LDAP: StartSyncProcess error",
+				"error", err.Error(),
+				"ldap_id", ldap.Id,
+				"act", logger.OperationNameLdapSyncUsers,
+				"r", logger.OperationResultFailure,
+			)
 			c.ResponseError(err.Error())
 			return
 		}
@@ -289,10 +296,14 @@ func (c *ApiController) UpdateLdap() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	gCtx := c.getRequestCtx()
-	record := object.GetRecord(gCtx)
+	tracingRecord := object.GetRecordBuilderFromContext(gCtx)
 
 	var ldap ldap_sync.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
 
 	anyRequiredLdapFieldEmpty := util.IsStringsEmpty(ldap.Owner, ldap.ServerName, ldap.Host, ldap.BaseDn)
 	enabledCryptoAndEmptyCert := ldap.EnableCryptographicAuth && ldap.ClientCert == ""
@@ -310,7 +321,7 @@ func (c *ApiController) UpdateLdap() {
 	}
 
 	if msg != "" {
-		record.AddReason(msg)
+		tracingRecord.AddReason(msg)
 		c.ResponseError(msg)
 		return
 	}
@@ -318,7 +329,7 @@ func (c *ApiController) UpdateLdap() {
 	for _, roleMappingItem := range ldap.RoleMappingItems {
 		if util.IsStringsEmpty(roleMappingItem.Attribute, roleMappingItem.Role) || len(roleMappingItem.Values) == 0 {
 			msg := c.T("general:Missing parameter")
-			record.AddReason(msg)
+			tracingRecord.AddReason(msg)
 
 			c.ResponseError(msg)
 			return
@@ -327,7 +338,7 @@ func (c *ApiController) UpdateLdap() {
 
 	prevLdap, err := object.GetLdap(ldap.Id)
 	if err != nil {
-		record.AddReason(fmt.Sprintf("Get LDAP: %v", err.Error()))
+		tracingRecord.AddReason(fmt.Sprintf("Get LDAP: %v", err.Error()))
 
 		c.ResponseError(err.Error())
 		return
@@ -335,22 +346,32 @@ func (c *ApiController) UpdateLdap() {
 
 	affected, err := object.UpdateLdap(&ldap)
 	if err != nil {
-		record.AddReason(fmt.Sprintf("Update LDAP: %v", err.Error()))
+		tracingRecord.AddReason(fmt.Sprintf("Update LDAP: %v", err.Error()))
 
 		c.ResponseError(err.Error())
 		return
 	}
 
 	if ldap.AutoSync != 0 {
-		err := object.GetLdapSynchronizationManager().StartAutoSync(gCtx, ldap.Id, time.Duration(ldap.AutoSync)*time.Minute, record)
+		// Create new context to use in background operation,
+		// because request context may timeout or be cancelled by framework code.
+		err := object.GetLdapSyncManager().StartSyncProcess(context.WithoutCancel(gCtx), ldap.Id, time.Duration(ldap.AutoSync)*time.Minute)
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Get LDAP syncronizer error: %v", err.Error()))
+			tracingRecord.AddReason(fmt.Sprintf("Update LDAP: StartSyncProcess: %v", err.Error()))
 
+			logger.Error(
+				gCtx,
+				"Update LDAP: StartSyncProcess error",
+				"error", err.Error(),
+				"ldap_id", ldap.Id,
+				"act", logger.OperationNameLdapSyncUsers,
+				"r", logger.OperationResultFailure,
+			)
 			c.ResponseError(err.Error())
 			return
 		}
 	} else if ldap.AutoSync == 0 && prevLdap.AutoSync != 0 {
-		object.GetLdapSynchronizationManager().StopAutoSync(ldap.Id)
+		object.GetLdapSyncManager().StopSyncProcess(ldap.Id)
 	}
 
 	c.Data["json"] = wrapActionResponse(affected)
@@ -381,7 +402,7 @@ func (c *ApiController) DeleteLdap() {
 		return
 	}
 
-	object.GetLdapSynchronizationManager().StopAutoSync(ldap.Id)
+	object.GetLdapSyncManager().StopSyncProcess(ldap.Id)
 
 	c.Data["json"] = wrapActionResponse(affected)
 	c.ServeJSON()
@@ -399,19 +420,18 @@ func (c *ApiController) SyncLdapUsers() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	goCtx := c.getRequestCtx()
-	record := object.GetRecord(goCtx)
+	record := object.NewRecord(c.Ctx)
+	record.Action = "manual LDAP sync"
 
 	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeLDAP)
 	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
 
-	record.AddReason("SyncLdapUsers: start sync users")
-
 	id := c.Input().Get("id")
 	logger.SetItem(goCtx, "obj", id)
+	record.Object = id
 
 	_, ldapId, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
-		record.AddReason(err.Error())
 		logger.Error(
 			goCtx,
 			"SyncLdapUsers error: Invalid id",
@@ -421,18 +441,21 @@ func (c *ApiController) SyncLdapUsers() {
 			"act", logger.OperationNameLdapSyncUsers,
 			"r", logger.OperationResultFailure,
 		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsers error: Invalid id",
+			Status: object.AuditStatusError,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { object.AddRecord(record) })
 		c.ResponseError(err.Error())
 		return
 	}
 
-	mappingRb := object.NewRecordBuilderFromCtx(c.Ctx)
-	goCtx = context.WithValue(goCtx, object.RoleMappingRecordDataKey, mappingRb)
-	mappingRb.AddReason("manual user synchronization, ldapID: " + ldapId)
-
 	var users []ldap_sync.LdapUser
 	err = json.Unmarshal(c.Ctx.Input.RequestBody, &users)
 	if err != nil {
-		record.AddReason(err.Error())
 		logger.Error(
 			goCtx,
 			"SyncLdapUsers error: Failed to unmarshal ldap users",
@@ -442,6 +465,14 @@ func (c *ApiController) SyncLdapUsers() {
 			"act", logger.OperationNameLdapSyncUsers,
 			"r", logger.OperationResultFailure,
 		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsers error: Failed to unmarshal ldap users",
+			Status: object.AuditStatusError,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { object.AddRecord(record) })
 		c.ResponseError(err.Error())
 		return
 	}
@@ -454,11 +485,8 @@ func (c *ApiController) SyncLdapUsers() {
 		command.SyncedByUserID = request.User.Id
 	}
 
-	record.AddReason("manual ldap sync")
-
-	syncResult, err := object.SyncLdapUsers(goCtx, command)
+	syncResult, err := object.SyncUsersSynchronously(goCtx, command)
 	if err != nil {
-		record.AddReason(err.Error())
 		logger.Error(
 			goCtx,
 			"SyncLdapUsers failed",
@@ -469,6 +497,14 @@ func (c *ApiController) SyncLdapUsers() {
 			"act", logger.OperationNameLdapSyncUsers,
 			"r", logger.OperationResultFailure,
 		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsers failed",
+			Status: object.AuditStatusError,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { object.AddRecord(record) })
 		c.ResponseError(err.Error())
 		return
 	}
@@ -487,6 +523,13 @@ func (c *ApiController) SyncLdapUsers() {
 			"updated", len(syncResult.Updated),
 			"errors", len(syncResult.Failed),
 		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsers: sync finished with errors",
+			Status: object.AuditStatusError,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
 	} else {
 		logger.Info(
 			goCtx,
@@ -501,13 +544,20 @@ func (c *ApiController) SyncLdapUsers() {
 			"new_users", len(syncResult.Added),
 			"updated", len(syncResult.Updated),
 		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsers: sync finished",
+			Status: object.AuditStatusOK,
 	}
-	record.AddReason("SyncLdapUsers: users sync finished")
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+	}
 
 	failed := make([]ldap_sync.LdapUser, 0, len(syncResult.Failed))
 	for _, f := range syncResult.Failed {
 		failed = append(failed, f)
 	}
+	util.SafeGoroutine(func() { object.AddRecord(record) })
 
 	c.ResponseOk(&LdapSyncResp{
 		Exist:  syncResult.Exist,
@@ -527,29 +577,36 @@ func (c *ApiController) SyncLdapUsersV2() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	syncRequest := SyncLdapUsersRequest{}
-	goCtx := c.getRequestCtx()
-	record := object.GetRecord(goCtx)
+	ctx := c.getRequestCtx()
+	record := object.NewRecord(c.Ctx)
+	record.Action = "manual LDAP sync"
+
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &syncRequest)
 	if err != nil {
-		record.AddReason(err.Error())
 		logger.Error(
-			goCtx,
+			ctx,
 			"SyncLdapUsersV2 error: unmarshal request",
 			"error", err.Error(),
 			"act", logger.OperationNameLdapSyncUsers,
 			"r", logger.OperationResultFailure,
 		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsersV2 error: unmarshal request",
+			Status: object.AuditStatusError,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { object.AddRecord(record) })
 		c.ResponseError(err.Error())
 		return
 	}
-
-	record.AddReason("SyncLdapUsersV2: start sync users")
 
 	ldap, err := object.GetLdap(syncRequest.Id)
 	if err != nil {
 		err = errors.Wrap(err, "SyncLdapUsersV2 error: failed to GetLdap")
 		logger.Error(
-			goCtx,
+			ctx,
 			"SyncLdapUsersV2 error: failed to GetLdap",
 			"error", err.Error(),
 			"ldap_id", syncRequest.Id,
@@ -557,25 +614,60 @@ func (c *ApiController) SyncLdapUsersV2() {
 			"act", logger.OperationNameLdapSyncUsers,
 			"r", logger.OperationResultFailure,
 		)
-		logger.Error(goCtx, err.Error())
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsersV2 error: failed to GetLdap",
+			Status: object.AuditStatusError,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { object.AddRecord(record) })
 		c.ResponseError(err.Error())
 		return
 	}
 
-	conn, err := ldap_sync.GetLdapConn(goCtx, ldap)
+	conn, err := ldap_sync.GetLdapConn(ctx, ldap)
 	if err != nil {
-		err = errors.Wrap(err, "SyncLdapUsersV2 error: failed to GetLdapConn")
-		record.AddReason(err.Error())
-		logger.Error(goCtx, err.Error())
+		logger.Error(
+			ctx,
+			"SyncLdapUsersV2 error: failed to GetLdapConn",
+			"error", err.Error(),
+			"ldap_id", syncRequest.Id,
+			"reason", ldap_sync.LdapSyncReasonManual,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
+		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsersV2 error: failed to GetLdapConn",
+			Status: object.AuditStatusError,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { object.AddRecord(record) })
 		c.ResponseError(err.Error())
 		return
 	}
 
-	res, err := conn.GetUsersFromLDAP(ldap, nil, record)
+	res, err := conn.GetUsersFromLDAP(ctx, ldap, nil)
 	if err != nil {
-		err = errors.Wrap(err, "SyncLdapUsersV2 error: failed to GetUsersFromLDAP")
-		record.AddReason(err.Error())
-		logger.Error(goCtx, err.Error())
+		logger.Error(
+			ctx,
+			"SyncLdapUsersV2 error: failed to GetUsersFromLDAP",
+			"error", err.Error(),
+			"ldap_id", syncRequest.Id,
+			"reason", ldap_sync.LdapSyncReasonManual,
+			"act", logger.OperationNameLdapSyncUsers,
+			"r", logger.OperationResultFailure,
+		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsersV2 error: failed to GetLdapConn",
+			Status: object.AuditStatusError,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { object.AddRecord(record) })
 		c.ResponseError(err.Error())
 		return
 	}
@@ -586,13 +678,14 @@ func (c *ApiController) SyncLdapUsersV2() {
 	}
 	if request.User != nil {
 		command.SyncedByUserID = request.User.Id
+		record.User = request.User.Name
+		record.Organization = request.User.Owner
 	}
 
-	syncResult, err := object.SyncLdapUsers(goCtx, command)
+	syncResult, err := object.SyncUsersSynchronously(ctx, command)
 	if err != nil {
-		record.AddReason(fmt.Sprintf("SyncLdapUsers error: %s", err.Error()))
 		logger.Error(
-			goCtx,
+			ctx,
 			"SyncLdapUsersV2 failed",
 			"error", err.Error(),
 			"ldap_id", command.LdapId,
@@ -600,12 +693,20 @@ func (c *ApiController) SyncLdapUsersV2() {
 			"act", logger.OperationNameLdapSyncUsers,
 			"r", logger.OperationResultFailure,
 		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsersV2 error: failed to GetLdapConn",
+			Status: object.AuditStatusError,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { object.AddRecord(record) })
 		c.ResponseError(err.Error())
 		return
 	}
 	if len(syncResult.Failed) != 0 {
 		logger.Warn(
-			goCtx,
+			ctx,
 			"SyncLdapUsersV2: sync finished with errors",
 			"ldap_id", command.LdapId,
 			"reason", ldap_sync.LdapSyncReasonManual,
@@ -617,9 +718,16 @@ func (c *ApiController) SyncLdapUsersV2() {
 			"updated", len(syncResult.Updated),
 			"errors", len(syncResult.Failed),
 		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsers: sync finished with errors",
+			Status: object.AuditStatusError,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
 	} else {
 		logger.Info(
-			goCtx,
+			ctx,
 			"SyncLdapUsersV2: sync finished",
 			"ldap_id", command.LdapId,
 			"reason", ldap_sync.LdapSyncReasonManual,
@@ -630,12 +738,20 @@ func (c *ApiController) SyncLdapUsersV2() {
 			"new_users", len(syncResult.Added),
 			"updated", len(syncResult.Updated),
 		)
+		auditResponse := object.AuditRecordResponse{
+			Msg:    "SyncLdapUsers: sync finished",
+			Status: object.AuditStatusOK,
+		}
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
 	}
 
 	failed := make([]ldap_sync.LdapUser, 0, len(syncResult.Failed))
 	for _, f := range syncResult.Failed {
 		failed = append(failed, f)
 	}
+	util.SafeGoroutine(func() { object.AddRecord(record) })
 
 	c.ResponseOk(&LdapSyncResp{
 		Exist:  syncResult.Exist,
@@ -678,7 +794,7 @@ func (c *ApiController) TestLdapConnection() {
 	}
 
 	var connection *ldap_sync.LdapConn
-	connection, err = ldap_sync.GetLdapConn(context.Background(), &ldap)
+	connection, err = ldap_sync.GetLdapConn(c.Ctx.Request.Context(), &ldap)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -723,7 +839,7 @@ func (c *ApiController) GetLdapSyncHistory() {
 	var err error
 
 	ctx := c.getRequestCtx()
-	record := object.GetRecord(ctx)
+	record := object.GetRecordBuilderFromContext(ctx)
 
 	ldapId := c.Input().Get("id")
 	sortOrderRaw := c.Input().Get("sortOrder")

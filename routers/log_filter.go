@@ -18,10 +18,12 @@ import (
 	"github.com/beego/beego/context"
 	"github.com/casdoor/casdoor/util"
 	"github.com/casdoor/casdoor/util/logger"
+	"github.com/google/uuid"
 )
 
-func LoggerFilter(ctx *context.Context) {
-	loggerCtx := logger.InitLoggerCtx(ctx.Request.Context())
-	ctx.Request = ctx.Request.WithContext(loggerCtx)
-	logger.SetItem(loggerCtx, "ip", util.GetIPFromRequest(ctx.Request))
+func LoggerFilter(beegoCtx *context.Context) {
+	ctx := logger.InitLoggerCtx(beegoCtx.Request.Context())
+	beegoCtx.Request = beegoCtx.Request.WithContext(ctx)
+	logger.SetItem(ctx, "ip", util.GetIPFromRequest(beegoCtx.Request))
+	logger.SetItem(ctx, "casgate_request_id", uuid.NewString())
 }

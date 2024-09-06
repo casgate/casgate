@@ -21,6 +21,7 @@ import (
 
 	"github.com/casdoor/casdoor/orm"
 	"github.com/casdoor/casdoor/util/logger"
+	"github.com/google/uuid"
 
 	"github.com/beego/beego"
 	"github.com/beego/beego/logs"
@@ -46,11 +47,14 @@ func main() {
 	object.CreateTables()
 	object.DoMigration()
 
-	ctx := context.Background()
+	ctx := logger.InitLoggerCtx(context.Background())
+	
+	// Parent request id to trace background tasks through logs
+	logger.SetItem(ctx, "casgate_request_id", uuid.NewString())
 
 	object.InitDb(ctx)
 	object.InitFromFile(ctx)
-	object.InitLdapAutoSynchronizer(ctx)
+	object.RunLDAPSync(ctx)
 	proxy.InitHttpClient()
 	object.InitUserManager()
 
@@ -68,7 +72,10 @@ func main() {
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PathFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PrometheusFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.LoggerFilter)
+
 	beego.InsertFilter("*", beego.BeforeExec, routers.UTF8Filter)
+
+	// certain routes are ignored within this filter for precise auditing
 	beego.InsertFilter("*", beego.AfterExec, routers.LogRecordMessage, false)
 
 	beego.BConfig.WebConfig.Session.SessionOn = true

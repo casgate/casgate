@@ -137,7 +137,7 @@ func (c *ApiController) UpdateProvider() {
 	id := c.Input().Get("id")
 
 	goCtx := c.getRequestCtx()
-	record := object.GetRecord(goCtx)
+	record := object.GetRecordBuilderFromContext(goCtx)
 
 	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeProvider)
 	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
