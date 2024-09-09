@@ -483,6 +483,8 @@ func (c *ApiController) SyncLdapUsers() {
 	}
 	if request.User != nil {
 		command.SyncedByUserID = request.User.Id
+		record.User = request.User.Name
+		record.Organization = request.User.Owner
 	}
 
 	syncResult, err := object.SyncUsersSynchronously(goCtx, command)
