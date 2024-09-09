@@ -55,7 +55,7 @@ func (c *ApiController) ResponseError(error string, data ...interface{}) {
 
 // ResponseErrorWithStatus ...
 func (c *ApiController) ResponseErrorWithStatus(status int, error string) {
-	resp := &Error{Code: status, Message: error}
+	resp := &Error{Code: status, Message: error, Status: "error"}
 
 	c.Ctx.Output.Status = status
 
@@ -237,7 +237,7 @@ func (c *ApiController) GetProviderFromContext(category string) (*object.Provide
 	}
 
 	if providerName != "" {
-		provider, err := object.GetProvider(util.GetId("admin", providerName))
+		provider, err := object.GetProvider(util.GetId("admin", providerName), false)
 		if err != nil {
 			return nil, err
 		}

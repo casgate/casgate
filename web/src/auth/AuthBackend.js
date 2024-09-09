@@ -146,8 +146,6 @@ export function getAuthURL(provider, application, method) {
   });
   const isShortState = provider.type === "WeChat" && navigator.userAgent.includes("MicroMessenger");
   const state = getStateFromQueryParams(application.name, provider.name, method, isShortState);
-  // eslint-disable-next-line no-console
-  console.log(state);
   return fetch(`${authConfig.serverUrl}/api/get-auth-url?${params.toString()}&state=${state}`, {
     method: "GET",
     credentials: "include",

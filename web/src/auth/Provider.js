@@ -380,11 +380,5 @@ export async function getAuthUrl(application, provider, method) {
   if (application === null || provider === null) {
     return "";
   }
-  const response = await AuthBackend.getAuthURL(provider, application, method);
-  if (response.status === "ok") {
-    const {url} = response.data;
-    return url;
-  } else {
-    throw new Error(response.msg || "Failed to get auth URL");
-  }
+  return await AuthBackend.getAuthURL(provider, application, method);
 }

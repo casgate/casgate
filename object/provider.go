@@ -183,7 +183,7 @@ func GetPaginationGlobalProviders(offset, limit int, field, value, sortField, so
 	return providers, nil
 }
 
-func getProvider(owner string, name string) (*Provider, error) {
+func getProvider(owner string, name string, initOpenIDProvider bool) (*Provider, error) {
 	if owner == "" || name == "" {
 		return nil, nil
 	}
@@ -194,19 +194,27 @@ func getProvider(owner string, name string) (*Provider, error) {
 		return &provider, err
 	}
 
-	if existed {
-		return &provider, nil
-	} else {
+	if !existed {
 		return nil, nil
+
 	}
+
+	if provider.Type == "OpenID" && initOpenIDProvider {
+		err := updateOpenIDWithUrls(&provider)
+		if err != nil {
+			return nil, fmt.Errorf("updateOpenIDWithUrls: %w", err)
+		}
+	}
+
+	return &provider, nil
 }
 
-func GetProvider(id string) (*Provider, error) {
+func GetProvider(id string, initOpenIDProvider bool) (*Provider, error) {
 	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return nil, err
 	}
-	return getProvider(owner, name)
+	return getProvider(owner, name, initOpenIDProvider)
 }
 
 func GetWechatMiniProgramProvider(application *Application) *Provider {
@@ -224,7 +232,7 @@ func UpdateProvider(ctx context.Context, id string, provider *Provider) (bool, e
 	if err != nil {
 		return false, err
 	}
-	p, err := getProvider(owner, name)
+	p, err := getProvider(owner, name, false)
 	if err != nil {
 		return false, err
 	} else if p == nil {

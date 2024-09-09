@@ -783,7 +783,7 @@ func GetWechatMiniProgramToken(ctx context.Context, application *Application, co
 			ErrorDescription: "the application does not support wechat mini program",
 		}, nil
 	}
-	provider, err := GetProvider(util.GetId("admin", mpProvider.Name))
+	provider, err := GetProvider(util.GetId("admin", mpProvider.Name), false)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -159,8 +159,15 @@ export async function authViaMetaMask(application, provider, method) {
       token = await signEthereumTypedData(account, nonce);
       setWeb3AuthToken(token);
     }
-    const redirectUri = `${getAuthUrl(application, provider, method)}&web3AuthTokenKey=${getWeb3AuthTokenKey(account)}`;
-    goToLink(redirectUri);
+    const authResp = await getAuthUrl(application, provider, method);
+    if (authResp.status === "ok") {
+      const redirectUri = `${authResp.data.url}&web3AuthTokenKey=${getWeb3AuthTokenKey(account)}`;
+      goToLink(redirectUri);
+    } else {
+      Setting.showMessage("error", `${i18next.t("general:Failed to get auth provider info")}: ${authResp.msg}`);
+      return null;
+    }
+
   } catch (err) {
     showMessage("error", `${i18next.t("login:Failed to obtain MetaMask authorization")}: ${err.message}`);
   }
@@ -329,8 +336,15 @@ export async function authViaWeb3Onboard(application, provider, method) {
         createAt: Math.floor(new Date().getTime() / 1000),
       };
       setWeb3AuthToken(token);
-      const redirectUri = `${getAuthUrl(application, provider, method)}&web3AuthTokenKey=${getWeb3AuthTokenKey(address)}`;
-      goToLink(redirectUri);
+      const authResp = await getAuthUrl(application, provider, method);
+      if (authResp.status === "ok") {
+        const redirectUri = `${authResp.data.url}&web3AuthTokenKey=${getWeb3AuthTokenKey(address)}`;
+        goToLink(redirectUri);
+      } else {
+        Setting.showMessage("error", `${i18next.t("general:Failed to get auth provider info")}: ${authResp.msg}`);
+        return null;
+      }
+
     }
   } catch (err) {
     showMessage("error", `${i18next.t("login:Failed to obtain Web3-Onboard authorization")}: ${err}`);

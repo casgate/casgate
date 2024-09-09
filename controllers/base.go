@@ -399,6 +399,7 @@ func (c *ApiController) Finish() {
 }
 
 type Error struct {
+	Status  string `json:"status"`
 	Code    int    `json:"code,omitempty"`
 	Message string `json:"msg"`
 }

@@ -22,7 +22,6 @@ import * as Conf from "../Conf";
 import * as AuthBackend from "./AuthBackend";
 import * as OrganizationBackend from "../backend/OrganizationBackend";
 import * as ApplicationBackend from "../backend/ApplicationBackend";
-import * as Provider from "./Provider";
 import * as ProviderButton from "./ProviderButton";
 import * as Util from "./Util";
 import * as Setting from "../Setting";
@@ -38,6 +37,7 @@ import {ChangePasswordForm, NextChangePasswordForm} from "./ChangePasswordForm";
 
 import {GoogleOneTapLoginVirtualButton} from "./GoogleLoginButton";
 import LdapSelect from "../common/select/LdapSelect";
+import * as Provider from "./Provider";
 class LoginPage extends React.Component {
   constructor(props) {
     super(props);
@@ -1115,7 +1115,14 @@ class LoginPage extends React.Component {
 
     const visibleOAuthProviderItems = (application.providers === null) ? [] : application.providers.filter(providerItem => this.isProviderVisible(providerItem));
     if (this.props.preview !== "auto" && !Setting.isPasswordEnabled(application) && !Setting.isCodeSigninEnabled(application) && !Setting.isWebAuthnEnabled(application) && !Setting.isLdapEnabled(application) && visibleOAuthProviderItems.length === 1) {
-      Setting.goToLink(Provider.getAuthUrl(application, visibleOAuthProviderItems[0].provider, "signup"));
+      const authResp = Provider.getAuthUrl(application, visibleOAuthProviderItems[0].provider, "signup");
+      if (authResp.status === "ok") {
+        const authUrlParams = new URLSearchParams(authResp.data.url);
+        Setting.goToLink(authUrlParams);
+      } else {
+        Setting.showMessage("error", `${i18next.t("general:Failed to get auth provider info")}: ${authResp.msg}`);
+        return null;
+      }
       return (
         <div style={{display: "flex", justifyContent: "center", alignItems: "center", width: "100%"}}>
           <Spin size="large" tip={i18next.t("login:Signing in...")} />

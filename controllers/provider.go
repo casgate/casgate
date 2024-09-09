@@ -112,7 +112,7 @@ func (c *ApiController) GetProvider() {
 	if !ok {
 		return
 	}
-	provider, err := object.GetProvider(id)
+	provider, err := object.GetProvider(id, false)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
@@ -368,7 +368,8 @@ func (c *ApiController) TestProviderConnection() {
 	idpInfo := object.FromProviderToIdpInfo(nil, &provider)
 	idProvider := idp.GetIdProvider(idpInfo, idpInfo.RedirectUrl)
 	if provider.Type == "OpenID" {
-		object.SetHttpClientToOIDCProvider(idpInfo, idProvider)
+		err := object.SetHttpClientToOIDCProvider(idpInfo, idProvider)
+		fmt.Println(err)
 	}
 
 	err = idProvider.TestConnection()
@@ -384,7 +385,7 @@ func (c *ApiController) TestProviderConnection() {
 		case errors.As(err, &notImplementedError):
 			c.ResponseError(c.T("general:Not implemented"))
 		default:
-			c.ResponseError(c.T(err.Error()))
+			c.ResponseError(err.Error())
 		}
 		return
 	}

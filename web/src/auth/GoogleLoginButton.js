@@ -17,6 +17,7 @@ import {StaticBaseUrl} from "../Setting";
 import {useGoogleOneTapLogin} from "react-google-one-tap-login";
 import * as Setting from "../Setting";
 import * as Provider from "./Provider";
+import i18next from "i18next";
 
 function Icon({width = 24, height = 24, color}) {
   return <img src={`${StaticBaseUrl}/buttons/google.svg`} alt="Sign in with Google" />;
@@ -46,7 +47,14 @@ export function GoogleOneTapLoginVirtualButton(prop) {
     },
     onSuccess: (response) => {
       const code = "GoogleIdToken-" + JSON.stringify(response);
-      const authUrlParams = new URLSearchParams(Provider.getAuthUrl(application, providerConf.provider, "signup"));
+      let authUrlParams;
+      const authResp = Provider.getAuthUrl(application, providerConf.provider, "signup");
+      if (authResp.status === "ok") {
+        authUrlParams = new URLSearchParams(authResp.data.url);
+      } else {
+        Setting.showMessage("error", `${i18next.t("general:Failed to get auth provider info")}: ${authResp.msg}`);
+        return;
+      }
       const state = authUrlParams.get("state");
       let redirectUri = authUrlParams.get("redirect_uri");
       redirectUri = `${redirectUri}?state=${state}&code=${encodeURIComponent(code)}`;

@@ -154,7 +154,7 @@ func getAuthData(assertionInfo *saml2.AssertionInfo, _ *Provider) map[string]int
 }
 
 func GenerateSamlRequest(ctx context.Context, id, relayState, host, lang string) (auth string, method string, err error) {
-	provider, err := GetProvider(id)
+	provider, err := GetProvider(id, false)
 	if err != nil {
 		return "", "", err
 	}

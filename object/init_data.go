@@ -270,7 +270,7 @@ func initDefinedLdap(ldap *ldap_sync.Ldap) {
 func initDefinedProvider(provider *Provider) {
 	ctx := context.TODO()
 
-	existed, err := GetProvider(util.GetId("admin", provider.Name))
+	existed, err := GetProvider(util.GetId("admin", provider.Name), false)
 	if err != nil {
 		panic(err)
 	}

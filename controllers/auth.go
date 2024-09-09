@@ -663,7 +663,7 @@ func (c *ApiController) Login() {
 		}
 
 		providerID := util.GetId(application.Organization, authForm.Provider)
-		provider, err := object.GetProvider(providerID)
+		provider, err := object.GetProvider(providerID, false)
 		if err != nil {
 			logLoginErr(goCtx, fmt.Sprintf("Login error: %s", err.Error()), authForm.Provider, "")
 			c.ResponseInternalServerError("internal server error")
@@ -1333,8 +1333,6 @@ func (c *ApiController) Callback() {
 // @Failure 500 Internal Server Error
 // @router /get-auth-url [get]
 func (c *ApiController) GetAuthURL() {
-	goCtx := c.getRequestCtx()
-
 	applicationID := c.Input().Get("applicationID")
 	providerID := c.Input().Get("providerID")
 	state := c.Input().Get("state")
@@ -1346,18 +1344,12 @@ func (c *ApiController) GetAuthURL() {
 	redirectURI := fmt.Sprintf("%s://%s/callback", getScheme(c.Ctx.Request), c.Ctx.Request.Host)
 	userAgent := c.Ctx.Request.UserAgent()
 
-	application, err := object.GetApplicationWithOpts(goCtx, applicationID, &object.GetApplicationOptions{InitOpenIDProvider: true})
+	provider, err := object.GetProvider(providerID, true)
 	if err != nil {
-		c.ResponseInternalServerError(fmt.Sprintf("Get application: %s", applicationID))
+		c.ResponseUnprocessableEntity(err.Error())
 		return
 	}
-	var provider *object.Provider
-	for _, p := range application.Providers {
-		if providerID == p.Provider.GetId() {
-			provider = p.Provider
-			break
-		}
-	}
+
 	if provider == nil {
 		c.ResponseNotFound(fmt.Sprintf("Could not find provider: %s in application: %s", providerID, applicationID))
 		return

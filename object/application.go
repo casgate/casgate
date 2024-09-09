@@ -227,7 +227,7 @@ func updateOpenIDWithUrls(provider *Provider) error {
 	openIDProvider.SetHttpClient(client)
 	err = openIDProvider.EnrichOauthURLs()
 	if err != nil {
-		return fmt.Errorf("failed to EnrichOauthURLs for provider %s", provider.Name)
+		return fmt.Errorf("failed to EnrichOauthURLs for provider %s: %w", provider.Name, err)
 	}
 
 	provider.CustomTokenUrl = openIDProvider.TokenURL
