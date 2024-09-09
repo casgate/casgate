@@ -1337,8 +1337,7 @@ func (c *ApiController) GetAuthURL() {
 
 	applicationID := c.Input().Get("applicationID")
 	providerID := c.Input().Get("providerID")
-	method := c.Input().Get("method")
-
+	state := c.Input().Get("state")
 	if applicationID == "" || providerID == "" {
 		c.ResponseNotFound("Missing required parameters")
 		return
@@ -1364,14 +1363,6 @@ func (c *ApiController) GetAuthURL() {
 		return
 	}
 
-	isShortState := provider.Type == "WeChat" && strings.Contains(userAgent, "MicroMessenger")
-
-	authQuery, err := getAuthQuery(application.Name, provider.Name, method, redirectURI, c.Ctx.Request.URL.RawQuery)
-	if err != nil {
-		c.ResponseInternalServerError(err.Error())
-		return
-	}
-	state := getStateFromQueryParams(authQuery, provider.Name, isShortState)
 	authInfo, err := object.GetAuthInfo(provider.Type)
 	if err != nil {
 		c.ResponseBadRequest(err.Error())
@@ -1390,9 +1381,7 @@ func (c *ApiController) GetAuthURL() {
 		return
 	}
 	resp := GetAuthURLResp{
-		IsShortState: isShortState,
-		AuthQuery:    authQuery,
-		URL:          url,
+		URL: url,
 	}
 	c.ResponseOk(resp)
 }
@@ -1405,30 +1394,6 @@ func getScheme(r *http.Request) string {
 		return proto
 	}
 	return "http"
-}
-
-func getAuthQuery(applicationName, providerName, method, currentURL, currentPath string) (string, error) {
-	queryParams, err := url.ParseQuery(currentURL)
-	if err != nil {
-		return "", err
-	}
-	queryParams.Add("application", applicationName)
-	queryParams.Add("provider", providerName)
-	queryParams.Add("method", method)
-
-	if method == "link" {
-		queryParams.Add("from", currentPath)
-	}
-
-	return queryParams.Encode(), nil
-}
-
-func getStateFromQueryParams(authQuery, providerName string, isShortState bool) string {
-	if !isShortState {
-		result := base64.StdEncoding.EncodeToString([]byte(authQuery))
-		return string(result)
-	}
-	return providerName
 }
 
 func buildAuthURL(provider *object.Provider, authInfo *object.AuthInfo, endpoint, redirectURI, state, userAgent, host string) (string, error) {
