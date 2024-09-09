@@ -2,6 +2,7 @@ package object
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 	"time"
 
@@ -88,7 +89,7 @@ func (l *LdapSyncManager) StartSyncProcess(
 	)
 
 	util.SafeGoroutine(func() {
-		err := l.syncRoutine(ctx, ldap, stopChan, tickDuration)
+		err := l.runSyncPeriodically(ctx, ldap, stopChan, tickDuration)
 		if err != nil {
 			logger.Info(
 				ctx,
@@ -115,7 +116,7 @@ func (l *LdapSyncManager) StopSyncProcess(ldapId string) {
 }
 
 // autosync goroutine
-func (l *LdapSyncManager) syncRoutine(
+func (l *LdapSyncManager) runSyncPeriodically(
 	ctx context.Context,
 	ldap *ldap_sync.Ldap,
 	stopChan chan struct{},
@@ -198,7 +199,19 @@ func UpdateLdapSyncTime(ldapId string) error {
 
 type LdapSyncronizer struct{}
 
+// SyncLdapUsers 
+// add audit here
 func (ls *LdapSyncronizer) SyncLdapUsers(ctx context.Context, ldap *ldap_sync.Ldap) error {
+	record := &Record{
+		Name:        util.GenerateId(),
+		CreatedTime: util.GetCurrentTime(),
+		Action:      "auto LDAP sync",
+		Object:      ldap.Id,
+	}
+	auditResponse := AuditRecordResponse{
+		Status: AuditStatusOK,
+		Msg: "autosync success",
+	}
 	logger.Info(
 		ctx,
 		"autoSync started",
@@ -212,6 +225,12 @@ func (ls *LdapSyncronizer) SyncLdapUsers(ctx context.Context, ldap *ldap_sync.Ld
 	// fetch all users
 	conn, err := ldap_sync.GetLdapConn(ctx, ldap)
 	if err != nil {
+		auditResponse.Status = AuditStatusError
+		auditResponse.Msg = errors.Wrap(err, "autoSync failed: failed to call GetLdapConn").Error()
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { AddRecord(record) })
 		logger.Error(
 			ctx,
 			"autoSync failed: failed to call GetLdapConn",
@@ -227,6 +246,12 @@ func (ls *LdapSyncronizer) SyncLdapUsers(ctx context.Context, ldap *ldap_sync.Ld
 
 	users, err := conn.GetUsersFromLDAP(ctx, ldap, nil)
 	if err != nil {
+		auditResponse.Status = AuditStatusError
+		auditResponse.Msg = errors.Wrap(err, "autoSync failed: failed to call GetUsersFromLDAP").Error()
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { AddRecord(record) })
 		logger.Error(
 			ctx,
 			"autoSync failed: failed to call GetUsersFromLDAP",
@@ -245,6 +270,12 @@ func (ls *LdapSyncronizer) SyncLdapUsers(ctx context.Context, ldap *ldap_sync.Ld
 		LdapSyncCommand{LdapUsers: AutoAdjustLdapUser(users), LdapId: ldap.Id, Reason: ldap_sync.LdapSyncReasonAuto},
 	)
 	if err != nil {
+		auditResponse.Status = AuditStatusError
+		auditResponse.Msg = errors.Wrap(err, "autosync error").Error()
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { AddRecord(record) })
 		logger.Error(
 			ctx,
 			"autosync error",
@@ -256,6 +287,12 @@ func (ls *LdapSyncronizer) SyncLdapUsers(ctx context.Context, ldap *ldap_sync.Ld
 			"r", logger.OperationResultFailure,
 		)
 	} else if len(syncResult.Failed) != 0 {
+		auditResponse.Status = AuditStatusError
+		auditResponse.Msg = errors.Wrap(err, "autosync finished with errors").Error()
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { AddRecord(record) })
 		logger.Warn(
 			ctx,
 			"autosync finished with errors",
@@ -267,6 +304,10 @@ func (ls *LdapSyncronizer) SyncLdapUsers(ctx context.Context, ldap *ldap_sync.Ld
 			"failed_count", len(syncResult.Failed),
 		)
 	} else {
+		if jsonResp, err := json.Marshal(auditResponse); err == nil {
+			record.Response = string(jsonResp)
+		}
+		util.SafeGoroutine(func() { AddRecord(record) })
 		logger.Info(
 			ctx,
 			"autosync success",
