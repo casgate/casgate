@@ -1,5 +1,7 @@
 package object
 
+const policyMaxValueLength = 100
+
 var defaultPolicyMappingRules = [][]string{
 	{"p", "permission.user", "permission.resource", "permission.action", "permission.effect"},
 	{"p", "role.name", "permission.resource", "permission.action", "permission.effect"},
