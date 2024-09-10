@@ -105,7 +105,6 @@ func NewRecord(ctx *beegoCtx.Context) *Record {
 		Name:        util.GenerateId(),
 		CreatedTime: util.GetCurrentTime(),
 		ClientIp:    ip,
-		User:        "",
 		Method:      ctx.Request.Method,
 		RequestUri:  requestUri,
 		Action:      action,

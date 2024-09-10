@@ -200,7 +200,6 @@ func UpdateLdapSyncTime(ldapId string) error {
 type LdapSyncronizer struct{}
 
 // SyncLdapUsers 
-// add audit here
 func (ls *LdapSyncronizer) SyncLdapUsers(ctx context.Context, ldap *ldap_sync.Ldap) error {
 	record := &Record{
 		Name:        util.GenerateId(),
@@ -221,6 +220,9 @@ func (ls *LdapSyncronizer) SyncLdapUsers(ctx context.Context, ldap *ldap_sync.Ld
 		"act", logger.OperationNameLdapSyncUsers,
 		"r", logger.OperationResultSuccess,
 	)
+	record.Owner = ldap.Owner
+	record.Organization = ldap.Owner
+	record.Object = ldap.Id
 
 	// fetch all users
 	conn, err := ldap_sync.GetLdapConn(ctx, ldap)

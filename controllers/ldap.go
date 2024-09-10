@@ -430,7 +430,7 @@ func (c *ApiController) SyncLdapUsers() {
 	logger.SetItem(goCtx, "obj", id)
 	record.Object = id
 
-	_, ldapId, err := util.SplitIdIntoOrgAndName(id)
+	organizationName, ldapId, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		logger.Error(
 			goCtx,
@@ -452,6 +452,9 @@ func (c *ApiController) SyncLdapUsers() {
 		c.ResponseError(err.Error())
 		return
 	}
+	record.Organization = organizationName
+	record.Owner = organizationName
+	record.Object = ldapId
 
 	var users []ldap_sync.LdapUser
 	err = json.Unmarshal(c.Ctx.Input.RequestBody, &users)
@@ -627,6 +630,9 @@ func (c *ApiController) SyncLdapUsersV2() {
 		c.ResponseError(err.Error())
 		return
 	}
+	record.Organization = ldap.Owner
+	record.Owner = ldap.Owner
+	record.Object = ldap.Id
 
 	conn, err := ldap_sync.GetLdapConn(ctx, ldap)
 	if err != nil {
@@ -681,7 +687,6 @@ func (c *ApiController) SyncLdapUsersV2() {
 	if request.User != nil {
 		command.SyncedByUserID = request.User.Id
 		record.User = request.User.Name
-		record.Organization = request.User.Owner
 	}
 
 	syncResult, err := object.SyncUsersSynchronously(ctx, command)
