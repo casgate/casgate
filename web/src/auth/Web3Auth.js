@@ -164,7 +164,7 @@ export async function authViaMetaMask(application, provider, method) {
       const redirectUri = `${authResp.data.url}&web3AuthTokenKey=${getWeb3AuthTokenKey(account)}`;
       goToLink(redirectUri);
     } else {
-      Setting.showMessage("error", `${i18next.t("general:Failed to get auth provider info")}: ${authResp.msg}`);
+      showMessage("error", `${i18next.t("general:Failed to get auth provider info")}: ${authResp.msg}`);
       return null;
     }
 
@@ -341,7 +341,7 @@ export async function authViaWeb3Onboard(application, provider, method) {
         const redirectUri = `${authResp.data.url}&web3AuthTokenKey=${getWeb3AuthTokenKey(address)}`;
         goToLink(redirectUri);
       } else {
-        Setting.showMessage("error", `${i18next.t("general:Failed to get auth provider info")}: ${authResp.msg}`);
+        showMessage("error", `${i18next.t("general:Failed to get auth provider info")}: ${authResp.msg}`);
         return null;
       }
 
