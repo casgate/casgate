@@ -878,19 +878,11 @@ func (c *ApiController) Login() {
 						return
 					}
 
-					var userId string
-					if provider.Category != "SAML" {
-						userId = userInfo.Id
-					}
-					if userId == "" {
-						userId = util.GenerateId()
-					}
-
 					user = &object.User{
 						Owner:             application.Organization,
 						Name:              userInfo.Username,
 						CreatedTime:       util.GetCurrentTime(),
-						Id:                userId,
+						Id:                util.GenerateId(),
 						Type:              "normal-user",
 						DisplayName:       userInfo.DisplayName,
 						Avatar:            userInfo.AvatarUrl,
