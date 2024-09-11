@@ -98,6 +98,10 @@ func GetGroup(id string) (*Group, error) {
 }
 
 func UpdateGroup(id string, group *Group) (bool, error) {
+	if len(group.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
+	}
+
 	owner, name, err := util.SplitIdIntoOrgAndName(id)
 	if err != nil {
 		return false, err
@@ -145,6 +149,10 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 }
 
 func AddGroup(group *Group) (bool, error) {
+	if len(group.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
+	}
+
 	err := checkGroupName(group.Name)
 	if err != nil {
 		return false, err

@@ -88,6 +88,10 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 		return false, err
 	}
 
+	if len(domain.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
+	}
+
 	if oldDomain == nil {
 		return false, nil
 	}
@@ -151,6 +155,10 @@ func AddDomain(domain *Domain) (bool, error) {
 	id := domain.GetId()
 	if slices.Contains(domain.Domains, id) {
 		return false, fmt.Errorf("domain %s is in the child domain of %s", id, id)
+	}
+
+	if len(domain.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
 	}
 
 	affected, err := orm.AppOrmer.Engine.Insert(domain)
