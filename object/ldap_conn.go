@@ -267,7 +267,7 @@ func SyncSingleUser(
 		syncDetails.Exist = append(syncDetails.Exist, ldapUser)
 	}
 
-	if userExists && ldap.EnableAttributeMapping {
+	if ldap.EnableAttributeMapping {
 		err := SyncLdapAttributes(ldapUser, localUserID, ldap.Owner)
 		if err != nil {
 			return errors.Wrap(err, "SyncLdapAttributes")

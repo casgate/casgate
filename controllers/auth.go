@@ -487,39 +487,36 @@ func (c *ApiController) Login() {
 				if err != nil {
 					record.AddReason(fmt.Sprintf("Login error: %s", err.Error()))
 				}
-
-				if user == nil {
-					mappingRb.AddReason("sign in via ldap, ldapID: " + authForm.LdapId)
-					_, err = object.SyncLdapUserOnSignIn(
+				mappingRb.AddReason("sign in via ldap, ldapID: " + authForm.LdapId)
+				_, err = object.SyncLdapUserOnSignIn(
+					goCtx,
+					c.Ctx,
+					authForm.Organization,
+					authForm.LdapId,
+					authForm.Username,
+					authForm.Password,
+					c.GetAcceptLanguage(),
+				)
+				if err != nil {
+					logger.Error(
 						goCtx,
-						c.Ctx,
-						authForm.Organization,
-						authForm.LdapId,
-						authForm.Username,
-						authForm.Password,
-						c.GetAcceptLanguage(),
+						"SyncLdapUserOnSignIn failed",
+						"error", err.Error(),
+						"username", authForm.Username,
+						"ldap_id", authForm.LdapId,
+						"act", logger.OperationNameLdapSyncUsers,
+						"r", logger.OperationResultFailure,
 					)
-					if err != nil {
-						logger.Error(
-							goCtx,
-							"SyncLdapUserOnSignIn failed",
-							"error", err.Error(),
-							"username", authForm.Username,
-							"ldap_id", authForm.LdapId,
-							"act", logger.OperationNameLdapSyncUsers,
-							"r", logger.OperationResultFailure,
-						)
-						record.AddReason(fmt.Sprintf("Ldap sync error: %s", err.Error()))
-					} else {
-						logger.Info(
-							goCtx,
-							"SyncLdapUserOnSignIn success",
-							"username", authForm.Username,
-							"ldap_id", authForm.LdapId,
-							"act", logger.OperationNameLdapSyncUsers,
-							"r", logger.OperationResultSuccess,
-						)
-					}
+					record.AddReason(fmt.Sprintf("Ldap sync error: %s", err.Error()))
+				} else {
+					logger.Info(
+						goCtx,
+						"SyncLdapUserOnSignIn success",
+						"username", authForm.Username,
+						"ldap_id", authForm.LdapId,
+						"act", logger.OperationNameLdapSyncUsers,
+						"r", logger.OperationResultSuccess,
+					)
 				}
 			}
 
