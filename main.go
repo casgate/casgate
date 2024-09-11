@@ -48,7 +48,7 @@ func main() {
 	object.DoMigration()
 
 	ctx := logger.InitLoggerCtx(context.Background())
-	
+
 	// Parent request id to trace background tasks through logs
 	logger.SetItem(ctx, "casgate_request_id", uuid.NewString())
 
@@ -74,6 +74,7 @@ func main() {
 	beego.InsertFilter("*", beego.BeforeRouter, routers.LoggerFilter)
 
 	beego.InsertFilter("*", beego.BeforeExec, routers.UTF8Filter)
+	beego.InsertFilter("*", beego.BeforeExec, routers.ValueFilter)
 
 	// certain routes are ignored within this filter for precise auditing
 	beego.InsertFilter("*", beego.AfterExec, routers.LogRecordMessage, false)
