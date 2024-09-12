@@ -806,7 +806,6 @@ func (c *ApiController) TestLdapConnection() {
 		c.ResponseError(err.Error())
 		return
 	}
-	connection.Conn.Start()
 
 	err = connection.Conn.Bind(ldap.Username, ldap.Password)
 	if err != nil {
