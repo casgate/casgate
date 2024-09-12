@@ -19,8 +19,8 @@ import (
 
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/object"
-	"github.com/casdoor/casdoor/util/logger"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 // AddApiToken
@@ -304,7 +304,13 @@ func (c *ApiController) RecreateApiToken() {
 		return
 	}
 
-	organization, _ := util.GetOwnerAndNameFromId(owner)
+	organization, _, err := util.SplitIdIntoOrgAndName(owner)
+	if err != nil {
+		logs.Error("SplitIdIntoOrgAndName(): %s", err.Error())
+
+		c.ResponseInternalServerError("incorrect owner")
+		return
+	}
 	c.ValidateOrganization(organization)
 
 	if owner == "" {
