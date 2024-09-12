@@ -116,7 +116,10 @@ func (e *UserGroupEnforcer) GetUserNamesByGroupName(groupName string) ([]string,
 
 	names := []string{}
 	for _, userId := range userIds {
-		_, name := util.SplitIdIntoOrgAndNameNoError(userId)
+		_, name, err := util.SplitIdIntoOrgAndName(userId)
+		if err != nil {
+			return nil, err
+		}
 		names = append(names, name)
 	}
 

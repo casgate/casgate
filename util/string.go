@@ -97,18 +97,13 @@ func SplitIdIntoOrgAndName(id string) (string, string, error) {
 	return tokens[0], tokens[1], nil
 }
 
-func SplitIdIntoOrgAndNameNoError(id string) (string, string) {
-	tokens := strings.SplitN(id, "/", 2)
-	return tokens[0], tokens[1]
-}
-
-func SplitSessionIdIntoOrgNameAndApp(id string) (string, string, string) {
+func SplitSessionIdIntoOrgNameAndApp(id string) (string, string, string, error) {
 	tokens := strings.Split(id, "/")
 	if len(tokens) != 3 {
-		panic(errors.New("SplitIdIntoOrgNameAndApp() error, wrong token count for ID: " + id))
+		return "", "", "", errors.New("SplitIdIntoOrgNameAndApp() error, wrong token count for ID: " + id)
 	}
 
-	return tokens[0], tokens[1], tokens[2]
+	return tokens[0], tokens[1], tokens[2], nil
 }
 
 func GenerateId() string {

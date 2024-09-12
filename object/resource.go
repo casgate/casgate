@@ -97,19 +97,25 @@ func getResource(owner string, name string) (*Resource, error) {
 }
 
 func GetResource(id string) (*Resource, error) {
-	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return nil, err
+	}
 	return getResource(owner, name)
 }
 
 func UpdateResource(id string, resource *Resource) (bool, error) {
-	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return false, err
+	}
 	if r, err := getResource(owner, name); err != nil {
 		return false, err
 	} else if r == nil {
 		return false, nil
 	}
 
-	_, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(resource)
+	_, err = orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(resource)
 	if err != nil {
 		return false, err
 	}
