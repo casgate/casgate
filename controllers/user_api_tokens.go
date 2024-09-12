@@ -20,6 +20,7 @@ import (
 	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util/logger"
+	"github.com/casdoor/casdoor/util"
 )
 
 // AddApiToken
@@ -302,7 +303,9 @@ func (c *ApiController) RecreateApiToken() {
 		c.ResponseBadRequest(c.T("general:Missing parameter") + ": owner")
 		return
 	}
-	c.ValidateOrganization(owner)
+
+	organization, _ := util.GetOwnerAndNameFromId(owner)
+	c.ValidateOrganization(organization)
 
 	if owner == "" {
 		c.ResponseUnprocessableEntity("owner not provided")
