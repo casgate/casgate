@@ -1165,3 +1165,9 @@ func SyncAttributesToUser(user *User, displayName, email, mobile, avatar string,
 
 	return nil
 }
+
+func UpdateUserSigninInfo(user *User) error {
+	user.LastSigninTime = util.GetCurrentTime()
+	_, err := updateUser(user.GetId(), user, []string{"last_signin_time"})
+	return err
+}

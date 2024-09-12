@@ -174,6 +174,11 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 	}
 
 	if resp.Status == "ok" {
+		err = object.UpdateUserSigninInfo(user)
+		if err != nil {
+			c.ResponseError(err.Error(), nil)
+			return
+		}
 		_, err = object.AddSession(&object.Session{
 			Owner:       user.Owner,
 			Name:        user.Name,
