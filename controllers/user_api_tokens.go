@@ -308,7 +308,7 @@ func (c *ApiController) RecreateApiToken() {
 	if err != nil {
 		logs.Error("SplitIdIntoOrgAndName(): %s", err.Error())
 
-		c.ResponseInternalServerError("incorrect owner")
+		c.ResponseUnprocessableEntity("incorrect owner")
 		return
 	}
 	c.ValidateOrganization(organization)
