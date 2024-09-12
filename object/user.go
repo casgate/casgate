@@ -547,6 +547,10 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 		return false, nil
 	}
 
+	if len(user.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
+	}
+
 	if name != user.Name {
 		err := userChangeTrigger(name, user.Name)
 		if err != nil {
@@ -753,6 +757,10 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 		user.Id = parsedUUID.String()
 	} else {
 		user.Id = util.GenerateId()
+	}
+
+	if len(user.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
 	}
 
 	if user.MappingStrategy == "" {
@@ -1162,4 +1170,10 @@ func SyncAttributesToUser(user *User, displayName, email, mobile, avatar string,
 	}
 
 	return nil
+}
+
+func UpdateUserSigninInfo(user *User) error {
+	user.LastSigninTime = util.GetCurrentTime()
+	_, err := updateUser(user.GetId(), user, []string{"last_signin_time"})
+	return err
 }

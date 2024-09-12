@@ -133,6 +133,9 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if len(role.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
+	}
 	oldRole, err := getRole(owner, name)
 	if err != nil {
 		return false, err
@@ -201,6 +204,10 @@ func AddRole(role *Role) (bool, error) {
 	id := role.GetId()
 	if slices.Contains(role.Roles, id) {
 		return false, fmt.Errorf("role %s is in the child roles of %s", id, id)
+	}
+
+	if len(id) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
 	}
 
 	affected, err := orm.AppOrmer.Engine.Insert(role)

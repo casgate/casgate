@@ -15,13 +15,12 @@
 package object
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/casdoor/casdoor/orm"
 
 	"github.com/xorm-io/core"
 
-	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -126,6 +125,11 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 		return false, nil
 	}
 
+	err = checkPermissionForPolicyMaxValueLength(permission)
+	if err != nil {
+		return false, err
+	}
+
 	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(permission)
 	if err != nil {
 		return false, err
@@ -142,6 +146,11 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 }
 
 func AddPermission(permission *Permission) (bool, error) {
+	err := checkPermissionForPolicyMaxValueLength(permission)
+	if err != nil {
+		return false, err
+	}
+
 	affected, err := orm.AppOrmer.Engine.Insert(permission)
 	if err != nil {
 		return false, err
@@ -157,49 +166,20 @@ func AddPermission(permission *Permission) (bool, error) {
 	return affected != 0, nil
 }
 
-func AddPermissions(permissions []*Permission) bool {
-	if len(permissions) == 0 {
-		return false
-	}
-
-	affected, err := orm.AppOrmer.Engine.Insert(permissions)
-	if err != nil {
-		if !strings.Contains(err.Error(), "Duplicate entry") {
-			panic(err)
+func checkPermissionForPolicyMaxValueLength(permission *Permission) error {
+	for _, action := range permission.Actions {
+		if len(action) > policyMaxValueLength {
+			return fmt.Errorf("action value %s too long for policies", action)
 		}
 	}
 
-	if affected != 0 {
-		err = ProcessPolicyDifference(permissions)
-		if err != nil {
-			panic(err)
-		}
-	}
-	return affected != 0
-}
-
-func AddPermissionsInBatch(permissions []*Permission) bool {
-	batchSize := conf.GetConfigBatchSize()
-
-	if len(permissions) == 0 {
-		return false
-	}
-
-	affected := false
-	for i := 0; i < len(permissions); i += batchSize {
-		start := i
-		end := i + batchSize
-		if end > len(permissions) {
-			end = len(permissions)
-		}
-
-		tmp := permissions[start:end]
-		if AddPermissions(tmp) {
-			affected = true
+	for _, resource := range permission.Resources {
+		if len(resource) > policyMaxValueLength {
+			return fmt.Errorf("resource value %s too long for policies", resource)
 		}
 	}
 
-	return affected
+	return nil
 }
 
 func DeletePermission(permission *Permission) (bool, error) {
