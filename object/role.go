@@ -65,7 +65,10 @@ func GetRolesByIds(roleIds []string) ([]*Role, error) {
 
 	condBuilder := builder.NewCond()
 	for _, roleId := range roleIds {
-		owner, name := util.SplitIdIntoOrgAndNameNoError(roleId)
+		owner, name, err := util.SplitIdIntoOrgAndName(roleId)
+		if err != nil {
+			return nil, err
+		}
 		condBuilder = condBuilder.Or(builder.Eq{"owner": owner, "name": name})
 	}
 	roles := []*Role{}
@@ -126,7 +129,10 @@ func GetRole(id string) (*Role, error) {
 }
 
 func UpdateRole(id string, role *Role) (bool, error) {
-	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return false, err
+	}
 	if len(role.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
@@ -500,7 +506,10 @@ func GetAncestorRoles(roleIds ...string) ([]*Role, error) {
 		return nil, nil
 	}
 
-	owner, _ := util.SplitIdIntoOrgAndNameNoError(roleIds[0])
+	owner, _, err := util.SplitIdIntoOrgAndName(roleIds[0])
+	if err != nil {
+		return nil, err
+	}
 
 	allRoles, err := GetRoles(owner)
 	if err != nil {

@@ -77,12 +77,18 @@ func getDomain(owner string, name string) (*Domain, error) {
 }
 
 func GetDomain(id string) (*Domain, error) {
-	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return nil, err
+	}
 	return getDomain(owner, name)
 }
 
 func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) {
-	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return false, err
+	}
 	oldDomain, err := getDomain(owner, name)
 	if err != nil {
 		return false, err
@@ -334,7 +340,10 @@ func subDomainPermissions(domain *Domain) ([]*Permission, error) {
 
 // GetAncestorDomains returns a list of domains that contain the given domainIds
 func GetAncestorDomains(ctx context.Context, domainIds ...string) ([]*Domain, error) {
-	owner, _ := util.SplitIdIntoOrgAndNameNoError(domainIds[0])
+	owner, _, err := util.SplitIdIntoOrgAndName(domainIds[0])
+	if err != nil {
+		return nil, err
+	}
 
 	allDomains, err := GetDomains(ctx, owner)
 	if err != nil {

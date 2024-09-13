@@ -270,7 +270,10 @@ func GetAncestorGroups(groupIds ...string) ([]*Group, error) {
 		return nil, nil
 	}
 
-	owner, _ := util.SplitIdIntoOrgAndNameNoError(groupIds[0])
+	owner, _ , err := util.SplitIdIntoOrgAndName(groupIds[0])
+	if err != nil {
+		return nil, err
+	}
 
 	allGroups, err := GetGroups(owner)
 	if err != nil {

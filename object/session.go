@@ -71,7 +71,10 @@ func GetSessionCount(owner, field, value string) (int64, error) {
 }
 
 func GetSingleSession(id string) (*Session, error) {
-	owner, name, application := util.SplitSessionIdIntoOrgNameAndApp(id)
+	owner, name, application, err := util.SplitSessionIdIntoOrgNameAndApp(id)
+	if err != nil {
+		return nil, err
+	}
 	session := Session{Owner: owner, Name: name, Application: application}
 	get, err := orm.AppOrmer.Engine.Get(&session)
 	if err != nil {
@@ -86,7 +89,10 @@ func GetSingleSession(id string) (*Session, error) {
 }
 
 func UpdateSession(id string, session *Session) (bool, error) {
-	owner, name, application := util.SplitSessionIdIntoOrgNameAndApp(id)
+	owner, name, application, err := util.SplitSessionIdIntoOrgNameAndApp(id)
+	if err != nil {
+		return false, err
+	}
 
 	if ss, err := GetSingleSession(id); err != nil {
 		return false, err
@@ -141,7 +147,10 @@ func AddSession(session *Session) (bool, error) {
 }
 
 func DeleteSession(ctx context.Context, id string) (bool, error) {
-	owner, name, applicationName := util.SplitSessionIdIntoOrgNameAndApp(id)
+	owner, name, applicationName, err := util.SplitSessionIdIntoOrgNameAndApp(id)
+	if err != nil {
+		return false, err
+	}
 
 	application, err := GetApplication(ctx, util.GetId("admin", applicationName))
 	if err != nil {
@@ -176,7 +185,10 @@ func DeleteSessionId(ctx context.Context, id string, sessionId string) (bool, er
 		return false, nil
 	}
 
-	owner, _, application := util.SplitSessionIdIntoOrgNameAndApp(id)
+	owner, _, application, err := util.SplitSessionIdIntoOrgNameAndApp(id)
+	if err != nil {
+		return false, err
+	}
 	if owner == CasdoorOrganization && application == CasdoorApplication {
 		DeleteBeegoSession([]string{sessionId})
 	}

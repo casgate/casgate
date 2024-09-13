@@ -535,7 +535,10 @@ func GetMaskedUsers(users []*User, errs ...error) ([]*User, error) {
 
 func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, error) {
 	var err error
-	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return false, err
+	}
 	oldUser, err := getUser(owner, name)
 	if err != nil {
 		return false, err
@@ -615,8 +618,11 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 }
 
 func updateUser(id string, user *User, columns []string) (int64, error) {
-	owner, name := util.SplitIdIntoOrgAndNameNoError(id)
-	err := user.UpdateUserHash()
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return 0, err
+	}
+	err = user.UpdateUserHash()
 	if err != nil {
 		return 0, err
 	}
