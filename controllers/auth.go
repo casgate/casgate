@@ -244,6 +244,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 // @Param   redirectUri    query    string  true        "redirect uri"
 // @Param   scope    query    string  true        "scope"
 // @Param   state    query    string  true        "state"
+// @Param   type     query    string  true        "One of 'cas' or 'code'"
 // @Success 200 {object}  Response The Response object
 // @router /get-app-login [get]
 func (c *ApiController) GetApplicationLogin() {

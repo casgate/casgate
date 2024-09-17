@@ -1402,6 +1402,13 @@
                         "description": "state",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
+                        "description": "One of 'cas' or 'code'",
+                        "required": true,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -4723,11 +4730,11 @@
         }
     },
     "definitions": {
-        "216452.\u003cnil\u003e.string": {
+        "220054.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "303852.\u003cnil\u003e.string": {
+        "306352.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -5731,7 +5738,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/216452.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/220054.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6197,7 +6204,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/303852.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/306352.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"
