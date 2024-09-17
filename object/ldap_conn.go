@@ -217,7 +217,7 @@ func SyncSingleUser(
 			return err
 		}
 		if !affected {
-			return errors.New("empty user when trying to update user from ldap")
+			return errors.New("unaffected user when trying to update user from ldap")
 		}
 		syncDetails.Exist = append(syncDetails.Exist, ldapUser)
 	} else {
