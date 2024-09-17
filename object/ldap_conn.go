@@ -212,12 +212,9 @@ func SyncSingleUser(
 		}
 		
 		user.MappingStrategy = ldap.UserMappingStrategy
-		affected, err:= UpdateUser(user.GetId(), user, []string{"mapping_strategy"}, false)
+		_, err = UpdateUser(user.GetId(), user, []string{"mapping_strategy"}, false)
 		if err != nil {
 			return err
-		}
-		if !affected {
-			return errors.New("unaffected user when trying to update user from ldap")
 		}
 		syncDetails.Exist = append(syncDetails.Exist, ldapUser)
 	} else {
@@ -261,7 +258,7 @@ func SyncSingleUser(
 		}
 
 		if !affected {
-			return errors.New("LDAP sync error: failed to AddUser")
+			return errors.New("LDAP sync error: failed to AddUser: unaffected")
 		}
 
 		userIdProvider := &UserIdProvider{
