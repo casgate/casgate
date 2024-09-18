@@ -274,7 +274,7 @@ func CheckOAuthLogin(ctx context.Context, clientId string, responseType string, 
 	return "", application, nil
 }
 
-func GetOAuthCode(userId string, clientId string, responseType string, redirectUri string, scope string, state string, nonce string, challenge string, host string, sid string, lang string) (*Code, error) {
+func GetOAuthCode(ctx context.Context, userId string, clientId string, responseType string, redirectUri string, scope string, state string, nonce string, challenge string, host string, sid string, lang string) (*Code, error) {
 	user, err := GetUser(userId)
 	if err != nil {
 		return nil, err
@@ -293,7 +293,7 @@ func GetOAuthCode(userId string, clientId string, responseType string, redirectU
 		}, nil
 	}
 
-	msg, application, err := CheckOAuthLogin(context.Background(), clientId, responseType, redirectUri, scope, state, lang)
+	msg, application, err := CheckOAuthLogin(ctx, clientId, responseType, redirectUri, scope, state, lang)
 	if err != nil {
 		return nil, err
 	}

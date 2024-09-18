@@ -115,7 +115,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 			c.ResponseError(c.T("auth:Challenge method should be S256"))
 			return
 		}
-		code, err := object.GetOAuthCode(userId, clientId, responseType, redirectUri, scope, state, nonce, codeChallenge, c.Ctx.Request.Host, sid, c.GetAcceptLanguage())
+		code, err := object.GetOAuthCode(c.getRequestCtx(), userId, clientId, responseType, redirectUri, scope, state, nonce, codeChallenge, c.Ctx.Request.Host, sid, c.GetAcceptLanguage())
 		if err != nil {
 			c.ResponseError(err.Error(), nil)
 			return
@@ -348,7 +348,7 @@ func (c *ApiController) Login() {
 	resp := &Response{}
 
 	goCtx := c.getRequestCtx()
-	mappingRb := object.NewRecordBuilderFromCtx(c.Ctx)
+	mappingRb := object.NewRecordBuilderWithRequestValues(c.Ctx)
 	goCtx = context.WithValue(goCtx, object.RoleMappingRecordDataKey, mappingRb)
 
 	var authForm form.AuthForm

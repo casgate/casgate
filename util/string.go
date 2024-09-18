@@ -78,15 +78,6 @@ func CamelToSnakeCase(camel string) string {
 	return strings.ReplaceAll(buf.String(), " ", "")
 }
 
-func SplitIdIntoOrgAndNameWithPanic(id string) (string, string) {
-	tokens := strings.Split(id, "/")
-	if len(tokens) != 2 {
-		panic(errors.New("SplitIdIntoOrgAndNameWithPanic() error, wrong token count for ID: " + id))
-	}
-
-	return tokens[0], tokens[1]
-}
-
 // SplitIdIntoOrgAndName this func is used not only for users id but for other entity ids too, (roleOwner/roleName = roleId etc .. )
 func SplitIdIntoOrgAndName(id string) (string, string, error) {
 	tokens := strings.Split(id, "/")
