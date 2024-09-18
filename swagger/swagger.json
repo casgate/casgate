@@ -1415,7 +1415,7 @@
                     "200": {
                         "description": "The Response object",
                         "schema": {
-                            "$ref": "#/definitions/Response"
+                            "$ref": "#/definitions/controllers.Response"
                         }
                     }
                 }
@@ -4730,11 +4730,11 @@
         }
     },
     "definitions": {
-        "220054.\u003cnil\u003e.string": {
+        "220094.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "306352.\u003cnil\u003e.string": {
+        "306433.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -5738,7 +5738,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/220054.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/220094.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6204,7 +6204,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/306352.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/306433.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"

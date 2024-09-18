@@ -71,7 +71,7 @@ func tokenToResponse(token *object.Token) *Response {
 
 // HandleLoggedIn ...
 func (c *ApiController) HandleLoggedIn(application *object.Application, user *object.User, form *form.AuthForm) (resp *Response) {
-	userId := user.GetId()
+	userId := user.GetOwnerAndName()
 	sid := c.getSid(userId)
 
 	if user.Type == "invited-user" {
@@ -224,7 +224,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 		logger.Info(c.getRequestCtx(),
 			string(msgStr),
 			"obj-type", "application",
-			"usr", user.GetId(),
+			"usr", user.GetOwnerAndName(),
 			"obj", form.Application,
 			"act", "login",
 			"r", "success",
@@ -245,7 +245,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 // @Param   scope    query    string  true        "scope"
 // @Param   state    query    string  true        "state"
 // @Param   type     query    string  true        "One of 'cas' or 'code'"
-// @Success 200 {object}  Response The Response object
+// @Success 200 {object}  controllers.Response The Response object
 // @router /get-app-login [get]
 func (c *ApiController) GetApplicationLogin() {
 	clientId := c.Input().Get("clientId")
@@ -594,19 +594,19 @@ func (c *ApiController) Login() {
 
 			if object.IsNeedPromptMfa(organization, user) {
 				// The prompt page needs the user to be signed in
-				c.SetSessionUsername(user.GetId())
+				c.SetSessionUsername(user.GetOwnerAndName())
 				c.ResponseOk(object.RequiredMfa)
 				return
 			}
 
 			if user.IsMfaEnabled() {
-				c.setMfaUserSession(user.GetId())
+				c.setMfaUserSession(user.GetOwnerAndName())
 				c.ResponseOk(object.NextMfa, user.GetPreferredMfaProps(true))
 				return
 			}
 
 			if user.IsPasswordChangeRequired() {
-				c.setChangePasswordUserSession(user.GetId())
+				c.setChangePasswordUserSession(user.GetOwnerAndName())
 				c.ResponseOk(object.NextChangePasswordForm)
 				return
 			}
@@ -1097,7 +1097,7 @@ func (c *ApiController) Login() {
 		}
 
 		if user.IsPasswordChangeRequired() {
-			c.setChangePasswordUserSession(user.GetId())
+			c.setChangePasswordUserSession(user.GetOwnerAndName())
 			c.setMfaUserSession("")
 			c.ResponseOk(object.NextChangePasswordForm)
 			return

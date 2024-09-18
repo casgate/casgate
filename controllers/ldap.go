@@ -103,7 +103,7 @@ func (c *ApiController) GetLdapUsers() {
 
 	uuids := make([]string, len(users))
 	for i, user := range users {
-		uuids[i] = user.GetLdapUuid()
+		uuids[i] = user.GetLdapUserID()
 	}
 	existUuids, err := object.GetExistingLdapUserIDs(ldapServer.Owner, uuids)
 	if err != nil {
@@ -552,7 +552,7 @@ func (c *ApiController) SyncLdapUsers() {
 		auditResponse := object.AuditRecordResponse{
 			Msg:    "SyncLdapUsers: sync finished",
 			Status: object.AuditStatusOK,
-	}
+		}
 		if jsonResp, err := json.Marshal(auditResponse); err == nil {
 			record.Response = string(jsonResp)
 		}

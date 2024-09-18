@@ -177,7 +177,7 @@ func checkSigninErrorTimes(ctx context.Context, user *User, lang string) error {
 		// reset the error times
 		user.SigninWrongTimes = 0
 
-		_, err := UpdateUser(user.GetId(), user, []string{"signin_wrong_times"}, false)
+		_, err := UpdateUser(user.GetOwnerAndName(), user, []string{"signin_wrong_times"}, false)
 		return err
 	}
 

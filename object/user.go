@@ -547,7 +547,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 		return false, nil
 	}
 
-	if len(user.GetId()) > policyMaxValueLength {
+	if len(user.GetOwnerAndName()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
 
@@ -603,7 +603,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 	}
 
 	if util.ContainsString(columns, "groups") {
-		_, err := userEnforcer.UpdateGroupsForUser(user.GetId(), user.Groups)
+		_, err := userEnforcer.UpdateGroupsForUser(user.GetOwnerAndName(), user.Groups)
 		if err != nil {
 			return false, err
 		}
@@ -759,7 +759,7 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 		user.Id = util.GenerateId()
 	}
 
-	if len(user.GetId()) > policyMaxValueLength {
+	if len(user.GetOwnerAndName()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
 
@@ -846,7 +846,7 @@ func DeleteUser(ctx context.Context, user *User) (bool, error) {
 			return false, fmt.Errorf("getRole: %w", err)
 		}
 
-		role.Users = util.DeleteVal(role.Users, user.GetId())
+		role.Users = util.DeleteVal(role.Users, user.GetOwnerAndName())
 		_, err = UpdateRole(role.GetId(), role)
 		if err != nil {
 			return false, fmt.Errorf("UpdateRole: %w", err)
@@ -910,7 +910,8 @@ func LinkUserAccount(user *User, field string, value string) (bool, error) {
 	return SetUserField(user, field, value)
 }
 
-func (user *User) GetId() string {
+// GetOwnerAndName previously known as GetId. Renamed to avoid confusion.
+func (user *User) GetOwnerAndName() string {
 	return fmt.Sprintf("%s/%s", user.Owner, user.Name)
 }
 
@@ -923,7 +924,7 @@ func ExtendUserWithRolesAndPermissions(user *User) (err error) {
 		return
 	}
 
-	user.Permissions, user.Roles, err = getPermissionsAndRolesByUser(user.GetId())
+	user.Permissions, user.Roles, err = getPermissionsAndRolesByUser(user.GetOwnerAndName())
 	if err != nil {
 		return err
 	}
@@ -939,6 +940,7 @@ func DeleteGroupForUser(user string, group string) (bool, error) {
 	return userEnforcer.DeleteGroupForUser(user, group)
 }
 
+// userChangeTrigger update username in roles and permissions tables
 func userChangeTrigger(oldName string, newName string) error {
 	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
@@ -1025,7 +1027,7 @@ func AddUserkeys(user *User, isAdmin bool) (bool, error) {
 	user.AccessKey = util.GenerateId()
 	user.AccessSecret = util.GenerateId()
 
-	return UpdateUser(user.GetId(), user, []string{}, isAdmin)
+	return UpdateUser(user.GetOwnerAndName(), user, []string{}, isAdmin)
 }
 
 func (user *User) IsApplicationAdmin(application *Application) bool {
@@ -1047,7 +1049,7 @@ func (user *User) IsGlobalAdmin() bool {
 func reachablePermissionsByUser(user *User) ([]*Permission, error) {
 	result := make([]*Permission, 0)
 
-	userPermissions, userRoles, err := getPermissionsAndRolesByUser(user.GetId())
+	userPermissions, userRoles, err := getPermissionsAndRolesByUser(user.GetOwnerAndName())
 	if err != nil {
 		return nil, fmt.Errorf("GetPermissionsAndRolesByUser: %w", err)
 	}
@@ -1164,7 +1166,7 @@ func SyncAttributesToUser(user *User, displayName, email, mobile, avatar string,
 	user.Avatar = avatar
 	user.Address = address
 
-	_, err := UpdateUser(user.GetId(), user, []string{"display_name", "email", "phone", "avatar", "address"}, true)
+	_, err := UpdateUser(user.GetOwnerAndName(), user, []string{"display_name", "email", "phone", "avatar", "address"}, true)
 	if err != nil {
 		return err
 	}
@@ -1174,6 +1176,6 @@ func SyncAttributesToUser(user *User, displayName, email, mobile, avatar string,
 
 func UpdateUserSigninInfo(user *User) error {
 	user.LastSigninTime = util.GetCurrentTime()
-	_, err := updateUser(user.GetId(), user, []string{"last_signin_time"})
+	_, err := updateUser(user.GetOwnerAndName(), user, []string{"last_signin_time"})
 	return err
 }

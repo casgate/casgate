@@ -3,9 +3,10 @@ package object
 import (
 	"context"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"testing"
 	"time"
+
+	"github.com/casdoor/casdoor/orm"
 )
 
 const modelText = `
@@ -65,7 +66,7 @@ func benchmarkUpdateRole(N int64, b *testing.B) {
 		if err != nil {
 			b.Errorf("AddUser: %s", err)
 		}
-		roles[0].Users = append(roles[0].Users, new_user.GetId())
+		roles[0].Users = append(roles[0].Users, new_user.GetOwnerAndName())
 		b.StartTimer()
 		res, err := UpdateRole(roles[0].GetId(), roles[0])
 		if err != nil {
@@ -125,7 +126,7 @@ func benchmarkDeleteRoleFromPermission(N int64, b *testing.B) {
 		if err != nil {
 			b.Errorf("AddUser: %s", err)
 		}
-		permissions[5].Users = append(permissions[5].Users, new_user.GetId())
+		permissions[5].Users = append(permissions[5].Users, new_user.GetOwnerAndName())
 		permissions[5].Roles = []string{}
 		b.StartTimer()
 		res, err := UpdatePermission(permissions[5].GetId(), permissions[5])
@@ -231,7 +232,7 @@ func generateInitialData(N int64, testOrgName, testModelName string) error {
 			Owner:   testOrgName,
 			Name:    fmt.Sprintf("roleMapping%d", i),
 			Roles:   []string{new_role.GetId()},
-			Users:   []string{new_user.GetId()},
+			Users:   []string{new_user.GetOwnerAndName()},
 			Domains: []string{new_domain.GetId()},
 		}
 		_, err = orm.AppOrmer.Engine.Insert(new_role2)

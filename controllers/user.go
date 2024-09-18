@@ -340,7 +340,7 @@ func (c *ApiController) UpdateUser() {
 		return
 	}
 
-	logger.SetItem(goCtx, "obj", user.GetId())
+	logger.SetItem(goCtx, "obj", user.GetOwnerAndName())
 
 	c.ValidateOrganization(user.Owner)
 
@@ -592,7 +592,7 @@ func (c *ApiController) AddUser() {
 		return
 	}
 
-	logger.SetItem(ctx, "obj", user.GetId())
+	logger.SetItem(ctx, "obj", user.GetOwnerAndName())
 
 	c.ValidateOrganization(user.Owner)
 
@@ -705,9 +705,9 @@ func (c *ApiController) DeleteUser() {
 		return
 	}
 
-	logger.SetItem(ctx, "obj", user.GetId())
+	logger.SetItem(ctx, "obj", user.GetOwnerAndName())
 
-	userFromDb, _ := object.GetUser(user.GetId())
+	userFromDb, _ := object.GetUser(user.GetOwnerAndName())
 	if userFromDb == nil {
 		logger.LogWithInfo(
 			ctx,

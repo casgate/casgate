@@ -51,7 +51,7 @@ func GetWebAuthnObject(host string) (*webauthn.WebAuthn, error) {
 // WebAuthnID
 // implementation of webauthn.User interface
 func (user *User) WebAuthnID() []byte {
-	return []byte(user.GetId())
+	return []byte(user.GetOwnerAndName())
 }
 
 func (user *User) WebAuthnName() string {
@@ -87,14 +87,14 @@ func (user *User) CredentialExcludeList() []protocol.CredentialDescriptor {
 
 func (user *User) AddCredentials(credential webauthn.Credential, isGlobalAdmin bool) (bool, error) {
 	user.WebauthnCredentials = append(user.WebauthnCredentials, credential)
-	return UpdateUser(user.GetId(), user, []string{"webauthnCredentials"}, isGlobalAdmin)
+	return UpdateUser(user.GetOwnerAndName(), user, []string{"webauthnCredentials"}, isGlobalAdmin)
 }
 
 func (user *User) DeleteCredentials(credentialIdBase64 string) (bool, error) {
 	for i, credential := range user.WebauthnCredentials {
 		if base64.StdEncoding.EncodeToString(credential.ID) == credentialIdBase64 {
 			user.WebauthnCredentials = append(user.WebauthnCredentials[0:i], user.WebauthnCredentials[i+1:]...)
-			return UpdateUserForAllFields(user.GetId(), user)
+			return UpdateUserForAllFields(user.GetOwnerAndName(), user)
 		}
 	}
 	return false, nil
