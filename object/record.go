@@ -111,6 +111,7 @@ func NewRecord(ctx *beegoCtx.Context) *Record {
 		Object:      object,
 		IsTriggered: false,
 		StatusCode:  strconv.Itoa(statusCode),
+		Detail: &RecordDetail{},
 	}
 	return &record
 }
