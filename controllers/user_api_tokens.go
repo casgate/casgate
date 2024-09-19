@@ -98,7 +98,7 @@ func (c *ApiController) AddApiToken() {
 
 	tokenUser := object.MakeUserForToken(user)
 
-	logger.SetItem(ctx, "obj", tokenUser.GetId())
+	logger.SetItem(ctx, "obj", tokenUser.GetOwnerAndName())
 
 	affected, err := object.AddUser(ctx, tokenUser)
 	if err != nil {

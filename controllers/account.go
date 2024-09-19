@@ -247,7 +247,7 @@ func (c *ApiController) Signup() {
 			return
 		}
 
-		affected, err = object.UpdateUser(invitedUser.GetId(), user, columns, false)
+		affected, err = object.UpdateUser(invitedUser.GetOwnerAndName(), user, columns, false)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -261,7 +261,7 @@ func (c *ApiController) Signup() {
 
 	if application.HasPromptPage() && user.Type == "normal-user" {
 		// The prompt page needs the user to be signed in
-		c.SetSessionUsername(user.GetId())
+		c.SetSessionUsername(user.GetOwnerAndName())
 	}
 
 	err = object.DisableVerificationCode(authForm.Email)
@@ -278,7 +278,7 @@ func (c *ApiController) Signup() {
 
 	record.WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User signed up")
 
-	userId := user.GetId()
+	userId := user.GetOwnerAndName()
 	util.LogInfo(c.Ctx, "API: [%s] is signed up as new user", userId)
 
 	c.ResponseOk(userId)

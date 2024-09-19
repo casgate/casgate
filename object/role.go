@@ -325,16 +325,16 @@ func GetRolesByDomain(domainId string) ([]*Role, error) {
 	return roles, nil
 }
 
-func getRolesByUserInternal(userId string) ([]*Role, error) {
+func getRolesByUserInternal(userOwnerAndName string) ([]*Role, error) {
 	roles := []*Role{}
-	err := orm.AppOrmer.Engine.Where("users like ?", "%"+userId+"\"%").Find(&roles)
+	err := orm.AppOrmer.Engine.Where("users like ?", "%"+userOwnerAndName+"\"%").Find(&roles)
 	if err != nil {
 		return roles, err
 	}
 
 	res := []*Role{}
 	for _, role := range roles {
-		if util.InSlice(role.Users, userId) {
+		if util.InSlice(role.Users, userOwnerAndName) {
 			res = append(res, role)
 		}
 	}
@@ -570,58 +570,60 @@ func subRolePermissions(role *Role) ([]*Permission, error) {
 }
 
 // SyncRolesToUser sync user roles
-func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
+func SyncRolesToUser(ctx context.Context, user *User, targetRoleIds []string) error {
 	if user == nil {
 		return errors.New("empty user when trying to sync roles")
 	}
-	userId := user.GetId()
-	roles, err := GetRolesByIds(roleIds)
-	if err != nil {
-		return err
-	}
-
 	if user.MappingStrategy != "all" && user.MappingStrategy != "role" {
 		return nil
 	}
-
-	currentUserRoles, err := getRolesByUserInternal(userId)
+	newRoles, err := GetRolesByIds(targetRoleIds)
 	if err != nil {
 		return err
 	}
 
-	for _, role := range currentUserRoles {
-		if role.ManualOverride {
+	userOwnerAndName := user.GetOwnerAndName()
+	currentUserRoles, err := getRolesByUserInternal(userOwnerAndName)
+	if err != nil {
+		return err
+	}
+
+	for _, currentRole := range currentUserRoles {
+		if currentRole.ManualOverride {
 			continue
 		}
 
-		if !util.InSlice(roleIds, role.GetId()) {
-			role.Users = util.DeleteVal(role.Users, userId)
-			_, err = UpdateRole(role.GetId(), role)
-			if err != nil {
-				logger.LogWithInfo(
-					ctx,
-					logger.LogMsgDetailed{
-						"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
-					},
-					logger.OperationNameSyncRoleToUser,
-					logger.OperationResultFailure,
-				)
-				return err
-			}
+		if util.InSlice(targetRoleIds, currentRole.GetId()) {
+			// user already has this role
+			continue
+		}
+		currentRole.Users = util.DeleteVal(currentRole.Users, userOwnerAndName)
+		_, err = UpdateRole(currentRole.GetId(), currentRole)
+		if err != nil {
 			logger.LogWithInfo(
 				ctx,
 				logger.LogMsgDetailed{
-					"info": "role removed from user",
-					"user": userId,
-					"role": role.GetId(),
+					"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
 				},
 				logger.OperationNameSyncRoleToUser,
-				logger.OperationResultSuccess,
+				logger.OperationResultFailure,
 			)
+			return err
 		}
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"info": "role removed from user",
+				"user": userOwnerAndName,
+				"role": currentRole.GetId(),
+			},
+			logger.OperationNameSyncRoleToUser,
+			logger.OperationResultSuccess,
+		)	
 	}
 
-	for _, role := range roles {
+	// add new roles to user
+	for _, role := range newRoles {
 		if role.Owner != user.Owner {
 			// we shouldn't add role from another organization (if it happened by any reason) to user, so skip
 			continue
@@ -631,40 +633,42 @@ func SyncRolesToUser(ctx context.Context, user *User, roleIds []string) error {
 			continue
 		}
 
-		if !util.InSlice(role.Users, userId) {
-			role.Users = append(role.Users, userId)
+		if util.InSlice(role.Users, userOwnerAndName) {
+			// role already has this user
+			continue
+		}
+		role.Users = append(role.Users, userOwnerAndName)
 
-			_, err = UpdateRole(role.GetId(), role)
-			if err != nil {
-				logger.LogWithInfo(
-					ctx,
-					logger.LogMsgDetailed{
-						"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
-					},
-					logger.OperationNameSyncRoleToUser,
-					logger.OperationResultFailure,
-				)
-				return err
-			}
+		_, err = UpdateRole(role.GetId(), role)
+		if err != nil {
 			logger.LogWithInfo(
 				ctx,
 				logger.LogMsgDetailed{
-					"info": "role added to user",
-					"user": userId,
-					"role": role.GetId(),
+					"error": fmt.Sprintf("UpdateRole: %s", err.Error()),
 				},
 				logger.OperationNameSyncRoleToUser,
-				logger.OperationResultSuccess,
+				logger.OperationResultFailure,
 			)
+			return err
 		}
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"info": "role added to user",
+				"user": userOwnerAndName,
+				"role": role.GetId(),
+			},
+			logger.OperationNameSyncRoleToUser,
+			logger.OperationResultSuccess,
+		)	
 	}
 
-	newUserRoles, err := getRolesByUserInternal(userId)
+	newUserRoles, err := getRolesByUserInternal(userOwnerAndName)
 	if err != nil {
 		return err
 	}
 
-	record := buildUserMappedRolesRecord(ctx, user.GetId(), currentUserRoles, newUserRoles)
+	record := buildUserMappedRolesRecord(ctx, user.GetOwnerAndName(), currentUserRoles, newUserRoles)
 	if record != nil {
 		util.SafeGoroutine(func() { AddRecord(record) })
 	}

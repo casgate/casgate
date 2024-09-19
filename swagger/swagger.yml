@@ -921,7 +921,7 @@ paths:
         "200":
           description: The Response object
           schema:
-            $ref: '#/definitions/Response'
+            $ref: '#/definitions/controllers.Response'
   /api/get-application:
     get:
       tags:
@@ -3091,10 +3091,10 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  220054.<nil>.string:
+  220094.<nil>.string:
     title: string
     type: object
-  306352.<nil>.string:
+  306433.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -3776,7 +3776,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/220054.<nil>.string'
+          $ref: '#/definitions/220094.<nil>.string'
       description:
         type: string
       displayName:
@@ -4088,7 +4088,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/306352.<nil>.string'
+        $ref: '#/definitions/306433.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:

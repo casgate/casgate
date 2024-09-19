@@ -18,9 +18,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"strings"
 	"time"
+
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/i18n"
@@ -65,7 +66,7 @@ func IsAllowSend(user *User, remoteAddr, recordType string) error {
 	record.RemoteAddr = remoteAddr
 	record.Type = recordType
 	if user != nil {
-		record.User = user.GetId()
+		record.User = user.GetOwnerAndName()
 	}
 	has, err := orm.AppOrmer.Engine.Desc("created_time").Get(&record)
 	if err != nil {
@@ -132,7 +133,7 @@ func AddToVerificationRecord(user *User, provider *Provider, remoteAddr, recordT
 	record.RemoteAddr = remoteAddr
 	record.Type = recordType
 	if user != nil {
-		record.User = user.GetId()
+		record.User = user.GetOwnerAndName()
 	}
 	record.Owner = provider.Owner
 	record.Name = util.GenerateId()

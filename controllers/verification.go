@@ -406,7 +406,7 @@ func (c *ApiController) VerifyCode() {
 		c.ResponseError(err.Error())
 		return
 	}
-	c.SetSession("verifiedUserId", user.GetId())
+	c.SetSession("verifiedUserId", user.GetOwnerAndName())
 	c.SetSession("verifiedCode", authForm.Code)
 
 	c.ResponseOk()

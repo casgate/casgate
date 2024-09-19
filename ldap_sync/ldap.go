@@ -64,12 +64,12 @@ type LdapUser struct {
 	Roles []string `json:"roles"`
 }
 
-func (ldapUser *LdapUser) GetLdapUuid() string {
-	if ldapUser.Uuid != "" {
-		return ldapUser.Uuid
-	}
+func (ldapUser *LdapUser) GetLdapUserID() string {
 	if ldapUser.Uid != "" {
 		return ldapUser.Uid
+	}
+	if ldapUser.Uuid != "" {
+		return ldapUser.Uuid
 	}
 
 	return ldapUser.Cn
@@ -80,17 +80,21 @@ func (ldapUser *LdapUser) BuildNameForNewLdapUser() (string, error) {
 	if ldapUser.Uid != "" {
 		return ldapUser.Uid, nil
 	}
-	if ldapUser.Email != "" {
-		return ldapUser.Email, nil
+	if ldapUser.Uuid != "" {
+		return ldapUser.Uuid, nil
 	}
-	return "", errors.New("failed to identify ldap user. User has empty uid and email")
+	if ldapUser.Cn != "" {
+		return ldapUser.Cn, nil
+	}
+	return "", errors.New("failed to identify ldap user. User has empty uid, uuid, cn")
 }
 
 // GetLocalIDForExistingLdapUser select identification for new user by ldap field value
-func GetLocalIDForExistingLdapUser(ldapUserID string) (string, error) {
+func GetLocalIDForExistingLdapUser(owner string, ldapUserID string) (string, error) {
 	result, err := orm.AppOrmer.Engine.QueryString(
-		`SELECT id FROM "user" WHERE ldap = ?`,
+		`SELECT id FROM "user" WHERE ldap = ? AND owner = ?`,
 		ldapUserID,
+		owner,
 	)
 	if err != nil {
 		return "", err

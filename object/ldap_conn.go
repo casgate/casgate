@@ -38,7 +38,7 @@ func AutoAdjustLdapUser(users []ldap_sync.LdapUser) []ldap_sync.LdapUser {
 			Uid:                   user.Uid,
 			Cn:                    user.Cn,
 			GroupId:               user.GidNumber,
-			Uuid:                  user.GetLdapUuid(),
+			Uuid:                  user.GetLdapUserID(),
 			DisplayName:           user.DisplayName,
 			Email:                 util.ReturnAnyNotEmpty(user.Email, user.EmailAddress, user.Mail),
 			Mobile:                util.ReturnAnyNotEmpty(user.Mobile, user.MobileTelephoneNumber, user.TelephoneNumber),
@@ -97,11 +97,11 @@ func SyncUsersSynchronously(
 	}
 	historyEntry.LdapSyncID = ldapSyncID
 
-	var uuids []string
+	var ids []string
 	for _, user := range command.LdapUsers {
-		uuids = append(uuids, user.GetLdapUuid())
+		ids = append(ids, user.GetLdapUserID())
 	}
-	ldapUserIDs, err := GetExistingLdapUserIDs(ldap.Owner, uuids)
+	ldapUserIDs, err := GetExistingLdapUserIDs(ldap.Owner, ids)
 	if err != nil {
 		err = errors.Wrap(err, "LDAP sync error: failed to GetExistingLdapUserIDs for sync")
 		return syncDetails, err
@@ -145,7 +145,7 @@ func SyncUsersSynchronously(
 			tag,
 		)
 		if userSyncError != nil {
-			syncDetails.Failed[ldapUser.GetLdapUuid()] = ldapUser
+			syncDetails.Failed[ldapUser.GetLdapUserID()] = ldapUser
 			if command.Reason == ldap_sync.LdapSyncReasonManual {
 				logger.SetItem(ctx, "usr", command.SyncedByUserID)
 			}
@@ -194,12 +194,12 @@ func SyncSingleUser(
 	tag string,
 ) error {
 	userExists := false
-	userExists = existingUserIDs[ldapUser.GetLdapUuid()]
+	userExists = existingUserIDs[ldapUser.GetLdapUserID()]
 
 	var user *User
 
 	if userExists {
-		userID, err := ldap_sync.GetLocalIDForExistingLdapUser(ldapUser.GetLdapUuid())
+		userID, err := ldap_sync.GetLocalIDForExistingLdapUser(organization.Name, ldapUser.GetLdapUserID())
 		if err != nil {
 			return errors.Wrap(err, "GetLocalIDForExistingLdapUser")
 		}
@@ -210,14 +210,11 @@ func SyncSingleUser(
 		if user == nil {
 			return errors.New("empty user when trying to update user from ldap")
 		}
-		
+
 		user.MappingStrategy = ldap.UserMappingStrategy
-		affected, err:= UpdateUser(user.GetId(), user, []string{"mapping_strategy"}, false)
+		_, err = UpdateUser(user.GetOwnerAndName(), user, []string{"mapping_strategy"}, false)
 		if err != nil {
 			return err
-		}
-		if !affected {
-			return errors.New("empty user when trying to update user from ldap")
 		}
 		syncDetails.Exist = append(syncDetails.Exist, ldapUser)
 	} else {
@@ -245,7 +242,7 @@ func SyncSingleUser(
 			Affiliation:       affiliation,
 			Tag:               tag,
 			Score:             score,
-			Ldap:              ldapUser.GetLdapUuid(),
+			Ldap:              ldapUser.GetLdapUserID(),
 			Properties:        map[string]string{},
 			MappingStrategy:   ldap.UserMappingStrategy,
 		}
@@ -261,13 +258,13 @@ func SyncSingleUser(
 		}
 
 		if !affected {
-			return errors.New("LDAP sync error: failed to AddUser")
+			return errors.New("LDAP sync error: failed to AddUser: unaffected")
 		}
 
 		userIdProvider := &UserIdProvider{
 			Owner:           organization.Name,
 			LdapId:          command.LdapId,
-			UsernameFromIdp: ldapUser.Uuid,
+			UsernameFromIdp: ldapUser.GetLdapUserID(),
 			CreatedTime:     util.GetCurrentTime(),
 			UserId:          user.Id,
 		}
@@ -310,13 +307,13 @@ func SetSyncHistoryUsers(
 	result *SyncLdapUsersResult,
 ) ldap_sync.LdapSyncHistory {
 	for _, user := range result.Added {
-		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "added", UUID: user.GetLdapUuid()})
+		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "added", UUID: user.GetLdapUserID()})
 	}
 	for _, user := range result.Updated {
-		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "updated", UUID: user.GetLdapUuid()})
+		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "updated", UUID: user.GetLdapUserID()})
 	}
 	for _, user := range result.Failed {
-		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "failed", UUID: user.GetLdapUuid()})
+		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "failed", UUID: user.GetLdapUserID()})
 	}
 
 	return historyEntry

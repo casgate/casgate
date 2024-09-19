@@ -52,7 +52,7 @@ func (c *ApiController) GetApplications() {
 		c.ResponseDBError(err)
 		return
 	}
-	applications = object.GetMaskedApplications(applications, request.User.GetId())
+	applications = object.GetMaskedApplications(applications, request.User.GetOwnerAndName())
 
 	c.ResponseOk(applications, paginator.Nums())
 	return
