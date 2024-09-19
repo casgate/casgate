@@ -157,7 +157,7 @@ type LdapRelatedUser interface {
 
 func (l *LdapConn) GetUsersFromLDAP(
 	ctx context.Context,
-	ldapServerSettings *Ldap,
+	ldapServer *Ldap,
 	selectedUser LdapRelatedUser,
 ) ([]LdapUser, error) {
 	SearchAttributes := []string{
@@ -170,26 +170,26 @@ func (l *LdapConn) GetUsersFromLDAP(
 		SearchAttributes = append(SearchAttributes, "uid")
 	}
 
-	for _, roleMappingItem := range ldapServerSettings.RoleMappingItems {
+	for _, roleMappingItem := range ldapServer.RoleMappingItems {
 		SearchAttributes = append(SearchAttributes, roleMappingItem.Attribute)
 	}
 
 	var attributeMappingMap AttributeMappingMap
-	if ldapServerSettings.EnableAttributeMapping {
+	if ldapServer.EnableAttributeMapping {
 		attributeMappingMap = buildAttributeMappingMap(
-			ldapServerSettings.AttributeMappingItems,
-			ldapServerSettings.EnableCaseInsensitivity,
+			ldapServer.AttributeMappingItems,
+			ldapServer.EnableCaseInsensitivity,
 		)
 		SearchAttributes = append(SearchAttributes, attributeMappingMap.Keys()...)
 	}
 
-	ldapFilter := ldapServerSettings.Filter
+	ldapFilter := ldapServer.Filter
 	if selectedUser != nil {
-		ldapFilter = ldapServerSettings.BuildAuthFilterString(selectedUser)
+		ldapFilter = ldapServer.BuildAuthFilterString(selectedUser)
 	}
 
 	searchReq := goldap.NewSearchRequest(
-		ldapServerSettings.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases,
+		ldapServer.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases,
 		0, 0, false,
 		ldapFilter, SearchAttributes, nil,
 	)
@@ -203,20 +203,20 @@ func (l *LdapConn) GetUsersFromLDAP(
 	}
 
 	var roleMappingMap RoleMappingMap
-	if ldapServerSettings.EnableRoleMapping {
-		roleMappingMap = buildRoleMappingMap(ldapServerSettings.RoleMappingItems, ldapServerSettings.EnableCaseInsensitivity)
+	if ldapServer.EnableRoleMapping {
+		roleMappingMap = buildRoleMappingMap(ldapServer.RoleMappingItems, ldapServer.EnableCaseInsensitivity)
 	}
 
 	var ldapUsers []LdapUser
 	for _, entry := range searchResult.Entries {
 		var user LdapUser
 
-		if ldapServerSettings.EnableAttributeMapping {
+		if ldapServer.EnableAttributeMapping {
 			unmappedAttributes := MapAttributesToUser(
 				entry,
 				&user,
 				attributeMappingMap,
-				ldapServerSettings.EnableCaseInsensitivity,
+				ldapServer.EnableCaseInsensitivity,
 			)
 			if len(unmappedAttributes) > 0 {
 				logger.Error(ctx, "User has unmapped attributes", "user_id", entry.DN, "unmapped_attributes", unmappedAttributes)
@@ -225,15 +225,15 @@ func (l *LdapConn) GetUsersFromLDAP(
 
 		for _, attribute := range entry.Attributes {
 			// check attribute value with role mapping rules
-			if ldapServerSettings.EnableRoleMapping {
+			if ldapServer.EnableRoleMapping {
 				attributeName := attribute.Name
-				if ldapServerSettings.EnableCaseInsensitivity {
+				if ldapServer.EnableCaseInsensitivity {
 					attributeName = strings.ToLower(attributeName)
 				}
 
 				if roleMappingMapItem, ok := roleMappingMap[RoleMappingAttribute(attributeName)]; ok {
 					for _, value := range attribute.Values {
-						if ldapServerSettings.EnableCaseInsensitivity {
+						if ldapServer.EnableCaseInsensitivity {
 							value = strings.ToLower(value)
 						}
 						if roleMappingMapRoles, ok := roleMappingMapItem[RoleMappingItemValue(value)]; ok {
@@ -243,7 +243,7 @@ func (l *LdapConn) GetUsersFromLDAP(
 				}
 			}
 
-			if ldapServerSettings.EnableAttributeMapping {
+			if ldapServer.EnableAttributeMapping {
 				continue
 			}
 
