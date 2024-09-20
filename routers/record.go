@@ -61,15 +61,22 @@ func getUserByClientIdSecret(ctx *beeCtx.Context) string {
 	return util.GetId(application.Organization, application.Name)
 }
 
-func InitRecordMessage(bCtx *beeCtx.Context) {
+// SetRecordBuilderToCtx runs before request is handled to the controller.
+// Initializes record builder with defaults from request.
+func SetRecordBuilderToCtx(bCtx *beeCtx.Context) {
 	reqCtx := bCtx.Request.Context()
-	rb := object.NewRecordBuilderFromCtx(bCtx)
+	rb := object.NewRecordBuilderWithRequestValues(bCtx)
 	ctxWithRecord := goCtx.WithValue(reqCtx, object.RecordDataKey, rb)
 	bCtx.Request = bCtx.Request.WithContext(ctxWithRecord)
 }
 
 func LogRecordMessage(bCtx *beeCtx.Context) {
-	rb, err := object.ExtractRecord(bCtx)
+	// ignore certain routes
+	if _, routeIgnored := ignoredByRecordFilter[bCtx.Request.URL.Path]; routeIgnored {
+		return
+	}
+
+	rb, err := object.ExtractRecordBuilderFromCtx(bCtx.Request.Context())
 	var record *object.Record
 
 	if err != nil {
@@ -99,7 +106,7 @@ func defaultRecordLog(ctx *beeCtx.Context) *object.Record {
 	}
 
 	if userId != "" {
-		record.Organization, record.User = util.GetOwnerAndNameFromId(userId)
+		record.Organization, record.User, _ = util.SplitIdIntoOrgAndName(userId)
 	}
 
 	return record
@@ -132,4 +139,12 @@ func sanitizeData(data interface{}, sensitiveResponseFields []string, stringToRe
 			}
 		}
 	}
+}
+
+// ignoredByRecordFilter matching with these routes will abort execution of LogRecordMessage filter.
+// It is done for the routes that require more precise audit logging than provided by that filter.
+// Only exact comparison of routes is supported.
+var ignoredByRecordFilter = map[string]struct{}{
+	"/api/sync-ldap-users":    {},
+	"/api/v2/sync-ldap-users": {},
 }

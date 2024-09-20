@@ -15,12 +15,14 @@
 package object
 
 import (
-	"github.com/casdoor/casdoor/orm"
-	"strings"
+	"fmt"
+	"unicode/utf8"
 
-	"github.com/casdoor/casdoor/conf"
-	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/orm"
+
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Permission struct {
@@ -107,15 +109,26 @@ func getPermission(owner string, name string) (*Permission, error) {
 }
 
 func GetPermission(id string) (*Permission, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return nil, err
+	}
 	return getPermission(owner, name)
 }
 
 func UpdatePermission(id string, permission *Permission) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
-	oldPermission, err := getPermission(owner, name)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return false, err
+	}
+	oldPermission, _ := getPermission(owner, name)
 	if oldPermission == nil {
 		return false, nil
+	}
+
+	err = checkPermissionForPolicyMaxValueLength(permission)
+	if err != nil {
+		return false, err
 	}
 
 	affected, err := orm.AppOrmer.Engine.ID(core.PK{owner, name}).AllCols().Update(permission)
@@ -134,6 +147,11 @@ func UpdatePermission(id string, permission *Permission) (bool, error) {
 }
 
 func AddPermission(permission *Permission) (bool, error) {
+	err := checkPermissionForPolicyMaxValueLength(permission)
+	if err != nil {
+		return false, err
+	}
+
 	affected, err := orm.AppOrmer.Engine.Insert(permission)
 	if err != nil {
 		return false, err
@@ -149,49 +167,20 @@ func AddPermission(permission *Permission) (bool, error) {
 	return affected != 0, nil
 }
 
-func AddPermissions(permissions []*Permission) bool {
-	if len(permissions) == 0 {
-		return false
-	}
-
-	affected, err := orm.AppOrmer.Engine.Insert(permissions)
-	if err != nil {
-		if !strings.Contains(err.Error(), "Duplicate entry") {
-			panic(err)
+func checkPermissionForPolicyMaxValueLength(permission *Permission) error {
+	for _, action := range permission.Actions {
+		if utf8.RuneCountInString(action) > policyMaxValueLength {
+			return fmt.Errorf("action value %s too long for policies", action)
 		}
 	}
 
-	if affected != 0 {
-		err = ProcessPolicyDifference(permissions)
-		if err != nil {
-			panic(err)
-		}
-	}
-	return affected != 0
-}
-
-func AddPermissionsInBatch(permissions []*Permission) bool {
-	batchSize := conf.GetConfigBatchSize()
-
-	if len(permissions) == 0 {
-		return false
-	}
-
-	affected := false
-	for i := 0; i < len(permissions); i += batchSize {
-		start := i
-		end := i + batchSize
-		if end > len(permissions) {
-			end = len(permissions)
-		}
-
-		tmp := permissions[start:end]
-		if AddPermissions(tmp) {
-			affected = true
+	for _, resource := range permission.Resources {
+		if utf8.RuneCountInString(resource) > policyMaxValueLength {
+			return fmt.Errorf("resource value %s too long for policies", resource)
 		}
 	}
 
-	return affected
+	return nil
 }
 
 func DeletePermission(permission *Permission) (bool, error) {
@@ -382,15 +371,21 @@ func (p *Permission) GetId() string {
 	return util.GetId(p.Owner, p.Name)
 }
 
-func (p *Permission) isUserHit(name string) bool {
-	targetOrg, _ := util.GetOwnerAndNameFromId(name)
+func (p *Permission) isUserHit(name string) (bool, error) {
+	targetOrg, _, err := util.SplitIdIntoOrgAndName(name)
+	if err != nil {
+		return false, err
+	}
 	for _, user := range p.Users {
-		userOrg, userName := util.GetOwnerAndNameFromId(user)
+		userOrg, userName, err := util.SplitIdIntoOrgAndName(user)
+		if err != nil {
+			return false, err
+		}
 		if userOrg == targetOrg && userName == "*" {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 func (p *Permission) isResourceHit(name string) bool {

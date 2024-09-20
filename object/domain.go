@@ -17,10 +17,14 @@ package object
 import (
 	"context"
 	"fmt"
+	"slices"
+	"unicode/utf8"
+
 	"github.com/casdoor/casdoor/orm"
 
-	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Domain struct {
@@ -33,11 +37,6 @@ type Domain struct {
 
 	Domains   []string `xorm:"mediumtext" json:"domains"`
 	IsEnabled bool     `json:"isEnabled"`
-}
-
-func GetDomainCount(owner, field, value string) (int64, error) {
-	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	return session.Count(&Domain{})
 }
 
 func GetDomains(ctx context.Context, owner string) ([]*Domain, error) {
@@ -79,29 +78,53 @@ func getDomain(owner string, name string) (*Domain, error) {
 }
 
 func GetDomain(id string) (*Domain, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return nil, err
+	}
 	return getDomain(owner, name)
 }
 
 func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return false, err
+	}
 	oldDomain, err := getDomain(owner, name)
 	if err != nil {
 		return false, err
+	}
+
+	if utf8.RuneCountInString(domain.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
 	}
 
 	if oldDomain == nil {
 		return false, nil
 	}
 
-	// allParentDomains, _ := GetAncestorDomains(ctx, id)
-	// for _, d := range allParentDomains {
-	// 	for _, domainId := range d.Domains {
-	// 		if id == domainId {
-	// 			return false, fmt.Errorf("role %s is in the child domain of %s", id, d.GetId())
-	// 		}
-	// 	}
-	// }
+	slices.Sort(oldDomain.Domains)
+	slices.Sort(domain.Domains)
+
+	needCheckCrossDeps := len(domain.Domains) > 0 && !slices.Equal(oldDomain.Domains, domain.Domains)
+
+	if needCheckCrossDeps {
+		allMyParents, _ := GetAncestorDomains(ctx, id)
+		for _, d := range domain.Domains {
+			if d == id {
+				return false, fmt.Errorf("domain %s is in the child domain of %s", id, id)
+			}
+			for _, pd := range allMyParents {
+				if pd.GetId() == id {
+					continue // self
+				}
+
+				if d == pd.GetId() {
+					return false, fmt.Errorf("domain %s is in the child domain of %s", id, pd.GetId())
+				}
+			}
+		}
+	}
 
 	if name != domain.Name {
 		err := domainChangeTrigger(name, domain.Name)
@@ -136,6 +159,15 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 }
 
 func AddDomain(domain *Domain) (bool, error) {
+	id := domain.GetId()
+	if slices.Contains(domain.Domains, id) {
+		return false, fmt.Errorf("domain %s is in the child domain of %s", id, id)
+	}
+
+	if utf8.RuneCountInString(domain.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
+	}
+
 	affected, err := orm.AppOrmer.Engine.Insert(domain)
 	if err != nil {
 		return false, err
@@ -230,7 +262,10 @@ func domainChangeTrigger(oldName string, newName string) error {
 
 	for _, role := range roles {
 		for j, u := range role.Domains {
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				role.Domains[j] = util.GetId(owner, newName)
 			}
@@ -250,7 +285,10 @@ func domainChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Domains {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				permission.Domains[j] = util.GetId(owner, newName)
 			}
@@ -303,7 +341,10 @@ func subDomainPermissions(domain *Domain) ([]*Permission, error) {
 
 // GetAncestorDomains returns a list of domains that contain the given domainIds
 func GetAncestorDomains(ctx context.Context, domainIds ...string) ([]*Domain, error) {
-	owner, _ := util.GetOwnerAndNameFromIdNoCheck(domainIds[0])
+	owner, _, err := util.SplitIdIntoOrgAndName(domainIds[0])
+	if err != nil {
+		return nil, err
+	}
 
 	allDomains, err := GetDomains(ctx, owner)
 	if err != nil {

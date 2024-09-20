@@ -24,20 +24,21 @@ import (
 	"time"
 	"unicode"
 
+	goldap "github.com/go-ldap/ldap/v3"
+
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/i18n"
+	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/util"
-	goldap "github.com/go-ldap/ldap/v3"
 )
 
-
 type CheckUserPasswordOptions struct {
-	Lang         		      string
-	LdapId       		      string
-	EnableCaptcha 	    	  bool
-	IsSigninViaLdap 		  bool
-	IsPasswordWithLdapEnabled bool	
+	Lang                      string
+	LdapId                    string
+	EnableCaptcha             bool
+	IsSigninViaLdap           bool
+	IsPasswordWithLdapEnabled bool
 }
 
 const (
@@ -176,7 +177,7 @@ func checkSigninErrorTimes(ctx context.Context, user *User, lang string) error {
 		// reset the error times
 		user.SigninWrongTimes = 0
 
-		_, err := UpdateUser(user.GetId(), user, []string{"signin_wrong_times"}, false)
+		_, err := UpdateUser(user.GetOwnerAndName(), user, []string{"signin_wrong_times"}, false)
 		return err
 	}
 
@@ -255,16 +256,15 @@ func CheckPasswordComplexity(user *User, password string, lang string) string {
 	return CheckPasswordComplexityByOrg(organization, password, lang)
 }
 
-
-//check user pwd only in selected ldap
+// check user pwd only in selected ldap
 func CheckLdapUserPassword(user *User, password string, lang string, ldapId string) (string, error) {
-	var ldaps []*Ldap
+	var ldaps []*ldap_sync.Ldap
 	var err error
 
 	if ldapId == "" {
 		ldaps, err = GetLdaps(user.Owner)
 	} else {
-		var ldap *Ldap
+		var ldap *ldap_sync.Ldap
 		ldap, err = GetLdap(ldapId)
 		ldaps = append(ldaps, ldap)
 	}
@@ -272,20 +272,20 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 	if err != nil {
 		return "", err
 	}
-	
+
 	ldapLoginSuccess := false
 	hit := false
 	var ldapServerId string
-	userDisabled := false
 
 	for _, ldapServer := range ldaps {
-		conn, err := ldapServer.GetLdapConn(context.Background())
+		conn, err := ldap_sync.GetLdapConn(context.Background(), ldapServer)
 		if err != nil {
 			continue
 		}
 
 		searchReq := goldap.NewSearchRequest(ldapServer.BaseDn, goldap.ScopeWholeSubtree, goldap.NeverDerefAliases,
-			0, 0, false, ldapServer.buildAuthFilterString(user), []string{}, nil)
+			0, 0, false, ldapServer.BuildAuthFilterString(user), []string{}, nil,
+		)
 
 		searchResult, err := conn.Conn.Search(searchReq)
 		if err != nil {
@@ -302,20 +302,15 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 			return ldapServer.Id, fmt.Errorf(i18n.Translate(lang, "check:Multiple accounts with same uid, please check your ldap server"))
 		}
 
-		userDisabled, err = CheckIsUserDisabled(searchResult.Entries[0].Attributes)
+		userDisabled, err := CheckIsUserDisabled(searchResult.Entries[0].Attributes)
 		if err != nil {
 			conn.Close()
 			return "", err
 		}
 
 		if userDisabled {
-			user.IsForbidden = true
-			_, err = UpdateUser(user.GetId(), user, []string{"is_forbidden"}, false)
-			if err != nil {
-				return "", err
-			}
 			conn.Close()
-			break
+			return "", fmt.Errorf("user is disabled")
 		}
 
 		hit = true
@@ -328,10 +323,6 @@ func CheckLdapUserPassword(user *User, password string, lang string, ldapId stri
 		}
 
 		conn.Close()
-	}
-
-	if userDisabled {
-		return "", fmt.Errorf("user is disabled")
 	}
 
 	if !ldapLoginSuccess {
@@ -398,11 +389,11 @@ func CheckUserPassword(ctx context.Context, organization string, username string
 	enableCaptcha := false
 	isSigninViaLdap := false
 	isPasswordWithLdapEnabled := false
-	
+
 	enableCaptcha = options.EnableCaptcha
 	isSigninViaLdap = options.IsSigninViaLdap
 	isPasswordWithLdapEnabled = options.IsPasswordWithLdapEnabled
-	
+
 	user, err := GetUserByFields(organization, username)
 	if err != nil {
 		return nil, err
@@ -489,12 +480,15 @@ func CheckUserPermission(ctx context.Context, requestUserId, userId string, stri
 		return false, fmt.Errorf(i18n.Translate(lang, "general:Please login first"))
 	}
 
-	userOwner := util.GetOwnerFromId(userId)
+	userOwner, _, err := util.SplitIdIntoOrgAndName(userId)
+	if err != nil {
+		return false, err
+	}
 
 	if userId != "" {
 		targetUser, err := GetUser(userId)
 		if err != nil {
-			panic(err)
+			return false, err
 		}
 
 		if targetUser == nil {
@@ -568,7 +562,11 @@ func CheckLoginPermission(userId string, application *Application) (bool, error)
 			continue
 		}
 
-		if permission.isUserHit(userId) {
+		hit, err := permission.isUserHit(userId)
+		if err != nil {
+			return false, err
+		}
+		if hit {
 			allowCount += 1
 		}
 
@@ -631,6 +629,16 @@ func CheckUpdateUser(oldUser, user *User, lang string) string {
 		if HasUserByField(user.Owner, "phone", user.Phone) {
 			return i18n.Translate(lang, "check:Phone already exists")
 		}
+	}
+
+	return ""
+}
+
+func CheckOrgName(orgName string, lang string) string {
+	if orgName == "" {
+		return i18n.Translate(lang, "check:Empty organization name")
+	} else if len(orgName) > 255 {
+		return i18n.Translate(lang, "check:Organization name is too long (maximum is 255 characters)")
 	}
 
 	return ""

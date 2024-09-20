@@ -23,10 +23,12 @@ import (
 
 	"github.com/beego/beego/logs"
 	"github.com/beego/beego/utils/pagination"
+
 	"github.com/casdoor/casdoor/captcha"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 type GetEmailAndPhoneResp struct {
@@ -100,14 +102,14 @@ func (c *ApiController) GetUsers() {
 
 	count, err := object.GetUserCount(request.Owner, request.Field, request.Value, groupName)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
 	paginator := pagination.SetPaginator(c.Ctx, request.Limit, count)
 	users, err := object.GetPaginationUsers(request.Owner, paginator.Offset(), request.Limit, request.Field, request.Value, request.SortField, request.SortOrder, groupName)
 	if err != nil {
-		c.ResponseInternalServerError(err.Error())
+		c.ResponseDBError(err)
 		return
 	}
 
@@ -175,7 +177,7 @@ func (c *ApiController) GetUser() {
 	case phone != "":
 		user, err = object.GetUserByPhone(request.Owner, phone)
 	case userId != "":
-		user, err = object.GetUserByUserId(request.Owner, userId)
+		user, err = object.GetUserForGetUserHandler(request.Owner, userId)
 	default:
 		user, err = object.GetUser(request.Id)
 	}
@@ -194,7 +196,11 @@ func (c *ApiController) GetUser() {
 	id := util.GetId(user.Owner, user.Name)
 
 	if request.Owner == "" {
-		request.Owner = util.GetOwnerFromId(id)
+		request.Owner, _, err = util.SplitIdIntoOrgAndName(id)
+		if err != nil {
+			c.ResponseInternalServerError(err.Error())
+			return
+		}
 	}
 
 	request.Id = util.GetId(user.Owner, user.Name)
@@ -236,7 +242,12 @@ func (c *ApiController) GetUser() {
 	}
 
 	if fillUserIdProvider {
-		userIdProviders, err := object.GetUserIdProviders(util.GetOwnerFromId(id))
+		owner, _, err := util.SplitIdIntoOrgAndName(id)
+		if err != nil {
+			c.ResponseInternalServerError(err.Error())
+			return
+		}
+		userIdProviders, err := object.GetUserIdProviders(owner)
 		if err != nil {
 			c.ResponseInternalServerError(err.Error())
 			return
@@ -260,7 +271,7 @@ func (c *ApiController) AddUserIdProvider() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	goCtx := c.getRequestCtx()
-	record := object.GetRecord(goCtx)
+	record := object.GetRecordBuilderFromContext(goCtx)
 
 	var userIdProvider object.UserIdProvider
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &userIdProvider)
@@ -309,20 +320,43 @@ func (c *ApiController) UpdateUser() {
 	columnsStr := c.Input().Get("columns")
 
 	goCtx := c.getRequestCtx()
-	record := object.GetRecord(goCtx)
+	record := object.GetRecordBuilderFromContext(goCtx)
+
+	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeUser)
+	logger.SetItem(goCtx, "usr", c.GetSessionUsername())
 
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameUserUpdate,
+			logger.OperationResultFailure,
+		)
 		c.ResponseBadRequest(err.Error())
 		return
 	}
 
+	logger.SetItem(goCtx, "obj", user.GetOwnerAndName())
+
 	c.ValidateOrganization(user.Owner)
+
+	c.validateUserURLs(user)
 
 	if id == "" {
 		id = c.GetSessionUsername()
 		if id == "" {
+			logger.LogWithInfo(
+				goCtx,
+				logger.LogMsgDetailed{
+					"error": "missed parameter: id",
+				},
+				logger.OperationNameUserUpdate,
+				logger.OperationResultFailure,
+			)
 			c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
 			return
 		}
@@ -330,34 +364,82 @@ func (c *ApiController) UpdateUser() {
 
 	oldUser, err := object.GetUser(id)
 	if err != nil {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameUserUpdate,
+			logger.OperationResultFailure,
+		)
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
 	if oldUser == nil {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": "user not found",
+			},
+			logger.OperationNameUserUpdate,
+			logger.OperationResultFailure,
+		)
 		c.ResponseNotFound(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), id))
 		return
 	}
 
 	if oldUser.Owner == "built-in" && oldUser.Name == "admin" && (user.Owner != "built-in" || user.Name != "admin") {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": "update admin user",
+			},
+			logger.OperationNameUserUpdate,
+			logger.OperationResultFailure,
+		)
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
 
 	if c.Input().Get("allowEmpty") == "" {
 		if user.DisplayName == "" {
+			logger.LogWithInfo(
+				goCtx,
+				logger.LogMsgDetailed{
+					"error": "empty display name",
+				},
+				logger.OperationNameUserUpdate,
+				logger.OperationResultFailure,
+			)
 			c.ResponseInternalServerError(c.T("user:Display name cannot be empty"))
 			return
 		}
 	}
 
 	if msg := object.CheckUpdateUser(oldUser, &user, c.GetAcceptLanguage()); msg != "" {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": "validation failed",
+			},
+			logger.OperationNameUserUpdate,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(msg)
 		return
 	}
 
 	isAdmin := c.IsAdmin()
 	if pass, err := object.CheckPermissionForUpdateUser(oldUser, &user, isAdmin, c.GetAcceptLanguage()); !pass {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": "permission check not passed",
+			},
+			logger.OperationNameUserUpdate,
+			logger.OperationResultFailure,
+		)
 		c.ResponseForbidden(err)
 		return
 	}
@@ -369,8 +451,113 @@ func (c *ApiController) UpdateUser() {
 
 	affected, err := object.UpdateUser(id, &user, columns, isAdmin)
 	if err != nil {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameUserUpdate,
+			logger.OperationResultFailure,
+		)
 		c.ResponseInternalServerError(err.Error())
 		return
+	} else if !affected {
+		logger.LogWithInfo(
+			goCtx,
+			logger.LogMsgDetailed{
+				"error": "not affected",
+			},
+			logger.OperationNameUserUpdate,
+			logger.OperationResultFailure,
+		)
+		c.ResponseError(c.T("account:Failed to update user"), util.StructToJson(user))
+	} else {
+		logger.LogWithInfo(
+			goCtx,
+			"",
+			logger.OperationNameUserUpdate,
+			logger.OperationResultSuccess,
+		)
+
+		if !oldUser.IsForbidden && user.IsForbidden {
+			logger.LogWithInfo(
+				goCtx,
+				"user has been blocked",
+				logger.OperationNameUserUpdate,
+				logger.OperationResultSuccess,
+			)
+		}
+
+		if oldUser.IsForbidden && !user.IsForbidden {
+			logger.LogWithInfo(
+				goCtx,
+				"user has been unblocked",
+				logger.OperationNameUserUpdate,
+				logger.OperationResultSuccess,
+			)
+		}
+
+		if oldUser.Password != user.Password {
+			logger.LogWithInfo(
+				goCtx,
+				logger.LogMsgDetailed{
+					"info":    "user's password has been changed",
+					"isAdmin": isAdmin,
+				},
+				logger.OperationNameUserUpdate,
+				logger.OperationResultSuccess,
+			)
+		}
+
+		oldGroups := make(map[string]struct{})
+		newGroups := make(map[string]struct{})
+
+		for _, groupID := range oldUser.Groups {
+			oldGroups[groupID] = struct{}{}
+		}
+
+		for _, groupID := range user.Groups {
+			newGroups[groupID] = struct{}{}
+		}
+
+		var joinedGroups []string
+		var leftGroups []string
+
+		for groupID := range newGroups {
+			if _, found := oldGroups[groupID]; !found {
+				joinedGroups = append(joinedGroups, groupID)
+			}
+		}
+
+		for groupID := range oldGroups {
+			if _, found := newGroups[groupID]; !found {
+				leftGroups = append(leftGroups, groupID)
+			}
+		}
+
+		if len(joinedGroups) > 0 {
+			logger.LogWithInfo(
+				goCtx,
+				logger.LogMsgDetailed{
+					"info":   "user joined groups",
+					"groups": joinedGroups,
+				},
+				logger.OperationNameUserUpdate,
+				logger.OperationResultSuccess,
+			)
+		}
+
+		if len(leftGroups) > 0 {
+			logger.LogWithInfo(
+				goCtx,
+				logger.LogMsgDetailed{
+					"info":   "user left groups",
+					"groups": leftGroups,
+				},
+				logger.OperationNameUserUpdate,
+				logger.OperationResultSuccess,
+			)
+		}
 	}
 
 	record.AddOldObject(oldUser).AddReason("Update user")
@@ -394,33 +581,95 @@ func (c *ApiController) AddUser() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	ctx := c.getRequestCtx()
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeUser)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
+
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
+		logger.Error(ctx, "failed to unmarshall user", "error", err.Error())
 		c.ResponseBadRequest(err.Error())
 		return
 	}
 
+	logger.SetItem(ctx, "obj", user.GetOwnerAndName())
+
 	c.ValidateOrganization(user.Owner)
+
+	c.validateUserURLs(user)
 
 	count, err := object.GetUserCount("", "", "", "")
 	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameAddUser,
+			logger.OperationResultFailure,
+		)
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
 	if err := checkQuotaForUser(int(count)); err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameAddUser,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(err.Error())
 		return
 	}
 
 	msg := object.CheckUsername(user.Name, c.GetAcceptLanguage())
 	if msg != "" {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error":   "username check failed",
+				"details": msg,
+			},
+			logger.OperationNameAddUser,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(msg)
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.AddUser(ctx, &user))
+	affected, err := object.AddUser(ctx, &user)
+
+	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameAddUser,
+			logger.OperationResultFailure,
+		)
+	} else if !affected {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "not affected",
+			},
+			logger.OperationNameAddUser,
+			logger.OperationResultFailure,
+		)
+	} else {
+		logger.LogWithInfo(
+			ctx,
+			"",
+			logger.OperationNameAddUser,
+			logger.OperationResultSuccess,
+		)
+	}
+
+	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 }
 
@@ -438,15 +687,36 @@ func (c *ApiController) DeleteUser() {
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
 	ctx := c.getRequestCtx()
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeUser)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
+
 	var user object.User
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &user)
 	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameUserDelete,
+			logger.OperationResultFailure,
+		)
 		c.ResponseBadRequest(err.Error())
 		return
 	}
 
-	userFromDb, _ := object.GetUser(user.GetId())
+	logger.SetItem(ctx, "obj", user.GetOwnerAndName())
+
+	userFromDb, _ := object.GetUser(user.GetOwnerAndName())
 	if userFromDb == nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "failed to get user from db",
+			},
+			logger.OperationNameUserDelete,
+			logger.OperationResultFailure,
+		)
 		c.Data["json"] = wrapActionResponse(false)
 		c.ServeJSON()
 		return
@@ -454,11 +724,47 @@ func (c *ApiController) DeleteUser() {
 	c.ValidateOrganization(userFromDb.Owner)
 
 	if user.Owner == "built-in" && user.Name == "admin" {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "deleting root user",
+			},
+			logger.OperationNameUserDelete,
+			logger.OperationResultFailure,
+		)
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
 
-	c.Data["json"] = wrapActionResponse(object.DeleteUser(ctx, &user))
+	affected, err := object.DeleteUser(ctx, &user)
+	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameUserDelete,
+			logger.OperationResultFailure,
+		)
+	} else if !affected {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "not affected",
+			},
+			logger.OperationNameUserDelete,
+			logger.OperationResultFailure,
+		)
+	} else {
+		logger.LogWithInfo(
+			ctx,
+			"",
+			logger.OperationNameUserDelete,
+			logger.OperationResultSuccess,
+		)
+	}
+
+	c.Data["json"] = wrapActionResponse(affected, err)
 	c.ServeJSON()
 }
 
@@ -557,12 +863,25 @@ func (c *ApiController) SetPassword() {
 	newPassword := c.Ctx.Request.Form.Get("newPassword")
 	code := c.Ctx.Request.Form.Get("code")
 
+	logger.SetItem(ctx, "obj-type", logger.ObjectTypeUser)
+	logger.SetItem(ctx, "usr", c.GetSessionUsername())
+
 	if strings.Contains(newPassword, " ") {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "password contain blank space",
+			},
+			logger.OperationNameSetPassword,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(c.T("user:New password cannot contain blank space."))
 		return
 	}
 
 	userId := util.GetId(userOwner, userName)
+
+	logger.SetItem(ctx, "obj", userId)
 
 	requestUserId := c.GetSessionUsername()
 
@@ -573,17 +892,41 @@ func (c *ApiController) SetPassword() {
 	}
 
 	if requestUserId == "" && code == "" {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "unauthrorized",
+			},
+			logger.OperationNameSetPassword,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnauthorized(c.T("general:Please login first"))
 		return
 	} else if code == "" {
 		goCtx := c.getRequestCtx()
 		hasPermission, err := object.CheckUserPermission(goCtx, requestUserId, userId, true, c.GetAcceptLanguage())
 		if !hasPermission {
+			logger.LogWithInfo(
+				ctx,
+				logger.LogMsgDetailed{
+					"error": err.Error(),
+				},
+				logger.OperationNameSetPassword,
+				logger.OperationResultFailure,
+			)
 			c.ResponseForbidden(err.Error())
 			return
 		}
 	} else {
 		if code != c.GetSession("verifiedCode") || userId != c.GetSession("verifiedUserId") {
+			logger.LogWithInfo(
+				ctx,
+				logger.LogMsgDetailed{
+					"error": "missing parameter",
+				},
+				logger.OperationNameSetPassword,
+				logger.OperationResultFailure,
+			)
 			c.ResponseUnprocessableEntity(c.T("general:Missing parameter"))
 			return
 		}
@@ -593,15 +936,39 @@ func (c *ApiController) SetPassword() {
 
 	targetUser, err := object.GetUser(userId)
 	if targetUser == nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "user not found",
+			},
+			logger.OperationNameSetPassword,
+			logger.OperationResultFailure,
+		)
 		c.ResponseNotFound(fmt.Sprintf(c.T("general:The user: %s doesn't exist"), userId))
 		return
 	}
 	if err != nil {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": err.Error(),
+			},
+			logger.OperationNameSetPassword,
+			logger.OperationResultFailure,
+		)
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
 	if targetUser.Type == "invited-user" {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": "unauthorized",
+			},
+			logger.OperationNameSetPassword,
+			logger.OperationResultFailure,
+		)
 		c.ResponseForbidden(c.T("auth:Unauthorized operation"))
 		return
 	}
@@ -611,6 +978,14 @@ func (c *ApiController) SetPassword() {
 		if oldPassword != "" {
 			err := object.CheckPassword(ctx, targetUser, oldPassword, c.GetAcceptLanguage())
 			if err != nil {
+				logger.LogWithInfo(
+					ctx,
+					logger.LogMsgDetailed{
+						"error": err.Error(),
+					},
+					logger.OperationNameSetPassword,
+					logger.OperationResultFailure,
+				)
 				c.ResponseUnauthorized(err.Error())
 				return
 			}
@@ -618,6 +993,14 @@ func (c *ApiController) SetPassword() {
 	} else if code == "" {
 		err := object.CheckPassword(ctx, targetUser, oldPassword, c.GetAcceptLanguage())
 		if err != nil {
+			logger.LogWithInfo(
+				ctx,
+				logger.LogMsgDetailed{
+					"error": err.Error(),
+				},
+				logger.OperationNameSetPassword,
+				logger.OperationResultFailure,
+			)
 			c.ResponseUnauthorized(err.Error())
 			return
 		}
@@ -625,12 +1008,28 @@ func (c *ApiController) SetPassword() {
 
 	msg := object.CheckPasswordComplexity(targetUser, newPassword, c.GetAcceptLanguage())
 	if msg != "" {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": msg,
+			},
+			logger.OperationNameSetPassword,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(msg)
 		return
 	}
 
 	msg = object.CheckPasswordSame(targetUser, newPassword, c.GetAcceptLanguage())
 	if msg != "" {
+		logger.LogWithInfo(
+			ctx,
+			logger.LogMsgDetailed{
+				"error": msg,
+			},
+			logger.OperationNameSetPassword,
+			logger.OperationResultFailure,
+		)
 		c.ResponseUnprocessableEntity(msg)
 		return
 	}
@@ -641,6 +1040,13 @@ func (c *ApiController) SetPassword() {
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
+
+	logger.LogWithInfo(
+		ctx,
+		"password has been changed",
+		logger.OperationNameSetPassword,
+		logger.OperationResultSuccess,
+	)
 
 	c.ResponseOk()
 }
@@ -818,7 +1224,7 @@ func (c *ApiController) SendInvite() {
 	}
 
 	if user.Email == "" {
-		c.ResponseUnprocessableEntity(fmt.Sprintf(c.T("service:Missing email for send invite")))
+		c.ResponseUnprocessableEntity(c.T("service:Missing email for send invite"))
 		return
 	}
 
@@ -867,7 +1273,7 @@ func (c *ApiController) SendInvite() {
 		link = fmt.Sprintf("%s/signup/%s?id=%s&u=%s&e=%s", origin, application.Name, user.Id, user.Name, user.Email)
 	default:
 		switch {
-		case application.Name == "app-built-in":
+		case application.Name == object.CasdoorApplication:
 			link = fmt.Sprintf("%s/login?u=%s", origin, user.Name)
 		case application.SigninUrl != "":
 			link = application.SigninUrl
@@ -888,9 +1294,12 @@ func (c *ApiController) SendInvite() {
 		return
 	}
 
-	content := fmt.Sprintf(provider.InviteContent, link)
+	titleWithProductName := fillWithProductName(provider.InviteTitle, application.Name)
 
-	err = object.SendEmail(provider, provider.InviteTitle, content, user.Email, sender)
+	contentWithProductName := fillWithProductName(provider.InviteContent, application.Name)
+	contentWithProductNameAndLink := fmt.Sprintf(contentWithProductName, link)
+
+	err = object.SendEmail(provider, titleWithProductName, contentWithProductNameAndLink, user.Email, sender)
 	if err != nil {
 		logs.Error("send email: %s", err.Error())
 		c.ResponseInternalServerError("internal server error")
@@ -899,6 +1308,10 @@ func (c *ApiController) SendInvite() {
 	}
 
 	c.ResponseOk()
+}
+
+func fillWithProductName(content, applicationName string) string {
+	return strings.ReplaceAll(content, productNameTarget, applicationName)
 }
 
 func fillUserIdProviders(users []*object.User, userIdProviders []*object.UserIdProvider) {
@@ -911,5 +1324,17 @@ func fillUserIdProviders(users []*object.User, userIdProviders []*object.UserIdP
 		if userIdProvider, ok := userIdProviderMap[users[i].Id]; ok {
 			users[i].UserIdProvider = userIdProvider
 		}
+	}
+}
+
+func (c *ApiController) validateUserURLs(user object.User) {
+	if user.Avatar != "" && !util.IsURLValid(user.Avatar) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("user:Avatar")))
+		return
+	}
+
+	if user.PermanentAvatar != "" && !util.IsURLValid(user.PermanentAvatar) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("user:PermanentAvatar")))
+		return
 	}
 }

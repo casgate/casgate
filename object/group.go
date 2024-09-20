@@ -17,11 +17,14 @@ package object
 import (
 	"errors"
 	"fmt"
+	"unicode/utf8"
+
 	"github.com/casdoor/casdoor/orm"
 
-	"github.com/casdoor/casdoor/util"
 	"github.com/xorm-io/builder"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 type Group struct {
@@ -47,15 +50,6 @@ type Group struct {
 }
 
 type GroupNode struct{}
-
-func GetGroupCount(owner, field, value string) (int64, error) {
-	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	count, err := session.Count(&Group{})
-	if err != nil {
-		return 0, err
-	}
-	return count, nil
-}
 
 func GetGroups(owner string) ([]*Group, error) {
 	groups := []*Group{}
@@ -97,12 +91,22 @@ func getGroup(owner string, name string) (*Group, error) {
 }
 
 func GetGroup(id string) (*Group, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return nil, err
+	}
 	return getGroup(owner, name)
 }
 
 func UpdateGroup(id string, group *Group) (bool, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	if utf8.RuneCountInString(group.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
+	}
+
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return false, err
+	}
 	oldGroup, err := getGroup(owner, name)
 	if oldGroup == nil {
 		return false, err
@@ -146,6 +150,10 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 }
 
 func AddGroup(group *Group) (bool, error) {
+	if utf8.RuneCountInString(group.GetId()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
+	}
+
 	err := checkGroupName(group.Name)
 	if err != nil {
 		return false, err
@@ -171,17 +179,6 @@ func AddGroup(group *Group) (bool, error) {
 	return affected != 0, nil
 }
 
-func AddGroups(groups []*Group) (bool, error) {
-	if len(groups) == 0 {
-		return false, nil
-	}
-	affected, err := orm.AppOrmer.Engine.Insert(groups)
-	if err != nil {
-		return false, err
-	}
-	return affected != 0, nil
-}
-
 func DeleteGroup(group *Group) (bool, error) {
 	_, err := orm.AppOrmer.Engine.Get(group)
 	if err != nil {
@@ -200,13 +197,13 @@ func DeleteGroup(group *Group) (bool, error) {
 		return false, errors.New("group has users")
 	}
 
-	if count, err := GetRoleCount(group.Owner, "`groups`", group.GetId()); err != nil {
+	if count, err := GetRoleCount(group.Owner, "groups", group.GetId()); err != nil {
 		return false, err
 	} else if count > 0 {
 		return false, errors.New("group has linked roles")
 	}
 
-	if count, err := GetPermissionCount(group.Owner, "`groups`", group.GetId()); err != nil {
+	if count, err := GetPermissionCount(group.Owner, "groups", group.GetId()); err != nil {
 		return false, err
 	} else if count > 0 {
 		return false, errors.New("group has linked permissions")
@@ -274,7 +271,10 @@ func GetAncestorGroups(groupIds ...string) ([]*Group, error) {
 		return nil, nil
 	}
 
-	owner, _ := util.GetOwnerAndNameFromIdNoCheck(groupIds[0])
+	owner, _ , err := util.SplitIdIntoOrgAndName(groupIds[0])
+	if err != nil {
+		return nil, err
+	}
 
 	allGroups, err := GetGroups(owner)
 	if err != nil {
@@ -309,7 +309,10 @@ func makeAncestorGroupsTreeMap(groups []*Group) map[string]*TreeNode[*Group] {
 }
 
 func GetGroupUserCount(groupId string, field, value string) (int64, error) {
-	owner, _ := util.GetOwnerAndNameFromId(groupId)
+	owner, _, err := util.SplitIdIntoOrgAndName(groupId)
+	if err != nil {
+		return 0, err
+	}
 	names, err := userEnforcer.GetUserNamesByGroupName(groupId)
 	if err != nil {
 		return 0, err
@@ -327,7 +330,10 @@ func GetGroupUserCount(groupId string, field, value string) (int64, error) {
 
 func GetPaginationGroupUsers(groupId string, offset, limit int, field, value, sortField, sortOrder string) ([]*User, error) {
 	users := []*User{}
-	owner, _ := util.GetOwnerAndNameFromId(groupId)
+	owner, _, err := util.SplitIdIntoOrgAndName(groupId)
+	if err != nil {
+		return nil, err
+	}
 	names, err := userEnforcer.GetUserNamesByGroupName(groupId)
 	if err != nil {
 		return nil, err
@@ -361,18 +367,6 @@ func GetPaginationGroupUsers(groupId string, offset, limit int, field, value, so
 	return users, nil
 }
 
-func GetGroupUsers(groupId string) ([]*User, error) {
-	users := []*User{}
-	owner, _ := util.GetOwnerAndNameFromId(groupId)
-	names, err := userEnforcer.GetUserNamesByGroupName(groupId)
-
-	err = orm.AppOrmer.Engine.Where("owner = ?", owner).In("name", names).Find(&users)
-	if err != nil {
-		return nil, err
-	}
-	return users, nil
-}
-
 func GroupChangeTrigger(oldName, newName string) error {
 	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
@@ -389,7 +383,7 @@ func GroupChangeTrigger(oldName, newName string) error {
 
 	for _, user := range users {
 		user.Groups = util.ReplaceVal(user.Groups, oldName, newName)
-		_, err := updateUser(user.GetId(), user, []string{"groups"})
+		_, err := session.ID(core.PK{user.Owner, user.Name}).Cols("groups").Update(user)
 		if err != nil {
 			return err
 		}
@@ -466,13 +460,16 @@ func getGroupsInGroup(groupId string) ([]*Group, error) {
 }
 
 func getGroupsByParentGroup(groupId string) ([]*Group, error) {
-	owner, parentName := util.GetOwnerAndNameFromId(groupId)
+	owner, parentName, err := util.SplitIdIntoOrgAndName(groupId)
+	if err != nil {
+		return nil, err
+	}
 
 	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
 
 	groups := []*Group{}
-	err := session.Where("owner=? and parent_id = ?", owner, parentName).Find(&groups)
+	err = session.Where("owner=? and parent_id = ?", owner, parentName).Find(&groups)
 	if err != nil {
 		return nil, err
 	}

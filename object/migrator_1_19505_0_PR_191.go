@@ -2,6 +2,8 @@ package object
 
 import (
 	"fmt"
+
+	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/orm"
 
 	"github.com/beego/beego/logs"
@@ -52,7 +54,7 @@ func (*Migrator_1_19505_0_PR_191) DoMigration() *migrate.Migration {
 				return fmt.Errorf("update application user_mapping_strategy: %w", err)
 			}
 
-			_, err = tx.Table(new(Ldap)).Update(map[string]interface{}{"user_mapping_strategy": "all"})
+			_, err = tx.Table(new(ldap_sync.Ldap)).Update(map[string]interface{}{"user_mapping_strategy": "all"})
 			if err != nil {
 				return fmt.Errorf("update ldap user_mapping_strategy: %w", err)
 			}

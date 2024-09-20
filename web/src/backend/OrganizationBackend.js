@@ -15,7 +15,7 @@
 import * as Setting from "../Setting";
 
 export function getOrganizations(owner, organizationName = "", page = "", pageSize = "", field = "", value = "", sortField = "", sortOrder = "") {
-  return fetch(`${Setting.ServerUrl}/api/get-organizations?owner=${owner}&organizationName=${organizationName}&p=${page}&pageSize=${pageSize}&field=${field}&value=${value}&sortField=${sortField}&sortOrder=${sortOrder}`, {
+  return fetch(`${Setting.ServerUrl}/api/get-organizations?owner=${owner}&organization=${organizationName}&p=${page}&pageSize=${pageSize}&field=${field}&value=${value}&sortField=${sortField}&sortOrder=${sortOrder}`, {
     method: "GET",
     credentials: "include",
     headers: {
@@ -25,6 +25,7 @@ export function getOrganizations(owner, organizationName = "", page = "", pageSi
 }
 
 export function getOrganization(owner, name) {
+  name = name.replaceAll("%23", "#");
   return fetch(`${Setting.ServerUrl}/api/get-organization?id=${owner}/${encodeURIComponent(name)}`, {
     method: "GET",
     credentials: "include",

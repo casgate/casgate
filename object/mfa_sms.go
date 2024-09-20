@@ -102,7 +102,7 @@ func (mfa *SmsMfa) Enable(ctx *context.Context, user *User) error {
 		}
 	}
 
-	_, err := UpdateUser(user.GetId(), user, columns, false)
+	_, err := UpdateUser(user.GetOwnerAndName(), user, columns, false)
 	if err != nil {
 		return err
 	}

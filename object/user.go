@@ -17,17 +17,20 @@ package object
 import (
 	"context"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
+
+	"github.com/casdoor/casdoor/orm"
+	"github.com/google/uuid"
 
 	"github.com/beego/beego/logs"
-	"github.com/casdoor/casdoor/conf"
-	"github.com/casdoor/casdoor/util"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/xorm-io/builder"
 	"github.com/xorm-io/core"
+
+	"github.com/casdoor/casdoor/util"
 )
 
 const (
@@ -235,6 +238,10 @@ type ManagedAccount struct {
 	SigninUrl   string `xorm:"varchar(200)" json:"signinUrl"`
 }
 
+func (user *User) GetName() string {
+	return user.Name
+}
+
 func (user *User) IsPasswordChangeRequired() bool {
 	return !user.PasswordChangeTime.IsZero() && user.PasswordChangeTime.Before(time.Now())
 }
@@ -319,20 +326,6 @@ func GetUsers(owner string) ([]*User, error) {
 	return users, nil
 }
 
-func GetUsersByTag(owner string, tag string) ([]*User, error) {
-	users := []*User{}
-	err := orm.AppOrmer.Engine.Desc("created_time").Find(&users, &User{Owner: owner, Tag: tag})
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range users {
-		users[i].PasswordChangeRequired = users[i].IsPasswordChangeRequired()
-	}
-
-	return users, nil
-}
-
 func GetSortedUsers(owner string, sorter string, limit int) ([]*User, error) {
 	users := []*User{}
 
@@ -388,24 +381,6 @@ func getUser(owner string, name string) (*User, error) {
 
 	if existed {
 		user.PasswordChangeRequired = user.IsPasswordChangeRequired()
-		return &user, nil
-	} else {
-		return nil, nil
-	}
-}
-
-func getUserById(owner string, id string) (*User, error) {
-	if owner == "" || id == "" {
-		return nil, nil
-	}
-
-	user := User{Owner: owner, Id: id}
-	existed, err := orm.AppOrmer.Engine.Get(&user)
-	if err != nil {
-		return nil, err
-	}
-
-	if existed {
 		return &user, nil
 	} else {
 		return nil, nil
@@ -469,7 +444,7 @@ func GetUserByPhone(owner string, phone string) (*User, error) {
 	}
 }
 
-func GetUserByUserId(owner string, userId string) (*User, error) {
+func GetUserForGetUserHandler(owner string, userId string) (*User, error) {
 	if owner == "" || userId == "" {
 		return nil, nil
 	}
@@ -488,30 +463,24 @@ func GetUserByUserId(owner string, userId string) (*User, error) {
 	}
 }
 
-func GetUserByAccessKey(accessKey string) (*User, error) {
-	if accessKey == "" {
+func GetUserByUserID(owner string, userId string) (*User, error) {
+	if owner == "" || userId == "" {
 		return nil, nil
 	}
-	user := User{AccessKey: accessKey}
-	existed, err := orm.AppOrmer.Engine.Get(&user)
+
+	user := User{Owner: owner, Id: userId}
+	_, err := orm.AppOrmer.Engine.Get(&user)
 	if err != nil {
 		return nil, err
 	}
-
-	if existed {
-		return &user, nil
-	} else {
-		return nil, nil
-	}
+	return &user, nil
 }
 
 func GetUser(id string) (*User, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
-	return getUser(owner, name)
-}
-
-func GetUserNoCheck(id string) (*User, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return nil, err
+	}
 	return getUser(owner, name)
 }
 
@@ -565,29 +534,22 @@ func GetMaskedUsers(users []*User, errs ...error) ([]*User, error) {
 	return users, nil
 }
 
-func getLastUser(owner string) (*User, error) {
-	user := User{Owner: owner}
-	existed, err := orm.AppOrmer.Engine.Desc("created_time", "id").Get(&user)
-	if err != nil {
-		return nil, err
-	}
-
-	if existed {
-		return &user, nil
-	}
-
-	return nil, nil
-}
-
 func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, error) {
 	var err error
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return false, err
+	}
 	oldUser, err := getUser(owner, name)
 	if err != nil {
 		return false, err
 	}
 	if oldUser == nil {
 		return false, nil
+	}
+
+	if utf8.RuneCountInString(user.GetOwnerAndName()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
 	}
 
 	if name != user.Name {
@@ -642,7 +604,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 	}
 
 	if util.ContainsString(columns, "groups") {
-		_, err := userEnforcer.UpdateGroupsForUser(user.GetId(), user.Groups)
+		_, err := userEnforcer.UpdateGroupsForUser(user.GetOwnerAndName(), user.Groups)
 		if err != nil {
 			return false, err
 		}
@@ -657,8 +619,11 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 }
 
 func updateUser(id string, user *User, columns []string) (int64, error) {
-	owner, name := util.GetOwnerAndNameFromIdNoCheck(id)
-	err := user.UpdateUserHash()
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return 0, err
+	}
+	err = user.UpdateUserHash()
 	if err != nil {
 		return 0, err
 	}
@@ -707,7 +672,10 @@ func updateUser(id string, user *User, columns []string) (int64, error) {
 
 func UpdateUserForAllFields(id string, user *User) (bool, error) {
 	var err error
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return false, err
+	}
 	oldUser, err := getUser(owner, name)
 	if err != nil {
 		return false, err
@@ -782,7 +750,19 @@ func UpdateUserForAllFields(id string, user *User) (bool, error) {
 }
 
 func AddUser(ctx context.Context, user *User) (bool, error) {
-	user.Id = util.GenerateId()
+	if user.Id != "" {
+		parsedUUID, err := uuid.Parse(user.Id)
+		if err != nil {
+			return false, fmt.Errorf("invalid user id: %w", err)
+		}
+		user.Id = parsedUUID.String()
+	} else {
+		user.Id = util.GenerateId()
+	}
+
+	if utf8.RuneCountInString(user.GetOwnerAndName()) > policyMaxValueLength {
+		return false, fmt.Errorf("id too long for policies")
+	}
 
 	if user.MappingStrategy == "" {
 		user.MappingStrategy = "all"
@@ -844,87 +824,38 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 	return affected != 0, nil
 }
 
-func AddUsers(users []*User) (bool, error) {
-	var err error
-	if len(users) == 0 {
-		return false, nil
-	}
-
-	// organization := GetOrganizationByUser(users[0])
-	for _, user := range users {
-		// this function is only used for syncer or batch upload, so no need to encrypt the password
-		// user.UpdateUserPassword(organization)
-
-		err = user.UpdateUserHash()
-		if err != nil {
-			return false, err
-		}
-
-		user.PreHash = user.Hash
-
-		user.Email = strings.ToLower(user.Email)
-
-		if user.MappingStrategy == "" {
-			user.MappingStrategy = "all"
-		}
-	}
-
-	affected, err := orm.AppOrmer.Engine.Insert(users)
+func AddUserWithID(ctx context.Context, user *User) (string, bool, error) {
+	affected, err := AddUser(ctx, user)
 	if err != nil {
-		if !strings.Contains(err.Error(), "Duplicate entry") {
-			return false, err
-		}
+		return "", false, fmt.Errorf("AddUser: %w", err)
 	}
-
-	if affected != 0 {
-		reachablePermissions := make([]*Permission, 0)
-		for _, user := range users {
-			reachablePermissionsByUser, err := reachablePermissionsByUser(user)
-			if err != nil {
-				return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
-			}
-			reachablePermissions = append(reachablePermissions, reachablePermissionsByUser...)
-		}
-
-		err = ProcessPolicyDifference(reachablePermissions)
-		if err != nil {
-			return false, fmt.Errorf("ProcessPolicyDifference: %w", err)
-		}
+	if !affected {
+		return "", false, fmt.Errorf("not affected")
 	}
-
-	return affected != 0, nil
-}
-
-func AddUsersInBatch(users []*User) (bool, error) {
-	batchSize := conf.GetConfigBatchSize()
-
-	if len(users) == 0 {
-		return false, nil
-	}
-
-	affected := false
-	for i := 0; i < len(users); i += batchSize {
-		start := i
-		end := i + batchSize
-		if end > len(users) {
-			end = len(users)
-		}
-
-		tmp := users[start:end]
-		fmt.Printf("The syncer adds users: [%d - %d]\n", start, end)
-		if ok, err := AddUsers(tmp); err != nil {
-			return false, err
-		} else if ok {
-			affected = true
-		}
-	}
-
-	return affected, nil
+	return user.Id, affected, err
 }
 
 func DeleteUser(ctx context.Context, user *User) (bool, error) {
+	err := ExtendUserWithRolesAndPermissions(user)
+	if err != nil {
+		return false, fmt.Errorf("ExtendUserWithRolesAndPermissions: %w", err)
+	}
+
+	for _, userRole := range user.Roles {
+		role, err := getRole(userRole.Owner, userRole.Name)
+		if err != nil {
+			return false, fmt.Errorf("getRole: %w", err)
+		}
+
+		role.Users = util.DeleteVal(role.Users, user.GetOwnerAndName())
+		_, err = UpdateRole(role.GetId(), role)
+		if err != nil {
+			return false, fmt.Errorf("UpdateRole: %w", err)
+		}
+	}
+
 	// Forced offline the user first
-	_, err := DeleteSession(ctx, util.GetSessionId(user.Owner, user.Name, CasdoorApplication))
+	_, err = DeleteSession(ctx, util.GetSessionId(user.Owner, user.Name, CasdoorApplication))
 	if err != nil {
 		return false, err
 	}
@@ -980,7 +911,8 @@ func LinkUserAccount(user *User, field string, value string) (bool, error) {
 	return SetUserField(user, field, value)
 }
 
-func (user *User) GetId() string {
+// GetOwnerAndName previously known as GetId. Renamed to avoid confusion.
+func (user *User) GetOwnerAndName() string {
 	return fmt.Sprintf("%s/%s", user.Owner, user.Name)
 }
 
@@ -993,7 +925,7 @@ func ExtendUserWithRolesAndPermissions(user *User) (err error) {
 		return
 	}
 
-	user.Permissions, user.Roles, err = getPermissionsAndRolesByUser(user.GetId())
+	user.Permissions, user.Roles, err = getPermissionsAndRolesByUser(user.GetOwnerAndName())
 	if err != nil {
 		return err
 	}
@@ -1009,6 +941,7 @@ func DeleteGroupForUser(user string, group string) (bool, error) {
 	return userEnforcer.DeleteGroupForUser(user, group)
 }
 
+// userChangeTrigger update username in roles and permissions tables
 func userChangeTrigger(oldName string, newName string) error {
 	session := orm.AppOrmer.Engine.NewSession()
 	defer session.Close()
@@ -1027,7 +960,10 @@ func userChangeTrigger(oldName string, newName string) error {
 	for _, role := range roles {
 		for j, u := range role.Users {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				role.Users[j] = util.GetId(owner, newName)
 			}
@@ -1046,7 +982,10 @@ func userChangeTrigger(oldName string, newName string) error {
 	for _, permission := range permissions {
 		for j, u := range permission.Users {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
+			if err != nil {
+				return err
+			}
 			if name == oldName {
 				permission.Users[j] = util.GetId(owner, newName)
 			}
@@ -1089,7 +1028,7 @@ func AddUserkeys(user *User, isAdmin bool) (bool, error) {
 	user.AccessKey = util.GenerateId()
 	user.AccessSecret = util.GenerateId()
 
-	return UpdateUser(user.GetId(), user, []string{}, isAdmin)
+	return UpdateUser(user.GetOwnerAndName(), user, []string{}, isAdmin)
 }
 
 func (user *User) IsApplicationAdmin(application *Application) bool {
@@ -1111,7 +1050,7 @@ func (user *User) IsGlobalAdmin() bool {
 func reachablePermissionsByUser(user *User) ([]*Permission, error) {
 	result := make([]*Permission, 0)
 
-	userPermissions, userRoles, err := getPermissionsAndRolesByUser(user.GetId())
+	userPermissions, userRoles, err := getPermissionsAndRolesByUser(user.GetOwnerAndName())
 	if err != nil {
 		return nil, fmt.Errorf("GetPermissionsAndRolesByUser: %w", err)
 	}
@@ -1228,10 +1167,16 @@ func SyncAttributesToUser(user *User, displayName, email, mobile, avatar string,
 	user.Avatar = avatar
 	user.Address = address
 
-	_, err := UpdateUser(user.GetId(), user, []string{"display_name", "email", "phone", "avatar", "address"}, true)
+	_, err := UpdateUser(user.GetOwnerAndName(), user, []string{"display_name", "email", "phone", "avatar", "address"}, true)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func UpdateUserSigninInfo(user *User) error {
+	user.LastSigninTime = util.GetCurrentTime()
+	_, err := updateUser(user.GetOwnerAndName(), user, []string{"last_signin_time"})
+	return err
 }

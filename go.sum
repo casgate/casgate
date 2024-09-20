@@ -129,6 +129,8 @@ github.com/casdoor/notify v0.44.0 h1:/j2TqO5lXEKYyu2WWtmGh3jh4aeN8m6p+9tWb5j1PWU
 github.com/casdoor/notify v0.44.0/go.mod h1:HgLPFmSmy9+uB72cp2z3Tk5KxpZfStqpLMr+5RddXmw=
 github.com/casdoor/xorm-adapter/v3 v3.0.4 h1:vB04Ao8n2jA7aFBI9F+gGXo9+Aa1IQP6mTdo50913DM=
 github.com/casdoor/xorm-adapter/v3 v3.0.4/go.mod h1:4WTcUw+bTgBylGHeGHzTtBvuTXRS23dtwzFLl9tsgFM=
+github.com/casgate/ldapserver v1.0.2 h1:3q5raI+ZCLo8UQMKwOrkdSkMKo/Sph4/NuYRl8PR2RE=
+github.com/casgate/ldapserver v1.0.2/go.mod h1:Bjo+fjEjF1hZJe2xU4sC2KuWCUHr6S+CeG7hBXXZCA4=
 github.com/cenkalti/backoff/v4 v4.1.1/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=
 github.com/cenkalti/backoff/v4 v4.1.2/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=
 github.com/cenkalti/backoff/v4 v4.1.3 h1:cFAlzYUlVYDysBEH2T5hyJZMh3+5+WCBvSnK6Q8UtC4=
@@ -223,8 +225,6 @@ github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5Kwzbycv
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
 github.com/fatih/color v1.12.0/go.mod h1:ELkj/draVOlAH/xkhN6mQ50Qd0MPOk5AAr3maGEBuJM=
 github.com/fogleman/gg v1.2.1-0.20190220221249-0403632d5b90/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
-github.com/forestmgy/ldapserver v1.1.0 h1:gvil4nuLhqPEL8SugCkFhRyA0/lIvRdwZSqlrw63ll4=
-github.com/forestmgy/ldapserver v1.1.0/go.mod h1:1RZ8lox1QSY7rmbjdmy+sYQXY4Lp7SpGzpdE3+j3IyM=
 github.com/fortytw2/leaktest v1.3.0/go.mod h1:jDsjWgpAGjm2CA7WthBh/CdZYEPF31XHquHwclZch5g=
 github.com/franela/goblin v0.0.0-20210519012713-85d372ac71e2/go.mod h1:VzmDKDJVZI3aJmnRI9VjAn9nJ8qPPsN1fqzr9dqInIo=
 github.com/franela/goreq v0.0.0-20171204163338-bcd34c9993f8/go.mod h1:ZhphrRTfi2rbfLwlschooIH4+wKKDR4Pdxhh+TRoA20=

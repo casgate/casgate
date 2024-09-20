@@ -115,7 +115,7 @@ class ModelListPage extends BaseListPage {
         ...this.getColumnSearchProps("owner"),
         render: (text, record, index) => {
           return (
-            <Link to={`/organizations/${text}`}>
+            <Link to={`/organizations/${text.replaceAll("#", "%23")}`}>
               {text}
             </Link>
           );

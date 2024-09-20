@@ -116,7 +116,7 @@ func (mfa *TotpMfa) Enable(ctx *context.Context, user *User) error {
 		user.PreferredMfaType = mfa.Config.MfaType
 	}
 
-	_, err := updateUser(user.GetId(), user, columns)
+	_, err := updateUser(user.GetOwnerAndName(), user, columns)
 	if err != nil {
 		return err
 	}

@@ -53,13 +53,13 @@ func (c *ApiController) GetSamlMeta() {
 func (c *ApiController) GetProviderSamlMetadata() {
 	id := c.Input().Get("id")
 
-	provider, err := object.GetProvider(id)
+	provider, err := object.GetProvider(id, false)
 	if err != nil {
 		c.ResponseInternalServerError(err.Error())
 		return
 	}
 
-	sp, err := object.BuildSp(provider, "", c.Ctx.Request.Host)
+	sp, err := object.BuildSp(c.getRequestCtx(), provider, "", c.Ctx.Request.Host)
 	if err != nil {
 		c.ResponseInternalServerError("Build SP error")
 		return

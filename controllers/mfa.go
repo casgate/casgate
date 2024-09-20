@@ -60,7 +60,7 @@ func (c *ApiController) MfaSetupInitiate() {
 		return
 	}
 
-	mfaProps, err := MfaUtil.Initiate(c.Ctx, user.GetId())
+	mfaProps, err := MfaUtil.Initiate(c.Ctx, user.GetOwnerAndName())
 	if err != nil {
 		c.ResponseError(err.Error())
 		return

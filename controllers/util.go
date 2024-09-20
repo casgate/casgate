@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -24,6 +25,7 @@ import (
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+	"github.com/lib/pq"
 )
 
 // ResponseJsonData ...
@@ -53,7 +55,7 @@ func (c *ApiController) ResponseError(error string, data ...interface{}) {
 
 // ResponseErrorWithStatus ...
 func (c *ApiController) ResponseErrorWithStatus(status int, error string) {
-	resp := &Error{Code: status, Message: error}
+	resp := &Error{Code: status, Message: error, Status: "error"}
 
 	c.Ctx.Output.Status = status
 
@@ -89,6 +91,18 @@ func (c *ApiController) ResponseUnprocessableEntity(error string) {
 // ResponseInternalServerError...
 func (c *ApiController) ResponseInternalServerError(error string) {
 	c.ResponseErrorWithStatus(http.StatusInternalServerError, error)
+}
+
+func (c *ApiController) ResponseDBError(err error) {
+	var dbErr *pq.Error
+	if errors.As(err, &dbErr) {
+		if dbErr.Code.Name() == "undefined_column" {
+			c.ResponseBadRequest(dbErr.Message)
+			return
+		}
+	}
+	c.ResponseInternalServerError(err.Error())
+	return
 }
 
 // ResponseConflict...
@@ -223,7 +237,7 @@ func (c *ApiController) GetProviderFromContext(category string) (*object.Provide
 	}
 
 	if providerName != "" {
-		provider, err := object.GetProvider(util.GetId("admin", providerName))
+		provider, err := object.GetProvider(util.GetId("admin", providerName), false)
 		if err != nil {
 			return nil, err
 		}

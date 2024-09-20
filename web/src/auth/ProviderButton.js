@@ -44,6 +44,7 @@ import LoginButton from "./LoginButton";
 import * as AuthBackend from "./AuthBackend";
 import {getEvent} from "./Util";
 import {Modal, Tooltip} from "antd";
+import * as Setting from "../Setting";
 
 function getSigninButton(provider) {
   const text = i18next.t("login:Sign in with {type}").replace("{type}", provider.displayName !== "" ? provider.displayName : provider.type);
@@ -127,8 +128,13 @@ export function goToWeb3Url(application, provider, method) {
 }
 
 async function handleOAuthClick(application, provider, method) {
-  const url = await Provider.getAuthUrl(application, provider, method);
-  window.location.href = url;
+  const authResp = await Provider.getAuthUrl(application, provider, method);
+  if (authResp.status === "ok") {
+    window.location.href = authResp.data.url;
+  } else {
+    Setting.showMessage("error", `${i18next.t("general:Failed to get auth provider info")}: ${authResp.msg}`);
+    return null;
+  }
 }
 
 export function renderProviderLogo(provider, application, width, margin, size, location) {

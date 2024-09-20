@@ -17,15 +17,16 @@ package object
 import (
 	"context"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"strconv"
+
+	"github.com/casdoor/casdoor/orm"
+
+	"github.com/xorm-io/core"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/i18n"
 	"github.com/casdoor/casdoor/util"
-	"github.com/xorm-io/builder"
-	"github.com/xorm-io/core"
 )
 
 const DefaultOrganizationPasswordSpecialChars = `~!@#$%^&*_\-+=` + "`" + `|(){}[]:;"'<>,.?/`
@@ -80,26 +81,9 @@ type Organization struct {
 	AccountItems []*AccountItem `xorm:"varchar(5000)" json:"accountItems"`
 }
 
-func GetOrganizationCount(owner, field, value string) (int64, error) {
+func GetOrganizationCount(owner, name, field, value string) (int64, error) {
 	session := orm.GetSession(owner, -1, -1, field, value, "", "")
-	return session.Count(&Organization{})
-}
-
-func GetOrganizations(owner string, name ...string) ([]*Organization, error) {
-	organizations := []*Organization{}
-	if name != nil && len(name) > 0 {
-		err := orm.AppOrmer.Engine.Desc("created_time").Where(builder.In("name", name)).Find(&organizations)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err := orm.AppOrmer.Engine.Desc("created_time").Find(&organizations, &Organization{Owner: owner})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return organizations, nil
+	return session.Count(&Organization{Name: name})
 }
 
 func GetOrganizationsByFields(owner string, fields ...string) ([]*Organization, error) {
@@ -115,12 +99,7 @@ func GetOrganizationsByFields(owner string, fields ...string) ([]*Organization, 
 func GetPaginationOrganizations(owner string, name string, offset, limit int, field, value, sortField, sortOrder string) ([]*Organization, error) {
 	organizations := []*Organization{}
 	session := orm.GetSession(owner, offset, limit, field, value, sortField, sortOrder)
-	var err error
-	if name != "" {
-		err = session.Find(&organizations, &Organization{Name: name})
-	} else {
-		err = session.Find(&organizations)
-	}
+	err := session.Find(&organizations, &Organization{Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +126,10 @@ func getOrganization(owner string, name string) (*Organization, error) {
 }
 
 func GetOrganization(id string) (*Organization, error) {
-	owner, name := util.GetOwnerAndNameFromId(id)
+	owner, name, err := util.SplitIdIntoOrgAndName(id)
+	if err != nil {
+		return nil, err
+	}
 	return getOrganization(owner, name)
 }
 
@@ -185,7 +167,10 @@ func GetMaskedOrganizations(organizations []*Organization, errs ...error) ([]*Or
 func UpdateOrganization(ctx context.Context, id string, organization *Organization, lang string) (bool, error) {
 	var affected int64
 	err := trm.WithTx(ctx, func(ctx context.Context) error {
-		owner, name := util.GetOwnerAndNameFromId(id)
+		owner, name, err := util.SplitIdIntoOrgAndName(id)
+		if err != nil {
+			return err
+		}
 		org, err := repo.GetOrganization(ctx, owner, name, true)
 		if err != nil {
 			return err
@@ -405,28 +390,40 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 	for _, role := range roles {
 		for i, u := range role.Users {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
+			if err != nil {
+				return err
+			}
 			if owner == oldName {
 				role.Users[i] = util.GetId(newName, name)
 			}
 		}
 		for i, u := range role.Roles {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
+			if err != nil {
+				return err
+			}
 			if owner == oldName {
 				role.Roles[i] = util.GetId(newName, name)
 			}
 		}
 		for i, g := range role.Groups {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(g)
+			owner, name, err := util.SplitIdIntoOrgAndName(g)
+			if err != nil {
+				return err
+			}
 			if owner == oldName {
 				role.Groups[i] = util.GetId(newName, name)
 			}
 		}
 		for i, d := range role.Domains {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(d)
+			owner, name, err := util.SplitIdIntoOrgAndName(d)
+			if err != nil {
+				return err
+			}
 			if owner == oldName {
 				role.Domains[i] = util.GetId(newName, name)
 			}
@@ -447,28 +444,40 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 	for _, permission := range permissions {
 		for i, u := range permission.Users {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
+			if err != nil {
+				return err
+			}
 			if owner == oldName {
 				permission.Users[i] = util.GetId(newName, name)
 			}
 		}
 		for i, u := range permission.Roles {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
+			if err != nil {
+				return err
+			}
 			if owner == oldName {
 				permission.Roles[i] = util.GetId(newName, name)
 			}
 		}
 		for i, g := range permission.Groups {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(g)
+			owner, name, err := util.SplitIdIntoOrgAndName(g)
+			if err != nil {
+				return err
+			}
 			if owner == oldName {
 				permission.Groups[i] = util.GetId(newName, name)
 			}
 		}
 		for i, d := range permission.Domains {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(d)
+			owner, name, err := util.SplitIdIntoOrgAndName(d)
+			if err != nil {
+				return err
+			}
 			if owner == oldName {
 				permission.Domains[i] = util.GetId(newName, name)
 			}
@@ -488,7 +497,10 @@ func organizationChangeTrigger(ctx context.Context, oldName string, newName stri
 	for _, domain := range domains {
 		for i, u := range domain.Domains {
 			// u = organization/username
-			owner, name := util.GetOwnerAndNameFromId(u)
+			owner, name, err := util.SplitIdIntoOrgAndName(u)
+			if err != nil {
+				return err
+			}
 			if owner == oldName {
 				domain.Domains[i] = util.GetId(newName, name)
 			}

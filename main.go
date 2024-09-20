@@ -17,13 +17,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/casdoor/casdoor/orm"
 	"github.com/casdoor/casdoor/util/logger"
-	"net/http"
+	"github.com/google/uuid"
 
 	"github.com/beego/beego"
 	"github.com/beego/beego/logs"
 	_ "github.com/beego/beego/session/redis"
+
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/ldap"
 	"github.com/casdoor/casdoor/object"
@@ -35,6 +38,7 @@ import (
 )
 
 func main() {
+	logger.InitGlobal(&logger.Config{Level: conf.GetConfigString("logLevel")})
 	orm.InitFlag()
 	ormer := orm.InitAdapter()
 	trm := txmanager.NewTransactionManager(ormer.Engine)
@@ -43,11 +47,14 @@ func main() {
 	object.CreateTables()
 	object.DoMigration()
 
-	ctx := context.Background()
+	ctx := logger.InitLoggerCtx(context.Background())
+
+	// Parent request id to trace background tasks through logs
+	logger.SetItem(ctx, "casgate_request_id", uuid.NewString())
 
 	object.InitDb(ctx)
 	object.InitFromFile(ctx)
-	object.InitLdapAutoSynchronizer(ctx)
+	object.RunLDAPSync(ctx)
 	proxy.InitHttpClient()
 	object.InitUserManager()
 
@@ -59,10 +66,17 @@ func main() {
 	beego.SetStaticPath("/files", "files")
 	// https://studygolang.com/articles/2303
 	beego.InsertFilter("*", beego.BeforeRouter, routers.StaticFilter)
-	beego.InsertFilter("*", beego.BeforeRouter, routers.InitRecordMessage, false)
+	beego.InsertFilter("*", beego.BeforeRouter, routers.SetRecordBuilderToCtx, false)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.AutoSigninFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.CorsFilter)
+	beego.InsertFilter("*", beego.BeforeRouter, routers.PathFilter)
 	beego.InsertFilter("*", beego.BeforeRouter, routers.PrometheusFilter)
+	beego.InsertFilter("*", beego.BeforeRouter, routers.LoggerFilter)
+
+	beego.InsertFilter("*", beego.BeforeExec, routers.UTF8Filter)
+	beego.InsertFilter("*", beego.BeforeExec, routers.ValueFilter)
+
+	// certain routes are ignored within this filter for precise auditing
 	beego.InsertFilter("*", beego.AfterExec, routers.LogRecordMessage, false)
 
 	beego.BConfig.WebConfig.Session.SessionOn = true
@@ -81,7 +95,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	logger.InitGlobal(&logger.Config{Level: conf.GetConfigString("logLevel")})
 	port := beego.AppConfig.DefaultInt("httpport", 8000)
 	// logs.SetLevel(logs.LevelInformational)
 	logs.SetLogFuncCall(false)

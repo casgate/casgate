@@ -15,6 +15,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -23,6 +24,8 @@ import (
 	"github.com/casdoor/casdoor/form"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
+	"github.com/casdoor/casdoor/util/logger"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -71,7 +74,7 @@ func (c *ApiController) Signup() {
 	}
 
 	gCtx := c.getRequestCtx()
-	record := object.GetRecord(gCtx)
+	record := object.GetRecordBuilderFromContext(gCtx)
 
 	var authForm form.AuthForm
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &authForm)
@@ -86,7 +89,7 @@ func (c *ApiController) Signup() {
 		return
 	}
 
-	if !application.EnableInternalSignUp && !application.EnableIdpSignUp {
+	if !application.EnableInternalSignUp {
 		c.ResponseError(c.T("account:The application does not allow to sign up new account"))
 		return
 	}
@@ -244,7 +247,7 @@ func (c *ApiController) Signup() {
 			return
 		}
 
-		affected, err = object.UpdateUser(invitedUser.GetId(), user, columns, false)
+		affected, err = object.UpdateUser(invitedUser.GetOwnerAndName(), user, columns, false)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return
@@ -258,7 +261,7 @@ func (c *ApiController) Signup() {
 
 	if application.HasPromptPage() && user.Type == "normal-user" {
 		// The prompt page needs the user to be signed in
-		c.SetSessionUsername(user.GetId())
+		c.SetSessionUsername(user.GetOwnerAndName())
 	}
 
 	err = object.DisableVerificationCode(authForm.Email)
@@ -275,7 +278,7 @@ func (c *ApiController) Signup() {
 
 	record.WithUsername(user.Name).WithOrganization(application.Organization).AddReason("User signed up")
 
-	userId := user.GetId()
+	userId := user.GetOwnerAndName()
 	util.LogInfo(c.Ctx, "API: [%s] is signed up as new user", userId)
 
 	c.ResponseOk(userId)
@@ -296,107 +299,170 @@ func (c *ApiController) Logout() {
 	redirectUri := c.Input().Get("post_logout_redirect_uri")
 	state := c.Input().Get("state")
 
-	user := c.GetSessionUsername()
-	c.Ctx.Input.SetData("user", user)
+	userNameWithOrg := c.GetSessionUsername()
+	c.Ctx.Input.SetData("user", userNameWithOrg)
 
 	goCtx := c.getRequestCtx()
-	record := object.GetRecord(goCtx).WithUsername(user)
+	record := object.GetRecordBuilderFromContext(goCtx).WithUsername(userNameWithOrg)
+
+	logger.SetItem(goCtx, "obj-type", "application")
+	logger.SetItem(goCtx, "usr", userNameWithOrg)
 
 	if accessToken == "" && redirectUri == "" {
 		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
-		if user == "" {
+		if userNameWithOrg == "" {
 			c.ResponseOk()
 			return
 		}
-
-		c.ClearUserSession()
-		owner, username := util.GetOwnerAndNameFromId(user)
-		_, err := object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
+		owner, username, err := util.SplitIdIntoOrgAndName(userNameWithOrg)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
 
 			c.ResponseError(err.Error())
 			return
 		}
-
-		util.LogInfo(c.Ctx, "API: [%s] logged out", user)
-
-		application := c.GetSessionApplication()
-		if application == nil || application.Name == "app-built-in" || application.HomepageUrl == "" {
-			record.AddReason("Logout error: application mismatch")
-
-			c.ResponseOk(user)
+		record.WithUsername(username).WithOrganization(owner)
+		application, err := object.GetApplicationByUserId(goCtx, userNameWithOrg)
+		if err != nil {
+			err = errors.Wrap(err, "Logout error: failed to get application for user")
+			logLogoutErr(goCtx, err.Error())
+			c.ResponseError(err.Error())
 			return
 		}
-		c.ResponseOk(user, application.HomepageUrl)
+		logger.SetItem(goCtx, "obj", object.CasdoorApplication)
+		if application != nil {
+			logger.SetItem(goCtx, "obj", application.GetId())
+		}
+
+		c.ClearUserSession()
+		_, err = object.DeleteSessionId(
+			goCtx,
+			util.GetSessionId(owner, username, object.CasdoorApplication),
+			c.Ctx.Input.CruSession.SessionID(),
+		)
+		if err != nil {
+			logLogoutErr(goCtx, fmt.Sprintf("Logout error: %s", err.Error()))
+			c.ResponseError(err.Error())
+			return
+		}
+
+		logger.Info(goCtx,
+			"",
+			"act", "logout",
+			"r", "success",
+		)
+
+		if application == nil || application.Name == object.CasdoorApplication || application.HomepageUrl == "" {
+			record.AddReason("Logout error: application mismatch")
+
+			c.ResponseOk(userNameWithOrg)
+			return
+		}
+		c.ResponseOk(userNameWithOrg, application.HomepageUrl)
 		return
 	} else {
-		// "post_logout_redirect_uri" has been made optional, see: https://github.com/casdoor/casdoor/issues/2151
-		// if redirectUri == "" {
-		// 	c.ResponseError(c.T("general:Missing parameter") + ": post_logout_redirect_uri")
-		// 	return
-		// }
 		if accessToken == "" {
-			record.AddReason("Logout error: missing id_token_hint")
-
+			logLogoutErr(goCtx, "Logout error: missing id_token_hint")
 			c.ResponseError(c.T("general:Missing parameter") + ": id_token_hint")
 			return
 		}
 
 		affected, application, token, err := object.ExpireTokenByAccessToken(goCtx, accessToken)
 		if err != nil {
-			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
-
+			logLogoutErr(goCtx, fmt.Sprintf("Logout error: %s", err.Error()))
 			c.ResponseError(err.Error())
 			return
 		}
 
 		if !affected {
-			record.AddReason("Logout error: token not found, invalid access token")
-
+			logLogoutErr(goCtx, "Logout error: token not found, invalid access token")
 			c.ResponseError(c.T("token:Token not found, invalid accessToken"))
 			return
 		}
 
 		if application == nil {
-			record.AddReason(fmt.Sprintf("Logout error: application does not exist %s", token.Application))
-
+			logger.SetItem(goCtx, "obj", util.GetId(token.Organization, token.Application))
+			logLogoutErr(goCtx, fmt.Sprintf("Logout error: application does not exist %s", token.Application))
 			c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist")), token.Application)
 			return
 		}
 
-		if user == "" {
-			user = util.GetId(token.Organization, token.User)
+		logger.SetItem(goCtx, "obj", application.GetId())
+
+		if userNameWithOrg == "" {
+			userNameWithOrg = util.GetId(token.Organization, token.User)
+			logger.SetItem(goCtx, "usr", userNameWithOrg)
 		}
 
 		c.ClearUserSession()
 		// TODO https://github.com/casdoor/casdoor/pull/1494#discussion_r1095675265
-		owner, username := util.GetOwnerAndNameFromId(user)
-
-		_, err = object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
+		owner, username, err := util.SplitIdIntoOrgAndName(userNameWithOrg)
 		if err != nil {
 			record.AddReason(fmt.Sprintf("Logout error: %s", err.Error()))
 
 			c.ResponseError(err.Error())
 			return
 		}
+		record.WithUsername(username).WithOrganization(owner)
 
-		util.LogInfo(c.Ctx, "API: [%s] logged out", user)
+		_, err = object.DeleteSessionId(goCtx, util.GetSessionId(owner, username, object.CasdoorApplication), c.Ctx.Input.CruSession.SessionID())
+		if err != nil {
+			logger.SetItem(goCtx, "obj", object.CasdoorApplication)
+			logLogoutErr(goCtx, fmt.Sprintf("Logout error: %s", err.Error()))
+			c.ResponseError(err.Error())
+			return
+		}
+
+		util.LogInfo(c.Ctx, "API: [%s] logged out", userNameWithOrg)
 
 		if redirectUri == "" {
+			logger.Info(goCtx,
+				"",
+				"obj-type", "application",
+				"usr", userNameWithOrg,
+				"obj", application.GetId(),
+				"act", "logout",
+				"r", "success",
+			)
 			c.ResponseOk()
 			return
 		} else {
 			if application.IsRedirectUriValid(redirectUri) {
+				logger.Info(goCtx,
+					"",
+					"obj-type", "application",
+					"usr", userNameWithOrg,
+					"obj", application.GetId(),
+					"act", "logout",
+					"r", "success",
+				)
 				c.Ctx.Redirect(http.StatusFound, fmt.Sprintf("%s?state=%s", strings.TrimRight(redirectUri, "/"), state))
 			} else {
-				record.AddReason(fmt.Sprintf("Logout error: wrong redirect URI: %s", redirectUri))
-
+				logLogoutErr(goCtx, fmt.Sprintf("Logout error: wrong redirect URI: %s", redirectUri))
 				c.ResponseError(fmt.Sprintf(c.T("token:Redirect URI: %s doesn't exist in the allowed Redirect URI list"), redirectUri))
 				return
 			}
 		}
 	}
+}
+
+func logLogoutErr(ctx context.Context, errText string) {
+	record := object.GetRecordBuilderFromContext(ctx)
+	record.AddReason(errText)
+
+	logMsg := map[string]string{
+		"error": errText,
+	}
+
+	logMsgStr, err := json.Marshal(logMsg)
+	if err != nil {
+		return
+	}
+	logger.Error(ctx,
+		string(logMsgStr),
+		"act", "logout",
+		"r", "failure",
+	)
 }
 
 // GetAccount

@@ -190,9 +190,15 @@ export function getQueryParamsFromState(state) {
 
 export function getEvent(application, provider) {
   getWechatMessageEvent()
-    .then(res => {
+    .then(async res => {
       if (res.data === "SCAN" || res.data === "subscribe") {
-        Setting.goToLink(Provider.getAuthUrl(application, provider, "signup"));
+        const authResp = await Provider.getAuthUrl(application, provider, "signup");
+        if (authResp.status === "ok") {
+          Setting.goToLink(authResp.data.url);
+        } else {
+          Setting.showMessage("error", `${i18next.t("general:Failed to get auth provider info")}: ${authResp.msg}`);
+          return null;
+        }
       }
     });
 }

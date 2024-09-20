@@ -3,10 +3,13 @@ package object
 import (
 	"context"
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/casdoor/casdoor/ldap_sync"
 )
 
 // Mock implementations of the interfaces
@@ -15,7 +18,7 @@ type MockLdapSynchronizer struct {
 	syncCalled int
 }
 
-func (m *MockLdapSynchronizer) SyncUsers(_ context.Context, _ *Ldap) error {
+func (m *MockLdapSynchronizer) SyncLdapUsers(_ context.Context, _ *ldap_sync.Ldap) error {
 	m.Lock()
 	m.syncCalled++
 	m.Unlock()
@@ -23,10 +26,10 @@ func (m *MockLdapSynchronizer) SyncUsers(_ context.Context, _ *Ldap) error {
 }
 
 type MockLdapRepository struct {
-	ldapMap map[string]*Ldap
+	ldapMap map[string]*ldap_sync.Ldap
 }
 
-func (m *MockLdapRepository) GetLdap(id string) (*Ldap, error) {
+func (m *MockLdapRepository) GetLdap(id string) (*ldap_sync.Ldap, error) {
 	ldap, exists := m.ldapMap[id]
 	if !exists {
 		return nil, errors.New("LDAP not found")
@@ -39,15 +42,14 @@ func TestLdapSynchronizationManager_StartAutoSync(t *testing.T) {
 
 	mockSynchronizer := &MockLdapSynchronizer{}
 	mockRepo := &MockLdapRepository{
-		ldapMap: map[string]*Ldap{
+		ldapMap: map[string]*ldap_sync.Ldap{
 			"ldap1": {Id: "ldap1"},
 		},
 	}
 
-	manager := NewLdapAutoSynchronizer(mockSynchronizer, mockRepo)
-	recordBuilder := &RecordBuilder{}
+	manager := NewLdapSyncManager(mockSynchronizer, mockRepo)
 
-	err := manager.StartAutoSync(ctx, "ldap1", time.Minute, recordBuilder)
+	err := manager.StartSyncProcess(ctx, "ldap1", time.Minute)
 	assert.Nil(t, err)
 
 	// Verify the sync process was started
@@ -68,21 +70,20 @@ func TestLdapSynchronizationManager_StopAutoSync(t *testing.T) {
 
 	mockSynchronizer := &MockLdapSynchronizer{}
 	mockRepo := &MockLdapRepository{
-		ldapMap: map[string]*Ldap{
+		ldapMap: map[string]*ldap_sync.Ldap{
 			"ldap1": {Id: "ldap1"},
 		},
 	}
 
-	manager := NewLdapAutoSynchronizer(mockSynchronizer, mockRepo)
-	recordBuilder := &RecordBuilder{}
+	manager := NewLdapSyncManager(mockSynchronizer, mockRepo)
 
 	// Start auto sync
-	err := manager.StartAutoSync(ctx, "ldap1", time.Nanosecond, recordBuilder)
+	err := manager.StartSyncProcess(ctx, "ldap1", time.Nanosecond)
 	assert.Nil(t, err)
 	time.Sleep(100 * time.Microsecond)
 
 	// Stop auto sync and wait for the sync goroutine to be stopped.
-	manager.StopAutoSync("ldap1")
+	manager.StopSyncProcess("ldap1")
 	time.Sleep(100 * time.Microsecond)
 
 	// Store number of calls to SyncUsers()
@@ -110,17 +111,16 @@ func TestLdapSynchronizationManager_StartAutoSync_NonExistentLdap(t *testing.T) 
 
 	mockSynchronizer := &MockLdapSynchronizer{}
 	mockRepo := &MockLdapRepository{
-		ldapMap: map[string]*Ldap{},
+		ldapMap: map[string]*ldap_sync.Ldap{},
 	}
 
-	manager := NewLdapAutoSynchronizer(mockSynchronizer, mockRepo)
-	recordBuilder := &RecordBuilder{}
+	manager := NewLdapSyncManager(mockSynchronizer, mockRepo)
 
-	err := manager.StartAutoSync(ctx, "non-existent", time.Minute, recordBuilder)
+	err := manager.StartSyncProcess(ctx, "non-existent", time.Minute)
 	time.Sleep(500 * time.Microsecond)
 
 	assert.NotNil(t, err)
-	assert.Equal(t, "LDAP not found", err.Error())
+	assert.Equal(t, "StartAutoSync error: failed to GetLdap: LDAP not found", err.Error())
 
 	// Verify that the sync process was not started
 	mockSynchronizer.Lock()
@@ -139,15 +139,14 @@ func TestLdapSynchronizationManager_WaitForNextSync(t *testing.T) {
 
 	mockSynchronizer := &MockLdapSynchronizer{}
 	mockRepo := &MockLdapRepository{
-		ldapMap: map[string]*Ldap{
+		ldapMap: map[string]*ldap_sync.Ldap{
 			"ldap1": {Id: "ldap1", AutoSync: 1},
 		},
 	}
 
-	manager := NewLdapAutoSynchronizer(mockSynchronizer, mockRepo)
-	recordBuilder := &RecordBuilder{}
+	manager := NewLdapSyncManager(mockSynchronizer, mockRepo)
 
-	err := manager.StartAutoSync(ctx, "ldap1", time.Nanosecond, recordBuilder)
+	err := manager.StartSyncProcess(ctx, "ldap1", time.Nanosecond)
 	assert.Nil(t, err)
 
 	time.Sleep(100 * time.Microsecond)

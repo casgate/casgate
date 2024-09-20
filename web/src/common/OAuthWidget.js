@@ -183,7 +183,7 @@ class OAuthWidget extends React.Component {
               provider.category === "Web3" ? (
                 <Button style={{marginLeft: "20px", width: linkButtonWidth}} type="primary" disabled={user.id !== account.id} onClick={() => goToWeb3Url(application, provider, "link")}>{i18next.t("user:Link")}</Button>
               ) : (
-                <a key={provider.displayName} href={user.id !== account.id ? null : Provider.getAuthUrl(application, provider, "link")}>
+                <a key={provider.displayName} href={user.id !== account.id ? null : Provider.getAuthUrl(application, provider, "link").data.url}>
                   <Button style={{marginLeft: "20px", width: linkButtonWidth}} type="primary" disabled={user.id !== account.id}>{i18next.t("user:Link")}</Button>
                 </a>
               )

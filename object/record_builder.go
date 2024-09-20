@@ -15,11 +15,12 @@
 package object
 
 import (
-	goCtx "context"
+	"context"
 	"errors"
 
 	beeCtx "github.com/beego/beego/context"
 	"github.com/beego/beego/logs"
+
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -27,34 +28,26 @@ func NewRecordBuilder() *RecordBuilder {
 	record := &Record{
 		Name:        util.GenerateId(),
 		CreatedTime: util.GetCurrentTime(),
+		Detail: &RecordDetail{},
+		Organization: builtInOrganization,
 	}
 
 	rb := &RecordBuilder{
 		record: record,
 	}
 
-	rb.setDefaultFieldValues()
-
 	return rb
 }
 
-func NewRecordBuilderFromCtx(bCtx *beeCtx.Context) *RecordBuilder {
+func NewRecordBuilderWithRequestValues(bCtx *beeCtx.Context) *RecordBuilder {
 	rb := &RecordBuilder{
 		record: NewRecord(bCtx),
 	}
-
-	rb.setDefaultFieldValues()
-
 	return rb
 }
 
 type RecordBuilder struct {
 	record *Record
-}
-
-func (rb *RecordBuilder) setDefaultFieldValues() {
-	rb.record.Organization = "built-in"
-	rb.record.Detail = &RecordDetail{}
 }
 
 func (rb *RecordBuilder) WithOrganization(organization string) *RecordBuilder {
@@ -81,7 +74,7 @@ func (rb *RecordBuilder) WithResponse(response string) *RecordBuilder {
 	return rb
 }
 
-func (rb *RecordBuilder) AddReason(detail string) *RecordBuilder {
+func (rb *RecordBuilder) AddReason(detail string) {
 	if rb.record == nil {
 		rb.record = &Record{
 			Name:        util.GenerateId(),
@@ -90,12 +83,9 @@ func (rb *RecordBuilder) AddReason(detail string) *RecordBuilder {
 	}
 
 	if rb.record.Detail == nil {
-		rb.setDefaultFieldValues()
+		rb.record.Detail = &RecordDetail{}
 	}
-
 	rb.record.Detail.Reasons = append(rb.record.Detail.Reasons, detail)
-
-	return rb
 }
 
 func (rb *RecordBuilder) AddOldObject(object interface{}) *RecordBuilder {
@@ -110,16 +100,29 @@ func (rb *RecordBuilder) Build() *Record {
 
 type recordDataKey string
 
-const RecordDataKey recordDataKey = "recordDataStore"
+const (
+	RecordDataKey            recordDataKey = "recordDataStore"
+	RoleMappingRecordDataKey recordDataKey = "roleMappingRecordDataStore"
+)
 
-func ExtractRecord(bCtx *beeCtx.Context) (*RecordBuilder, error) {
-	reqCtx := bCtx.Request.Context()
+func ExtractRecordBuilderFromCtx(ctx context.Context) (*RecordBuilder, error) {
+	rbVal := ctx.Value(RecordDataKey)
 
-	return extractRecordFromCtx(reqCtx)
+	if rbVal == nil {
+		return nil, ErrExtractRecordFromCtx
+	}
+
+	rb, ok := rbVal.(*RecordBuilder)
+	if !ok {
+		return nil, ErrCastingToRecord
+	}
+
+	return rb, nil
 }
 
-func GetRecord(ctx goCtx.Context) *RecordBuilder {
-	rb, err := extractRecordFromCtx(ctx)
+
+func GetRecordBuilderFromContext(ctx context.Context) *RecordBuilder {
+	rb, err := ExtractRecordBuilderFromCtx(ctx)
 	if err == nil {
 		return rb
 	}
@@ -133,18 +136,3 @@ var (
 	ErrExtractRecordFromCtx = errors.New("record is not present")
 	ErrCastingToRecord      = errors.New("casting to record")
 )
-
-func extractRecordFromCtx(goCtx goCtx.Context) (*RecordBuilder, error) {
-	recordVal := goCtx.Value(RecordDataKey)
-
-	if recordVal == nil {
-		return nil, ErrExtractRecordFromCtx
-	}
-
-	rb, ok := recordVal.(*RecordBuilder)
-	if !ok {
-		return nil, ErrCastingToRecord
-	}
-
-	return rb, nil
-}

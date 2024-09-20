@@ -165,7 +165,7 @@ class ApplicationListPage extends BaseListPage {
         ...this.getColumnSearchProps("organization"),
         render: (text, record, index) => {
           return (
-            <Link to={`/organizations/${text}`}>
+            <Link to={`/organizations/${text.replaceAll("#", "%23")}`}>
               {text}
             </Link>
           );

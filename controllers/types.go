@@ -27,3 +27,9 @@ type TokenRequest struct {
 	Avatar       string `json:"avatar"`
 	RefreshToken string `json:"refresh_token"`
 }
+
+const (
+	builtInOrg    = "built-in"
+	adminUsername = "admin"
+	productNameTarget = "%productName"
+)

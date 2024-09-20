@@ -17,11 +17,12 @@ package object
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/casdoor/casdoor/orm"
 
 	"github.com/casdoor/casdoor/cred"
 	"github.com/casdoor/casdoor/i18n"
@@ -283,7 +284,7 @@ func SetUserOAuthProperties(organization *Organization, user *User, providerType
 		}
 	}
 
-	return UpdateUserForAllFields(user.GetId(), user)
+	return UpdateUserForAllFields(user.GetOwnerAndName(), user)
 }
 
 func ClearUserOAuthProperties(user *User, providerType string) (bool, error) {

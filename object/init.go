@@ -18,13 +18,18 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
-	"github.com/casdoor/casdoor/orm"
-	"github.com/casdoor/xorm-adapter/v3"
 	"os"
+
+	"github.com/casdoor/xorm-adapter/v3"
+
+	casdoorcert "github.com/casdoor/casdoor/cert"
+	"github.com/casdoor/casdoor/ldap_sync"
+	"github.com/casdoor/casdoor/orm"
+
+	"github.com/go-webauthn/webauthn/webauthn"
 
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/util"
-	"github.com/go-webauthn/webauthn/webauthn"
 )
 
 func InitDb(ctx context.Context) {
@@ -156,7 +161,7 @@ func initBuiltInUser(ctx context.Context) {
 		IsAdmin:           true,
 		IsForbidden:       false,
 		IsDeleted:         false,
-		SignupApplication: "app-built-in",
+		SignupApplication: CasdoorApplication,
 		CreatedIp:         "127.0.0.1",
 		Properties:        make(map[string]string),
 		MappingStrategy:   "all",
@@ -168,7 +173,7 @@ func initBuiltInUser(ctx context.Context) {
 }
 
 func initBuiltInApplication(ctx context.Context) {
-	application, err := getApplication(ctx, "admin", "app-built-in", nil)
+	application, err := getApplication(ctx, "admin", CasdoorApplication, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -179,7 +184,7 @@ func initBuiltInApplication(ctx context.Context) {
 
 	application = &Application{
 		Owner:                "admin",
-		Name:                 "app-built-in",
+		Name:                 CasdoorApplication,
 		CreatedTime:          util.GetCurrentTime(),
 		DisplayName:          "Casdoor",
 		Logo:                 fmt.Sprintf("%s/img/cg_logo.png", conf.GetConfigString("staticBaseUrl")),
@@ -239,12 +244,12 @@ func initBuiltInCert() {
 		return
 	}
 
-	cert = &Cert{
+	cert = &casdoorcert.Cert{
 		Owner:           "admin",
 		Name:            "cert-built-in",
 		CreatedTime:     util.GetCurrentTime(),
 		DisplayName:     "Built-in Cert",
-		Scope:           scopeCertJWT,
+		Scope:           casdoorcert.ScopeCertJWT,
 		Type:            "x509",
 		CryptoAlgorithm: "RS256",
 		BitSize:         4096,
@@ -268,7 +273,7 @@ func initBuiltInLdap() {
 		return
 	}
 
-	ldap = &Ldap{
+	ldap = &ldap_sync.Ldap{
 		Id:         "ldap-built-in",
 		Owner:      "built-in",
 		ServerName: "BuildIn LDAP Server",
@@ -287,7 +292,9 @@ func initBuiltInLdap() {
 }
 
 func initBuiltInProvider() {
-	provider, err := GetProvider(util.GetId("admin", "provider_captcha_default"))
+	ctx := context.TODO()
+
+	provider, err := GetProvider(util.GetId("admin", "provider_captcha_default"), false)
 	if err != nil {
 		panic(err)
 	}
@@ -304,7 +311,7 @@ func initBuiltInProvider() {
 		Category:    "Captcha",
 		Type:        "Default",
 	}
-	_, err = AddProvider(provider)
+	_, err = AddProvider(ctx, provider)
 	if err != nil {
 		panic(err)
 	}
@@ -414,7 +421,7 @@ func initBuiltInPermission() {
 		Domains:      []string{},
 		Model:        "model-built-in",
 		ResourceType: "Application",
-		Resources:    []string{"app-built-in"},
+		Resources:    []string{CasdoorApplication},
 		Actions:      []string{"Read", "Write", "Admin"},
 		Effect:       "Allow",
 		IsEnabled:    true,
@@ -616,12 +623,12 @@ func CreateTable(a *orm.Ormer) {
 		panic(err)
 	}
 
-	err = a.Engine.Sync2(new(Cert))
+	err = a.Engine.Sync2(new(casdoorcert.Cert))
 	if err != nil {
 		panic(err)
 	}
 
-	err = a.Engine.Sync2(new(Ldap))
+	err = a.Engine.Sync2(new(ldap_sync.Ldap))
 	if err != nil {
 		panic(err)
 	}

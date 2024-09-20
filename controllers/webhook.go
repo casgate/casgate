@@ -16,8 +16,8 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 
-	"github.com/beego/beego/utils/pagination"
 	"github.com/casdoor/casdoor/object"
 	"github.com/casdoor/casdoor/util"
 )
@@ -34,41 +34,20 @@ func (c *ApiController) GetWebhooks() {
 	request := c.ReadRequestFromQueryParams()
 	c.ContinueIfHasRightsOrDenyRequest(request)
 
-	owner := c.Input().Get("owner")
-	limit := c.Input().Get("pageSize")
-	page := c.Input().Get("p")
-	field := c.Input().Get("field")
-	value := c.Input().Get("value")
-	sortField := c.Input().Get("sortField")
-	sortOrder := c.Input().Get("sortOrder")
-	organization := c.Input().Get("organization")
-
-	if limit == "" || page == "" {
-		webhooks, err := object.GetWebhooks(owner, organization)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(webhooks)
-	} else {
-		limit := util.ParseInt(limit)
-		count, err := object.GetWebhookCount(owner, organization, field, value)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		paginator := pagination.SetPaginator(c.Ctx, limit, count)
-
-		webhooks, err := object.GetPaginationWebhooks(owner, organization, paginator.Offset(), limit, field, value, sortField, sortOrder)
-		if err != nil {
-			c.ResponseError(err.Error())
-			return
-		}
-
-		c.ResponseOk(webhooks, paginator.Nums())
+	paginator, err := object.GetPaginator(c.Ctx, request.Owner, request.Field, request.Value, request.Limit, object.Webhook{Organization: request.Organization})
+	if err != nil {
+		c.ResponseDBError(err)
+		return
 	}
+
+	webhooks, err := object.GetPaginationWebhooks(request.Owner, request.Organization, paginator.Offset(),
+		request.Limit, request.Field, request.Value, request.SortField, request.SortOrder)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk(webhooks, paginator.Nums())
 }
 
 // GetWebhook
@@ -120,6 +99,7 @@ func (c *ApiController) UpdateWebhook() {
 		return
 	}
 	c.ValidateOrganization(webhookFromDb.Organization)
+	c.validateWebhookURLs(webhook)
 
 	c.Data["json"] = wrapActionResponse(object.UpdateWebhook(request.Id, &webhook))
 	c.ServeJSON()
@@ -143,6 +123,7 @@ func (c *ApiController) AddWebhook() {
 		return
 	}
 	c.ValidateOrganization(webhook.Organization)
+	c.validateWebhookURLs(webhook)
 
 	c.Data["json"] = wrapActionResponse(object.AddWebhook(&webhook))
 	c.ServeJSON()
@@ -174,4 +155,11 @@ func (c *ApiController) DeleteWebhook() {
 
 	c.Data["json"] = wrapActionResponse(object.DeleteWebhook(&webhook))
 	c.ServeJSON()
+}
+
+func (c *ApiController) validateWebhookURLs(webhook object.Webhook) {
+	if webhook.Url != "" && !util.IsURLValid(webhook.Url) {
+		c.ResponseError(fmt.Sprintf(c.T("general:%s field is not valid URL"), c.T("webhook:Url")))
+		return
+	}
 }

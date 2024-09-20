@@ -119,7 +119,7 @@ func (pb *PolicyBuilder) calcGroupPolicies(group *Group) ([]policyGroup, error) 
 			id:          group.GetId(),
 			name:        group.GetId(),
 			parentGroup: parentId,
-			user:        user.GetId(),
+			user:        user.GetOwnerAndName(),
 		})
 	}
 

@@ -68,7 +68,7 @@ func (c *ApiController) SendEmail() {
 	if emailForm.Provider != "" {
 		// called by frontend's TestEmailWidget, provider name is set by frontend
 		providerID := util.GetId(emailForm.Owner, emailForm.Provider)
-		provider, err = object.GetProvider(providerID)
+		provider, err = object.GetProvider(providerID, false)
 		if err != nil {
 			c.ResponseError(err.Error())
 			return

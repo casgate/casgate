@@ -380,18 +380,5 @@ export async function getAuthUrl(application, provider, method) {
   if (application === null || provider === null) {
     return "";
   }
-  const applicationID = application.owner + "/" + application.name;
-  const providerID = provider.owner + "/" + provider.name;
-  const response = await AuthBackend.getAuthURL(providerID, applicationID, method);
-  if (response.status === "ok") {
-    const {isShortState, authQuery, url} = response.data;
-    if (isShortState) {
-      const urlParams = new URLSearchParams(url.split("?")[1]);
-      const state = urlParams.get("state");
-      sessionStorage.setItem(state, authQuery);
-    }
-    return url;
-  } else {
-    throw new Error(response.msg || "Failed to get auth URL");
-  }
+  return await AuthBackend.getAuthURL(provider, application, method);
 }

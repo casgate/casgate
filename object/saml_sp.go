@@ -15,21 +15,25 @@
 package object
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
-	"slices"
 	"strings"
 
-	"github.com/casdoor/casdoor/i18n"
-	"github.com/casdoor/casdoor/idp"
 	saml2 "github.com/russellhaering/gosaml2"
 	dsig "github.com/russellhaering/goxmldsig"
+
+	"github.com/casdoor/casdoor/cert"
+	"github.com/casdoor/casdoor/i18n"
+	"github.com/casdoor/casdoor/idp"
+	"github.com/casdoor/casdoor/util/logger"
 )
 
 const (
@@ -62,9 +66,9 @@ var signatureAlgorithms = map[string]string{
 
 var samlSertRegex = regexp.MustCompile("<[[[:alpha:]]+:]?X509Certificate>([\\s\\S]*?)</[[[:alpha:]]+:]?X509Certificate>")
 
-func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*idp.UserInfo, map[string]any, error) {
+func ParseSamlResponse(ctx context.Context, samlResponse string, provider *Provider, host string) (*idp.UserInfo, map[string]any, error) {
 	samlResponse, _ = url.QueryUnescape(samlResponse)
-	sp, err := BuildSp(provider, samlResponse, host)
+	sp, err := BuildSp(ctx, provider, samlResponse, host)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -127,42 +131,30 @@ func ParseSamlResponse(samlResponse string, provider *Provider, host string) (*i
 	return &userInfo, authData, nil
 }
 
-func getAuthData(assertionInfo *saml2.AssertionInfo, provider *Provider) map[string]interface{} {
+func getAuthData(assertionInfo *saml2.AssertionInfo, _ *Provider) map[string]interface{} {
 	authData := map[string]interface{}{
-		"ID": assertionInfo.NameID,
+		"ID": []string{assertionInfo.NameID},
 	}
 
-	for key := range assertionInfo.Values {
-		if !slices.ContainsFunc(provider.RoleMappingItems, func(item *RoleMappingItem) bool {
-			return item.Role == key
-		}) {
-			authData[key] = assertionInfo.Values.Get(key)
-		}
-	}
+	tempRoleDict := make(map[string][]string)
 
-	for _, mappItem := range provider.RoleMappingItems {
-		for _, assertion := range assertionInfo.Assertions {
-			roles := make([]string, 0)
-
-			for _, attribute := range assertion.AttributeStatement.Attributes {
-				if attribute.Name == mappItem.Attribute {
-
-					for _, val := range attribute.Values {
-						roles = append(roles, val.Value)
-					}
-
-				}
+	for _, assertion := range assertionInfo.Assertions {
+		for _, attribute := range assertion.AttributeStatement.Attributes {
+			for _, val := range attribute.Values {
+				tempRoleDict[attribute.Name] = append(tempRoleDict[attribute.Name], val.Value)
 			}
-
-			authData[mappItem.Attribute] = roles
 		}
+	}
+
+	for k, v := range tempRoleDict {
+		authData[k] = v
 	}
 
 	return authData
 }
 
-func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method string, err error) {
-	provider, err := GetProvider(id)
+func GenerateSamlRequest(ctx context.Context, id, relayState, host, lang string) (auth string, method string, err error) {
+	provider, err := GetProvider(id, false)
 	if err != nil {
 		return "", "", err
 	}
@@ -170,7 +162,7 @@ func GenerateSamlRequest(id, relayState, host, lang string) (auth string, method
 		return "", "", fmt.Errorf(i18n.Translate(lang, "saml_sp:provider %s's category is not SAML"), provider.Name)
 	}
 
-	sp, err := BuildSp(provider, "", host)
+	sp, err := BuildSp(ctx, provider, "", host)
 	if err != nil {
 		return "", "", err
 	}
@@ -201,7 +193,7 @@ func buildSAMLRequest(sp *saml2.SAMLServiceProvider, httpMethod string, relaySta
 	return string(postData[:]), err
 }
 
-func BuildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLServiceProvider, error) {
+func BuildSp(ctx context.Context, provider *Provider, samlResponse string, host string) (*saml2.SAMLServiceProvider, error) {
 	_, origin := getOriginFromHostWithConfPriority(host)
 
 	issuer := provider.ClientId
@@ -240,6 +232,23 @@ func BuildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 			return nil, err
 		}
 	}
+
+	if !provider.ValidateIdpSignature {
+		logMsg := map[string]string{
+			"msg": "signature validation for saml response disabled",
+		}
+		logMsgStr, err := json.Marshal(logMsg)
+		if err != nil {
+			return nil, err
+		}
+		logger.Warn(ctx,
+			string(logMsgStr),
+			"obj-type", "provider",
+			"obj", provider.GetId(),
+			"act", "login",
+		)
+	}
+
 	if provider.ValidateIdpSignature && samlResponse != "" {
 		sp.IDPCertificateStore, err = buildIdPCertificateStore(provider, samlResponse)
 		if err != nil {
@@ -252,7 +261,7 @@ func BuildSp(provider *Provider, samlResponse string, host string) (*saml2.SAMLS
 
 func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 	var (
-		certificate *Cert
+		certificate *cert.Cert
 		keyPair     tls.Certificate
 		err         error
 	)
@@ -265,11 +274,11 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 			return nil, err
 		}
 		if certificate == nil {
-			return nil, ErrCertDoesNotExist
+			return nil, cert.ErrCertDoesNotExist
 		}
 
-		if certificate.Scope != scopeClientCert {
-			return nil, ErrCertInvalidScope
+		if certificate.Scope != cert.ScopeClientCert {
+			return nil, cert.ErrCertInvalidScope
 		}
 
 		keyPair, err = tls.X509KeyPair([]byte(certificate.Certificate), []byte(certificate.PrivateKey))
@@ -291,7 +300,7 @@ func buildSpKeyStore(provider *Provider) (dsig.X509KeyStore, error) {
 	}, nil
 }
 
-func buildIdPCertificateStore(provider *Provider, samlResponse string) (certStore *dsig.MemoryX509CertificateStore, err error) {
+func buildIdPCertificateStore(_ *Provider, samlResponse string) (certStore *dsig.MemoryX509CertificateStore, err error) {
 	certEncodedData, err := getCertificateFromSamlResponse(samlResponse)
 	if err != nil {
 		return &dsig.MemoryX509CertificateStore{}, err

@@ -100,7 +100,7 @@ paths:
         description: The details of the cert
         required: true
         schema:
-          $ref: '#/definitions/object.Cert'
+          $ref: '#/definitions/cert.Cert'
       responses:
         "200":
           description: The Response object
@@ -529,7 +529,7 @@ paths:
         description: The details of the cert
         required: true
         schema:
-          $ref: '#/definitions/object.Cert'
+          $ref: '#/definitions/cert.Cert'
       responses:
         "200":
           description: The Response object
@@ -912,11 +912,16 @@ paths:
         description: state
         required: true
         type: string
+      - in: query
+        name: type
+        description: One of 'cas' or 'code'
+        required: true
+        type: string
       responses:
         "200":
           description: The Response object
           schema:
-            $ref: '#/definitions/Response'
+            $ref: '#/definitions/controllers.Response'
   /api/get-application:
     get:
       tags:
@@ -1029,7 +1034,7 @@ paths:
         "200":
           description: The Response object
           schema:
-            $ref: '#/definitions/object.Cert'
+            $ref: '#/definitions/cert.Cert'
   /api/get-certs:
     get:
       tags:
@@ -1048,7 +1053,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/object.Cert'
+              $ref: '#/definitions/cert.Cert'
   /api/get-dashboard:
     get:
       tags:
@@ -1226,7 +1231,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/object.Cert'
+              $ref: '#/definitions/cert.Cert'
   /api/get-group:
     get:
       tags:
@@ -1416,25 +1421,6 @@ paths:
             $ref: '#/definitions/object.Organization'
         "500":
           description: Internal server error
-  /api/get-organization-applications:
-    get:
-      tags:
-      - Application API
-      description: get the detail of the organization's application
-      operationId: ApiController.GetOrganizationApplications
-      parameters:
-      - in: query
-        name: organization
-        description: The organization name
-        required: true
-        type: string
-      responses:
-        "200":
-          description: The Response object
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/object.Application'
   /api/get-organization-names:
     get:
       tags:
@@ -2544,7 +2530,7 @@ paths:
         "200":
           description: The Response object
           schema:
-            $ref: '#/definitions/LdapSyncResp'
+            $ref: '#/definitions/controllers.LdapSyncResp'
   /api/test-ldap:
     post:
       tags:
@@ -2557,7 +2543,7 @@ paths:
         description: The details of the ldap
         required: true
         schema:
-          $ref: '#/definitions/object.Ldap'
+          $ref: '#/definitions/ldap_sync.Ldap'
       responses:
         "200":
           description: The Response object
@@ -2653,7 +2639,7 @@ paths:
         description: The details of the cert
         required: true
         schema:
-          $ref: '#/definitions/object.Cert'
+          $ref: '#/definitions/cert.Cert'
       responses:
         "200":
           description: The Response object
@@ -2999,12 +2985,12 @@ paths:
         name: body
         description: "true"
         schema:
-          $ref: '#/definitions/SyncLdapUsersRequest'
+          $ref: '#/definitions/controllers.SyncLdapUsersRequest'
       responses:
         "200":
           description: The Response object
           schema:
-            $ref: '#/definitions/LdapSyncResp'
+            $ref: '#/definitions/controllers.LdapSyncResp'
   /api/verify-captcha:
     post:
       tags:
@@ -3105,10 +3091,10 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  228634.<nil>.string:
+  220094.<nil>.string:
     title: string
     type: object
-  315541.<nil>.string:
+  306433.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -3120,18 +3106,40 @@ definitions:
   LdapResp:
     title: LdapResp
     type: object
-  LdapSyncResp:
-    title: LdapSyncResp
-    type: object
   Response:
     title: Response
-    type: object
-  SyncLdapUsersRequest:
-    title: SyncLdapUsersRequest
     type: object
   casbin.Enforcer:
     title: Enforcer
     type: object
+  cert.Cert:
+    title: Cert
+    type: object
+    properties:
+      bitSize:
+        type: integer
+        format: int64
+      certificate:
+        type: string
+      createdTime:
+        type: string
+      cryptoAlgorithm:
+        type: string
+      displayName:
+        type: string
+      expireInYears:
+        type: integer
+        format: int64
+      name:
+        type: string
+      owner:
+        type: string
+      privateKey:
+        type: string
+      scope:
+        type: string
+      type:
+        type: string
   controllers.AuthForm:
     title: AuthForm
     type: object
@@ -3153,6 +3161,18 @@ definitions:
         type: string
       title:
         type: string
+  controllers.LdapSyncResp:
+    title: LdapSyncResp
+    type: object
+    properties:
+      exist:
+        type: array
+        items:
+          $ref: '#/definitions/ldap_sync.LdapUser'
+      failed:
+        type: array
+        items:
+          $ref: '#/definitions/ldap_sync.LdapUser'
   controllers.NotificationForm:
     title: NotificationForm
     type: object
@@ -3191,9 +3211,81 @@ definitions:
         type: array
         items:
           type: string
+  controllers.SyncLdapUsersRequest:
+    title: SyncLdapUsersRequest
+    type: object
+    properties:
+      id:
+        type: string
   jose.JSONWebKey:
     title: JSONWebKey
     type: object
+  ldap_sync.AttributeMappingItem:
+    title: AttributeMappingItem
+    type: object
+    properties:
+      attribute:
+        type: string
+      userField:
+        type: string
+  ldap_sync.Ldap:
+    title: Ldap
+    type: object
+    properties:
+      attributeMappingItems:
+        type: array
+        items:
+          $ref: '#/definitions/ldap_sync.AttributeMappingItem'
+      autoSync:
+        type: integer
+        format: int64
+      baseDn:
+        type: string
+      cert:
+        type: string
+      clientCert:
+        type: string
+      createdTime:
+        type: string
+      enableAttributeMapping:
+        type: boolean
+      enableCaseInsensitivity:
+        type: boolean
+      enableCryptographicAuth:
+        type: boolean
+      enableRoleMapping:
+        type: boolean
+      enableSsl:
+        type: boolean
+      filter:
+        type: string
+      filterFields:
+        type: array
+        items:
+          type: string
+      host:
+        type: string
+      id:
+        type: string
+      lastSync:
+        type: string
+      owner:
+        type: string
+      password:
+        type: string
+      port:
+        type: integer
+        format: int64
+      roleMappingItems:
+        type: array
+        items:
+          $ref: '#/definitions/ldap_sync.RoleMappingItem'
+      serverName:
+        type: string
+      userMappingStrategy:
+        type: string
+      username:
+        type: string
   ldap_sync.LdapSyncHistory:
     title: LdapSyncHistory
     type: object
@@ -3228,6 +3320,62 @@ definitions:
         type: string
       UUID:
         type: string
+  ldap_sync.LdapUser:
+    title: LdapUser
+    type: object
+    properties:
+      EmailAddress:
+        type: string
+      Mail:
+        type: string
+      MobileTelephoneNumber:
+        type: string
+      PostalAddress:
+        type: string
+      RegisteredAddress:
+        type: string
+      TelephoneNumber:
+        type: string
+      address:
+        type: string
+      cn:
+        type: string
+      displayName:
+        type: string
+      email:
+        type: string
+      gidNumber:
+        type: string
+      groupId:
+        type: string
+      memberOf:
+        type: string
+      mobile:
+        type: string
+      roles:
+        type: array
+        items:
+          type: string
+      uid:
+        type: string
+      uidNumber:
+        type: string
+      userPrincipalName:
+        type: string
+      uuid:
+        type: string
+  ldap_sync.RoleMappingItem:
+    title: RoleMappingItem
+    type: object
+    properties:
+      attribute:
+        type: string
+      role:
+        type: string
+      values:
+        type: array
+        items:
+          type: string
   model.Model:
     title: Model
     type: object
@@ -3412,47 +3560,11 @@ definitions:
         type: string
       userMappingStrategy:
         type: string
-  object.AttributeMappingItem:
-    title: AttributeMappingItem
-    type: object
-    properties:
-      attribute:
-        type: string
-      userField:
-        type: string
   object.CasbinRequest:
     title: CasbinRequest
     type: array
     items:
       $ref: '#/definitions/object.CasbinRequest'
-  object.Cert:
-    title: Cert
-    type: object
-    properties:
-      bitSize:
-        type: integer
-        format: int64
-      certificate:
-        type: string
-      createdTime:
-        type: string
-      cryptoAlgorithm:
-        type: string
-      displayName:
-        type: string
-      expireInYears:
-        type: integer
-        format: int64
-      name:
-        type: string
-      owner:
-        type: string
-      privateKey:
-        type: string
-      scope:
-        type: string
-      type:
-        type: string
   object.Domain:
     title: Domain
     type: object
@@ -3613,61 +3725,6 @@ definitions:
   object.Ldap:
     title: Ldap
     type: object
-    properties:
-      attributeMappingItems:
-        type: array
-        items:
-          $ref: '#/definitions/object.AttributeMappingItem'
-      autoSync:
-        type: integer
-        format: int64
-      baseDn:
-        type: string
-      cert:
-        type: string
-      clientCert:
-        type: string
-      createdTime:
-        type: string
-      enableAttributeMapping:
-        type: boolean
-      enableCaseInsensitivity:
-        type: boolean
-      enableCryptographicAuth:
-        type: boolean
-      enableRoleMapping:
-        type: boolean
-      enableSsl:
-        type: boolean
-      filter:
-        type: string
-      filterFields:
-        type: array
-        items:
-          type: string
-      host:
-        type: string
-      id:
-        type: string
-      lastSync:
-        type: string
-      owner:
-        type: string
-      password:
-        type: string
-      port:
-        type: integer
-        format: int64
-      roleMappingItems:
-        type: array
-        items:
-          $ref: '#/definitions/object.RoleMappingItem'
-      serverName:
-        type: string
-      userMappingStrategy:
-        type: string
-      username:
-        type: string
   object.ManagedAccount:
     title: ManagedAccount
     type: object
@@ -3719,7 +3776,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/228634.<nil>.string'
+          $ref: '#/definitions/220094.<nil>.string'
       description:
         type: string
       displayName:
@@ -4013,7 +4070,7 @@ definitions:
       roleMappingItems:
         type: array
         items:
-          $ref: '#/definitions/object.RoleMappingItem'
+          $ref: '#/definitions/ldap_sync.RoleMappingItem'
       scopes:
         type: string
       signName:
@@ -4031,7 +4088,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/315541.<nil>.string'
+        $ref: '#/definitions/306433.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:
@@ -4140,18 +4197,6 @@ definitions:
         items:
           type: string
       users:
-        type: array
-        items:
-          type: string
-  object.RoleMappingItem:
-    title: RoleMappingItem
-    type: object
-    properties:
-      attribute:
-        type: string
-      role:
-        type: string
-      values:
         type: array
         items:
           type: string

@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/casdoor/casdoor/object"
+	"github.com/casdoor/casdoor/ldap_sync"
 )
 
 type OAuthMapper struct {
-	rules []*object.RoleMappingItem
+	rules []*ldap_sync.RoleMappingItem
 	data  map[string]interface{}
 }
 
-func NewOAuthMapper(rules []*object.RoleMappingItem, data map[string]interface{}) (*OAuthMapper, error) {
+func NewOAuthMapper(rules []*ldap_sync.RoleMappingItem, data map[string]interface{}) (*OAuthMapper, error) {
 	return &OAuthMapper{
 		rules: rules,
 		data:  data,
