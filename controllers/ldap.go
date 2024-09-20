@@ -779,9 +779,15 @@ func (c *ApiController) TestLdapConnection() {
 
 	var ldap ldap_sync.Ldap
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &ldap)
-	if err != nil || util.IsStringsEmpty(ldap.Owner, ldap.Host, ldap.Username, ldap.Password, ldap.BaseDn) {
+	if err != nil || util.IsStringsEmpty(ldap.Owner, ldap.Host, ldap.BaseDn) {
 		c.ResponseError(c.T("general:Missing parameter"))
 		return
+	}
+	if !(ldap.EnableCryptographicAuth && ldap.EnableSsl) {
+		if util.IsStringsEmpty(ldap.Username, ldap.Password) {
+			c.ResponseError(c.T("general:Missing parameter"))
+			return
+		}
 	}
 
 	if ldap.Password == "***" {
@@ -802,12 +808,6 @@ func (c *ApiController) TestLdapConnection() {
 
 	var connection *ldap_sync.LdapConn
 	connection, err = ldap_sync.GetLdapConn(c.Ctx.Request.Context(), &ldap)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
-	}
-
-	err = connection.Conn.Bind(ldap.Username, ldap.Password)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
