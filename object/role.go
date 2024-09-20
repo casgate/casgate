@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/casdoor/casdoor/ldap_sync"
 	"github.com/casdoor/casdoor/orm"
@@ -133,7 +134,7 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if len(role.GetId()) > policyMaxValueLength {
+	if utf8.RuneCountInString(role.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
 	oldRole, err := getRole(owner, name)
@@ -206,7 +207,7 @@ func AddRole(role *Role) (bool, error) {
 		return false, fmt.Errorf("role %s is in the child roles of %s", id, id)
 	}
 
-	if len(id) > policyMaxValueLength {
+	if utf8.RuneCountInString(id) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
 

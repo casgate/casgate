@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"unicode/utf8"
 
 	"github.com/casdoor/casdoor/orm"
 
@@ -94,7 +95,7 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 		return false, err
 	}
 
-	if len(domain.GetId()) > policyMaxValueLength {
+	if utf8.RuneCountInString(domain.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
 
@@ -163,7 +164,7 @@ func AddDomain(domain *Domain) (bool, error) {
 		return false, fmt.Errorf("domain %s is in the child domain of %s", id, id)
 	}
 
-	if len(domain.GetId()) > policyMaxValueLength {
+	if utf8.RuneCountInString(domain.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
 

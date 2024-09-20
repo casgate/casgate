@@ -16,6 +16,7 @@ package object
 
 import (
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/casdoor/casdoor/orm"
 
@@ -168,13 +169,13 @@ func AddPermission(permission *Permission) (bool, error) {
 
 func checkPermissionForPolicyMaxValueLength(permission *Permission) error {
 	for _, action := range permission.Actions {
-		if len(action) > policyMaxValueLength {
+		if utf8.RuneCountInString(action) > policyMaxValueLength {
 			return fmt.Errorf("action value %s too long for policies", action)
 		}
 	}
 
 	for _, resource := range permission.Resources {
-		if len(resource) > policyMaxValueLength {
+		if utf8.RuneCountInString(resource) > policyMaxValueLength {
 			return fmt.Errorf("resource value %s too long for policies", resource)
 		}
 	}

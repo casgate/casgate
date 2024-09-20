@@ -17,6 +17,7 @@ package object
 import (
 	"errors"
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/casdoor/casdoor/orm"
 
@@ -98,7 +99,7 @@ func GetGroup(id string) (*Group, error) {
 }
 
 func UpdateGroup(id string, group *Group) (bool, error) {
-	if len(group.GetId()) > policyMaxValueLength {
+	if utf8.RuneCountInString(group.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
 
@@ -149,7 +150,7 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 }
 
 func AddGroup(group *Group) (bool, error) {
-	if len(group.GetId()) > policyMaxValueLength {
+	if utf8.RuneCountInString(group.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
 

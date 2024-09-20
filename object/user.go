@@ -20,6 +20,7 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/casdoor/casdoor/orm"
 	"github.com/google/uuid"
@@ -547,7 +548,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 		return false, nil
 	}
 
-	if len(user.GetOwnerAndName()) > policyMaxValueLength {
+	if utf8.RuneCountInString(user.GetOwnerAndName()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
 
@@ -759,7 +760,7 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 		user.Id = util.GenerateId()
 	}
 
-	if len(user.GetOwnerAndName()) > policyMaxValueLength {
+	if utf8.RuneCountInString(user.GetOwnerAndName()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
 
