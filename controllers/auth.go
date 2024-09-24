@@ -1225,7 +1225,7 @@ func (c *ApiController) HandleSamlLogin() {
 	relayState = url.QueryEscape(relayState)
 	samlResponse = url.QueryEscape(samlResponse)
 	targetUrl := fmt.Sprintf("%s?relayState=%s&samlResponse=%s",
-		slice[4], relayState, samlResponse)
+		slice[len(slice)-1], relayState, samlResponse)
 	c.Redirect(targetUrl, 303)
 }
 
