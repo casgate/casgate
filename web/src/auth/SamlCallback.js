@@ -55,7 +55,7 @@ class SamlCallback extends React.Component {
     const application = messages[0] === "" ? "app-built-in" : "";
     const state = messages[1];
     const providerName = messages[2];
-    const redirectUri = messages[3];
+    const redirectUri = messages.slice(3, messages.length - 1).join("&");
     const responseType = this.getResponseType(redirectUri);
 
     const body = {
@@ -86,7 +86,11 @@ class SamlCallback extends React.Component {
             Setting.goToLink("/");
           } else if (responseType === "code") {
             const code = res.data;
-            Setting.goToLink(`${redirectUri}?code=${code}&state=${state}`);
+            let sep = "?";
+            if (redirectUri.indexOf("?") > -1) {
+              sep = "&";
+            }
+            Setting.goToLink(`${redirectUri}${sep}code=${code}&state=${state}`);
           }
         } else {
           this.setState({

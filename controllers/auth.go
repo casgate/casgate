@@ -1216,17 +1216,28 @@ func (c *ApiController) GetSamlLogin() {
 func (c *ApiController) HandleSamlLogin() {
 	relayState := c.Input().Get("RelayState")
 	samlResponse := c.Input().Get("SAMLResponse")
+
+	targetUrl, err := generateSamlTargetUrl(samlResponse, relayState)
+	if err != nil {
+		c.ResponseBadRequest(err.Error())
+		return
+	}
+
+	c.Redirect(targetUrl, 303)
+}
+
+func generateSamlTargetUrl(samlResponse, relayState string) (string, error) {
 	decode, err := base64.StdEncoding.DecodeString(relayState)
 	if err != nil {
-		c.ResponseBadRequest("decoding relay state error")
-		return
+		return "", fmt.Errorf("decoding relay state error")
 	}
 	slice := strings.Split(string(decode), "&")
 	relayState = url.QueryEscape(relayState)
 	samlResponse = url.QueryEscape(samlResponse)
 	targetUrl := fmt.Sprintf("%s?relayState=%s&samlResponse=%s",
-		slice[4], relayState, samlResponse)
-	c.Redirect(targetUrl, 303)
+		slice[len(slice)-1], relayState, samlResponse)
+
+	return targetUrl, nil
 }
 
 // HandleOfficialAccountEvent ...
