@@ -138,7 +138,7 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	if utf8.RuneCountInString(role.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
-	if !util.IsLegalCasbinEntityName(role.Name){
+	if util.HasSymbolsIllegalForCasbin(role.Name) {
 		return false, fmt.Errorf("id contains illegal characters")
 	}
 	oldRole, err := getRole(owner, name)
@@ -214,7 +214,7 @@ func AddRole(role *Role) (bool, error) {
 	if utf8.RuneCountInString(id) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
-	if !util.IsLegalCasbinEntityName(role.Name){
+	if util.HasSymbolsIllegalForCasbin(role.Name) {
 		return false, fmt.Errorf("id contains illegal characters")
 	}
 

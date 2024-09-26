@@ -102,7 +102,7 @@ func UpdateGroup(id string, group *Group) (bool, error) {
 	if utf8.RuneCountInString(group.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
-	if !util.IsLegalCasbinEntityName(group.Name){
+	if util.HasSymbolsIllegalForCasbin(group.Name) {
 		return false, fmt.Errorf("id contains illegal characters")
 	}
 
@@ -156,7 +156,7 @@ func AddGroup(group *Group) (bool, error) {
 	if utf8.RuneCountInString(group.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
-	if !util.IsLegalCasbinEntityName(group.Name){
+	if util.HasSymbolsIllegalForCasbin(group.Name) {
 		return false, fmt.Errorf("id contains illegal characters")
 	}
 
@@ -277,7 +277,7 @@ func GetAncestorGroups(groupIds ...string) ([]*Group, error) {
 		return nil, nil
 	}
 
-	owner, _ , err := util.SplitIdIntoOrgAndName(groupIds[0])
+	owner, _, err := util.SplitIdIntoOrgAndName(groupIds[0])
 	if err != nil {
 		return nil, err
 	}

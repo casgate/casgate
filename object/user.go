@@ -551,7 +551,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 	if utf8.RuneCountInString(user.GetOwnerAndName()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
-	if !util.IsLegalCasbinEntityName(user.Name){
+	if util.HasSymbolsIllegalForCasbin(user.Name){
 		return false, fmt.Errorf("id contains illegal characters")
 	}
 
@@ -766,7 +766,7 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 	if utf8.RuneCountInString(user.GetOwnerAndName()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
-	if !util.IsLegalCasbinEntityName(user.Name){
+	if util.HasSymbolsIllegalForCasbin(user.Name){
 		return false, fmt.Errorf("id contains illegal characters")
 	}
 
