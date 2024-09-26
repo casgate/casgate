@@ -98,7 +98,7 @@ func IsURLValid(URL string) bool {
 	return err == nil && u.Scheme != javascriptURLScheme
 }
 
-// HasSymbolsIllegalForCasbin allow only latin, russian cyrillic, dot, dash and underscore
+// HasSymbolsIllegalForCasbin disallow symbols that break csv parsing of casbin policy
 func HasSymbolsIllegalForCasbin(value string) bool {
 	return strings.ContainsAny(value, "\"#,\n\r")
 }
