@@ -222,7 +222,7 @@ func updateOpenIDWithUrls(provider *Provider) error {
 
 	client, err := GetProviderHttpClient(*idpInfo)
 	if err != nil {
-		return fmt.Errorf("failed to GetProviderHttpClient for provider %s", provider.Name)
+		return fmt.Errorf("failed to GetProviderHttpClient for provider %s: %w", provider.Name, err)
 	}
 	openIDProvider.SetHttpClient(client)
 	err = openIDProvider.EnrichOauthURLs()
