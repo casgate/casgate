@@ -98,6 +98,9 @@ func UpdateDomain(ctx context.Context, id string, domain *Domain) (bool, error) 
 	if utf8.RuneCountInString(domain.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
+	if util.HasSymbolsIllegalForCasbin(domain.Name) {
+		return false, fmt.Errorf("id contains illegal characters")
+	}
 
 	if oldDomain == nil {
 		return false, nil
@@ -166,6 +169,9 @@ func AddDomain(domain *Domain) (bool, error) {
 
 	if utf8.RuneCountInString(domain.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
+	}
+	if util.HasSymbolsIllegalForCasbin(domain.Name) {
+		return false, fmt.Errorf("id contains illegal characters")
 	}
 
 	affected, err := orm.AppOrmer.Engine.Insert(domain)

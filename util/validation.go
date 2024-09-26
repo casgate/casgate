@@ -19,6 +19,7 @@ import (
 	"net/mail"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/nyaruka/phonenumbers"
 )
@@ -30,10 +31,10 @@ const (
 )
 
 var (
-	rePhone          *regexp.Regexp
-	ReWhiteSpace     *regexp.Regexp
-	ReFieldWhiteList *regexp.Regexp
-	ReUserName       *regexp.Regexp
+	rePhone              *regexp.Regexp
+	ReWhiteSpace         *regexp.Regexp
+	ReFieldWhiteList     *regexp.Regexp
+	ReUserName           *regexp.Regexp
 )
 
 func init() {
@@ -95,4 +96,9 @@ func IsFieldValueAllowedForDB(field string) bool {
 func IsURLValid(URL string) bool {
 	u, err := url.Parse(URL)
 	return err == nil && u.Scheme != javascriptURLScheme
+}
+
+// HasSymbolsIllegalForCasbin disallow symbols that break csv parsing of casbin policy
+func HasSymbolsIllegalForCasbin(value string) bool {
+	return strings.ContainsAny(value, "\"#,\n\r")
 }
