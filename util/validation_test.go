@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,6 +34,28 @@ func TestIsFieldValueAllowedForDB(t *testing.T) {
 		t.Run(testCase.description, func(t *testing.T) {
 			actual := IsFieldValueAllowedForDB(testCase.input)
 			assert.Equal(t, testCase.expected, actual, "The returned value not is expected")
+		})
+	}
+}
+
+func TestIsValidCasbinEntityName(t *testing.T) {
+	testCases := []struct {
+		description string
+		input       string
+		expected    bool
+	}{
+		{"upper and lower case cyrillic", "МаМа", true},
+		{"ё", "ёж", true},
+		{"underscore", "hell_yeah", true},
+		{"other symbols", "role.name-_", true},
+		{"space", "space bar", true},
+		{"illegal symbols", "javascript:alert()//.", false},
+		{"comma", "should,fail", false},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.description, func(t *testing.T) {
+			actual := IsLegalCasbinEntityName(testCase.input)
+			assert.Equal(t, testCase.expected, actual, fmt.Sprintf("unexpected return value for case: %s", testCase.description))
 		})
 	}
 }

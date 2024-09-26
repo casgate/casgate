@@ -30,16 +30,18 @@ const (
 )
 
 var (
-	rePhone          *regexp.Regexp
-	ReWhiteSpace     *regexp.Regexp
-	ReFieldWhiteList *regexp.Regexp
-	ReUserName       *regexp.Regexp
+	rePhone           *regexp.Regexp
+	ReWhiteSpace      *regexp.Regexp
+	ReFieldWhiteList  *regexp.Regexp
+	ReUserName        *regexp.Regexp
+	LegalCasbinEntityName *regexp.Regexp
 )
 
 func init() {
 	rePhone, _ = regexp.Compile(`(\d{3})\d*(\d{4})`)
 	ReWhiteSpace, _ = regexp.Compile(`\s`)
 	ReFieldWhiteList, _ = regexp.Compile("^[A-Za-z0-9]+$")
+	LegalCasbinEntityName, _ = regexp.Compile(`^[a-zA-Zа-яА-ЯёЁё\.\_\-\ ]+$`)
 
 	specialSymbolsPattern := regexp.QuoteMeta(usernameAllowedSpecialSymbols)
 	ReUserName, _ = regexp.Compile(fmt.Sprintf("^([a-zA-Z0-9]+[a-zA-Z0-9\\-_%s]*[a-zA-Z0-9]+|[a-zA-Z0-9]+)$", specialSymbolsPattern))
@@ -95,4 +97,9 @@ func IsFieldValueAllowedForDB(field string) bool {
 func IsURLValid(URL string) bool {
 	u, err := url.Parse(URL)
 	return err == nil && u.Scheme != javascriptURLScheme
+}
+
+// IsLegalCasbinEntityName allow only latin, russian cyrillic, dot, dash and underscore
+func IsLegalCasbinEntityName(value string) bool {
+	return LegalCasbinEntityName.MatchString(value)
 }

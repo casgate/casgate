@@ -51,6 +51,7 @@ type Role struct {
 	Domains        []string `xorm:"mediumtext" json:"domains"`
 	Tags           []string `xorm:"mediumtext" json:"tags"`
 	IsEnabled      bool     `json:"isEnabled"`
+	// ManualOverride means role is to be asigned manually and will not be set with provider mapping
 	ManualOverride bool     `xorm:"bool" json:"manualOverride"`
 }
 
@@ -137,6 +138,9 @@ func UpdateRole(id string, role *Role) (bool, error) {
 	if utf8.RuneCountInString(role.GetId()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
+	if !util.IsLegalCasbinEntityName(role.Name){
+		return false, fmt.Errorf("id contains illegal characters")
+	}
 	oldRole, err := getRole(owner, name)
 	if err != nil {
 		return false, err
@@ -209,6 +213,9 @@ func AddRole(role *Role) (bool, error) {
 
 	if utf8.RuneCountInString(id) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
+	}
+	if !util.IsLegalCasbinEntityName(role.Name){
+		return false, fmt.Errorf("id contains illegal characters")
 	}
 
 	affected, err := orm.AppOrmer.Engine.Insert(role)
