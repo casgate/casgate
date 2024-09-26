@@ -47,6 +47,11 @@ type oidcConf struct {
 	UserinfoEndpoint      string `json:"userinfo_endpoint"`
 }
 
+type oidcConfError struct {
+	Error            string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+}
+
 func NewOpenIdProvider(idpInfo *ProviderInfo, redirectUrl string) *OpenIdProvider {
 	idp := &OpenIdProvider{}
 
@@ -78,7 +83,11 @@ func (idp *OpenIdProvider) EnrichOauthURLsIfNotValid() error {
 func (idp *OpenIdProvider) EnrichOauthURLs() error {
 	requestURL := idp.ConfURL
 	if !strings.Contains(requestURL, ".well-known/openid-configuration") {
-		requestURL = fmt.Sprintf("%s/%s", idp.ConfURL, ".well-known/openid-configuration")
+		var err error
+		requestURL, err = url.JoinPath(idp.ConfURL, ".well-known/openid-configuration")
+		if err != nil {
+			return err
+		}
 	}
 
 	request, err := http.NewRequest("GET", requestURL, nil)
@@ -97,8 +106,13 @@ func (idp *OpenIdProvider) EnrichOauthURLs() error {
 		return err
 	}
 
-	var oidcResp oidcConf
+	var oidcError oidcConfError
+	err = json.Unmarshal(data, &oidcError)
+	if oidcError.Error != "" {
+		return fmt.Errorf("failed to get OIDC configuration from %s. %s: %s", requestURL, oidcError.Error, oidcError.ErrorDescription)
+	}
 
+	var oidcResp oidcConf
 	err = json.Unmarshal(data, &oidcResp)
 	if err != nil {
 		return err
