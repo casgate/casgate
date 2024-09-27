@@ -290,7 +290,7 @@ func (ls *LdapSyncronizer) SyncLdapUsers(ctx context.Context, ldap *ldap_sync.Ld
 		)
 	} else if len(syncResult.Failed) != 0 {
 		auditResponse.Status = AuditStatusError
-		auditResponse.Msg = errors.Wrap(err, "autosync finished with errors").Error()
+		auditResponse.Msg = errors.New("autosync finished with errors").Error()
 		if jsonResp, err := json.Marshal(auditResponse); err == nil {
 			record.Response = string(jsonResp)
 		}
