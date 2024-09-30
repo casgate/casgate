@@ -292,6 +292,13 @@ func SyncSingleUser(
 	}
 
 	if ldap.EnableRoleMapping {
+		roleMappingRb, ok := ctx.Value(RoleMappingRecordDataKey).(*RecordBuilder)
+		if !ok {
+			roleMappingRb = NewRecordBuilder()
+		}
+		roleMappingRb.WithOrganization(ldap.Owner)
+		ctx = context.WithValue(ctx, RoleMappingRecordDataKey, roleMappingRb)
+		
 		err := SyncRolesToUser(ctx, user, ldapUser.Roles)
 		if err != nil {
 			return errors.Wrap(err, "SyncLdapRoles")

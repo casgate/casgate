@@ -984,6 +984,7 @@ func (c *ApiController) Login() {
 					default:
 						mappingRb.AddReason(fmt.Sprintf("sync roles for provider: %s", providerID))
 					}
+					mappingRb.WithOrganization(provider.Owner)
 
 					err = object.SyncRolesToUser(goCtx, user, userRoles)
 					if err != nil {
