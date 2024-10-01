@@ -710,11 +710,11 @@ func buildUserMappedRolesRecord(ctx context.Context, userID string, oldRoles, ne
 		return nil
 	}
 
+	record := &Record{}
 	rb, ok := ctx.Value(RoleMappingRecordDataKey).(*RecordBuilder)
-	if !ok {
-		return nil
+	if ok {
+		record = rb.Build()
 	}
-	record := rb.Build()
 
 	record.Name = util.GenerateId()
 	record.Object = string(objectMessageRaw)

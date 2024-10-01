@@ -421,6 +421,8 @@ func (c *ApiController) SyncLdapUsers() {
 
 	goCtx := c.getRequestCtx()
 	record := object.NewRecord(c.Ctx)
+	mappingRb := object.NewRecordBuilderWithRequestValues(c.Ctx)
+	goCtx = context.WithValue(goCtx, object.RoleMappingRecordDataKey, mappingRb)
 	record.Action = "manual LDAP sync"
 
 	logger.SetItem(goCtx, "obj-type", logger.ObjectTypeLDAP)
@@ -451,7 +453,8 @@ func (c *ApiController) SyncLdapUsers() {
 		util.SafeGoroutine(func() { object.AddRecord(record) })
 		c.ResponseError(err.Error())
 		return
-	}
+	}	
+	mappingRb.WithOrganization(organizationName)
 	record.Organization = organizationName
 	record.Owner = organizationName
 	record.Object = ldapId
@@ -585,6 +588,8 @@ func (c *ApiController) SyncLdapUsersV2() {
 	ctx := c.getRequestCtx()
 	record := object.NewRecord(c.Ctx)
 	record.Action = "manual LDAP sync"
+	mappingRb := object.NewRecordBuilderWithRequestValues(c.Ctx)
+	ctx = context.WithValue(ctx, object.RoleMappingRecordDataKey, mappingRb)
 
 	err := json.Unmarshal(c.Ctx.Input.RequestBody, &syncRequest)
 	if err != nil {
@@ -630,6 +635,7 @@ func (c *ApiController) SyncLdapUsersV2() {
 		c.ResponseError(err.Error())
 		return
 	}
+	mappingRb.WithOrganization(ldap.Owner)
 	record.Organization = ldap.Owner
 	record.Owner = ldap.Owner
 	record.Object = ldap.Id
