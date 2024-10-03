@@ -314,13 +314,13 @@ func SetSyncHistoryUsers(
 	result *SyncLdapUsersResult,
 ) ldap_sync.LdapSyncHistory {
 	for _, user := range result.Added {
-		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "added", UUID: user.GetLdapUserID()})
+		historyEntry.Result = append(historyEntry.Result, &ldap_sync.LdapSyncHistoryUser{Action: "added", UUID: user.GetLdapUserID()})
 	}
 	for _, user := range result.Updated {
-		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "updated", UUID: user.GetLdapUserID()})
+		historyEntry.Result = append(historyEntry.Result, &ldap_sync.LdapSyncHistoryUser{Action: "updated", UUID: user.GetLdapUserID()})
 	}
 	for _, user := range result.Failed {
-		historyEntry.Result = append(historyEntry.Result, ldap_sync.LdapSyncHistoryUser{Action: "failed", UUID: user.GetLdapUserID()})
+		historyEntry.Result = append(historyEntry.Result, &ldap_sync.LdapSyncHistoryUser{Action: "failed", UUID: user.GetLdapUserID()})
 	}
 
 	return historyEntry
