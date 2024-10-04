@@ -551,7 +551,7 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 	if utf8.RuneCountInString(user.GetOwnerAndName()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
-	if util.HasSymbolsIllegalForCasbin(user.Name){
+	if util.HasSymbolsIllegalForCasbin(user.Name) {
 		return false, fmt.Errorf("id contains illegal characters")
 	}
 
@@ -766,7 +766,7 @@ func AddUser(ctx context.Context, user *User) (bool, error) {
 	if utf8.RuneCountInString(user.GetOwnerAndName()) > policyMaxValueLength {
 		return false, fmt.Errorf("id too long for policies")
 	}
-	if util.HasSymbolsIllegalForCasbin(user.Name){
+	if util.HasSymbolsIllegalForCasbin(user.Name) {
 		return false, fmt.Errorf("id contains illegal characters")
 	}
 
@@ -871,9 +871,23 @@ func DeleteUser(ctx context.Context, user *User) (bool, error) {
 		return false, fmt.Errorf("reachablePermissionsByUser: %w", err)
 	}
 
-	affected, err := orm.AppOrmer.Engine.ID(core.PK{user.Owner, user.Name}).Delete(&User{})
+	organization, err := GetOrganizationByUser(user)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("GetOrganizationByUser: %w", err)
+	}
+
+	var affected int64 = 0
+	if organization.EnableSoftDeletion {
+		user.IsDeleted = true
+		affected, err = orm.AppOrmer.Engine.ID(core.PK{user.Owner, user.Name}).AllCols().Update(user)
+		if err != nil {
+			return false, err
+		}
+	} else {
+		affected, err = orm.AppOrmer.Engine.ID(core.PK{user.Owner, user.Name}).Delete(&User{})
+		if err != nil {
+			return false, err
+		}
 	}
 
 	if affected != 0 {
