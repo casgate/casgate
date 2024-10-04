@@ -13,7 +13,7 @@ type LdapSyncHistory struct {
 	EndedAt        time.Time             `xorm:"datetime" json:"ended_at"`
 	Reason         string                `xorm:"varchar(100) notnull" json:"reason"`
 	SyncedByUserID string                `xorm:"'synced_by_user_id' varchar(100) notnull" json:"synced_by_user_id"`
-	Result         []LdapSyncHistoryUser `xorm:"json" json:"result"`
+	Result         []*LdapSyncHistoryUser `xorm:"json" json:"result"`
 }
 
 type LdapSyncHistoryUser struct {
@@ -38,6 +38,11 @@ func (r *LdapSyncHistoryRepository) GetLdapSyncHistory(ldapID string, offset, li
 	err := statement.Find(&history, &LdapSyncHistory{LdapID: ldapID}, ldapID)
 	if err != nil {
 		return nil, err
+	}
+	for _, h := range history {
+		if h.Result == nil {
+			h.Result = make([]*LdapSyncHistoryUser, 0)
+		}
 	}
 
 	return history, nil
