@@ -99,7 +99,6 @@ export function ChangePasswordForm({application, userOwner, userName, onSuccess,
                   message: i18next.t("user:Empty input!"),
                 },
               ]}
-              hasFeedback
             >
               <Input.Password />
             </Form.Item>
