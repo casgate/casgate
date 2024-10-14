@@ -15,6 +15,7 @@
 package controllers
 
 import (
+	"github.com/casdoor/casdoor/orm"
 	"github.com/casdoor/casdoor/util"
 )
 
@@ -57,5 +58,20 @@ func (c *ApiController) GetVersionInfo() {
 // @Success 200 {object} controllers.Response The Response object
 // @router /health [get]
 func (c *ApiController) Health() {
+	c.ResponseOk()
+}
+
+// Ready
+// @Title Ready
+// @Tag System API
+// @Description check if the system is ready
+// @Success 200 {object} controllers.Response The Response object
+// @router /ready [get]
+func (c *ApiController) Ready() {
+	err := orm.AppOrmer.Engine.Ping()
+	if err != nil {
+		c.ResponseInternalServerError(err.Error())
+		return
+	}
 	c.ResponseOk()
 }

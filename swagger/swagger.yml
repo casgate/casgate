@@ -2297,6 +2297,17 @@ paths:
           description: object
           schema:
             $ref: '#/definitions/Response'
+  /api/ready:
+    get:
+      tags:
+      - System API
+      description: check if the system is ready
+      operationId: ApiController.Ready
+      responses:
+        "200":
+          description: The Response object
+          schema:
+            $ref: '#/definitions/controllers.Response'
   /api/recreate-api-token:
     post:
       tags:
@@ -3091,10 +3102,10 @@ paths:
           schema:
             $ref: '#/definitions/controllers.Response'
 definitions:
-  220094.<nil>.string:
+  220914.<nil>.string:
     title: string
     type: object
-  306433.<nil>.string:
+  307307.<nil>.string:
     title: string
     type: object
   LaravelResponse:
@@ -3776,7 +3787,7 @@ definitions:
       customPolicyMappingRules:
         type: array
         items:
-          $ref: '#/definitions/220094.<nil>.string'
+          $ref: '#/definitions/220914.<nil>.string'
       description:
         type: string
       displayName:
@@ -4088,7 +4099,7 @@ definitions:
       type:
         type: string
       userMapping:
-        $ref: '#/definitions/306433.<nil>.string'
+        $ref: '#/definitions/307307.<nil>.string'
       validateIdPSignature:
         type: boolean
   object.ProviderItem:

@@ -3514,6 +3514,23 @@
                 }
             }
         },
+        "/api/ready": {
+            "get": {
+                "tags": [
+                    "System API"
+                ],
+                "description": "check if the system is ready",
+                "operationId": "ApiController.Ready",
+                "responses": {
+                    "200": {
+                        "description": "The Response object",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/recreate-api-token": {
             "post": {
                 "tags": [
@@ -4730,11 +4747,11 @@
         }
     },
     "definitions": {
-        "220094.\u003cnil\u003e.string": {
+        "220914.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "306433.\u003cnil\u003e.string": {
+        "307307.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -5738,7 +5755,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/220094.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/220914.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6204,7 +6221,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/306433.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/307307.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"
