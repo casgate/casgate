@@ -376,9 +376,17 @@ func makeAncestorDomainsTreeMap(domains []*Domain) map[string]*TreeNode[*Domain]
 	}
 
 	for _, domain := range domains {
+		ancestor, ok := domainMap[domain.GetId()]
+		if !ok {
+			continue
+		}
 		for _, subdomain := range domain.Domains {
-			domainMap[subdomain].ancestors = append(domainMap[subdomain].ancestors, domainMap[domain.GetId()])
-			domainMap[domain.GetId()].children = append(domainMap[domain.GetId()].children, domainMap[subdomain])
+			subDomain, ok := domainMap[subdomain]
+			if !ok {
+				continue
+			}
+			subDomain.ancestors = append(subDomain.ancestors, ancestor)
+			ancestor.children = append(ancestor.children, subDomain)
 		}
 	}
 
