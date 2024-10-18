@@ -172,6 +172,24 @@ class ProviderEditPage extends React.Component {
             this.updateUserMappingField("displayName", value);
           }}
         />
+        {Setting.getLabel(i18next.t("general:First name"), i18next.t("provider:First name - Tooltip"))} :
+        <Select
+          mode="tags"
+          style={{width: "100%"}}
+          value={this.state.provider.userMapping.firstName}
+          onChange={value => {
+            this.updateUserMappingField("firstName", value);
+          }}
+        />
+        {Setting.getLabel(i18next.t("general:Last name"), i18next.t("provider:Last name - Tooltip"))} :
+        <Select
+          mode="tags"
+          style={{width: "100%"}}
+          value={this.state.provider.userMapping.lastName}
+          onChange={value => {
+            this.updateUserMappingField("lastName", value);
+          }}
+        />
         {Setting.getLabel(i18next.t("general:Email"), i18next.t("provider:Email - Tooltip"))} :
         <Select
           mode="tags"

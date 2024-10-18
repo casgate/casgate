@@ -1176,18 +1176,24 @@ func GetUserTablePasswordMaxLength() (int, error) {
 	return 0, fmt.Errorf("could not found column 'password' in table 'user'")
 }
 
-func SyncAttributesToUser(user *User, displayName, email, mobile, avatar string, address []string) error {
+func SyncAttributesToUser(user *User, displayName, firstName, lastName, email, mobile, avatar string, address []string) error {
 	if user.MappingStrategy != "all" && user.MappingStrategy != "attribute" {
 		return nil
 	}
 
 	user.DisplayName = displayName
+	if firstName != "" {
+		user.FirstName = firstName
+	}
+	if lastName != "" {
+		user.LastName = lastName
+	}
 	user.Email = email
 	user.Phone = mobile
 	user.Avatar = avatar
 	user.Address = address
 
-	_, err := UpdateUser(user.GetOwnerAndName(), user, []string{"display_name", "email", "phone", "avatar", "address"}, true)
+	_, err := UpdateUser(user.GetOwnerAndName(), user, []string{"display_name", "first_name", "last_name", "email", "phone", "avatar", "address"}, true)
 	if err != nil {
 		return err
 	}
