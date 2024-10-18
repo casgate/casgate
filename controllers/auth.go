@@ -888,6 +888,8 @@ func (c *ApiController) Login() {
 						Id:                util.GenerateId(),
 						Type:              "normal-user",
 						DisplayName:       userInfo.DisplayName,
+						FirstName:         userInfo.FirstName,
+						LastName:          userInfo.LastName,
 						Avatar:            userInfo.AvatarUrl,
 						Address:           []string{},
 						Email:             userInfo.Email,
@@ -956,7 +958,7 @@ func (c *ApiController) Login() {
 			if resp.Status == "ok" {
 				if len(provider.UserMapping) > 0 {
 					record.AddReason("Start attribute mapping")
-					err = object.SyncAttributesToUser(user, userInfo.DisplayName, userInfo.Email, userInfo.Phone, userInfo.AvatarUrl, user.Address)
+					err = object.SyncAttributesToUser(user, userInfo.DisplayName, userInfo.FirstName, userInfo.LastName, userInfo.Email, userInfo.Phone, userInfo.AvatarUrl, user.Address)
 					if err != nil {
 						logLoginErr(goCtx, fmt.Sprintf("Attribute mapping error: %s", err.Error()), authForm.Provider, provider.Category)
 						c.ResponseInternalServerError("internal server error")

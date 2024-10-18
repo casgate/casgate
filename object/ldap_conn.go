@@ -280,6 +280,7 @@ func SyncSingleUser(
 		err := SyncAttributesToUser(
 			user,
 			ldapUser.BuildLdapDisplayName(),
+			"", "",
 			ldapUser.Email,
 			ldapUser.Mobile,
 			user.Avatar,
@@ -298,7 +299,7 @@ func SyncSingleUser(
 		}
 		roleMappingRb.WithOrganization(ldap.Owner)
 		ctx = context.WithValue(ctx, RoleMappingRecordDataKey, roleMappingRb)
-		
+
 		err := SyncRolesToUser(ctx, user, ldapUser.Roles)
 		if err != nil {
 			return errors.Wrap(err, "SyncLdapRoles")

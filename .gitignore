@@ -38,3 +38,4 @@ server_linux_amd64
 
 # vscode workspaces
 *.code-workspace
+.ai
