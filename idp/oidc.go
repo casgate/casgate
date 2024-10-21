@@ -168,6 +168,8 @@ type OidcUserInfo struct {
 	Id          string `mapstructure:"id"`
 	Username    string `mapstructure:"username"`
 	DisplayName string `mapstructure:"displayName"`
+	FirstName   string `mapstructure:"firstName"`
+	LastName    string `mapstructure:"lastName"`
 	Email       string `mapstructure:"email"`
 	AvatarUrl   string `mapstructure:"avatarUrl"`
 }
@@ -252,6 +254,8 @@ func (idp *OpenIdProvider) GetUserInfo(token *oauth2.Token) (*UserInfo, error) {
 		Id:             oidcUserinfo.Id,
 		Username:       oidcUserinfo.Username,
 		DisplayName:    oidcUserinfo.DisplayName,
+		FirstName:      oidcUserinfo.FirstName,
+		LastName:       oidcUserinfo.LastName,
 		Email:          oidcUserinfo.Email,
 		AvatarUrl:      oidcUserinfo.AvatarUrl,
 		AdditionalInfo: attributes,
