@@ -84,6 +84,8 @@ func ParseSamlResponse(ctx context.Context, samlResponse string, provider *Provi
 		"displayName": fmt.Sprintf("%s %s", assertionInfo.Values.Get(defaultFirstNameOid), assertionInfo.Values.Get(defaultLastNameOid)),
 		"email":       assertionInfo.Values.Get(defaultEmailOid),
 		"avatarUrl":   "",
+		"firstName":   assertionInfo.Values.Get(defaultFirstNameOid),
+		"lastName":    assertionInfo.Values.Get(defaultLastNameOid),
 	}
 
 	if strings.Trim(dataMap["displayName"], " ") == "" {
@@ -127,6 +129,8 @@ func ParseSamlResponse(ctx context.Context, samlResponse string, provider *Provi
 		DisplayName: dataMap["displayName"],
 		Email:       dataMap["email"],
 		AvatarUrl:   dataMap["avatarUrl"],
+		FirstName:   dataMap["firstName"],
+		LastName:    dataMap["lastName"],
 	}
 	return &userInfo, authData, nil
 }
