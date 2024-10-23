@@ -1353,8 +1353,16 @@ func (c *ApiController) GetAuthURL() {
 	redirectURI := fmt.Sprintf("%s://%s/callback", getScheme(c.Ctx.Request), c.Ctx.Request.Host)
 	userAgent := c.Ctx.Request.UserAgent()
 
+	owner, _, err := util.SplitIdIntoOrgAndName(providerID)
+	if err != nil {
+		c.ResponseUnprocessableEntity("wrong provider id format")
+		return
+	}
+
 	provider, err := object.GetProvider(providerID, true)
 	if err != nil {
+		record := object.GetRecordBuilderFromContext(c.getRequestCtx())
+		record.WithOrganization(owner).WithAction("get-auth-url").AddReason(err.Error())
 		c.ResponseUnprocessableEntity(err.Error())
 		return
 	}
