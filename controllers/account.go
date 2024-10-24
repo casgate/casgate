@@ -63,8 +63,44 @@ type Captcha struct {
 // @Tag Login API
 // @Title Signup
 // @Description sign up a new user
-// @Param   username     formData    string  true        "The username to sign up"
-// @Param   password     formData    string  true        "The password"
+// @Param type body         string false
+// @Param signinMethod body string false
+// @Param organization body   string true
+// @Param id body             string false
+// @Param username body       string true
+// @Param password body       string false
+// @Param name body           string false
+// @Param firstName body      string false
+// @Param lastName body       string false
+// @Param email body          string false
+// @Param phone body          string false
+// @Param affiliation body    string false
+// @Param idCard body         string false
+// @Param region body         string false
+// @Param invitationCode body string false
+// @Param application body string true
+// @Param clientId body    string false
+// @Param provider body    string false
+// @Param code body        string false
+// @Param state body       string false
+// @Param redirectUri body string false
+// @Param method body      string false
+// @Param emailCode body   string false
+// @Param phoneCode body   string false
+// @Param countryCode body string false
+// @Param autoSignin body   bool false
+// @Param relayState body   string false
+// @Param samlRequest body  string false
+// @Param samlResponse body string false
+// @Param captchaType body  string false
+// @Param captchaToken body string false
+// @Param clientSecret body string false
+// @Param mfaType body      string false
+// @Param passcode body     string false
+// @Param recoveryCode body string false
+// @Param plan body    string false
+// @Param pricing body string false
+// @Param ldapId body string false
 // @Success 200 {object} controllers.Response The Response object
 // @router /signup [post]
 func (c *ApiController) Signup() {
