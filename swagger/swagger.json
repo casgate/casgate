@@ -3837,17 +3837,345 @@
                 "operationId": "ApiController.Signup",
                 "parameters": [
                     {
-                        "in": "formData",
-                        "name": "username",
-                        "description": "The username to sign up",
-                        "required": true,
+                        "in": "body",
+                        "name": "type",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
                         "type": "string"
                     },
                     {
-                        "in": "formData",
+                        "in": "body",
+                        "name": "signinMethod",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "organization",
+                        "description": "true",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "id",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "username",
+                        "description": "true",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
                         "name": "password",
-                        "description": "The password",
-                        "required": true,
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "name",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "firstName",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "lastName",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "email",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "phone",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "affiliation",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "idCard",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "region",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "invitationCode",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "application",
+                        "description": "true",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "clientId",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "provider",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "code",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "state",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "redirectUri",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "method",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "emailCode",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "phoneCode",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "countryCode",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "autoSignin",
+                        "description": "false",
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "body",
+                        "name": "relayState",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "samlRequest",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "samlResponse",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "captchaType",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "captchaToken",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "clientSecret",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "mfaType",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "passcode",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "recoveryCode",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "plan",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "pricing",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "ldapId",
+                        "description": "false",
+                        "schema": {
+                            "type": "string"
+                        },
                         "type": "string"
                     }
                 ],
@@ -4747,11 +5075,11 @@
         }
     },
     "definitions": {
-        "220914.\u003cnil\u003e.string": {
+        "220981.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
-        "307307.\u003cnil\u003e.string": {
+        "307374.\u003cnil\u003e.string": {
             "title": "string",
             "type": "object"
         },
@@ -5755,7 +6083,7 @@
                 "customPolicyMappingRules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/220914.\u003cnil\u003e.string"
+                        "$ref": "#/definitions/220981.\u003cnil\u003e.string"
                     }
                 },
                 "description": {
@@ -6221,7 +6549,7 @@
                     "type": "string"
                 },
                 "userMapping": {
-                    "$ref": "#/definitions/307307.\u003cnil\u003e.string"
+                    "$ref": "#/definitions/307374.\u003cnil\u003e.string"
                 },
                 "validateIdPSignature": {
                     "type": "boolean"
